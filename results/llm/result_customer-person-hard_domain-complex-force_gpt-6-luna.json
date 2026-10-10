@@ -1,0 +1,16 @@
+{
+ "precision": 99.17,
+ "recall": 95.2,
+ "f1": 97.14,
+ "accuracy": 97.88,
+ "n": 660,
+ "predicted_matches": 240,
+ "dataset": "customer-person-hard",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-6-luna",
+ "unclear_or_long_answers": 12,
+ "empty_answers": 0,
+ "cost_usd": 0.0271,
+ "temperature": null,
+ "max_tokens": 2000
+}

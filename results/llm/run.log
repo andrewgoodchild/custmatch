@@ -1,0 +1,53 @@
+Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 3978.16it/s]
+abt-buy-sampled-gs 0/1206 0.84 ex/s
+abt-buy-sampled-gs 100/1206 1.28 ex/s
+abt-buy-sampled-gs 200/1206 1.31 ex/s
+abt-buy-sampled-gs 300/1206 1.32 ex/s
+abt-buy-sampled-gs 400/1206 1.32 ex/s
+abt-buy-sampled-gs 500/1206 1.32 ex/s
+abt-buy-sampled-gs 600/1206 1.31 ex/s
+abt-buy-sampled-gs 700/1206 1.31 ex/s
+abt-buy-sampled-gs 800/1206 1.31 ex/s
+abt-buy-sampled-gs 900/1206 1.31 ex/s
+abt-buy-sampled-gs 1000/1206 1.30 ex/s
+abt-buy-sampled-gs 1100/1206 1.30 ex/s
+abt-buy-sampled-gs 1200/1206 1.30 ex/s
+{"precision": 55.43, "recall": 91.75, "f1": 69.1, "accuracy": 85.99, "n": 1206, "predicted_matches": 341, "dataset": "abt-buy-sampled-gs", "prompt": "domain-complex-force", "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit", "unclear_or_long_answers": 295, "seconds": 925.8}
+Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 4350.94it/s]
+walmart-amazon-sampled-gs 0/1193 0.78 ex/s
+walmart-amazon-sampled-gs 100/1193 1.30 ex/s
+walmart-amazon-sampled-gs 200/1193 1.30 ex/s
+walmart-amazon-sampled-gs 300/1193 1.28 ex/s
+walmart-amazon-sampled-gs 400/1193 1.26 ex/s
+walmart-amazon-sampled-gs 500/1193 1.25 ex/s
+walmart-amazon-sampled-gs 600/1193 1.25 ex/s
+walmart-amazon-sampled-gs 700/1193 1.25 ex/s
+walmart-amazon-sampled-gs 800/1193 1.24 ex/s
+walmart-amazon-sampled-gs 900/1193 1.24 ex/s
+walmart-amazon-sampled-gs 1000/1193 1.24 ex/s
+walmart-amazon-sampled-gs 1100/1193 1.24 ex/s
+{"precision": 41.53, "recall": 95.34, "f1": 57.86, "accuracy": 77.54, "n": 1193, "predicted_matches": 443, "dataset": "walmart-amazon-sampled-gs", "prompt": "domain-complex-force", "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit", "unclear_or_long_answers": 162, "seconds": 963.3}
+Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 3496.71it/s]
+wdcproducts-80cc-seen-sampled-250-gs-2 0/1239 0.74 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 100/1239 1.20 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 200/1239 1.19 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 300/1239 1.19 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 400/1239 1.19 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 500/1239 1.19 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 600/1239 1.19 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 700/1239 1.19 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 800/1239 1.19 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 900/1239 1.19 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 1000/1239 1.19 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 1100/1239 1.19 ex/s
+wdcproducts-80cc-seen-sampled-250-gs-2 1200/1239 1.19 ex/s
+{"precision": 57.07, "recall": 92.0, "f1": 70.44, "accuracy": 84.42, "n": 1239, "predicted_matches": 403, "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2", "prompt": "domain-complex-force", "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit", "unclear_or_long_answers": 357, "seconds": 1043.5}
+Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 3908.95it/s]
+historical50k-person-hard 0/660 0.78 ex/s
+historical50k-person-hard 100/660 1.44 ex/s
+historical50k-person-hard 200/660 1.45 ex/s
+historical50k-person-hard 300/660 1.45 ex/s
+historical50k-person-hard 400/660 1.44 ex/s
+historical50k-person-hard 500/660 1.44 ex/s
+historical50k-person-hard 600/660 1.44 ex/s
+{"precision": 80.0, "recall": 1.6, "f1": 3.14, "accuracy": 62.58, "n": 660, "predicted_matches": 5, "dataset": "historical50k-person-hard", "prompt": "domain-complex-force", "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit", "unclear_or_long_answers": 18, "seconds": 457.9}

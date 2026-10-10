@@ -1,0 +1,13 @@
+{
+ "precision": 99.22,
+ "recall": 50.8,
+ "f1": 67.2,
+ "accuracy": 81.21,
+ "n": 660,
+ "predicted_matches": 128,
+ "dataset": "historical50k-person-hard",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-4o-2024-08-06",
+ "unclear_or_long_answers": 8,
+ "cost_usd": 0.1431
+}

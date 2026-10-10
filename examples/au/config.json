@@ -1,0 +1,17 @@
+{
+  "sources": [
+    {"name": "web", "path": "../../data/au_customer/source_web.parquet",
+     "columns": {"record_id": "record_id", "first_name": "first_name", "last_name": "last_name",
+                 "date_of_birth": "date_of_birth", "email": "email", "phone": "mobile",
+                 "postcode": "postcode"}},
+    {"name": "app", "path": "../../data/au_customer/source_app.parquet",
+     "columns": {"record_id": "record_id", "first_name": "first_name", "last_name": "last_name",
+                 "date_of_birth": "date_of_birth", "email": "email", "phone": "mobile"}},
+    {"name": "store", "path": "../../data/au_customer/source_store.parquet",
+     "columns": {"record_id": "record_id", "first_name": "first_name", "last_name": "last_name",
+                 "date_of_birth": "date_of_birth", "email": "email", "phone": "mobile",
+                 "address": "address"}}
+  ],
+  "extra_fields": [{"name": "postcode", "compare": "exact"}],
+  "source_priority": ["store", "app", "web"]
+}

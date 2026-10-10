@@ -1,0 +1,21 @@
+# keep customer records and local state out of images: the scheduler inbox, data, environments
+server/inbox
+data
+.env
+.venv
+.venv-*
+**/__pycache__
+results/llm
+external
+**/*.db
+**/*.sqlite
+**/*.parquet
+**/*.csv
+!examples/**
+**/build
+**/*.egg-info
+results
+scripts
+poc
+tests
+!custmatch/data/*.csv

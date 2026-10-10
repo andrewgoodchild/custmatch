@@ -1,0 +1,12 @@
+{"task": "Structured/Amazon-Google", "best_model": "RF", "test_f1": 59.85, "rf_test_f1": 61.62, "reported_magellan": 49.1, "valid_f1": {"DT": 52.63, "RF": 61.73, "LR": 46.28, "NB": 18.79, "SVM": 39.13}}
+{"task": "Structured/Beer", "best_model": "LR", "test_f1": 86.67, "rf_test_f1": 81.25, "reported_magellan": 78.8, "valid_f1": {"DT": 70.97, "RF": 81.25, "LR": 87.5, "NB": 75.68, "SVM": 75.86}}
+{"task": "Structured/DBLP-ACM", "best_model": "RF", "test_f1": 98.55, "rf_test_f1": 98.21, "reported_magellan": 98.4, "valid_f1": {"DT": 98.09, "RF": 98.43, "LR": 98.32, "NB": 97.34, "SVM": 97.77}}
+{"task": "Structured/DBLP-GoogleScholar", "best_model": "RF", "test_f1": 93.8, "rf_test_f1": 93.79, "reported_magellan": 92.3, "valid_f1": {"DT": 92.78, "RF": 94.99, "LR": 92.23, "NB": 82.44, "SVM": 93.52}}
+{"task": "Structured/Fodors-Zagats", "best_model": "DT", "test_f1": 100.0, "rf_test_f1": 100.0, "reported_magellan": 100.0, "valid_f1": {"DT": 100.0, "RF": 100.0, "LR": 100.0, "NB": 100.0, "SVM": 100.0}}
+{"task": "Structured/iTunes-Amazon", "best_model": "RF", "test_f1": 94.74, "rf_test_f1": 94.74, "reported_magellan": 91.2, "valid_f1": {"DT": 92.86, "RF": 98.18, "LR": 96.3, "NB": 96.3, "SVM": 98.11}}
+{"task": "Structured/Walmart-Amazon", "best_model": "RF", "test_f1": 78.01, "rf_test_f1": 78.11, "reported_magellan": 71.9, "valid_f1": {"DT": 69.27, "RF": 77.51, "LR": 69.65, "NB": 17.44, "SVM": 65.05}}
+{"task": "Dirty/DBLP-ACM", "best_model": "RF", "test_f1": 94.73, "rf_test_f1": 94.28, "reported_magellan": 91.9, "valid_f1": {"DT": 90.44, "RF": 94.49, "LR": 93.45, "NB": 83.15, "SVM": 93.39}}
+{"task": "Dirty/DBLP-GoogleScholar", "best_model": "RF", "test_f1": 88.33, "rf_test_f1": 88.16, "reported_magellan": 82.5, "valid_f1": {"DT": 81.69, "RF": 87.33, "LR": 82.79, "NB": 32.41, "SVM": 84.05}}
+{"task": "Dirty/iTunes-Amazon", "best_model": "LR", "test_f1": 67.92, "rf_test_f1": 58.33, "reported_magellan": 46.8, "valid_f1": {"DT": 61.54, "RF": 76.0, "LR": 83.33, "NB": 58.23, "SVM": 50.0}}
+{"task": "Dirty/Walmart-Amazon", "best_model": "DT", "test_f1": 43.57, "rf_test_f1": 44.29, "reported_magellan": 37.4, "valid_f1": {"DT": 41.64, "RF": 41.04, "LR": 29.39, "NB": 17.35, "SVM": 19.35}}
+{"task": "Textual/Abt-Buy", "best_model": "RF", "test_f1": 68.01, "rf_test_f1": 65.91, "reported_magellan": 43.6, "valid_f1": {"DT": 59.86, "RF": 60.06, "LR": 43.51, "NB": 19.3, "SVM": 40.44}}

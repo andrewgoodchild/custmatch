@@ -1,0 +1,86 @@
+[
+ {
+  "copies": 1,
+  "records": 20134,
+  "blocking": "core",
+  "run_candidate_pairs": 48759,
+  "stage_seconds": {
+   "load and profile": 0.15,
+   "blocking (48,759 candidate pairs)": 0.21,
+   "forest: cross-fitted clustered F1 98.08": 4.19,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "matcher chosen": 0.0,
+   "households, golden records, outputs": 0.79
+  },
+  "candidate_pairs": 48759,
+  "load_seconds": 0.06,
+  "profile_seconds": 0.09,
+  "block_seconds": 0.2,
+  "features_seconds": 0.15,
+  "full_run_seconds": 5.35,
+  "clustered_f1": 97.38
+ },
+ {
+  "copies": 5,
+  "records": 100670,
+  "blocking": "core",
+  "run_candidate_pairs": 243795,
+  "stage_seconds": {
+   "load and profile": 0.67,
+   "blocking (243,795 candidate pairs)": 1.12,
+   "forest: cross-fitted clustered F1 97.39": 6.68,
+   "threshold (clustered, in-cluster precision check)": -0.0,
+   "matcher chosen": -0.0,
+   "households, golden records, outputs": 3.91
+  },
+  "candidate_pairs": 243795,
+  "load_seconds": 0.19,
+  "profile_seconds": 0.29,
+  "block_seconds": 1.17,
+  "features_seconds": 0.75,
+  "full_run_seconds": 12.41,
+  "clustered_f1": 97.32
+ },
+ {
+  "copies": 25,
+  "records": 503350,
+  "blocking": "core",
+  "run_candidate_pairs": 1218975,
+  "stage_seconds": {
+   "load and profile": 3.51,
+   "blocking (1,218,975 candidate pairs)": 6.26,
+   "forest: cross-fitted clustered F1 97.05": 18.99,
+   "threshold (clustered, in-cluster precision check)": -0.0,
+   "matcher chosen": -0.0,
+   "households, golden records, outputs": 20.02
+  },
+  "candidate_pairs": 1218975,
+  "load_seconds": 0.86,
+  "profile_seconds": 1.48,
+  "block_seconds": 6.58,
+  "features_seconds": 3.87,
+  "full_run_seconds": 48.92,
+  "clustered_f1": 97.02
+ },
+ {
+  "copies": 50,
+  "records": 1006700,
+  "blocking": "core",
+  "run_candidate_pairs": 2437950,
+  "stage_seconds": {
+   "load and profile": 6.93,
+   "blocking (2,437,950 candidate pairs)": 13.34,
+   "forest: cross-fitted clustered F1 97.75": 37.79,
+   "threshold (clustered, in-cluster precision check)": -0.0,
+   "matcher chosen": -0.0,
+   "households, golden records, outputs": 42.3
+  },
+  "candidate_pairs": 2437950,
+  "load_seconds": 1.76,
+  "profile_seconds": 3.1,
+  "block_seconds": 13.69,
+  "features_seconds": 7.93,
+  "full_run_seconds": 100.65,
+  "clustered_f1": 97.99
+ }
+]

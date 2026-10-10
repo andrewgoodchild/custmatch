@@ -1,0 +1,112 @@
+{
+ "historical50k-person-hard": {
+  "baseline": {
+   "match": {
+    "f1_at_0.5": 75.88,
+    "f1_tuned_held_out": 84.97,
+    "auc": 0.9484,
+    "brier": 0.1086
+   }
+  },
+  "criteria": {
+   "match": {
+    "f1_at_0.5": 82.02,
+    "f1_tuned_held_out": 84.56,
+    "auc": 0.9612,
+    "brier": 0.0934
+   },
+   "cost_usd": 0.0138
+  },
+  "structured": {
+   "match": {
+    "f1_at_0.5": 66.14,
+    "f1_tuned_held_out": 84.49,
+    "auc": 0.9582,
+    "brier": 0.1222
+   },
+   "cost_usd": 0.0113
+  },
+  "structured_criteria": {
+   "match": {
+    "f1_at_0.5": 77.4,
+    "f1_tuned_held_out": 87.08,
+    "auc": 0.9655,
+    "brier": 0.0991
+   },
+   "cost_usd": 0.0157
+  }
+ },
+ "customer-person-hard": {
+  "baseline": {
+   "match": {
+    "f1_at_0.5": 94.95,
+    "f1_tuned_held_out": 94.31,
+    "auc": 0.9906,
+    "brier": 0.0481
+   }
+  },
+  "criteria": {
+   "match": {
+    "f1_at_0.5": 96.98,
+    "f1_tuned_held_out": 95.99,
+    "auc": 0.9945,
+    "brier": 0.0381
+   },
+   "cost_usd": 0.0148
+  },
+  "structured": {
+   "match": {
+    "f1_at_0.5": 95.85,
+    "f1_tuned_held_out": 97.0,
+    "auc": 0.9974,
+    "brier": 0.0383
+   },
+   "cost_usd": 0.0128
+  },
+  "structured_criteria": {
+   "match": {
+    "f1_at_0.5": 96.92,
+    "f1_tuned_held_out": 96.72,
+    "auc": 0.9976,
+    "brier": 0.0322
+   },
+   "cost_usd": 0.0172
+  },
+  "choice3": {
+   "match": {
+    "f1_at_0.5": 95.88,
+    "f1_tuned_held_out": 96.62,
+    "auc": 0.9972,
+    "brier": 0.0221
+   },
+   "household": {
+    "f1_at_0.5": 97.59,
+    "f1_tuned_held_out": 97.68,
+    "auc": 0.9867,
+    "brier": 0.0297
+   },
+   "cost_usd": 0.0181
+  },
+  "multi": {
+   "match": {
+    "f1_at_0.5": 97.13,
+    "f1_tuned_held_out": 97.15,
+    "auc": 0.9973,
+    "brier": 0.0318
+   },
+   "household": {
+    "f1_at_0.5": 96.27,
+    "f1_tuned_held_out": 97.05,
+    "auc": 0.9823,
+    "brier": 0.054
+   },
+   "junk_contact_per_record": {
+    "f1_at_0.5": 93.59,
+    "f1_tuned_held_out": 93.53,
+    "auc": 0.9721,
+    "brier": 0.0525
+   },
+   "cost_usd": 0.0197
+  }
+ }
+}

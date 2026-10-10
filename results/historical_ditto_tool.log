@@ -1,0 +1,45 @@
+forest {"f1": 88.59, "precision": 96.84, "recall": 81.64, "matcher": "forest", "seconds": 23}
+ditto: 240,723 of 547,050 candidate pairs pass the forest veto
+ditto fold 1/2: training on 6,000 labelled pairs
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/197 [00:00<?, ?it/s]Loading weights: 100%|██████████| 197/197 [00:00<00:00, 60502.15it/s]
+[transformers] [1mRobertaModel LOAD REPORT[0m from: roberta-base
+Key                       | Status     | 
+--------------------------+------------+-
+lm_head.dense.bias        | UNEXPECTED | 
+lm_head.bias              | UNEXPECTED | 
+lm_head.layer_norm.bias   | UNEXPECTED | 
+lm_head.dense.weight      | UNEXPECTED | 
+lm_head.layer_norm.weight | UNEXPECTED | 
+pooler.dense.bias         | MISSING    | 
+pooler.dense.weight       | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  ditto epoch 1/4: mean loss 0.2454
+  ditto epoch 2/4: mean loss 0.0882
+  ditto epoch 3/4: mean loss 0.0451
+  ditto epoch 4/4: mean loss 0.0210
+ditto fold 2/2: training on 6,000 labelled pairs
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/197 [00:00<?, ?it/s]Loading weights: 100%|██████████| 197/197 [00:00<00:00, 38447.62it/s]
+[transformers] [1mRobertaModel LOAD REPORT[0m from: roberta-base
+Key                       | Status     | 
+--------------------------+------------+-
+lm_head.bias              | UNEXPECTED | 
+lm_head.layer_norm.bias   | UNEXPECTED | 
+lm_head.dense.bias        | UNEXPECTED | 
+lm_head.layer_norm.weight | UNEXPECTED | 
+lm_head.dense.weight      | UNEXPECTED | 
+pooler.dense.weight       | MISSING    | 
+pooler.dense.bias         | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  ditto epoch 1/4: mean loss 0.2560
+  ditto epoch 2/4: mean loss 0.0846
+  ditto epoch 3/4: mean loss 0.0589
+  ditto epoch 4/4: mean loss 0.0256
+forest_veto_then_ditto {"f1": 89.43, "precision": 98.69, "recall": 81.75, "matcher": "forest_veto_then_ditto", "seconds": 5561}

@@ -1,0 +1,1022 @@
+{
+ "dataset": {
+  "test_records": 12880,
+  "test_candidate_pairs": 152772,
+  "test_true_pairs": 77704,
+  "true_clusters": 1289
+ },
+ "random_forest": {
+  "model": "random_forest",
+  "threshold_from_valid": 0.3,
+  "pairwise": {
+   "precision": 93.38,
+   "recall": 77.7,
+   "f1": 84.82,
+   "predicted_pairs": 64654
+  },
+  "sweep": [
+   {
+    "threshold": 0.05,
+    "pairwise": {
+     "precision": 79.7,
+     "recall": 80.57,
+     "f1": 80.13,
+     "predicted_pairs": 78556
+    },
+    "clustered": {
+     "precision": 0.12,
+     "recall": 98.71,
+     "f1": 0.24,
+     "clusters": 338,
+     "largest_cluster": 11240,
+     "implied_pairs": 63169788,
+     "adjusted_rand": 0.0006
+    }
+   },
+   {
+    "threshold": 0.1,
+    "pairwise": {
+     "precision": 85.18,
+     "recall": 79.96,
+     "f1": 82.49,
+     "predicted_pairs": 72947
+    },
+    "clustered": {
+     "precision": 0.14,
+     "recall": 98.44,
+     "f1": 0.27,
+     "clusters": 432,
+     "largest_cluster": 10598,
+     "implied_pairs": 56163640,
+     "adjusted_rand": 0.0009
+    }
+   },
+   {
+    "threshold": 0.15,
+    "pairwise": {
+     "precision": 88.42,
+     "recall": 79.45,
+     "f1": 83.7,
+     "predicted_pairs": 69822
+    },
+    "clustered": {
+     "precision": 0.15,
+     "recall": 97.97,
+     "f1": 0.31,
+     "clusters": 507,
+     "largest_cluster": 9923,
+     "implied_pairs": 49245838,
+     "adjusted_rand": 0.0012
+    }
+   },
+   {
+    "threshold": 0.2,
+    "pairwise": {
+     "precision": 90.67,
+     "recall": 78.91,
+     "f1": 84.38,
+     "predicted_pairs": 67630
+    },
+    "clustered": {
+     "precision": 0.18,
+     "recall": 97.67,
+     "f1": 0.35,
+     "clusters": 590,
+     "largest_cluster": 9307,
+     "implied_pairs": 43325090,
+     "adjusted_rand": 0.0016
+    }
+   },
+   {
+    "threshold": 0.25,
+    "pairwise": {
+     "precision": 92.15,
+     "recall": 78.28,
+     "f1": 84.65,
+     "predicted_pairs": 66011
+    },
+    "clustered": {
+     "precision": 0.2,
+     "recall": 97.35,
+     "f1": 0.39,
+     "clusters": 663,
+     "largest_cluster": 8743,
+     "implied_pairs": 38238737,
+     "adjusted_rand": 0.0021
+    }
+   },
+   {
+    "threshold": 0.3,
+    "pairwise": {
+     "precision": 93.38,
+     "recall": 77.7,
+     "f1": 84.82,
+     "predicted_pairs": 64654
+    },
+    "clustered": {
+     "precision": 0.22,
+     "recall": 97.09,
+     "f1": 0.45,
+     "clusters": 742,
+     "largest_cluster": 8200,
+     "implied_pairs": 33642190,
+     "adjusted_rand": 0.0026
+    }
+   },
+   {
+    "threshold": 0.35,
+    "pairwise": {
+     "precision": 94.37,
+     "recall": 77.01,
+     "f1": 84.81,
+     "predicted_pairs": 63408
+    },
+    "clustered": {
+     "precision": 0.25,
+     "recall": 96.74,
+     "f1": 0.51,
+     "clusters": 813,
+     "largest_cluster": 7682,
+     "implied_pairs": 29531892,
+     "adjusted_rand": 0.0032
+    }
+   },
+   {
+    "threshold": 0.4,
+    "pairwise": {
+     "precision": 95.07,
+     "recall": 76.27,
+     "f1": 84.64,
+     "predicted_pairs": 62338
+    },
+    "clustered": {
+     "precision": 0.31,
+     "recall": 96.31,
+     "f1": 0.62,
+     "clusters": 891,
+     "largest_cluster": 6909,
+     "implied_pairs": 23903676,
+     "adjusted_rand": 0.0044
+    }
+   },
+   {
+    "threshold": 0.45,
+    "pairwise": {
+     "precision": 95.67,
+     "recall": 75.47,
+     "f1": 84.38,
+     "predicted_pairs": 61296
+    },
+    "clustered": {
+     "precision": 0.37,
+     "recall": 95.97,
+     "f1": 0.75,
+     "clusters": 969,
+     "largest_cluster": 6303,
+     "implied_pairs": 19906490,
+     "adjusted_rand": 0.0056
+    }
+   },
+   {
+    "threshold": 0.5,
+    "pairwise": {
+     "precision": 96.22,
+     "recall": 74.58,
+     "f1": 84.03,
+     "predicted_pairs": 60223
+    },
+    "clustered": {
+     "precision": 0.46,
+     "recall": 95.54,
+     "f1": 0.92,
+     "clusters": 1054,
+     "largest_cluster": 5652,
+     "implied_pairs": 16018675,
+     "adjusted_rand": 0.0074
+    }
+   },
+   {
+    "threshold": 0.55,
+    "pairwise": {
+     "precision": 96.82,
+     "recall": 73.62,
+     "f1": 83.64,
+     "predicted_pairs": 59085
+    },
+    "clustered": {
+     "precision": 0.62,
+     "recall": 94.91,
+     "f1": 1.24,
+     "clusters": 1152,
+     "largest_cluster": 4860,
+     "implied_pairs": 11864726,
+     "adjusted_rand": 0.0105
+    }
+   },
+   {
+    "threshold": 0.6,
+    "pairwise": {
+     "precision": 97.24,
+     "recall": 72.41,
+     "f1": 83.01,
+     "predicted_pairs": 57859
+    },
+    "clustered": {
+     "precision": 0.99,
+     "recall": 94.26,
+     "f1": 1.97,
+     "clusters": 1259,
+     "largest_cluster": 3818,
+     "implied_pairs": 7366577,
+     "adjusted_rand": 0.0179
+    }
+   },
+   {
+    "threshold": 0.65,
+    "pairwise": {
+     "precision": 97.86,
+     "recall": 70.59,
+     "f1": 82.02,
+     "predicted_pairs": 56048
+    },
+    "clustered": {
+     "precision": 1.78,
+     "recall": 93.31,
+     "f1": 3.49,
+     "clusters": 1391,
+     "largest_cluster": 2823,
+     "implied_pairs": 4076500,
+     "adjusted_rand": 0.0331
+    }
+   },
+   {
+    "threshold": 0.7,
+    "pairwise": {
+     "precision": 98.33,
+     "recall": 68.64,
+     "f1": 80.84,
+     "predicted_pairs": 54237
+    },
+    "clustered": {
+     "precision": 11.23,
+     "recall": 92.17,
+     "f1": 20.02,
+     "clusters": 1546,
+     "largest_cluster": 804,
+     "implied_pairs": 637813,
+     "adjusted_rand": 0.1989
+    }
+   },
+   {
+    "threshold": 0.75,
+    "pairwise": {
+     "precision": 98.61,
+     "recall": 66.58,
+     "f1": 79.49,
+     "predicted_pairs": 52462
+    },
+    "clustered": {
+     "precision": 25.48,
+     "recall": 90.76,
+     "f1": 39.78,
+     "clusters": 1695,
+     "largest_cluster": 421,
+     "implied_pairs": 276834,
+     "adjusted_rand": 0.397
+    }
+   },
+   {
+    "threshold": 0.8,
+    "pairwise": {
+     "precision": 98.91,
+     "recall": 63.6,
+     "f1": 77.42,
+     "predicted_pairs": 49964
+    },
+    "clustered": {
+     "precision": 41.13,
+     "recall": 88.32,
+     "f1": 56.13,
+     "clusters": 1910,
+     "largest_cluster": 225,
+     "implied_pairs": 166829,
+     "adjusted_rand": 0.5607
+    }
+   },
+   {
+    "threshold": 0.85,
+    "pairwise": {
+     "precision": 99.1,
+     "recall": 60.43,
+     "f1": 75.08,
+     "predicted_pairs": 47385
+    },
+    "clustered": {
+     "precision": 56.67,
+     "recall": 86.08,
+     "f1": 68.34,
+     "clusters": 2103,
+     "largest_cluster": 195,
+     "implied_pairs": 118025,
+     "adjusted_rand": 0.6831
+    }
+   },
+   {
+    "threshold": 0.9,
+    "pairwise": {
+     "precision": 99.29,
+     "recall": 55.82,
+     "f1": 71.46,
+     "predicted_pairs": 43684
+    },
+    "clustered": {
+     "precision": 75.71,
+     "recall": 82.19,
+     "f1": 78.81,
+     "clusters": 2405,
+     "largest_cluster": 127,
+     "implied_pairs": 84355,
+     "adjusted_rand": 0.7879
+    }
+   },
+   {
+    "threshold": 0.95,
+    "pairwise": {
+     "precision": 99.64,
+     "recall": 47.96,
+     "f1": 64.75,
+     "predicted_pairs": 37396
+    },
+    "clustered": {
+     "precision": 96.44,
+     "recall": 73.67,
+     "f1": 83.53,
+     "clusters": 3033,
+     "largest_cluster": 36,
+     "implied_pairs": 59361,
+     "adjusted_rand": 0.8352
+    }
+   },
+   {
+    "threshold": 0.98,
+    "pairwise": {
+     "precision": 99.77,
+     "recall": 38.64,
+     "f1": 55.7,
+     "predicted_pairs": 30093
+    },
+    "clustered": {
+     "precision": 98.54,
+     "recall": 62.35,
+     "f1": 76.37,
+     "clusters": 3832,
+     "largest_cluster": 31,
+     "implied_pairs": 49165,
+     "adjusted_rand": 0.7635
+    }
+   },
+   {
+    "threshold": 0.99,
+    "pairwise": {
+     "precision": 99.81,
+     "recall": 33.22,
+     "f1": 49.85,
+     "predicted_pairs": 25865
+    },
+    "clustered": {
+     "precision": 99.06,
+     "recall": 54.35,
+     "f1": 70.19,
+     "clusters": 4456,
+     "largest_cluster": 29,
+     "implied_pairs": 42629,
+     "adjusted_rand": 0.7017
+    }
+   },
+   {
+    "threshold": 0.995,
+    "pairwise": {
+     "precision": 99.82,
+     "recall": 28.58,
+     "f1": 44.44,
+     "predicted_pairs": 22249
+    },
+    "clustered": {
+     "precision": 99.04,
+     "recall": 48.99,
+     "f1": 65.55,
+     "clusters": 4917,
+     "largest_cluster": 29,
+     "implied_pairs": 38436,
+     "adjusted_rand": 0.6553
+    }
+   },
+   {
+    "threshold": 0.998,
+    "pairwise": {
+     "precision": 99.83,
+     "recall": 23.7,
+     "f1": 38.3,
+     "predicted_pairs": 18444
+    },
+    "clustered": {
+     "precision": 99.1,
+     "recall": 41.05,
+     "f1": 58.06,
+     "clusters": 5629,
+     "largest_cluster": 28,
+     "implied_pairs": 32191,
+     "adjusted_rand": 0.5803
+    }
+   },
+   {
+    "threshold": 0.999,
+    "pairwise": {
+     "precision": 99.84,
+     "recall": 23.51,
+     "f1": 38.06,
+     "predicted_pairs": 18300
+    },
+    "clustered": {
+     "precision": 99.13,
+     "recall": 40.57,
+     "f1": 57.57,
+     "clusters": 5675,
+     "largest_cluster": 28,
+     "implied_pairs": 31801,
+     "adjusted_rand": 0.5755
+    }
+   },
+   {
+    "threshold": 0.9995,
+    "pairwise": {
+     "precision": 99.84,
+     "recall": 23.44,
+     "f1": 37.97,
+     "predicted_pairs": 18245
+    },
+    "clustered": {
+     "precision": 99.12,
+     "recall": 40.37,
+     "f1": 57.38,
+     "clusters": 5690,
+     "largest_cluster": 28,
+     "implied_pairs": 31649,
+     "adjusted_rand": 0.5735
+    }
+   }
+  ],
+  "clustered_at_valid_threshold": {
+   "precision": 0.22,
+   "recall": 97.09,
+   "f1": 0.45,
+   "clusters": 742,
+   "largest_cluster": 8200,
+   "implied_pairs": 33642190,
+   "adjusted_rand": 0.0026
+  },
+  "best_pairwise": {
+   "threshold": 0.3,
+   "pairwise": {
+    "precision": 93.38,
+    "recall": 77.7,
+    "f1": 84.82,
+    "predicted_pairs": 64654
+   },
+   "clustered": {
+    "precision": 0.22,
+    "recall": 97.09,
+    "f1": 0.45,
+    "clusters": 742,
+    "largest_cluster": 8200,
+    "implied_pairs": 33642190,
+    "adjusted_rand": 0.0026
+   }
+  },
+  "best_clustered": {
+   "threshold": 0.95,
+   "pairwise": {
+    "precision": 99.64,
+    "recall": 47.96,
+    "f1": 64.75,
+    "predicted_pairs": 37396
+   },
+   "clustered": {
+    "precision": 96.44,
+    "recall": 73.67,
+    "f1": 83.53,
+    "clusters": 3033,
+    "largest_cluster": 36,
+    "implied_pairs": 59361,
+    "adjusted_rand": 0.8352
+   }
+  }
+ },
+ "ditto_roberta": {
+  "model": "ditto_roberta",
+  "threshold_from_valid": 0.05,
+  "pairwise": {
+   "precision": 97.76,
+   "recall": 80.36,
+   "f1": 88.21,
+   "predicted_pairs": 63873
+  },
+  "sweep": [
+   {
+    "threshold": 0.05,
+    "pairwise": {
+     "precision": 97.76,
+     "recall": 80.36,
+     "f1": 88.21,
+     "predicted_pairs": 63873
+    },
+    "clustered": {
+     "precision": 15.52,
+     "recall": 96.51,
+     "f1": 26.74,
+     "clusters": 1163,
+     "largest_cluster": 663,
+     "implied_pairs": 483273,
+     "adjusted_rand": 0.2662
+    }
+   },
+   {
+    "threshold": 0.1,
+    "pairwise": {
+     "precision": 98.16,
+     "recall": 80.11,
+     "f1": 88.22,
+     "predicted_pairs": 63415
+    },
+    "clustered": {
+     "precision": 24.77,
+     "recall": 96.3,
+     "f1": 39.41,
+     "clusters": 1239,
+     "largest_cluster": 425,
+     "implied_pairs": 302071,
+     "adjusted_rand": 0.3932
+    }
+   },
+   {
+    "threshold": 0.15,
+    "pairwise": {
+     "precision": 98.38,
+     "recall": 79.91,
+     "f1": 88.19,
+     "predicted_pairs": 63121
+    },
+    "clustered": {
+     "precision": 34.58,
+     "recall": 96.13,
+     "f1": 50.86,
+     "clusters": 1291,
+     "largest_cluster": 294,
+     "implied_pairs": 215995,
+     "adjusted_rand": 0.508
+    }
+   },
+   {
+    "threshold": 0.2,
+    "pairwise": {
+     "precision": 98.51,
+     "recall": 79.76,
+     "f1": 88.15,
+     "predicted_pairs": 62919
+    },
+    "clustered": {
+     "precision": 41.64,
+     "recall": 96.1,
+     "f1": 58.1,
+     "clusters": 1316,
+     "largest_cluster": 249,
+     "implied_pairs": 179330,
+     "adjusted_rand": 0.5805
+    }
+   },
+   {
+    "threshold": 0.25,
+    "pairwise": {
+     "precision": 98.64,
+     "recall": 79.63,
+     "f1": 88.12,
+     "predicted_pairs": 62729
+    },
+    "clustered": {
+     "precision": 44.55,
+     "recall": 96.02,
+     "f1": 60.86,
+     "clusters": 1343,
+     "largest_cluster": 249,
+     "implied_pairs": 167480,
+     "adjusted_rand": 0.6081
+    }
+   },
+   {
+    "threshold": 0.3,
+    "pairwise": {
+     "precision": 98.72,
+     "recall": 79.54,
+     "f1": 88.1,
+     "predicted_pairs": 62607
+    },
+    "clustered": {
+     "precision": 46.83,
+     "recall": 95.95,
+     "f1": 62.94,
+     "clusters": 1363,
+     "largest_cluster": 242,
+     "implied_pairs": 159196,
+     "adjusted_rand": 0.6289
+    }
+   },
+   {
+    "threshold": 0.35,
+    "pairwise": {
+     "precision": 98.79,
+     "recall": 79.46,
+     "f1": 88.07,
+     "predicted_pairs": 62499
+    },
+    "clustered": {
+     "precision": 47.43,
+     "recall": 95.92,
+     "f1": 63.47,
+     "clusters": 1378,
+     "largest_cluster": 242,
+     "implied_pairs": 157146,
+     "adjusted_rand": 0.6343
+    }
+   },
+   {
+    "threshold": 0.4,
+    "pairwise": {
+     "precision": 98.86,
+     "recall": 79.37,
+     "f1": 88.05,
+     "predicted_pairs": 62386
+    },
+    "clustered": {
+     "precision": 52.54,
+     "recall": 95.89,
+     "f1": 67.88,
+     "clusters": 1397,
+     "largest_cluster": 203,
+     "implied_pairs": 141833,
+     "adjusted_rand": 0.6784
+    }
+   },
+   {
+    "threshold": 0.45,
+    "pairwise": {
+     "precision": 98.91,
+     "recall": 79.29,
+     "f1": 88.02,
+     "predicted_pairs": 62296
+    },
+    "clustered": {
+     "precision": 54.18,
+     "recall": 95.84,
+     "f1": 69.23,
+     "clusters": 1413,
+     "largest_cluster": 203,
+     "implied_pairs": 137452,
+     "adjusted_rand": 0.6919
+    }
+   },
+   {
+    "threshold": 0.5,
+    "pairwise": {
+     "precision": 98.96,
+     "recall": 79.21,
+     "f1": 87.99,
+     "predicted_pairs": 62193
+    },
+    "clustered": {
+     "precision": 57.08,
+     "recall": 95.74,
+     "f1": 71.52,
+     "clusters": 1424,
+     "largest_cluster": 175,
+     "implied_pairs": 130323,
+     "adjusted_rand": 0.7149
+    }
+   },
+   {
+    "threshold": 0.55,
+    "pairwise": {
+     "precision": 99.02,
+     "recall": 79.15,
+     "f1": 87.98,
+     "predicted_pairs": 62110
+    },
+    "clustered": {
+     "precision": 58.71,
+     "recall": 95.7,
+     "f1": 72.78,
+     "clusters": 1434,
+     "largest_cluster": 175,
+     "implied_pairs": 126664,
+     "adjusted_rand": 0.7274
+    }
+   },
+   {
+    "threshold": 0.6,
+    "pairwise": {
+     "precision": 99.09,
+     "recall": 79.06,
+     "f1": 87.95,
+     "predicted_pairs": 61999
+    },
+    "clustered": {
+     "precision": 59.77,
+     "recall": 95.65,
+     "f1": 73.57,
+     "clusters": 1445,
+     "largest_cluster": 175,
+     "implied_pairs": 124346,
+     "adjusted_rand": 0.7354
+    }
+   },
+   {
+    "threshold": 0.65,
+    "pairwise": {
+     "precision": 99.13,
+     "recall": 78.97,
+     "f1": 87.91,
+     "predicted_pairs": 61905
+    },
+    "clustered": {
+     "precision": 62.18,
+     "recall": 95.61,
+     "f1": 75.36,
+     "clusters": 1455,
+     "largest_cluster": 165,
+     "implied_pairs": 119470,
+     "adjusted_rand": 0.7533
+    }
+   },
+   {
+    "threshold": 0.7,
+    "pairwise": {
+     "precision": 99.21,
+     "recall": 78.87,
+     "f1": 87.88,
+     "predicted_pairs": 61779
+    },
+    "clustered": {
+     "precision": 65.38,
+     "recall": 95.57,
+     "f1": 77.64,
+     "clusters": 1469,
+     "largest_cluster": 150,
+     "implied_pairs": 113593,
+     "adjusted_rand": 0.7762
+    }
+   },
+   {
+    "threshold": 0.75,
+    "pairwise": {
+     "precision": 99.26,
+     "recall": 78.76,
+     "f1": 87.83,
+     "predicted_pairs": 61661
+    },
+    "clustered": {
+     "precision": 66.56,
+     "recall": 95.5,
+     "f1": 78.44,
+     "clusters": 1483,
+     "largest_cluster": 150,
+     "implied_pairs": 111495,
+     "adjusted_rand": 0.7842
+    }
+   },
+   {
+    "threshold": 0.8,
+    "pairwise": {
+     "precision": 99.3,
+     "recall": 78.6,
+     "f1": 87.74,
+     "predicted_pairs": 61509
+    },
+    "clustered": {
+     "precision": 67.31,
+     "recall": 95.4,
+     "f1": 78.93,
+     "clusters": 1496,
+     "largest_cluster": 150,
+     "implied_pairs": 110131,
+     "adjusted_rand": 0.7891
+    }
+   },
+   {
+    "threshold": 0.85,
+    "pairwise": {
+     "precision": 99.35,
+     "recall": 78.42,
+     "f1": 87.65,
+     "predicted_pairs": 61330
+    },
+    "clustered": {
+     "precision": 69.2,
+     "recall": 95.26,
+     "f1": 80.16,
+     "clusters": 1516,
+     "largest_cluster": 150,
+     "implied_pairs": 106959,
+     "adjusted_rand": 0.8014
+    }
+   },
+   {
+    "threshold": 0.9,
+    "pairwise": {
+     "precision": 99.42,
+     "recall": 78.15,
+     "f1": 87.51,
+     "predicted_pairs": 61081
+    },
+    "clustered": {
+     "precision": 75.58,
+     "recall": 95.17,
+     "f1": 84.25,
+     "clusters": 1541,
+     "largest_cluster": 111,
+     "implied_pairs": 97853,
+     "adjusted_rand": 0.8423
+    }
+   },
+   {
+    "threshold": 0.95,
+    "pairwise": {
+     "precision": 99.53,
+     "recall": 77.71,
+     "f1": 87.27,
+     "predicted_pairs": 60668
+    },
+    "clustered": {
+     "precision": 82.1,
+     "recall": 95.04,
+     "f1": 88.1,
+     "clusters": 1576,
+     "largest_cluster": 80,
+     "implied_pairs": 89951,
+     "adjusted_rand": 0.8808
+    }
+   },
+   {
+    "threshold": 0.98,
+    "pairwise": {
+     "precision": 99.62,
+     "recall": 76.96,
+     "f1": 86.84,
+     "predicted_pairs": 60030
+    },
+    "clustered": {
+     "precision": 88.09,
+     "recall": 94.66,
+     "f1": 91.26,
+     "clusters": 1623,
+     "largest_cluster": 65,
+     "implied_pairs": 83498,
+     "adjusted_rand": 0.9125
+    }
+   },
+   {
+    "threshold": 0.99,
+    "pairwise": {
+     "precision": 99.69,
+     "recall": 76.33,
+     "f1": 86.46,
+     "predicted_pairs": 59495
+    },
+    "clustered": {
+     "precision": 90.94,
+     "recall": 94.42,
+     "f1": 92.65,
+     "clusters": 1657,
+     "largest_cluster": 65,
+     "implied_pairs": 80679,
+     "adjusted_rand": 0.9264
+    }
+   },
+   {
+    "threshold": 0.995,
+    "pairwise": {
+     "precision": 99.74,
+     "recall": 75.55,
+     "f1": 85.97,
+     "predicted_pairs": 58856
+    },
+    "clustered": {
+     "precision": 93.08,
+     "recall": 94.12,
+     "f1": 93.6,
+     "clusters": 1693,
+     "largest_cluster": 50,
+     "implied_pairs": 78568,
+     "adjusted_rand": 0.9359
+    }
+   },
+   {
+    "threshold": 0.998,
+    "pairwise": {
+     "precision": 99.84,
+     "recall": 74.03,
+     "f1": 85.02,
+     "predicted_pairs": 57614
+    },
+    "clustered": {
+     "precision": 96.08,
+     "recall": 93.28,
+     "f1": 94.66,
+     "clusters": 1780,
+     "largest_cluster": 50,
+     "implied_pairs": 75438,
+     "adjusted_rand": 0.9465
+    }
+   },
+   {
+    "threshold": 0.999,
+    "pairwise": {
+     "precision": 99.89,
+     "recall": 72.36,
+     "f1": 83.93,
+     "predicted_pairs": 56291
+    },
+    "clustered": {
+     "precision": 97.08,
+     "recall": 92.29,
+     "f1": 94.63,
+     "clusters": 1859,
+     "largest_cluster": 34,
+     "implied_pairs": 73872,
+     "adjusted_rand": 0.9462
+    }
+   },
+   {
+    "threshold": 0.9995,
+    "pairwise": {
+     "precision": 99.94,
+     "recall": 69.79,
+     "f1": 82.19,
+     "predicted_pairs": 54263
+    },
+    "clustered": {
+     "precision": 98.25,
+     "recall": 90.34,
+     "f1": 94.13,
+     "clusters": 1993,
+     "largest_cluster": 34,
+     "implied_pairs": 71442,
+     "adjusted_rand": 0.9412
+    }
+   }
+  ],
+  "clustered_at_valid_threshold": {
+   "precision": 15.52,
+   "recall": 96.51,
+   "f1": 26.74,
+   "clusters": 1163,
+   "largest_cluster": 663,
+   "implied_pairs": 483273,
+   "adjusted_rand": 0.2662
+  },
+  "best_pairwise": {
+   "threshold": 0.1,
+   "pairwise": {
+    "precision": 98.16,
+    "recall": 80.11,
+    "f1": 88.22,
+    "predicted_pairs": 63415
+   },
+   "clustered": {
+    "precision": 24.77,
+    "recall": 96.3,
+    "f1": 39.41,
+    "clusters": 1239,
+    "largest_cluster": 425,
+    "implied_pairs": 302071,
+    "adjusted_rand": 0.3932
+   }
+  },
+  "best_clustered": {
+   "threshold": 0.998,
+   "pairwise": {
+    "precision": 99.84,
+    "recall": 74.03,
+    "f1": 85.02,
+    "predicted_pairs": 57614
+   },
+   "clustered": {
+    "precision": 96.08,
+    "recall": 93.28,
+    "f1": 94.66,
+    "clusters": 1780,
+    "largest_cluster": 50,
+    "implied_pairs": 75438,
+    "adjusted_rand": 0.9465
+   }
+  }
+ }
+}

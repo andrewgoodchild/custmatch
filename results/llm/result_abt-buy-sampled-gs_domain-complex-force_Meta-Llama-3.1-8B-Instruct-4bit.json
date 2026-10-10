@@ -1,0 +1,13 @@
+{
+ "precision": 55.43,
+ "recall": 91.75,
+ "f1": 69.1,
+ "accuracy": 85.99,
+ "n": 1206,
+ "predicted_matches": 341,
+ "dataset": "abt-buy-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+ "unclear_or_long_answers": 295,
+ "seconds": 925.8
+}

@@ -1,0 +1,22 @@
+{
+ "precision": 99.57,
+ "recall": 93.6,
+ "f1": 96.49,
+ "accuracy": 97.42,
+ "n": 660,
+ "predicted_matches": 235,
+ "dataset": "customer-person-hard",
+ "prompt": "domain-complex-force",
+ "model": "typesafe/jev-router",
+ "unclear_or_long_answers": 1,
+ "empty_answers": 0,
+ "cost_usd": 0.2271,
+ "temperature": null,
+ "max_tokens": 8000,
+ "answered_by": {
+  "deepseek/deepseek-v4.1-flash": 364,
+  "openai/gpt-6-luna": 210,
+  "google/gemini-3.8-flash": 76,
+  "anthropic/claude-sonnet-5": 10
+ }
+}

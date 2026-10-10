@@ -1,0 +1,13 @@
+{
+  "sources": [
+    {"name": "crm", "path": "../../data/customer/source_crm.parquet",
+     "columns": {"record_id": "record_id", "first_name": "first_name", "middle_initial": "middle_initial",
+                 "last_name": "last_name", "date_of_birth": "date_of_birth", "addr_number": "addr_number",
+                 "addr_street": "addr_street", "addr_unit": "addr_unit", "email": "email", "phone": "phone"}},
+    {"name": "billing", "path": "../../data/customer/source_billing.parquet",
+     "columns": {"record_id": "record_id", "first_name": "first_name", "middle_initial": "middle_initial",
+                 "last_name": "last_name", "ssn": "ssn", "addr_number": "addr_number",
+                 "addr_street": "addr_street", "addr_unit": "addr_unit", "email": "email", "phone": "phone"}}
+  ],
+  "source_priority": ["crm", "billing"]
+}

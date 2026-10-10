@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>custmatch steward</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6b66; --line: #e2e2dc;
+    --accent: #2f5d8a; --same: #2e7d4f; --diff: #b23b3b; --warn: #a66a00; --hi: #fff4c2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --panel: #1f1f1d; --ink: #ececea; --muted: #9a9a94; --line: #34342f;
+            --accent: #7fa8d6; --same: #5fbf86; --diff: #e07a7a; --warn: #e0a84a; --hi: #4a4220; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 16px;
+           border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { font-size: 16px; margin: 0 12px 0 0; }
+  nav button { background: none; border: 0; padding: 6px 10px; color: var(--muted); cursor: pointer;
+               font: inherit; border-radius: 6px; }
+  nav button.on { color: var(--ink); background: var(--bg); font-weight: 600; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .muted { color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); vertical-align: top;
+           overflow-wrap: break-word; word-break: break-word; }
+  th { color: var(--muted); font-weight: 500; }
+  table.kv { table-layout: fixed; }
+  table.kv th { width: 30%; }
+  tr.same td { background: var(--hi); }
+  .rec h3 { margin: 0 0 6px; font-size: 14px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  button.act { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line);
+               background: var(--panel); color: var(--ink); cursor: pointer; }
+  button.same { border-color: var(--same); color: var(--same); }
+  button.diff { border-color: var(--diff); color: var(--diff); }
+  button.act:hover { filter: brightness(0.95); }
+  kbd { font-size: 11px; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; color: var(--muted); }
+  input[type=text], input[type=password] { font: inherit; padding: 8px 10px; border: 1px solid var(--line);
+               border-radius: 8px; background: var(--panel); color: var(--ink); width: 100%; }
+  .score { font-size: 28px; font-weight: 600; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); }
+  .pill.linked { color: var(--same); border-color: var(--same); }
+  .pill.apart { color: var(--diff); border-color: var(--diff); }
+  .msg { padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--line); }
+  .msg.err { color: var(--diff); border-color: var(--diff); }
+  .stats { position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .stat b { display: block; font-size: 22px; }
+  a { color: var(--accent); cursor: pointer; }
+  .hidden { display: none; }
+  /* waterfall: each feature's share of the score */
+  .wf { margin-top: 12px; }
+  .wf-row { display: grid; grid-template-columns: minmax(120px, 34%) 1fr 64px; gap: 8px; align-items: center;
+            font-size: 13px; padding: 2px 0; }
+  .wf-track { position: relative; height: 14px; background: var(--bg); border-radius: 3px; }
+  .wf-bar { position: absolute; top: 0; height: 14px; border-radius: 3px; }
+  .wf-bar.up { background: var(--same); } .wf-bar.down { background: var(--diff); } .wf-bar.base { background: var(--muted); }
+  .wf-th { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--warn); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; word-break: normal; }
+  select, input[type=number] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px;
+                               background: var(--panel); color: var(--ink); }
+  svg text { fill: var(--ink); font-size: 11px; }
+  .heat { text-align: right; font-variant-numeric: tabular-nums; }
+  .row-click { cursor: pointer; } .row-click:hover td { background: var(--bg); }
+  .scroll-x { overflow-x: auto; }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+  .filters label { white-space: nowrap; }
+  details summary { cursor: pointer; color: var(--accent); }
+  .confirm { border: 1px solid var(--warn); border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+  .act.small { padding: 3px 9px; font-size: 13px; }
+  .won { color: var(--same); font-weight: 600; }
+  button.info { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--muted); background: none;
+                color: var(--muted); font: italic 600 11px/16px Georgia, serif; padding: 0; margin-left: 6px;
+                cursor: pointer; vertical-align: 2px; }
+  button.info:hover, button.info.on { color: var(--accent); border-color: var(--accent); }
+  .info-box { border-left: 3px solid var(--accent); background: var(--bg); padding: 10px 14px; margin: 8px 0 12px;
+              border-radius: 0 8px 8px 0; font-size: 14px; font-weight: normal; }
+  .info-box h5 { margin: 8px 0 2px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  .info-box h5:first-child { margin-top: 0; }
+  .info-box p { margin: 0 0 4px; }
+  .stats > button.info { position: absolute; top: 12px; right: 12px; }
+  .subnav { display: inline-flex; gap: 2px; padding: 3px; margin-bottom: 12px; border: 1px solid var(--line);
+            border-radius: 9px; background: var(--panel); }
+  .subnav button { font: inherit; background: none; border: 0; padding: 6px 14px; border-radius: 6px;
+                   color: var(--muted); cursor: pointer; }
+  .subnav button.on { background: var(--bg); color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>custmatch steward</h1>
+  <nav>
+    <button data-view="overview" class="on">Overview</button>
+    <button data-view="quality">Model &amp; data</button>
+    <button data-view="find">Customers</button>
+    <button data-view="review">Review</button>
+    <button data-view="decisions">Decisions</button>
+  </nav>
+</header>
+<main>
+  <div id="msg"></div>
+
+  <section id="login" class="panel hidden">
+    <p>Paste an API key with the <b>steward</b> role (<code>custmatch-server key create NAME --role steward</code>).
+      It is kept in this browser tab only.</p>
+    <form id="login-form"><input type="password" id="key" placeholder="cm_..." autocomplete="off">
+      <div class="actions"><button class="act" type="submit">Use this key</button></div></form>
+  </section>
+
+  <section id="review" class="view hidden">
+    <div class="panel">
+      <form id="r-filter" class="filters">
+        <label>Source <select id="r-source"><option value="">any</option></select></label>
+        <label>Model's call <select id="r-call"><option value="">either</option><option value="linked">matched</option><option value="apart">kept apart</option></select></label>
+        <label>Score <input type="number" id="r-min" min="0" max="1" step="0.05" value="0" style="width:80px"> to
+          <input type="number" id="r-max" min="0" max="1" step="0.05" value="1" style="width:80px"></label>
+        <label><input type="checkbox" id="r-bulk"> List (bulk)</label>
+        <button class="act" type="submit">Apply</button><button class="info" type="button" data-info="review_filters" title="What is this?" aria-label="What is this?">i</button>
+      </form>
+      <input type="text" id="r-note" placeholder="Note for your decisions (optional): why, a ticket number..." style="margin-top:8px">
+    </div>
+    <div id="review-body"></div>
+  </section>
+
+  <section id="decisions" class="view hidden">
+    <div class="panel"><h3 style="margin-top:0">Steward activity (last 30 days)<button class="info" type="button" data-info="activity" title="What is this?" aria-label="What is this?">i</button></h3><div id="activity"></div></div>
+    <div class="panel">
+      <h3 style="margin-top:0">Decisions<button class="info" type="button" data-info="decisions" title="What is this?" aria-label="What is this?">i</button></h3>
+      <form id="d-filter" class="filters">
+        <label>Status <select id="d-status"><option value="">any</option><option value="applied">applied</option><option value="proposed">awaiting approval</option></select></label>
+        <label>Decision <select id="d-decision"><option value="">any</option><option value="same">same</option><option value="different">different</option></select></label>
+        <label>Steward <input type="text" id="d-by" style="width:120px"></label>
+        <label>Record <input type="text" id="d-q" placeholder="web:w0001" style="width:140px"></label>
+        <button class="act" type="submit">Apply</button>
+        <button class="act" type="button" id="d-csv">Download CSV</button>
+      </form>
+      <div id="d-list"></div>
+    </div>
+  </section>
+
+  <section id="find" class="view hidden">
+    <div class="subnav">
+      <button data-sub="search" class="on">Search</button>
+      <button data-sub="browse">Browse</button>
+      <button data-sub="links">Links</button>
+      <button data-sub="compare">Compare</button>
+    </div>
+    <div class="panel sub" id="sub-search">
+      <form id="find-form"><input type="text" id="q" placeholder="A record key (web:w000007), record id, email, phone or name"></form>
+      <p class="muted" style="margin:8px 0 0"><label>Find a person's customer. One customer found opens straight away.<button class="info" type="button" data-info="search" title="What is this?" aria-label="What is this?">i</button></label></p>
+      <div id="results"></div>
+      <details style="margin-top:12px"><summary>Find possible matches for a person<button class="info" type="button" data-info="possible" title="What is this?" aria-label="What is this?">i</button></summary>
+        <form id="pm-form" class="filters" style="margin-top:8px">
+          <label>Source <select id="pm-source"></select></label>
+          <label>First name <input type="text" id="pm-first" style="width:130px"></label>
+          <label>Surname <input type="text" id="pm-last" style="width:130px"></label>
+          <label>Date of birth <input type="text" id="pm-dob" placeholder="1980-05-01" style="width:120px"></label>
+          <label>Email <input type="text" id="pm-email" style="width:180px"></label>
+          <label>Phone <input type="text" id="pm-phone" style="width:140px"></label>
+          <button class="act" type="submit">Find</button>
+        </form>
+        <div id="pm-out"></div>
+      </details>
+    </div>
+    <div class="panel sub hidden" id="sub-browse">
+      <label>Customers <select id="c-order">
+        <option value="size">largest first</option>
+        <option value="weakest">with the weakest link first</option>
+        <option value="bridges">with the most bridge links (one link holds parts together)</option>
+        <option value="sparse">with the sparsest links (3+ records)</option>
+        <option value="random">at random</option>
+      </select></label>
+      <p class="muted" style="margin:8px 0 0"><label>Customers worth a second look. Click one to open it.<button class="info" type="button" data-info="browse" title="What is this?" aria-label="What is this?">i</button></label></p>
+      <div id="c-list"></div>
+    </div>
+    <div class="panel sub hidden" id="sub-links">
+      <form id="l-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        Accepted links scoring from <input type="number" id="l-min" min="0" max="1" step="0.05" value="0.6" style="width:90px">
+        to <input type="number" id="l-max" min="0" max="1" step="0.05" value="0.75" style="width:90px">
+        <button class="act" type="submit">Sample</button>
+      </form>
+      <p class="muted" style="margin:8px 0 0"><label>What the model accepts at each level of confidence: a random sample of links in the band. Click one to see why it scored what it did.<button class="info" type="button" data-info="links" title="What is this?" aria-label="What is this?">i</button></label></p>
+      <div id="l-list"></div>
+    </div>
+    <div class="panel sub hidden" id="sub-compare">
+      <form id="cmp-form" class="filters">
+        <label>Record <input type="text" id="cmp-a" placeholder="web:w000007" style="width:170px"></label>
+        <label>and record <input type="text" id="cmp-b" placeholder="store:s002555" style="width:170px"></label>
+        <button class="act" type="submit">Compare</button>
+      </form>
+      <p class="muted" style="margin:8px 0 0"><label>Any two records side by side: their score and why, and whether blocking would ever compare them - why they did or did not match.<button class="info" type="button" data-info="compare" title="What is this?" aria-label="What is this?">i</button></label></p>
+      <div id="cmp-out"></div>
+    </div>
+    <div id="l-explain"></div>
+    <div id="customer"></div>
+  </section>
+
+  <section id="quality" class="view hidden"><div id="quality-body"></div></section>
+
+  <section id="overview" class="view"><div id="overview-body"></div></section>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const seg = (v) => encodeURIComponent(String(v));   // every path segment built from data
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+let key = null;
+try { key = sessionStorage.getItem("custmatch-key"); } catch (e) {}
+
+async function api(path, body, method) {
+  const opts = {headers: {"Authorization": "Bearer " + key}};
+  if (body) { opts.method = "POST"; opts.body = JSON.stringify(body); opts.headers["Content-Type"] = "application/json"; }
+  if (method) opts.method = method;
+  const r = await fetch(path, opts);
+  if (r.status === 401) { showLogin("That key was not accepted."); throw new Error("401"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || r.statusText);
+  return data;
+}
+const fail = (e) => { if (e.message !== "401") say(e.message, true); };   // 401 already shows the login
+const when = (t) => String(t ?? "").slice(0, 16).replace("T", " ");
+const statusColor = (st) => `var(--${st === "ok" ? "same" : st === "warn" ? "warn" : "diff"})`;
+function say(text, err) { $("#msg").innerHTML = text ? `<div class="msg ${err ? "err" : ""}">${esc(text)}</div>` : ""; }
+function showLogin(text) {
+  key = null; try { sessionStorage.removeItem("custmatch-key"); } catch (e) {}
+  document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
+  $("#login").classList.remove("hidden"); say(text, true);
+}
+$("#login-form").onsubmit = (e) => {
+  e.preventDefault(); key = $("#key").value.trim();
+  try { sessionStorage.setItem("custmatch-key", key); } catch (e) {}
+  $("#login").classList.add("hidden"); say(""); show("overview");
+};
+
+function show(view) {
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.view === view));
+  document.querySelectorAll(".view").forEach((v) => v.classList.toggle("hidden", v.id !== view));
+  if (!key) return showLogin();
+  ({review: loadReview, find: () => showSub(currentSub), overview: loadOverview, quality: loadQuality,
+    decisions: loadDecisions})[view]();
+}
+
+// ------------------------------------------------------------------ customers: search, browse, links
+let currentSub = "search";
+try { currentSub = localStorage.getItem("custmatch-sub") || "search"; } catch (e) {}
+document.querySelectorAll(".subnav button").forEach((b) => b.onclick = () => showSub(b.dataset.sub));
+function showSub(sub) {
+  currentSub = sub;
+  try { localStorage.setItem("custmatch-sub", sub); } catch (e) {}
+  document.querySelectorAll(".subnav button").forEach((b) => b.classList.toggle("on", b.dataset.sub === sub));
+  document.querySelectorAll(".sub").forEach((el) => el.classList.toggle("hidden", el.id !== "sub-" + sub));
+  $("#customer").innerHTML = ""; $("#l-explain").innerHTML = "";
+  if (sub === "search") $("#q").focus();
+  else if (sub === "browse") loadCustomers();
+  else if (sub === "links" && !$("#l-list").innerHTML) $("#l-form").requestSubmit();
+  else if (sub === "compare") $("#cmp-a").focus();
+}
+document.querySelectorAll("nav button").forEach((b) => b.onclick = () => show(b.dataset.view));
+
+// ------------------------------------------------------------------ the (i) explanations
+// Each: what the panel shows, how it is calculated, and what good looks like.
+const INFO = {
+  overview_stats: {
+    what: "The current batch run at a glance: how many source records it matched, into how many customers; how many uncertain pairs await review; and how many decisions stewards have made.",
+    how: "Records and customers come from the current run. To review: pairs in the run's review band (scores within 0.1 of the threshold) that no steward has decided yet. Decisions: every same or different recorded, ever; those the current run trained on are counted after the semicolon.",
+    good: "Customers somewhat fewer than records (each duplicate removed brings them closer); a review queue that shrinks from run to run as decisions teach the model; every decision made before the run counted as trained."},
+  health: {
+    what: "Checks that the service is doing its job: a recent successful run, no sharp jump in customers, a review queue under control, loads succeeding, real-time records reconciled.",
+    how: "Each check is ok, warn or fail against a limit the operator sets (CUSTMATCH_MAX_RUN_AGE_HOURS, CUSTMATCH_MAX_CUSTOMER_CHANGE, CUSTMATCH_MAX_REVIEW). The scheduler runs the same checks after every batch and sends anything not ok to the alert webhook.",
+    good: "Every check ok. A customers warning is not necessarily wrong - a new source merges many records - but look at the run's merges before trusting it."},
+  current_run: {
+    what: "The batch run whose results everyone sees: when it was published, the newest load of source records it included, its match threshold and any warnings it raised.",
+    how: "A batch run matches every live source record, keeps customer IDs stable from the previous run, and is published in one transaction: readers see the old run or the new one, never a mix.",
+    good: "Published recently (by your schedule) with no warnings. Warnings name a concrete problem - too few labels, a very large customer, a threshold that could not meet a precision target."},
+  loads: {
+    what: "Every delivery of source records: which source, full or incremental, when, and what it changed.",
+    how: "Each record's fields are hashed and compared with the stored version: new records are inserted, changed ones updated (the old version kept), and a full load marks records missing from it deleted.",
+    good: "Regular loads where most records are unchanged. A full load that deletes many records, or changes most of them, usually means a wrong or partial file - check before the next batch run."},
+  recent_decisions: {
+    what: "The latest same-person and different-people decisions, with who made them (the API key's name) and when.",
+    how: "A decision takes effect at once for those two records (same merges their customers; different stops them being merged, and splits them at the next run), and from the next batch run it also trains the model.",
+    good: "Decisions spread across stewards, mostly from the review queue. Many different decisions on links the model was confident about suggest a data problem worth raising."},
+  quality_stats: {
+    what: "The match threshold the run chose, how accurate the matching is estimated to be, and how many labelled pairs that estimate rests on.",
+    how: "Precision: record pairs sampled inside customers (chains included) and scored by models that did not see the labels in question - the share they call the same person. Recall: of labelled same-person pairs, the share placed in one customer by held-out models. The threshold is in the middle of the thresholds whose estimated F1 is within reach of the best.",
+    good: "Precision and recall both above 90% (95%+ is very good); 500 or more labelled pairs, with at least a few dozen matches drawn at random. Fewer than 200 labels and the run refuses to start."},
+  threshold: {
+    what: "How estimated precision, recall and F1 change as the match threshold moves; the dashed line is the threshold chosen.",
+    how: "For each threshold from 0.05 to 0.95, customers are formed from the links above it and scored against labelled pairs with models that did not see those labels (cross-fitting). Precision uses the in-customer sampling described under the run's precision.",
+    good: "A broad, flat top to F1 around the chosen threshold: small changes in the threshold change little. A sharp peak means results are sensitive to the threshold - more labels steady it."},
+  scores: {
+    what: "Every candidate pair the run compared, by its score from 0 (different people) to 1 (same person), on a log scale; the dashed line is the threshold.",
+    how: "Each bar counts the candidate pairs scoring in its tenth of the range. Candidate pairs are the pairs blocking proposed - records sharing a name, address, email, phone or similar key.",
+    good: "A U shape: most pairs clearly different, many clearly the same, and few in the middle. A bump near the threshold is a pile of uncertain pairs: the review queue, and more labels, help."},
+  importance: {
+    what: "Which evidence the model leans on most, across all pairs.",
+    how: "Impurity importance: how much each feature's splits improve the forest's 300 trees, as a share of the total. Features that carry the same information (email agrees, email weight) share the credit. A single pair's breakdown is its waterfall.",
+    good: "Several kinds of evidence near the top - names, contacts, dates, addresses - rather than one feature with most of the weight, which would make matching fragile when that field is missing or wrong."},
+  completeness: {
+    what: "For each source, the share of records with a value in each field, and the share of its records matched to another record.",
+    how: "A value is any non-blank field after cleaning. Matched: records in a customer with at least one other record.",
+    good: "Each source carries some strong identifiers - a name plus a date of birth, email or phone - on most records. A source low on both completeness and matched rate cannot match much; better data at the source helps more than any setting."},
+  common_values: {
+    what: "Per field: how many records have a value, how many distinct values there are, the share held by the single most common value, the share of values seen once, and the commonest values themselves.",
+    how: "Counted over the current run's records after cleaning (lower case, phone digits only).",
+    good: "No single value holding a large share of a field that should be personal (email, phone, date of birth). A value like none@none.com, 0000000000 or 01/01/1900 on many records is a placeholder: the model already gives junk contacts no weight, but cleaning them at source is better."},
+  unlinkables: {
+    what: "The share of records that could not be matched even to an exact copy of themselves - they hold too little information for any match.",
+    how: "2,000 records are sampled; each is scored against an identical copy of itself, and the curve shows the share scoring at or below each threshold. (Splink's unlinkables chart.)",
+    good: "Under about 5% at the threshold. These records - often a first name alone - stay single customers whatever duplicates they have; enriching them at source is the only fix."},
+  rarity: {
+    what: "How much it counts when two records agree on a name: agreeing on a rare name is strong evidence, on a common one weak.",
+    how: "Rarity = ln(records / records with that name). The model uses it as a feature for agreeing first names and surnames. The commonest names are listed first, then a middling one and the rarest.",
+    good: "Common names with low rarity, rare ones high: nothing to fix. A placeholder among the names - test, unknown, a single dot - should be blank at source."},
+  blocking: {
+    what: "How candidate pairs are found: records are only compared if they share a blocking key. Each key's pairs, how many no earlier key found, and blocks too large to use.",
+    how: "Keys are tried in order; New counts pairs not proposed by an earlier key. A key value shared by more records than the block limit (default 60) is skipped - comparing all of them would be slow and mostly wrong. Records never compared were only in skipped blocks.",
+    good: "No records never compared; a few skipped blocks of common names or placeholders is normal. Candidate pairs a small multiple of the records. A key adding very few new pairs costs little - and finds little."},
+  contacts: {
+    what: "Emails and phone numbers carried by many people's records, and how they are treated.",
+    how: "Junk: a placeholder pattern, or a value on 8 or more records with mostly different surnames and addresses - agreeing on it counts for nothing. Household: different people (first names) who share a surname or address - it counts for little. Weight is the evidence agreeing on the value carries.",
+    good: "Placeholders classed junk; family emails and home phones classed household. A real personal email classed junk would hide true matches: report it."},
+  runs: {
+    what: "Each batch run: when, how many records and customers, its threshold and estimated accuracy - and the model compared with the previous run's.",
+    how: "The figures are saved with each run. The comparison lists the current model's most important features with the same features' importance in the run before (Splink's parameter estimate comparisons).",
+    good: "Accuracy steady or improving run to run; customers changing in step with records; feature importances broadly stable. A large swing on similar data is worth a look."},
+  review: {
+    what: "Pairs the model is least sure about, most uncertain first, with both records side by side (agreeing fields highlighted) and why it scored them as it did.",
+    how: "The run's review band: candidate pairs scoring within 0.1 of the threshold, less pairs already decided. Same person or different people takes effect at once and trains the next batch run; skip leaves it for later.",
+    good: "The queue shrinks from run to run. Decide on the evidence shown: when you cannot tell, skip - a wrong decision teaches the model the wrong thing."},
+  waterfall: {
+    what: "Why the pair scored what it did: from the base rate, each feature moves the score up (green) or down (red), ending at the pair's score. The orange line is the threshold.",
+    how: "The forest's 300 trees each pass the pair from root to leaf; every step changes the predicted chance of a match and is credited to the feature that split there. Averaged over the trees, the steps add up exactly to the score. A last step shows the batch run's adjustments - the stability margin that keeps a pair near the previous run's decision, and overrides. Values shown as (missing) are blanks.",
+    good: "The large bars are evidence you would weigh the same way: the same email, date of birth, rare surname. A large bar for a missing value, or a common name, deserves a second look."},
+  golden: {
+    what: "The customer's best single view, one value per field chosen from its records.",
+    how: "Survivorship, set in the config: by default the most common value among the records, ties going to the most trusted source (source_priority) and then the longest value.",
+    good: "Values that match what you know of the person. A wrong golden value usually traces to one bad source record; the Records section below shows each record's values."},
+  graph: {
+    what: "The customer's records and the links between them that the batch run accepted.",
+    how: "Each line is a link scoring above the threshold: wider and greener the stronger. A dashed line is a bridge - remove it and the customer splits in two. Orange records arrived in real time after the batch run. Click a link for its waterfall.",
+    good: "Well-connected records with strong links. A customer held together by one weak bridge link may be two people: open that link's waterfall, and mark the two sides different if so."},
+  records: {
+    what: "Every source record in the customer, with its fields as delivered.",
+    how: "Records from the batch run, plus any matched in real time since (marked provisional until the next run confirms them).",
+    good: "Records you would agree are one person. If two are not, tick them and mark them different people."},
+  history: {
+    what: "What has happened to this customer, run by run.",
+    how: "Each batch run compares its customers with the previous run's: a customer is new, merged (customers joined by new evidence) or split (divided), with the customer IDs involved. IDs are kept wherever records overlap.",
+    good: "A quiet history. Repeated merges and splits of the same customers mean evidence close to the threshold - a decision settles it."},
+  search: {
+    what: "Find a customer from what you know about the person.",
+    how: "Matches a record key (source:record_id) or record id exactly, an email exactly, a phone by its last nine digits, or a name containing all the words typed, in any order. Searches the run's records and those added in real time.",
+    good: "One customer found opens straight away. Several customers for one person may be a missed match: compare them, and record a decision."},
+  browse: {
+    what: "Customers worth a second look, sorted by size, weakest link, bridge links, sparse links, or at random.",
+    how: "Links: accepted links between the customer's records. Weakest: the lowest-scoring of them. Bridges: links whose removal would split the customer. Density: links as a share of all possible pairs of its records.",
+    good: "Large customers dense with strong links. Few links, a weak weakest link or many bridges is how over-merging shows itself; a random sample checks the typical customer."},
+  review_filters: {
+    what: "Narrow the review queue: pairs with a record from one source, pairs the model matched or kept apart, a score range. List (bulk) shows 50 at a time with tick boxes; the note is saved with each decision you make.",
+    how: "Filters apply to the run's review band less decided pairs. Pairs you are shown are held from other stewards for 15 minutes, so two people never decide the same pair at once.",
+    good: "Split the work: one steward per source, or the model's matches first (a wrong match is usually costlier than a missed one). Keep notes short and specific - they are the audit trail."},
+  bulk: {
+    what: "Many pairs at once: tick the ones you are sure of and record them together.",
+    how: "Each ticked pair is recorded as its own decision (with your note), applied at once and used to train the next run, exactly as one at a time.",
+    good: "Use it for runs of obvious pairs - the same email and name across two sources, say. When a pair needs thought, open it one at a time with its waterfall."},
+  decisions: {
+    what: "Every decision on file: same person or different people, who made it, its note, and whether it is applied or awaiting approval.",
+    how: "Revoke withdraws a decision at once (a merge it made stays until the next batch run decides afresh). With four-eyes on (CUSTMATCH_FOUR_EYES=on), decisions wait until a different steward approves them; reject discards one. Download CSV exports the list as filtered.",
+    good: "Few revocations; proposals approved within a day. Decisions are the model's teaching material: a wrong one teaches a wrong lesson, so revoke mistakes."},
+  activity: {
+    what: "Who has done what in the last 30 days, how often each steward's decisions went against the model, and decisions per day.",
+    how: "From the steward log. Overturned: a same on a pair the model scored below the threshold, or a different on one above it, at the time of the decision.",
+    good: "Steady throughput. Overturn rates of 20-50% in the review band are normal - those are the pairs the model is unsure of; near 0% the queue may be too easy, near 100% worth a calibration check between stewards."},
+  merge: {
+    what: "Merge this customer with another you know to be the same person.",
+    how: "Recorded as a same between a record of each customer, so every later run keeps them together; applied now unless a different decision or a duplicate-free source forbids it - the preview says which. (Splink-style tools call this a manual link; MDM tools a manual merge.)",
+    good: "Merge on evidence you can point to; add a note. If the preview says it is forbidden, look at the decision in the way before overriding it."},
+  lineage: {
+    what: "Where each golden value comes from: every value the customer's records hold for the field, which records hold it, and which one won.",
+    how: "Survivorship picks the winner (by default the most common value, ties to the most trusted source, then the longest). A pinned value replaces it - now, and in every later batch run, for whichever customer holds the pinned record.",
+    good: "Golden values held by several records. Pin sparingly: a pin outlives the data that justified it, so note why."},
+  household: {
+    what: "Other customers who share this customer's household: different people at one address or sharing a family contact.",
+    how: "Households group customers that share an address, or a phone or email classed as a household contact, in the batch run.",
+    good: "Plausible households - a family, a share house. A household of dozens usually means a shared business address or placeholder."},
+  audit: {
+    what: "Every steward action on this customer's records: decisions, approvals, revocations, splits and pins, with who, when and the note.",
+    how: "From the steward log, which records every action through the dashboard and the API.",
+    good: "Actions with notes that explain them. Repeated back-and-forth on the same records is worth a conversation between stewards."},
+  possible: {
+    what: "Who might this person be? Type what you know and see the customers they would match, with scores - nothing is saved.",
+    how: "The details are cleaned as a record from the chosen source would be, blocked and scored against every record by the real-time matcher, with the batch run's rules applied.",
+    good: "One clear customer well above the threshold. Several close candidates suggest duplicates among them: compare them, and merge if they are one person."},
+  compare: {
+    what: "Any two records side by side, their score and why, and whether blocking would ever compare them.",
+    how: "The score and waterfall are the model's for the pair. Blocking: records are only compared when they share a key (a name, address, email, phone...) used by no more than the block limit of records. If they share none, they are never compared - the usual reason two records of one person are not matched.",
+    good: "For a missed match: if blocking never compares them, a decision fixes this pair, but a blocking key (extra_blocking in the config) fixes the pattern. If they are compared but score low, the waterfall shows which evidence is missing."},
+  links: {
+    what: "A random sample of the links the batch run accepted with scores in the band you choose - what the model accepts at each level of confidence.",
+    how: "Drawn at random from the current run's accepted links between the two scores. Click a link to see both records, its waterfall, and to mark them different or open the customer.",
+    good: "Links just above the threshold that still look like the same person. If many there look wrong, the threshold is too low or the model needs labels in that range: review them."}
+};
+const info = (k) => `<button class="info" type="button" data-info="${k}" title="What is this?" aria-label="What is this?">i</button>`;
+function infoBox(k) {
+  const x = INFO[k];
+  return `<div class="info-box" data-for="${k}"><h5>What it shows</h5><p>${esc(x.what)}</p><h5>How it is calculated</h5><p>${esc(x.how)}</p>
+    <h5>What good looks like</h5><p>${esc(x.good)}</p></div>`;
+}
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest("button.info");
+  if (!b) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const host = b.closest(".panel, .wf") || b.parentElement;
+  const open = host.querySelector(`.info-box[data-for="${b.dataset.info}"]`);
+  if (open) { open.remove(); b.classList.remove("on"); return; }
+  const anchor = b.closest("h2, h3, h4, label, .stats") || b;
+  anchor.insertAdjacentHTML("afterend", infoBox(b.dataset.info));
+  b.classList.add("on");
+});
+
+// ------------------------------------------------------------------ preview, then confirm (no browser dialogs)
+async function previewThen(target, path, body, label, done) {
+  try {
+    const pv = await api(path, {...body, dry_run: true});
+    $(target).innerHTML = `<div class="confirm"><b>Preview:</b> ${esc(pv.applied)}
+      <div class="actions"><button class="act diff" data-go>${esc(label)}</button><button class="act" data-cancel>Cancel</button></div></div>`;
+    $(target).querySelector("[data-cancel]").onclick = () => { $(target).innerHTML = ""; };
+    $(target).querySelector("[data-go]").onclick = async () => {
+      try { const r = await api(path, body); say(r.applied); $(target).innerHTML = ""; done && done(r); }
+      catch (e) { fail(e); }
+    };
+  } catch (e) { fail(e); }
+}
+const note = () => ($("#r-note")?.value || "").trim() || null;
+let sources = [];
+async function loadSources() {
+  if (sources.length) return sources;
+  try { sources = Object.keys((await api("/runs/current")).summary?.records_by_source || {}); } catch (e) {}
+  const opts = sources.map((x) => `<option>${esc(x)}</option>`).join("");
+  $("#r-source").innerHTML = `<option value="">any</option>${opts}`; $("#pm-source").innerHTML = opts;
+  return sources;
+}
+
+// ------------------------------------------------------------------ records side by side
+function fieldsTable(a, b) {
+  const names = [...new Set([...Object.keys(a || {}), ...Object.keys(b || {})])].filter((n) => n !== "record_id");
+  return names.map((n) => {
+    const x = (a || {})[n] ?? "", y = (b || {})[n] ?? "";
+    const same = x && y && String(x).toLowerCase() === String(y).toLowerCase();
+    return `<tr class="${same ? "same" : ""}"><th>${esc(n)}</th><td>${esc(x)}</td><td>${esc(y)}</td></tr>`;
+  }).join("");
+}
+
+// ------------------------------------------------------------------ review
+let queue = [], skipped = 0, reviewTotal = 0, held = 0;
+function reviewQuery(limit) {
+  const q = new URLSearchParams({limit, offset: skipped, min_score: $("#r-min").value || 0, max_score: $("#r-max").value || 1});
+  if ($("#r-source").value) q.set("source", $("#r-source").value);
+  if ($("#r-call").value) q.set("call", $("#r-call").value);
+  return "/review?" + q;
+}
+$("#r-filter").onsubmit = (e) => { e.preventDefault(); skipped = 0; loadReview(); };
+async function loadReview() {
+  await loadSources();
+  try {
+    const r = await api(reviewQuery($("#r-bulk").checked ? 50 : 20));
+    queue = r.pairs; reviewTotal = r.remaining; held = r.held_by_others || 0;
+    $("#r-bulk").checked ? renderBulk() : renderReview(r.remaining);
+  } catch (e) { fail(e); }
+}
+const heldNote = () => held ? ` <span class="muted">(${held} more held by other stewards)</span>` : "";
+function renderReview(remaining) {
+  const p = queue[0];
+  if (!p) {
+    $("#review-body").innerHTML = `<div class="panel"><h3 style="margin:0">Nothing left to review here${info("review")}</h3>
+      <p class="muted">${skipped ? `${skipped} skipped - reload to see them again. ` : ""}${held ? `${held} pair(s) are with other stewards. ` : ""}New uncertain pairs arrive with the next batch run.</p></div>`;
+    return;
+  }
+  const sameCustomer = p.a_customer && p.a_customer === p.b_customer;
+  $("#review-body").innerHTML = `
+    <div class="panel">
+      <h3 style="margin:0">${remaining} pair(s) to review, most uncertain first${heldNote()}${info("review")}</h3>
+      <div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;margin:8px 0">
+        <span class="score">${(p.score * 100).toFixed(0)}%</span>
+        <span class="pill ${p.linked ? "linked" : "apart"}">${p.linked ? "matched by the model" : "kept apart by the model"}</span>
+        <span class="muted">${sameCustomer ? "now in one customer (" + esc(p.a_customer) + ")" : "customers " + esc(p.a_customer) + " and " + esc(p.b_customer)}</span>
+      </div>
+      ${p.evidence ? `<div class="muted">Evidence: ${esc(p.evidence)}</div>` : ""}
+      <table class="kv" style="margin-top:12px">
+        <tr><th></th><td><b>${esc(p.a)}</b></td><td><b>${esc(p.b)}</b></td></tr>
+        ${fieldsTable(p.a_fields, p.b_fields)}
+      </table>
+      <div class="actions">
+        <button class="act same" id="b-same">Same person <kbd>S</kbd></button>
+        <button class="act diff" id="b-diff">Different people <kbd>D</kbd></button>
+        <button class="act" id="b-skip">Skip <kbd>K</kbd></button>
+      </div>
+      <div id="r-why"></div>
+    </div>`;
+  explainInto("#r-why", p.a, p.b, p.score);
+  $("#b-same").onclick = () => decide("same");
+  $("#b-diff").onclick = () => decide("different");
+  $("#b-skip").onclick = () => { queue.shift(); skipped++; queue.length ? renderReview(remaining) : loadReview(); };
+}
+function renderBulk() {
+  if (!queue.length) return renderReview(0);
+  const brief = (f) => esc(Object.entries(f || {}).filter(([n, v]) => v && n !== "record_id").map(([, v]) => v).join(" · "));
+  $("#review-body").innerHTML = `<div class="panel">
+    <h3 style="margin:0">${reviewTotal} pair(s) to review; the first ${queue.length}${heldNote()}${info("bulk")}</h3>
+    <table style="margin-top:8px"><tr><th><input type="checkbox" id="bk-all"></th><th>Record</th><th>Record</th><th class="num">Score</th></tr>
+    ${queue.map((p, k) => `<tr><td><input type="checkbox" data-bk="${k}"></td>
+      <td><b>${esc(p.a)}</b><br><span class="muted">${brief(p.a_fields)}</span></td>
+      <td><b>${esc(p.b)}</b><br><span class="muted">${brief(p.b_fields)}</span></td>
+      <td class="num">${(p.score * 100).toFixed(0)}%<br><span class="pill ${p.linked ? "linked" : "apart"}">${p.linked ? "matched" : "apart"}</span></td></tr>`).join("")}</table>
+    <div class="actions"><button class="act same" id="bk-same">Same person (ticked)</button><button class="act diff" id="bk-diff">Different people (ticked)</button></div>
+    <div id="bk-confirm"></div></div>`;
+  $("#bk-all").onchange = (e) => document.querySelectorAll("[data-bk]").forEach((b) => b.checked = e.target.checked);
+  const bulk = (decision) => {
+    const picked = [...document.querySelectorAll("[data-bk]:checked")].map((b) => queue[+b.dataset.bk]);
+    if (!picked.length) return say("Tick the pairs first.", true);
+    $("#bk-confirm").innerHTML = `<div class="confirm"><b>${picked.length} pair(s): ${decision === "same" ? "same person" : "different people"}.</b>
+      Each takes effect now and trains the next run.
+      <div class="actions"><button class="act diff" data-go>Confirm ${picked.length}</button><button class="act" data-cancel>Cancel</button></div></div>`;
+    $("#bk-confirm [data-cancel]").onclick = () => { $("#bk-confirm").innerHTML = ""; };
+    $("#bk-confirm [data-go]").onclick = async () => {
+      let ok = 0;
+      for (const p of picked) { try { await api("/overrides", {a: p.a, b: p.b, decision, note: note()}); ok++; } catch (e) { say(e.message, true); } }
+      say(`${ok} of ${picked.length} decision(s) recorded.`); loadReview();
+    };
+  };
+  $("#bk-same").onclick = () => bulk("same"); $("#bk-diff").onclick = () => bulk("different");
+}
+async function decide(decision) {
+  const p = queue[0]; if (!p) return;
+  try {
+    const r = await api("/overrides", {a: p.a, b: p.b, decision, note: note()});
+    say(`${decision === "same" ? "Same person" : "Different people"}: ${r.applied}`);
+    loadReview();
+  } catch (e) { fail(e); }
+}
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;           // Cmd-S saves the page; it does not decide
+  if ($("#review").classList.contains("hidden") || ["INPUT", "SELECT"].includes(e.target.tagName) || $("#r-bulk").checked) return;
+  if (e.key === "s") decide("same");
+  else if (e.key === "d") decide("different");
+  else if (e.key === "k") $("#b-skip")?.click();
+});
+
+// ------------------------------------------------------------------ find a customer
+$("#find-form").onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const rows = await api("/search?q=" + encodeURIComponent($("#q").value));
+    $("#results").innerHTML = rows.length ? `<table style="margin-top:12px">
+      <tr><th>Record</th><th>Name</th><th>Email</th><th>Customer</th></tr>
+      ${rows.map((r) => `<tr><td>${esc(r.key)}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td>
+        <td><a data-c="${esc(r.customer_id)}">${esc(r.customer_id)}</a></td></tr>`).join("")}</table>`
+      : `<p class="muted">No records found.</p>`;
+    $("#results").querySelectorAll("a[data-c]").forEach((a) => a.onclick = () => loadCustomer(a.dataset.c));
+    if (rows.length && new Set(rows.map((r) => r.customer_id)).size === 1) loadCustomer(rows[0].customer_id);   // one customer: open it
+  } catch (e) { fail(e); }
+};
+let picked = [];
+async function loadCustomer(id) {
+  try {
+    const [c, ev, lin, aud] = await Promise.all([api(`/customers/${seg(id)}?fields=true`), api(`/customers/${seg(id)}/events`),
+      api(`/customers/${seg(id)}/lineage`).catch(() => ({fields: []})), api(`/customers/${seg(id)}/audit`).catch(() => [])]);
+    if (c.merged_into) { say(`Customer ${id} was merged into ${c.merged_into} since the batch run.`); return loadCustomer(c.merged_into); }
+    picked = [];
+    const all = [...c.records, ...c.provisional_records];
+    const fld = lin.fields.filter((f) => f.values.length || f.golden);
+    $("#customer").innerHTML = `
+      <div class="panel">
+        <h2 style="margin-top:0">Customer ${esc(c.customer_id)}</h2>
+        <div class="muted">${all.length} record(s)${c.provisional_records.length ? `, ${c.provisional_records.length} changed since the batch run (provisional)` : ""};
+          household ${esc(c.household_id ?? "-")}; first seen in run ${esc(c.created_run ?? "-")}
+          ${c.moved_out.length ? `; split out since the run: ${c.moved_out.map(esc).join(", ")}` : ""}</div>
+        <div class="filters" style="margin-top:12px">
+          <label>Merge with customer <input type="number" id="m-other" style="width:110px"></label>
+          <button class="act" id="m-go">Preview merge</button>${info("merge")}
+        </div>
+        <div id="m-confirm"></div>
+        <h3>Golden record${info("golden")}</h3>
+        <table class="kv">${fld.map((f) => `<tr><th>${esc(f.field)}${f.pinned ? ' <span class="pill">pinned</span>' : ""}</th>
+          <td>${esc(f.golden ?? "")}${f.values.length > 1 || f.pinned ? ` <a data-lin="${esc(f.field)}">${f.values.length} value(s)</a>` : ""}</td></tr>
+          <tr class="hidden" data-lin-row="${esc(f.field)}"><td colspan="2"><table>
+            ${f.values.map((v) => `<tr><td class="${v.won ? "won" : ""}">${esc(v.value)}${v.won ? " (golden)" : ""}</td>
+              <td class="muted">${v.records.map(esc).join(", ")}</td>
+              <td><button class="act small" data-pin='${esc(JSON.stringify({record_key: v.records[0], field: f.field, value: v.value}))}'>Pin</button></td></tr>`).join("")}
+            ${f.pinned ? `<tr><td colspan="3">Pinned by ${esc(c.pinned[f.field].by)} <button class="act small" data-unpin="${c.pinned[f.field].id}">Unpin</button></td></tr>` : ""}
+          </table></td></tr>`).join("")}</table>
+        <p class="muted">Click a field's values to see which records hold each one; pin a value to make it the golden value, in this and every later run.${info("lineage")}</p>
+        <h3>Links${info("graph")}</h3>
+        <div id="c-graph" class="muted">Loading the links...</div>
+        <div id="c-why"></div>
+        <h3>Records${info("records")}</h3>
+        <p class="muted">Split a record out to make it a customer of its own now; or tick two records that are different people.</p>
+        <div class="grid2">${all.map((k) => `
+          <div class="rec panel"><h3><label><input type="checkbox" data-k="${esc(k)}"> ${esc(k)}</label>
+            ${c.provisional_records.includes(k) ? '<span class="pill">provisional</span>' : ""}
+            ${all.length > 1 ? `<button class="act small diff" data-split="${esc(k)}" style="float:right">Split out</button>` : ""}</h3>
+            <div data-split-confirm="${esc(k)}"></div>
+            <table class="kv">${Object.entries((c.record_fields || {})[k] || {}).filter(([n, v]) => v && n !== "record_id")
+              .map(([n, v]) => `<tr><th>${esc(n)}</th><td>${esc(v)}</td></tr>`).join("")}</table></div>`).join("")}</div>
+        <div class="actions"><button class="act diff" id="b-split" disabled>These two are different people</button>
+          <button class="act" id="b-compare" disabled>Compare these two</button></div>
+        <div id="pair-confirm"></div>
+        ${c.household.length ? `<h3>Household${info("household")}</h3><table>
+          ${c.household.map((h) => `<tr class="row-click" data-c="${esc(h.customer_id)}"><td><a>${esc(h.customer_id)}</a></td><td>${esc(h.name)}</td>
+            <td class="num">${h.records} record(s)</td></tr>`).join("")}</table>` : ""}
+        <h3>History${info("history")}</h3>
+        ${ev.length ? `<table><tr><th>When</th><th>Event</th><th>Detail</th></tr>${ev.map((x) =>
+          `<tr><td>${esc(when(x.at))}</td><td>${esc(x.event)} ${esc(x.other_customer_ids || "")}</td><td>${esc(x.detail)}</td></tr>`).join("")}</table>`
+          : `<p class="muted">No events.</p>`}
+        <h3>Steward actions${info("audit")}</h3>
+        ${aud.length ? `<table><tr><th>When</th><th>Who</th><th>Action</th><th>Records</th><th>Note</th></tr>${aud.map((x) =>
+          `<tr><td>${esc(when(x.at))}</td><td>${esc(x.actor)}</td>
+            <td>${esc(x.action)}${x.detail?.decision ? ": " + esc(x.detail.decision) : ""}${x.detail?.field ? ": " + esc(x.detail.field) + " = " + esc(x.detail.value) : ""}</td>
+            <td>${esc(x.a || "")}${x.b ? "<br>" + esc(x.b) : ""}</td><td>${esc(x.note || "")}</td></tr>`).join("")}</table>`
+          : `<p class="muted">No steward has acted on this customer.</p>`}
+      </div>`;
+    drawGraph(id);
+    $("#l-explain").innerHTML = "";
+    $("#customer").scrollIntoView({behavior: "smooth", block: "start"});
+    const reload = () => loadCustomer(id);
+    $("#customer").querySelectorAll("[data-lin]").forEach((a) => a.onclick = () =>
+      $(`#customer [data-lin-row="${CSS.escape(a.dataset.lin)}"]`).classList.toggle("hidden"));
+    $("#customer").querySelectorAll("[data-pin]").forEach((b) => b.onclick = async () => {
+      try { const r = await api("/pins", {...JSON.parse(b.dataset.pin), note: note()}); say(`Pinned ${r.pinned} = ${r.value}`); reload(); }
+      catch (e) { fail(e); }
+    });
+    $("#customer").querySelectorAll("[data-unpin]").forEach((b) => b.onclick = async () => {
+      try { await api(`/pins/${seg(b.dataset.unpin)}`, null, "DELETE"); say("Unpinned"); reload(); }
+      catch (e) { fail(e); }
+    });
+    $("#customer").querySelectorAll("[data-split]").forEach((b) => b.onclick = () =>
+      previewThen(`#customer [data-split-confirm="${CSS.escape(b.dataset.split)}"]`, "/split", {record_key: b.dataset.split, note: note()},
+                  "Split it out", (r) => r.to_customer ? loadCustomer(r.from_customer) : reload()));
+    $("#customer").querySelectorAll("tr[data-c]").forEach((tr) => tr.onclick = () => loadCustomer(tr.dataset.c));
+    $("#m-go").onclick = () => {
+      const other = +$("#m-other").value;
+      if ($("#m-other").value.trim() === "") return say("Enter the other customer's number.", true);
+      previewThen("#m-confirm", `/customers/${seg(id)}/merge`, {other, note: note()}, "Merge", reload);
+    };
+    $("#customer").querySelectorAll("input[data-k]").forEach((box) => box.onchange = () => {
+      picked = [...$("#customer").querySelectorAll("input[data-k]:checked")].map((b) => b.dataset.k);
+      $("#b-split").disabled = $("#b-compare").disabled = picked.length !== 2;
+    });
+    $("#b-split").onclick = () => previewThen("#pair-confirm", "/overrides", {a: picked[0], b: picked[1], decision: "different", note: note()},
+                                              "Record: different people", reload);
+    $("#b-compare").onclick = () => { showSub("compare"); $("#cmp-a").value = picked[0]; $("#cmp-b").value = picked[1]; $("#cmp-form").requestSubmit(); };
+  } catch (e) { fail(e); }
+}
+
+// ------------------------------------------------------------------ find possible matches, compare
+$("#pm-form").onsubmit = async (e) => {
+  e.preventDefault();
+  await loadSources();
+  const fields = {first_name: $("#pm-first").value, last_name: $("#pm-last").value, date_of_birth: $("#pm-dob").value,
+                  email: $("#pm-email").value, phone: $("#pm-phone").value};
+  try {
+    const r = await api("/possible", {source: $("#pm-source").value || sources[0], fields});
+    $("#pm-out").innerHTML = `<p>${r.customer_id ? `Best match: <a data-c="${esc(r.customer_id)}">customer ${esc(r.customer_id)}</a>` : "No customer scores above the threshold."}
+      ${r.merges?.length ? ` (also links to ${r.merges.map(esc).join(", ")})` : ""}</p>
+      ${r.evidence?.length ? `<table><tr><th>Record</th><th>Customer</th><th class="num">Score</th></tr>${r.evidence.map((x) =>
+        `<tr><td>${esc(x.record)}</td><td><a data-c="${esc(x.customer_id)}">${esc(x.customer_id)}</a></td><td class="num">${(x.score * 100).toFixed(0)}%</td></tr>`).join("")}</table>` : ""}
+      ${r.rules?.length ? `<p class="muted">${r.rules.map(esc).join("; ")}</p>` : ""}
+      <p class="muted">Nothing was saved: this only asks who the person might be.</p>`;
+    $("#pm-out").querySelectorAll("a[data-c]").forEach((a) => a.onclick = () => loadCustomer(a.dataset.c));
+  } catch (err) { fail(err); }
+};
+$("#cmp-form").onsubmit = async (e) => {
+  e.preventDefault();
+  const a = $("#cmp-a").value.trim(), b = $("#cmp-b").value.trim();
+  try {
+    const r = await api(`/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
+    const row = (label, f) => `<tr><th>${label}</th><td>${esc(r.a_record[f])}</td><td>${esc(r.b_record[f])}</td></tr>`;
+    const bl = r.blocking;
+    $("#cmp-out").innerHTML = `<div style="margin-top:12px">
+      <h3>${(r.score * 100).toFixed(0)}% - ${r.score > r.threshold ? "above" : "below"} the threshold; customers ${esc(r.a_customer)} and ${esc(r.b_customer)}</h3>
+      <table class="kv"><tr><th></th><td><b>${esc(a)}</b></td><td><b>${esc(b)}</b></td></tr>
+        ${row("name", "name")}${row("email", "email")}${row("phone", "phone")}${row("date of birth", "date_of_birth")}${row("street", "street")}</table>
+      <p><b>Blocking:</b> ${bl.compared ? "these two are compared - they share a usable blocking key." :
+        bl.shared_keys.length ? `they share a key, but every shared block is too large (over ${bl.max_block} records) to compare: they are never compared.` :
+        "they share no blocking key, so they are never compared - which is why they are not matched, whatever their score."}
+        ${bl.shared_keys.map((k) => `<span class="pill">${esc(k.key)}: ${k.records_sharing_it} records${k.usable ? "" : ", skipped"}</span>`).join(" ")}</p>
+      ${r.decision ? `<p>Decision on file: <b>${esc(r.decision.decision)}</b> by ${esc(r.decision.created_by)} (${esc(r.decision.status)})</p>` : ""}
+      <div class="actions"><button class="act same" data-d="same">Same person</button><button class="act diff" data-d="different">Different people</button></div>
+      <div id="cmp-confirm"></div>${waterfall(r)}</div>`;
+    $("#cmp-out").querySelectorAll("[data-d]").forEach((btn) => btn.onclick = () =>
+      previewThen("#cmp-confirm", "/overrides", {a, b, decision: btn.dataset.d, note: note()}, "Record the decision"));
+  } catch (err) { fail(err); }
+};
+
+// ------------------------------------------------------------------ decisions and steward activity
+async function loadDecisions() {
+  try {
+    const st = await api("/stewards");
+    const days = Object.entries(st.decisions_per_day), top = Math.max(1, ...days.map(([, n]) => n));
+    $("#activity").innerHTML = `${st.four_eyes ? `<p><b>${st.awaiting_approval}</b> decision(s) awaiting approval (four-eyes is on: a decision applies when a second steward approves it).</p>` : ""}
+      ${st.stewards.length ? `<table><tr><th>Steward</th><th class="num">Decisions</th><th class="num">Same</th><th class="num">Different</th>
+        <th class="num">Overturned the model</th><th class="num">Approved</th><th class="num">Revoked</th><th class="num">Splits</th><th class="num">Pins</th></tr>
+        ${st.stewards.map((x) => `<tr><td>${esc(x.steward)}</td><td class="num">${x.decisions}</td><td class="num">${x.same}</td><td class="num">${x.different}</td>
+          <td class="num">${x.overturned_model ?? "-"}${x.overturned_model != null ? "%" : ""}</td><td class="num">${x.approved}</td>
+          <td class="num">${x.revoked}</td><td class="num">${x.splits}</td><td class="num">${x.pins}</td></tr>`).join("")}</table>` : '<p class="muted">No steward activity yet.</p>'}
+      ${days.length ? `<div style="display:flex;align-items:flex-end;gap:3px;height:60px;margin-top:12px">${days.map(([d, n]) =>
+        `<div title="${esc(d)}: ${n}" style="flex:1;max-width:24px;background:var(--accent);height:${Math.max(4, 60 * n / top)}px;border-radius:2px"></div>`).join("")}</div>
+        <p class="muted">Decisions per day.</p>` : ""}`;
+  } catch (e) { fail(e); }
+  loadDecisionList();
+}
+function decisionQuery() {
+  const q = new URLSearchParams();
+  for (const [k, id] of [["status", "#d-status"], ["decision", "#d-decision"], ["by", "#d-by"], ["q", "#d-q"]]) if ($(id).value) q.set(k, $(id).value);
+  return q;
+}
+$("#d-filter").onsubmit = (e) => { e.preventDefault(); loadDecisionList(); };
+$("#d-csv").onclick = async () => {
+  try {
+    const q = decisionQuery(); q.set("format", "csv");
+    const r = await fetch("/overrides?" + q, {headers: {"Authorization": "Bearer " + key}});
+    const url = URL.createObjectURL(await r.blob());
+    const a = Object.assign(document.createElement("a"), {href: url, download: "decisions.csv"});
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  } catch (e) { say(e.message, true); }
+};
+async function loadDecisionList() {
+  try {
+    const rows = await api("/overrides?" + decisionQuery());
+    $("#d-list").innerHTML = rows.length ? `<p class="muted">${rows.length} decision(s), newest first.</p><table>
+      <tr><th>Records</th><th>Decision</th><th>Status</th><th>By</th><th>Note</th><th></th></tr>
+      ${rows.slice(0, 300).map((o) => `<tr><td>${esc(o.a)}<br>${esc(o.b)}</td><td>${esc(o.decision)}</td>
+        <td>${o.status === "proposed" ? '<span class="pill">awaiting approval</span>' : "applied" + (o.approved_by ? `<br><span class="muted">approved by ${esc(o.approved_by)}</span>` : "")}</td>
+        <td>${esc(o.created_by)}<br><span class="muted">${esc(when(o.created_at))}</span></td><td>${esc(o.note || "")}</td>
+        <td style="white-space:nowrap">${o.status === "proposed" ? `<button class="act small same" data-approve="${o.id}">Approve</button>
+          <button class="act small diff" data-reject="${o.id}">Reject</button>` : `<button class="act small" data-revoke="${o.id}">Revoke</button>`}
+          <button class="act small" data-cmp='${esc(JSON.stringify([o.a, o.b]))}'>Compare</button></td></tr>`).join("")}</table>`
+      : '<p class="muted">No decisions match.</p>';
+    const act = (sel, fn) => $("#d-list").querySelectorAll(sel).forEach((b) => b.onclick = async () => {
+      try { const r = await fn(b); say(r.applied); loadDecisions(); } catch (e) { fail(e); }
+    });
+    act("[data-approve]", (b) => api(`/overrides/${seg(b.dataset.approve)}/approve`, {note: null}));
+    act("[data-reject]", (b) => api(`/overrides/${seg(b.dataset.reject)}/reject`, {note: null}));
+    act("[data-revoke]", (b) => api(`/overrides/${seg(b.dataset.revoke)}`, null, "DELETE"));
+    $("#d-list").querySelectorAll("[data-cmp]").forEach((b) => b.onclick = () => {
+      const [x, y] = JSON.parse(b.dataset.cmp); show("find"); showSub("compare"); $("#cmp-a").value = x; $("#cmp-b").value = y; $("#cmp-form").requestSubmit();
+    });
+  } catch (e) { fail(e); }
+}
+
+// ------------------------------------------------------------------ overview
+async function loadOverview() {
+  try {
+    const [run, loads, ov, rv, st] = await Promise.all([api("/runs/current"), api("/loads"), api("/overrides"),
+                                                          api("/review?limit=0"), api("/status")]);
+    const s = run.summary || {};
+    const same = ov.filter((o) => o.decision === "same").length;
+    $("#overview-body").innerHTML = `
+      <div class="panel stats">${info("overview_stats")}
+        <div class="stat"><span class="muted">Records</span><b>${(s.records ?? 0).toLocaleString()}</b></div>
+        <div class="stat"><span class="muted">Customers</span><b>${(s.customers ?? 0).toLocaleString()}</b></div>
+        <div class="stat"><span class="muted">To review</span><b>${rv.remaining.toLocaleString()}</b></div>
+        <div class="stat"><span class="muted">Decisions</span><b>${ov.length}</b><span class="muted">${same} same, ${ov.length - same} different;
+          ${(s.labels_from_decisions ?? 0)} trained the current model</span></div>
+      </div>
+      <div class="panel"><h3 style="margin-top:0">Health: <span style="color:${statusColor(st.status)}">${esc(st.status)}</span>${info("health")}</h3>
+        <table>${st.checks.map((c) => `<tr><td style="width:90px;color:${statusColor(c.status)}">${esc(c.status)}</td>
+          <td style="width:110px">${esc(c.check)}</td><td>${esc(c.detail)}</td></tr>`).join("")}</table></div>
+      <div class="panel"><h3 style="margin-top:0">Current run ${esc(run.id)}${info("current_run")}</h3>
+        <div class="muted">Published ${esc(when(run.published_at))}, from loads up to ${esc(run.input_load_id)};
+          threshold ${esc(s.threshold)}</div>
+        ${(s.warnings || []).map((w) => `<div class="msg">${esc(w)}</div>`).join("")}</div>
+      <div class="panel"><h3 style="margin-top:0">Loads${info("loads")}</h3><table>
+        <tr><th>#</th><th>Source</th><th>Mode</th><th>When</th><th>In / new / changed / deleted</th></tr>
+        ${loads.slice(-15).reverse().map((l) => `<tr><td>${l.id}</td><td>${esc(l.source)}</td><td>${esc(l.mode)}</td>
+          <td>${esc(when(l.started_at))}</td><td>${l.rows_in} / ${l.inserted} / ${l.updated} / ${l.deleted}</td></tr>`).join("")}
+      </table></div>
+      <div class="panel"><h3 style="margin-top:0">Recent decisions${info("recent_decisions")}</h3><table>
+        <tr><th>Records</th><th>Decision</th><th>By</th></tr>
+        ${ov.slice(0, 15).map((o) => `<tr><td>${esc(o.a)}<br>${esc(o.b)}</td><td>${esc(o.decision)}</td>
+          <td>${esc(o.created_by)}<br><span class="muted">${esc(when(o.created_at))}</span></td></tr>`).join("")}
+      </table></div>`;
+  } catch (e) { fail(e); }
+}
+
+// ------------------------------------------------------------------ why a pair scores what it scores
+async function explainInto(target, a, b, score) {
+  try {
+    const e = await api(`/explain?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}${score != null ? "&score=" + score : ""}`);
+    $(target).innerHTML = waterfall(e);
+  } catch (err) { if (err.message !== "401") $(target).innerHTML = `<p class="muted">${esc(err.message)}</p>`; }
+}
+function waterfall(e) {
+  // the forest's score built up from the base rate, one feature at a time (largest effects first)
+  if (!e.contributions) return `<p class="muted">Score ${e.score}: this model cannot be broken down by feature.</p>`;
+  const shown = e.contributions.slice(0, 10);
+  const rest = e.contributions.slice(10).reduce((t, c) => t + c.contribution, 0);
+  if (Math.abs(rest) >= 0.001) shown.push({feature: `${e.contributions.length - 10} other features`, value: "", contribution: rest});
+  if (e.adjustment) shown.push(e.adjustment);
+  let at = e.base;
+  const pct = (v) => `${Math.max(0, Math.min(100, v * 100))}%`;
+  const th = `<span class="wf-th" style="left:${pct(e.threshold)}" title="threshold ${e.threshold}"></span>`;
+  const rows = shown.map((c) => {
+    const from = at, to = at + c.contribution; at = to;
+    const lo = Math.min(from, to), w = Math.abs(to - from);
+    const val = c.value === "" ? "" : c.value === -1 ? " <span class=\"muted\">(missing)</span>" : ` <span class="muted">= ${esc(c.value)}</span>`;
+    return `<div class="wf-row"><span>${esc(c.feature)}${val}</span>
+      <span class="wf-track">${th}<span class="wf-bar ${c.contribution >= 0 ? "up" : "down"}" style="left:${pct(lo)};width:${pct(w)}"></span></span>
+      <span class="num">${c.contribution >= 0 ? "+" : ""}${(c.contribution * 100).toFixed(1)}</span></div>`;
+  }).join("");
+  return `<div class="wf"><h4 style="margin:12px 0 4px">Why ${(e.score * 100).toFixed(0)}%${info("waterfall")}</h4>
+    <p class="muted" style="margin:0 0 6px">From the base rate, each feature moves the score (percentage points); the line is the threshold.
+      ${e.twin_guard ? "<b>Twin guard:</b> these look like twins, so they are kept below the threshold." : ""}</p>
+    <div class="wf-row"><span>base rate</span><span class="wf-track">${th}<span class="wf-bar base" style="left:0;width:${pct(e.base)}"></span></span>
+      <span class="num">${(e.base * 100).toFixed(1)}</span></div>
+    ${rows}
+    <div class="wf-row"><b>score</b><span class="wf-track">${th}<span class="wf-bar ${e.score > e.threshold ? "up" : "down"}" style="left:0;width:${pct(e.score)}"></span></span>
+      <b class="num">${(e.score * 100).toFixed(1)}</b></div></div>`;
+}
+
+// ------------------------------------------------------------------ a customer's records as a network
+async function drawGraph(id) {
+  try {
+    const g = await api(`/customers/${seg(id)}/graph`);
+    const n = g.nodes.length, W = 640, H = n > 8 ? 440 : 320, R = Math.min(W, H) / 2 - 64;
+    const pos = {};
+    const above = {};
+    g.nodes.forEach((v, k) => {
+      const t = 2 * Math.PI * k / n - Math.PI / 2;
+      pos[v.key] = n === 1 ? [W / 2, H / 2] : [W / 2 + R * Math.cos(t) * 1.4, H / 2 + R * Math.sin(t)];
+      above[v.key] = n > 1 && Math.sin(t) < -0.3;          // labels outside the circle, away from the links
+    });
+    const color = (s) => s >= 0.9 ? "var(--same)" : s >= 0.75 ? "var(--accent)" : "var(--warn)";
+    const edges = g.edges.filter((e) => pos[e.a] && pos[e.b]).map((e, k) => {
+      const [x1, y1] = pos[e.a], [x2, y2] = pos[e.b];
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color(e.score)}" stroke-width="${1 + 5 * e.score}"
+        ${e.is_bridge ? 'stroke-dasharray="6 4"' : ""} data-e="${k}" style="cursor:pointer"><title>${esc(e.score)} ${esc(e.evidence)}</title></line>`;
+    }).join("");
+    const nodes = g.nodes.map((v) => {
+      const [x, y] = pos[v.key];
+      return `<circle cx="${x}" cy="${y}" r="8" fill="${v.provisional ? "var(--warn)" : "var(--accent)"}"><title>${esc(v.key)}</title></circle>
+        <text x="${x}" y="${above[v.key] ? y - 27 : y + 22}" text-anchor="middle">${esc(v.key)}</text>
+        <text x="${x}" y="${above[v.key] ? y - 14 : y + 35}" text-anchor="middle" style="fill:var(--muted)">${esc(v.name)}</text>`;
+    }).join("");
+    $("#c-graph").innerHTML = `<div class="scroll-x"><svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;min-width:360px">${edges}${nodes}</svg></div>
+      <p class="muted">Line width and colour: the link's score (green 0.9+, blue 0.75+, amber below); dashed: a bridge link (removing it splits the customer).
+        Orange records arrived after the batch run. Click a link to see why it scored what it did.</p>
+      <table><tr><th>Link</th><th class="num">Score</th><th>Evidence</th></tr>
+      ${g.edges.map((e, k) => `<tr class="row-click" data-e="${k}"><td>${esc(e.a)} - ${esc(e.b)}${e.is_bridge ? ' <span class="pill">bridge</span>' : ""}</td>
+        <td class="num">${e.score.toFixed(3)}</td><td>${esc(e.evidence)}</td></tr>`).join("")}</table>`;
+    $("#c-graph").querySelectorAll("[data-e]").forEach((el) => el.onclick = () => {
+      const e = g.edges[+el.dataset.e]; explainInto("#c-why", e.a, e.b);
+    });
+  } catch (err) { if (err.message !== "401") $("#c-graph").innerHTML = `<p class="muted">${esc(err.message)}</p>`; }
+}
+
+// ------------------------------------------------------------------ customers to inspect
+$("#c-order").onchange = () => loadCustomers();
+async function loadCustomers() {
+  try {
+    const r = await api(`/customers?order=${seg($("#c-order").value)}&limit=25`);
+    $("#c-list").innerHTML = `<p class="muted">${r.customers_with_several_records.toLocaleString()} customers hold two or more records.</p>
+      <table><tr><th>Customer</th><th class="num">Records</th><th class="num">Links</th><th class="num">Weakest</th>
+        <th class="num">Bridges</th><th class="num">Density</th></tr>
+      ${r.customers.map((c) => `<tr class="row-click" data-c="${esc(c.customer_id)}"><td><a>${esc(c.customer_id)}</a></td>
+        <td class="num">${c.records}</td><td class="num">${c.links}</td><td class="num">${c.weakest ?? "-"}</td>
+        <td class="num">${c.bridges}</td><td class="num">${c.density ?? "-"}</td></tr>`).join("")}</table>
+      <p class="muted">Links below the record count minus one mean records joined by a steward's "same" or a trusted ID rather than a scored link.
+        Density: links as a share of all possible pairs.</p>`;
+    $("#c-list").querySelectorAll("tr[data-c]").forEach((tr) => tr.onclick = () => loadCustomer(tr.dataset.c));
+  } catch (e) { fail(e); }
+}
+
+// ------------------------------------------------------------------ links by score band
+$("#l-form").onsubmit = async (ev) => {
+  ev.preventDefault();
+  try {
+    const r = await api(`/links?min=${seg($("#l-min").value)}&max=${seg($("#l-max").value)}&limit=15`);
+    const brief = (x) => `<b>${esc(x.key)}</b><br>${esc(x.name)}<br><span class="muted">${esc([x.email, x.phone, x.date_of_birth, x.street].filter(Boolean).join(" · "))}</span>`;
+    $("#l-list").innerHTML = `<p class="muted">${r.total.toLocaleString()} accepted links in this band (threshold ${r.threshold}); a random ${r.links.length}:</p>
+      <table><tr><th>Record</th><th>Record</th><th class="num">Score</th><th>Evidence</th></tr>
+      ${r.links.map((l, k) => `<tr class="row-click" data-l="${k}"><td>${brief(l.a)}</td><td>${brief(l.b)}</td>
+        <td class="num">${l.score.toFixed(3)}${l.is_bridge ? '<br><span class="pill">bridge</span>' : ""}</td><td>${esc(l.evidence)}</td></tr>`).join("")}</table>`;
+    $("#l-list").querySelectorAll("tr[data-l]").forEach((tr) => tr.onclick = () => {
+      const l = r.links[+tr.dataset.l];
+      $("#customer").innerHTML = "";
+      const row = (label, f) => `<tr><th>${label}</th><td>${esc(l.a[f])}</td><td>${esc(l.b[f])}</td></tr>`;
+      $("#l-explain").innerHTML = `<div class="panel"><h3 style="margin-top:0">Link in customer ${esc(l.customer_id)}: ${(l.score * 100).toFixed(0)}%</h3>
+        <table class="kv"><tr><th></th><td><b>${esc(l.a.key)}</b></td><td><b>${esc(l.b.key)}</b></td></tr>
+          ${row("name", "name")}${row("email", "email")}${row("phone", "phone")}${row("date of birth", "date_of_birth")}${row("street", "street")}</table>
+        <div class="actions"><button class="act diff" id="l-diff">Different people</button>
+          <button class="act" id="l-open">Open customer ${esc(l.customer_id)}</button></div>
+        <div id="l-why"></div></div>`;
+      explainInto("#l-why", l.a.key, l.b.key);
+      $("#l-explain").scrollIntoView({behavior: "smooth", block: "start"});
+      $("#l-open").onclick = () => { $("#l-explain").innerHTML = ""; loadCustomer(l.customer_id); };
+      $("#l-diff").onclick = async () => {
+        try { const o = await api("/overrides", {a: l.a.key, b: l.b.key, decision: "different"}); say(`Different people: ${o.applied}`); }
+        catch (e) { fail(e); }
+      };
+    });
+  } catch (e) { fail(e); }
+};
+
+// ------------------------------------------------------------------ the model, the threshold and the data
+function lineChart(sweep, th) {
+  const ts = Object.keys(sweep).map(Number).sort((a, b) => a - b);
+  const W = 520, H = 220, L = 36, B = 24, x = (t) => L + (W - L - 8) * t, y = (v) => H - B - (H - B - 8) * v / 100;
+  const line = (k, c) => `<polyline fill="none" stroke="${c}" stroke-width="2" points="${ts.map((t) => `${x(t)},${y(sweep[String(t)][k])}`).join(" ")}"/>`;
+  const grid = [0, 25, 50, 75, 100].map((v) => `<line x1="${L}" x2="${W - 8}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="4" y="${y(v) + 4}">${v}</text>`).join("");
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => `<text x="${x(t)}" y="${H - 6}" text-anchor="middle">${t}</text>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px">${grid}${ticks}
+    <line x1="${x(th)}" x2="${x(th)}" y1="8" y2="${H - B}" stroke="var(--warn)" stroke-dasharray="4 3"/>
+    ${line("precision", "var(--accent)")}${line("recall", "var(--same)")}${line("f1", "var(--ink)")}</svg>
+    <p class="muted"><span style="color:var(--accent)">precision</span>, <span style="color:var(--same)">recall</span> and F1 (%) against the threshold,
+      estimated from the labels with held-out models; dashed: the threshold chosen (${th}).</p>`;
+}
+function histogram(counts, th) {
+  if (!counts) return "";
+  const W = 520, H = 160, n = counts.length, max = Math.log10(Math.max(...counts) + 1), bw = (W - 40) / n;
+  const bars = counts.map((c, k) => { const h = (H - 30) * Math.log10(c + 1) / max;
+    return `<rect x="${36 + k * bw}" y="${H - 20 - h}" width="${bw - 2}" height="${h}" fill="var(--accent)"><title>${(k / n).toFixed(1)}-${((k + 1) / n).toFixed(1)}: ${c.toLocaleString()} pairs</title></rect>`; }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px">${bars}
+    <line x1="${36 + th * (W - 40)}" x2="${36 + th * (W - 40)}" y1="0" y2="${H - 20}" stroke="var(--warn)" stroke-dasharray="4 3"/>
+    ${[0, 0.5, 1].map((t) => `<text x="${36 + t * (W - 40)}" y="${H - 6}" text-anchor="middle">${t}</text>`).join("")}</svg>
+    <p class="muted">Candidate pairs by score (log scale); dashed: the threshold. A good model leaves few pairs in the middle.</p>`;
+}
+const heat = (v) => `<td class="heat" style="background:color-mix(in srgb, var(--same) ${Math.round(v * 0.45)}%, transparent)">${v}</td>`;
+function cumulative(rows) {
+  // Splink's cumulative comparisons chart: each blocking key's pairs, and how many no earlier key found
+  if (!rows || !rows.length) return "";
+  const total = rows.reduce((t, r) => Math.max(t, r.cumulative ?? 0), 0) || rows.reduce((t, r) => t + r.pairs, 0);
+  return `<table><tr><th>Key</th><th class="num">Pairs</th><th class="num">New</th><th style="width:35%">Cumulative</th></tr>
+    ${rows.map((r) => `<tr><td>${esc(r.key)}${r.blocks_skipped ? ` <span class="muted">(${r.blocks_skipped} blocks skipped)</span>` : ""}</td>
+      <td class="num">${r.pairs.toLocaleString()}</td><td class="num">${r.new == null ? "-" : r.new.toLocaleString()}</td>
+      <td>${r.cumulative == null ? "" : `<div class="wf-track"><span class="wf-bar" style="left:0;width:${100 * (r.cumulative - r.new) / total}%;background:var(--line)"></span>
+        <span class="wf-bar" style="left:${100 * (r.cumulative - r.new) / total}%;width:${100 * r.new / total}%;background:var(--accent)"></span></div>`}</td></tr>`).join("")}</table>
+    <p class="muted">New: pairs no earlier key proposed. A key that adds few new pairs costs little but also finds little.</p>`;
+}
+function unlinkablesChart(u) {
+  if (!u) return '<p class="muted">Not available for this model.</p>';
+  const ts = Object.keys(u.curve).map(Number), W = 480, H = 180, L = 36, B = 24;
+  const x = (t) => L + (W - L - 8) * t, y = (v) => H - B - (H - B - 8) * v / 100;
+  return `<p><b style="font-size:22px">${u.share_at_threshold}%</b> <span class="muted">of records could not be linked even to an exact copy of themselves at the threshold.</span></p>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px">
+    ${[0, 50, 100].map((v) => `<line x1="${L}" x2="${W - 8}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="4" y="${y(v) + 4}">${v}%</text>`).join("")}
+    ${[0, 0.5, 1].map((t) => `<text x="${x(t)}" y="${H - 6}" text-anchor="middle">${t}</text>`).join("")}
+    <line x1="${x(u.threshold)}" x2="${x(u.threshold)}" y1="8" y2="${H - B}" stroke="var(--warn)" stroke-dasharray="4 3"/>
+    <polyline fill="none" stroke="var(--diff)" stroke-width="2" points="${ts.map((t) => `${x(t)},${y(u.curve[String(t)])}`).join(" ")}"/></svg>
+    <p class="muted">Share of ${u.sample.toLocaleString()} sampled records whose self-match scores at or below each threshold (Splink's unlinkables chart):
+      records with too little information - a first name alone, say - can never be matched, whatever their duplicates.</p>`;
+}
+function rarityTable(r) {
+  if (!r || !Object.keys(r).length) return "";
+  return `<div class="grid2">${Object.entries(r).map(([f, rows]) => `<div><b>${esc(f)}</b><table>
+    <tr><th>Value</th><th class="num">Records</th><th class="num">Rarity</th></tr>
+    ${rows.map((v) => `<tr><td>${esc(v.value)}</td><td class="num">${v.records.toLocaleString()}</td><td class="num">${v.rarity}</td></tr>`).join("")}</table></div>`).join("")}</div>
+    <p class="muted">Two records agreeing on a common name prove less than agreeing on a rare one. Rarity, ln(records / records with the name),
+      is a feature the model weighs (Splink's term-frequency adjustment); the most common names first, then a middling and the rarest.</p>`;
+}
+function runsTable(rs) {
+  const pub = rs.filter((r) => r.summary);
+  const imp = (r) => (r && r.summary && r.summary.feature_importance) || {};
+  const cur = pub[0], prev = pub[1];
+  const names = Object.keys(imp(cur)).sort((a, b) => imp(cur)[b] - imp(cur)[a]).slice(0, 10);
+  return `<table><tr><th>Run</th><th>Status</th><th>Published</th><th class="num">Records</th><th class="num">Customers</th>
+    <th class="num">Threshold</th><th class="num">Est. precision</th><th class="num">Est. recall</th><th class="num">Labels</th></tr>
+    ${rs.slice(0, 12).map((r) => { const s = r.summary || {}, e = s.estimated || {};
+      return `<tr><td>${r.id}</td><td>${esc(r.status)}</td><td>${esc(when(r.published_at ?? ""))}</td>
+        <td class="num">${(s.records ?? 0).toLocaleString()}</td><td class="num">${(s.customers ?? 0).toLocaleString()}</td>
+        <td class="num">${s.threshold ?? "-"}</td><td class="num">${e.precision ?? "-"}</td><td class="num">${e.recall ?? "-"}</td>
+        <td class="num">${s.labelled_pairs?.total ?? "-"}</td></tr>`; }).join("")}</table>
+    ${names.length ? `<h4>The model, this run against the one before</h4>
+      <table><tr><th>Feature</th><th class="num">Run ${cur.id}</th><th class="num">${prev ? "Run " + prev.id : ""}</th></tr>
+      ${names.map((n) => `<tr><td>${esc(n)}</td><td class="num">${(100 * imp(cur)[n]).toFixed(1)}%</td>
+        <td class="num">${prev && imp(prev)[n] != null ? (100 * imp(prev)[n]).toFixed(1) + "%" : ""}</td></tr>`).join("")}</table>
+      <p class="muted">Feature importance per run: a feature whose weight moves a lot between runs on similar data is worth a look.</p>` : ""}`;
+}
+async function loadQuality() {
+  try {
+    const [q, runList] = await Promise.all([api("/quality"), api("/runs")]);
+    const est = q.estimated || {};
+    const fields = Object.keys(Object.values(q.fill_rate_by_source)[0] || {});
+    const imp = q.feature_importance.slice(0, 15), top = imp.length ? imp[0].importance : 1;
+    const b = q.blocking || {};
+    $("#quality-body").innerHTML = `
+      <div class="panel stats">${info("quality_stats")}
+        <div class="stat"><span class="muted">Threshold</span><b>${q.threshold}</b></div>
+        <div class="stat"><span class="muted">Est. precision</span><b>${est.precision ?? "-"}%</b></div>
+        <div class="stat"><span class="muted">Est. recall</span><b>${est.recall ?? "-"}%</b></div>
+        <div class="stat"><span class="muted">Labelled pairs</span><b>${q.labelled_pairs?.total ?? "-"}</b><span class="muted">${q.labelled_pairs?.matches ?? "-"} matches</span></div>
+      </div>
+      <div class="grid2">
+        <div class="panel"><h3 style="margin-top:0">Threshold${info("threshold")}</h3>${q.threshold_sweep ? lineChart(q.threshold_sweep, q.threshold) : '<p class="muted">This run did not record the threshold sweep (runs before this version).</p>'}</div>
+        <div class="panel"><h3 style="margin-top:0">Scores${info("scores")}</h3>${histogram(q.score_histogram, q.threshold)}</div>
+      </div>
+      <div class="panel"><h3 style="margin-top:0">What the model relies on${info("importance")}</h3>
+        <div>${imp.map((f) => `<div class="wf-row"><span>${esc(f.feature)}</span>
+          <span class="wf-track"><span class="wf-bar up" style="left:0;width:${100 * f.importance / top}%;background:var(--accent)"></span></span>
+          <span class="num">${(100 * f.importance).toFixed(1)}%</span></div>`).join("")}</div>
+        <p class="muted">Share of the forest's splits' improvement (impurity importance) - which evidence the model uses most, across all pairs. A single pair's breakdown is its waterfall.</p></div>
+      <div class="panel scroll-x"><h3 style="margin-top:0">Completeness by source (% of records with a value)${info("completeness")}</h3>
+        <table><tr><th>Source</th><th class="num">Records</th><th class="num">Matched</th>${fields.map((f) => `<th class="num">${esc(f)}</th>`).join("")}</tr>
+        ${Object.entries(q.fill_rate_by_source).map(([src, row]) => `<tr><td>${esc(src)}</td><td class="num">${(q.records_by_source[src] ?? 0).toLocaleString()}</td>
+          <td class="num">${q.match_rate_by_source?.[src] ?? "-"}%</td>${fields.map((f) => heat(row[f])).join("")}</tr>`).join("")}</table>
+        <p class="muted">Matched: records in a customer with another record.</p></div>
+      <div class="panel"><h3 style="margin-top:0">Most common values${info("common_values")}</h3>
+        <p class="muted">A value on far more records than the rest is often a placeholder ("test", 01/01/1900, a shop's own phone).</p>
+        <table><tr><th>Field</th><th class="num">Filled</th><th class="num">Distinct values</th><th class="num">Top value's share</th>
+          <th class="num">Values on one record</th></tr>
+          ${Object.entries(q.profile || {}).map(([f, v]) => `<tr><td>${esc(f)}</td><td class="num">${v.filled.toLocaleString()}</td>
+            <td class="num">${v.distinct.toLocaleString()}</td><td class="num">${v.top_value_share ?? "-"}%</td>
+            <td class="num">${v.singletons ?? "-"}%</td></tr>`).join("")}</table>
+        <div class="grid2">${Object.entries(q.common_values).map(([f, vs]) => `<div><b>${esc(f)}</b><table>
+          ${vs.map((v) => `<tr><td>${esc(v.value)}</td><td class="num">${v.records.toLocaleString()}</td></tr>`).join("")}</table></div>`).join("")}</div></div>
+      <div class="grid2">
+        <div class="panel"><h3 style="margin-top:0">Records too sparse to link${info("unlinkables")}</h3>${unlinkablesChart(q.unlinkables)}</div>
+        <div class="panel"><h3 style="margin-top:0">What agreeing on a name is worth${info("rarity")}</h3>${rarityTable(q.name_rarity)}</div>
+      </div>
+      <div class="grid2">
+        <div class="panel"><h3 style="margin-top:0">Blocking${info("blocking")}</h3>${cumulative(b.pairs_by_key)}<table class="kv">
+          <tr><th>candidate pairs</th><td>${(b.candidate_pairs ?? 0).toLocaleString()}</td></tr>
+          <tr><th>blocks skipped as too large</th><td>${b.hubs_dropped ?? "-"}</td></tr>
+          <tr><th>records only in skipped blocks (never compared)</th><td>${b.records_only_in_skipped_blocks ?? "-"}</td></tr></table>
+          ${(b.largest_skipped_blocks || []).length ? `<p class="muted">Largest skipped blocks:</p><table>${b.largest_skipped_blocks.map((x) =>
+            `<tr><td>${esc(x.key)}</td><td class="num">${x.records}</td></tr>`).join("")}</table>` : ""}</div>
+        <div class="panel"><h3 style="margin-top:0">Junk and shared contacts${info("contacts")}</h3>
+          <p class="muted">Emails and phones on many people's records: junk counts for nothing, shared for little.</p>
+          <table>${q.shared_and_junk_contacts.slice(0, 15).map((c) => `<tr><td>${esc(c.field)}</td><td>${esc(c.value)}</td><td>${esc(c["class"])}</td></tr>`).join("")}</table></div>
+      </div>
+      <div class="panel scroll-x"><h3 style="margin-top:0">Runs${info("runs")}</h3>${runsTable(runList)}</div>
+      ${q.warnings.map((w) => `<div class="msg">${esc(w)}</div>`).join("")}`;
+  } catch (e) { fail(e); }
+}
+
+if (key) show("overview"); else showLogin();
+</script>
+</body>
+</html>

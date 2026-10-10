@@ -1,0 +1,67 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install (declared dependencies only)
+        run: pip install -e '.[test]'
+      - name: The command starts after a clean install
+        run: custmatch --help
+      - name: The bundled demo runs
+        run: custmatch run examples/demo/config.json --labels examples/demo/labels.csv --out demo_out
+      - name: Tests
+        run: pytest -q
+      - name: The opt-in forest + CatBoost model, with its extra installed
+        run: pip install -e '.[catboost]' && pytest -q -k "forest_catboost"
+
+  server:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: {POSTGRES_USER: custmatch, POSTGRES_PASSWORD: custmatch, POSTGRES_DB: custmatch}
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U custmatch" --health-interval 2s --health-retries 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Install the library and the service
+        run: pip install -e '.[test,catboost]' -e './server[test]'
+      - name: Service tests (SQLite)
+        run: pytest -q tests/test_server_smoke.py tests/test_server_rules.py tests/test_server_ops.py tests/test_server_steward.py
+      - name: Service tests (Postgres)
+        env:
+          CUSTMATCH_DB_URL: postgresql+psycopg://custmatch:custmatch@localhost:5432/custmatch
+          CUSTMATCH_RULES_DB_URL: postgresql+psycopg://custmatch:custmatch@localhost:5432/custmatch
+          CUSTMATCH_STEWARD_DB_URL: postgresql+psycopg://custmatch:custmatch@localhost:5432/custmatch
+        run: |
+          python server/smoke_test.py
+          pytest -q tests/test_server_rules.py tests/test_server_steward.py
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: The image builds and its command starts
+        run: |
+          docker build -f server/Dockerfile -t custmatch-server .
+          docker run --rm custmatch-server --help

@@ -1,0 +1,13 @@
+{
+ "precision": 66.07,
+ "recall": 79.06,
+ "f1": 71.98,
+ "accuracy": 88.33,
+ "n": 1234,
+ "predicted_matches": 280,
+ "dataset": "amazon-google-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-4o-mini",
+ "unclear_or_long_answers": 0,
+ "cost_usd": 0.0155
+}

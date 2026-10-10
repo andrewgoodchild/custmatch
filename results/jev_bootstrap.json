@@ -1,0 +1,80 @@
+{
+ "historical50k-person-hard/criteria": {
+  "pairs": 660,
+  "f1_at_0.5_change": 6.14,
+  "f1_interval": [
+   3.43,
+   9.09
+  ],
+  "auc_change": 0.0128,
+  "auc_interval": [
+   0.0073,
+   0.0192
+  ]
+ },
+ "historical50k-person-hard/structured": {
+  "pairs": 660,
+  "f1_at_0.5_change": -9.74,
+  "f1_interval": [
+   -14.32,
+   -5.47
+  ],
+  "auc_change": 0.0098,
+  "auc_interval": [
+   -0.0011,
+   0.0211
+  ]
+ },
+ "historical50k-person-hard/structured_criteria": {
+  "pairs": 660,
+  "f1_at_0.5_change": 1.53,
+  "f1_interval": [
+   -2.26,
+   5.37
+  ],
+  "auc_change": 0.0172,
+  "auc_interval": [
+   0.0059,
+   0.0292
+  ]
+ },
+ "customer-person-hard/criteria": {
+  "pairs": 660,
+  "f1_at_0.5_change": 2.03,
+  "f1_interval": [
+   0.97,
+   3.47
+  ],
+  "auc_change": 0.0039,
+  "auc_interval": [
+   0.0016,
+   0.0069
+  ]
+ },
+ "customer-person-hard/structured": {
+  "pairs": 660,
+  "f1_at_0.5_change": 0.9,
+  "f1_interval": [
+   -0.93,
+   2.75
+  ],
+  "auc_change": 0.0069,
+  "auc_interval": [
+   0.0015,
+   0.0132
+  ]
+ },
+ "customer-person-hard/structured_criteria": {
+  "pairs": 660,
+  "f1_at_0.5_change": 1.97,
+  "f1_interval": [
+   0.17,
+   3.87
+  ],
+  "auc_change": 0.007,
+  "auc_interval": [
+   0.0014,
+   0.0141
+  ]
+ }
+}

@@ -1,0 +1,106 @@
+{
+ "listed_words": 403,
+ "single_words": 279,
+ "real_names": {
+  "anal": 1,
+  "ass": 1,
+  "bastardo": 1,
+  "boner": 18,
+  "boob": 6,
+  "butt": 70,
+  "cock": 3,
+  "cocks": 6,
+  "coon": 147,
+  "coons": 79,
+  "cum": 1,
+  "cumming": 46,
+  "dick": 300,
+  "escort": 1,
+  "fag": 1,
+  "felch": 7,
+  "feltch": 1,
+  "guro": 1,
+  "hooker": 955,
+  "horny": 2,
+  "juggs": 2,
+  "lolita": 196,
+  "mong": 21,
+  "negro": 1,
+  "nipple": 12,
+  "paki": 4,
+  "poon": 11,
+  "porn": 11,
+  "rape": 95,
+  "santorum": 9,
+  "semen": 1,
+  "smut": 1,
+  "suck": 1,
+  "swinger": 8,
+  "tit": 2,
+  "wank": 11
+ },
+ "real_names_match_the_module": true,
+ "ncvr": {
+  "ncvr_numrec_1000000_modrec_2_ocp_20_myp_0_nump_5.csv": {
+   "records": 1000000,
+   "flagged": 0,
+   "examples": []
+  },
+  "ncvr_numrec_1000000_modrec_2_ocp_20_myp_1_nump_5.csv": {
+   "records": 1000000,
+   "flagged": 0,
+   "examples": []
+  },
+  "ncvr_numrec_1000000_modrec_2_ocp_20_myp_2_nump_5.csv": {
+   "records": 1000000,
+   "flagged": 0,
+   "examples": []
+  },
+  "ncvr_numrec_1000000_modrec_2_ocp_20_myp_3_nump_5.csv": {
+   "records": 1000000,
+   "flagged": 0,
+   "examples": []
+  },
+  "ncvr_numrec_1000000_modrec_2_ocp_20_myp_4_nump_5.csv": {
+   "records": 1000000,
+   "flagged": 0,
+   "examples": []
+  }
+ },
+ "held_out": {
+  "historical_50k": {
+   "records": 50578,
+   "flagged": 0,
+   "reasons": {},
+   "examples": []
+  },
+  "febrl3": {
+   "records": 5000,
+   "flagged": 0,
+   "reasons": {},
+   "examples": []
+  },
+  "fake_1000": {
+   "records": 1000,
+   "flagged": 0,
+   "reasons": {},
+   "examples": []
+  },
+  "synthetic": {
+   "records": 20134,
+   "flagged": 0,
+   "reasons": {},
+   "examples": []
+  },
+  "au": {
+   "records": 18478,
+   "flagged": 0,
+   "reasons": {},
+   "examples": []
+  }
+ },
+ "million": {
+  "records": 1006700,
+  "seconds": 2.4
+ }
+}

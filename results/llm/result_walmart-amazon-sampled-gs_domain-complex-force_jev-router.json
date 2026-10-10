@@ -1,0 +1,23 @@
+{
+ "precision": 92.96,
+ "recall": 95.85,
+ "f1": 94.39,
+ "accuracy": 98.16,
+ "n": 1193,
+ "predicted_matches": 199,
+ "dataset": "walmart-amazon-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "typesafe/jev-router",
+ "unclear_or_long_answers": 59,
+ "empty_answers": 0,
+ "cost_usd": 0.2106,
+ "temperature": null,
+ "max_tokens": 8000,
+ "answered_by": {
+  "openai/gpt-6-luna": 765,
+  "deepseek/deepseek-v4.1-flash": 357,
+  "google/gemini-3.8-flash": 61,
+  "anthropic/claude-sonnet-5": 7,
+  "z-ai/glm-5.3-flash": 3
+ }
+}

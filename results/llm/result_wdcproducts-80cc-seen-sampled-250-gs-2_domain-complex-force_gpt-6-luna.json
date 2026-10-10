@@ -1,0 +1,16 @@
+{
+ "precision": 92.37,
+ "recall": 92.0,
+ "f1": 92.18,
+ "accuracy": 96.85,
+ "n": 1239,
+ "predicted_matches": 249,
+ "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-6-luna",
+ "unclear_or_long_answers": 295,
+ "empty_answers": 0,
+ "cost_usd": 0.059,
+ "temperature": null,
+ "max_tokens": 2000
+}

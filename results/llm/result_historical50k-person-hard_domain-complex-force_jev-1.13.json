@@ -1,0 +1,20 @@
+{
+ "precision": 91.53,
+ "recall": 64.8,
+ "f1": 75.88,
+ "accuracy": 84.39,
+ "n": 660,
+ "predicted_matches": 177,
+ "f1_at_0.5": 75.88,
+ "f1_tuned_held_out": 84.97,
+ "auc": 0.9484,
+ "brier": 0.1086,
+ "dataset": "historical50k-person-hard",
+ "prompt": "domain-complex-force",
+ "model": "typesafe/jev-1.13",
+ "snapshots": [
+  "typesafe/jev-1.13-20260917"
+ ],
+ "threshold": 0.5,
+ "cost_usd": 0.0095
+}

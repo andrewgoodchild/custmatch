@@ -1,0 +1,13 @@
+{
+ "precision": 80.0,
+ "recall": 1.6,
+ "f1": 3.14,
+ "accuracy": 62.58,
+ "n": 660,
+ "predicted_matches": 5,
+ "dataset": "historical50k-person-hard",
+ "prompt": "domain-complex-force",
+ "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+ "unclear_or_long_answers": 18,
+ "seconds": 457.9
+}

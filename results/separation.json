@@ -1,0 +1,290 @@
+{
+ "au_customer": {
+  "data": {
+   "accounts_pct": 70.0,
+   "events": 28002,
+   "cookies": 12073,
+   "records_with_cookie_pct": 53.1,
+   "records_with_user_id_pct": 46.2,
+   "couples": 2225,
+   "couples_sharing_a_family_email": 89,
+   "separated": 1125,
+   "separated_with_family_email": 49,
+   "post_split_records": 1072
+  },
+  "runs": [
+   {
+    "seed": 1,
+    "cdp_tuned": {
+     "post_split_records": 1072,
+     "merged_with_ex_pct": 3.36,
+     "email_reaches_ex_matched_pct": 1.59,
+     "email_reaches_ex_own_record_pct": 1.4,
+     "post_to_ex_address_pct": 2.33,
+     "precision": 92.18,
+     "recall": 70.85
+    },
+    "cdp_tuned_newest": {
+     "post_split_records": 1072,
+     "merged_with_ex_pct": 3.36,
+     "email_reaches_ex_matched_pct": 1.49,
+     "email_reaches_ex_own_record_pct": 1.4,
+     "post_to_ex_address_pct": 1.87,
+     "precision": 92.18,
+     "recall": 70.85
+    },
+    "custmatch": {
+     "post_split_records": 1072,
+     "merged_with_ex_pct": 0.84,
+     "email_reaches_ex_matched_pct": 1.96,
+     "email_reaches_ex_own_record_pct": 1.4,
+     "post_to_ex_address_pct": 1.87,
+     "precision": 92.58,
+     "recall": 87.18,
+     "threshold": 0.5
+    },
+    "custmatch_threshold_0.8": {
+     "post_split_records": 1072,
+     "merged_with_ex_pct": 0.09,
+     "email_reaches_ex_matched_pct": 1.49,
+     "email_reaches_ex_own_record_pct": 1.31,
+     "post_to_ex_address_pct": 1.4,
+     "precision": 97.33,
+     "recall": 78.44
+    },
+    "custmatch_contact_safety": {
+     "post_split_records": 1072,
+     "merged_with_ex_pct": 0.84,
+     "email_reaches_ex_matched_pct": 0.84,
+     "email_reaches_ex_own_record_pct": 1.21,
+     "post_to_ex_address_pct": 1.87,
+     "precision": 92.58,
+     "recall": 87.18,
+     "threshold": 0.5
+    },
+    "custmatch_min_precision": {
+     "post_split_records": 1072,
+     "merged_with_ex_pct": 0.09,
+     "email_reaches_ex_matched_pct": 0.84,
+     "email_reaches_ex_own_record_pct": 1.21,
+     "post_to_ex_address_pct": 1.12,
+     "precision": 98.03,
+     "recall": 63.55,
+     "threshold": 0.9
+    },
+    "custmatch_newest": {
+     "post_split_records": 1072,
+     "merged_with_ex_pct": 0.84,
+     "email_reaches_ex_matched_pct": 0.93,
+     "email_reaches_ex_own_record_pct": 1.4,
+     "post_to_ex_address_pct": 1.87,
+     "precision": 92.58,
+     "recall": 87.18,
+     "threshold": 0.5
+    },
+    "custmatch_newest_min_precision": {
+     "post_split_records": 1072,
+     "merged_with_ex_pct": 0.09,
+     "email_reaches_ex_matched_pct": 0.75,
+     "email_reaches_ex_own_record_pct": 1.31,
+     "post_to_ex_address_pct": 1.12,
+     "precision": 98.03,
+     "recall": 63.55,
+     "threshold": 0.9
+    }
+   }
+  ]
+ },
+ "au_customer_s1": {
+  "data": {
+   "accounts_pct": 70.0,
+   "events": 28387,
+   "cookies": 12264,
+   "records_with_cookie_pct": 52.9,
+   "records_with_user_id_pct": 45.9,
+   "couples": 2224,
+   "couples_sharing_a_family_email": 98,
+   "separated": 1124,
+   "separated_with_family_email": 46,
+   "post_split_records": 1066
+  },
+  "runs": [
+   {
+    "seed": 1,
+    "cdp_tuned": {
+     "post_split_records": 1066,
+     "merged_with_ex_pct": 4.41,
+     "email_reaches_ex_matched_pct": 1.88,
+     "email_reaches_ex_own_record_pct": 2.35,
+     "post_to_ex_address_pct": 1.41,
+     "precision": 92.17,
+     "recall": 69.18
+    },
+    "cdp_tuned_newest": {
+     "post_split_records": 1066,
+     "merged_with_ex_pct": 4.41,
+     "email_reaches_ex_matched_pct": 1.13,
+     "email_reaches_ex_own_record_pct": 2.35,
+     "post_to_ex_address_pct": 1.13,
+     "precision": 92.17,
+     "recall": 69.18
+    },
+    "custmatch": {
+     "post_split_records": 1066,
+     "merged_with_ex_pct": 0.28,
+     "email_reaches_ex_matched_pct": 1.22,
+     "email_reaches_ex_own_record_pct": 2.35,
+     "post_to_ex_address_pct": 0.84,
+     "precision": 78.32,
+     "recall": 84.79,
+     "threshold": 0.55
+    },
+    "custmatch_threshold_0.8": {
+     "post_split_records": 1066,
+     "merged_with_ex_pct": 0.19,
+     "email_reaches_ex_matched_pct": 1.13,
+     "email_reaches_ex_own_record_pct": 2.44,
+     "post_to_ex_address_pct": 0.84,
+     "precision": 97.75,
+     "recall": 77.24
+    },
+    "custmatch_contact_safety": {
+     "post_split_records": 1066,
+     "merged_with_ex_pct": 0.28,
+     "email_reaches_ex_matched_pct": 0.56,
+     "email_reaches_ex_own_record_pct": 2.35,
+     "post_to_ex_address_pct": 0.84,
+     "precision": 78.32,
+     "recall": 84.79,
+     "threshold": 0.55
+    },
+    "custmatch_min_precision": {
+     "post_split_records": 1066,
+     "merged_with_ex_pct": 0.09,
+     "email_reaches_ex_matched_pct": 0.56,
+     "email_reaches_ex_own_record_pct": 2.35,
+     "post_to_ex_address_pct": 0.66,
+     "precision": 98.61,
+     "recall": 66.55,
+     "threshold": 0.9
+    },
+    "custmatch_newest": {
+     "post_split_records": 1066,
+     "merged_with_ex_pct": 0.28,
+     "email_reaches_ex_matched_pct": 0.56,
+     "email_reaches_ex_own_record_pct": 2.44,
+     "post_to_ex_address_pct": 0.75,
+     "precision": 78.32,
+     "recall": 84.79,
+     "threshold": 0.55
+    },
+    "custmatch_newest_min_precision": {
+     "post_split_records": 1066,
+     "merged_with_ex_pct": 0.09,
+     "email_reaches_ex_matched_pct": 0.56,
+     "email_reaches_ex_own_record_pct": 2.44,
+     "post_to_ex_address_pct": 0.66,
+     "precision": 98.61,
+     "recall": 66.55,
+     "threshold": 0.9
+    }
+   }
+  ]
+ },
+ "au_customer_s2": {
+  "data": {
+   "accounts_pct": 70.0,
+   "events": 28459,
+   "cookies": 12164,
+   "records_with_cookie_pct": 52.7,
+   "records_with_user_id_pct": 46.2,
+   "couples": 2320,
+   "couples_sharing_a_family_email": 96,
+   "separated": 1171,
+   "separated_with_family_email": 44,
+   "post_split_records": 1127
+  },
+  "runs": [
+   {
+    "seed": 1,
+    "cdp_tuned": {
+     "post_split_records": 1127,
+     "merged_with_ex_pct": 3.55,
+     "email_reaches_ex_matched_pct": 1.95,
+     "email_reaches_ex_own_record_pct": 1.6,
+     "post_to_ex_address_pct": 1.51,
+     "precision": 92.74,
+     "recall": 70.48
+    },
+    "cdp_tuned_newest": {
+     "post_split_records": 1127,
+     "merged_with_ex_pct": 3.55,
+     "email_reaches_ex_matched_pct": 1.51,
+     "email_reaches_ex_own_record_pct": 1.6,
+     "post_to_ex_address_pct": 1.51,
+     "precision": 92.74,
+     "recall": 70.48
+    },
+    "custmatch": {
+     "post_split_records": 1127,
+     "merged_with_ex_pct": 0.0,
+     "email_reaches_ex_matched_pct": 0.71,
+     "email_reaches_ex_own_record_pct": 1.6,
+     "post_to_ex_address_pct": 1.24,
+     "precision": 94.37,
+     "recall": 86.84,
+     "threshold": 0.55
+    },
+    "custmatch_threshold_0.8": {
+     "post_split_records": 1127,
+     "merged_with_ex_pct": 0.0,
+     "email_reaches_ex_matched_pct": 0.62,
+     "email_reaches_ex_own_record_pct": 1.6,
+     "post_to_ex_address_pct": 0.98,
+     "precision": 97.89,
+     "recall": 77.61
+    },
+    "custmatch_contact_safety": {
+     "post_split_records": 1127,
+     "merged_with_ex_pct": 0.0,
+     "email_reaches_ex_matched_pct": 0.35,
+     "email_reaches_ex_own_record_pct": 1.51,
+     "post_to_ex_address_pct": 1.24,
+     "precision": 94.37,
+     "recall": 86.84,
+     "threshold": 0.55
+    },
+    "custmatch_min_precision": {
+     "post_split_records": 1127,
+     "merged_with_ex_pct": 0.0,
+     "email_reaches_ex_matched_pct": 0.35,
+     "email_reaches_ex_own_record_pct": 1.51,
+     "post_to_ex_address_pct": 0.71,
+     "precision": 98.58,
+     "recall": 68.03,
+     "threshold": 0.9
+    },
+    "custmatch_newest": {
+     "post_split_records": 1127,
+     "merged_with_ex_pct": 0.0,
+     "email_reaches_ex_matched_pct": 0.27,
+     "email_reaches_ex_own_record_pct": 1.51,
+     "post_to_ex_address_pct": 1.24,
+     "precision": 94.37,
+     "recall": 86.84,
+     "threshold": 0.55
+    },
+    "custmatch_newest_min_precision": {
+     "post_split_records": 1127,
+     "merged_with_ex_pct": 0.0,
+     "email_reaches_ex_matched_pct": 0.27,
+     "email_reaches_ex_own_record_pct": 1.51,
+     "post_to_ex_address_pct": 0.71,
+     "precision": 98.58,
+     "recall": 68.03,
+     "threshold": 0.9
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,130 @@
+{
+ "copies_5": {
+  "copies": 5,
+  "1_full_loads": {
+   "records": 100370,
+   "seconds": 5.5,
+   "peak_gb": 0.54
+  },
+  "2_batch_run_1": {
+   "records": 100370,
+   "customers": 54855,
+   "seconds": 16.3,
+   "peak_gb": 0.93,
+   "clustered_f1": 97.04
+  },
+  "3_matcher_start": {
+   "seconds": 0.6,
+   "peak_gb": 0.81,
+   "added_gb": 0.02,
+   "index_keys": 553694
+  },
+  "4_api_first_call_seconds": 0.5,
+  "4_realtime": {
+   "writes": 300,
+   "ms_p50": 24.3,
+   "ms_p95": 29.7,
+   "lookup_ms_p50": 5.0,
+   "lookup_ms_p95": 6.4
+  },
+  "5_later_loads": {
+   "incremental_updated": 509,
+   "incremental_seconds": 0.3,
+   "full_deleted": 248,
+   "full_unchanged": 49267,
+   "full_seconds": 0.7,
+   "peak_gb": 0.83,
+   "incremental_10pct_updated": 5086,
+   "incremental_10pct_seconds": 0.5
+  },
+  "6_batch_run_2": {
+   "records": 100422,
+   "seconds": 17.7,
+   "peak_gb": 1.01,
+   "labels_dropped": 3
+  },
+  "6_batch_run_3": {
+   "seconds": 17.8,
+   "peak_gb": 1.11,
+   "statuses": {
+    "2": "published",
+    "3": "published",
+    "1": "retired"
+   }
+  },
+  "6_database": {
+   "total_mb": 193,
+   "largest_tables_mb": {
+    "source_record_versions": 47,
+    "source_records": 47,
+    "record_customer_r2": 16,
+    "record_customer_r3": 16,
+    "links_r2": 15,
+    "links_r3": 15
+   }
+  }
+ },
+ "copies_50": {
+  "copies": 50,
+  "1_full_loads": {
+   "records": 1006400,
+   "seconds": 54.6,
+   "peak_gb": 2.1
+  },
+  "2_batch_run_1": {
+   "records": 1006400,
+   "customers": 552633,
+   "seconds": 138.8,
+   "peak_gb": 2.31,
+   "clustered_f1": 97.1
+  },
+  "3_matcher_start": {
+   "seconds": 6.0,
+   "peak_gb": 1.88,
+   "added_gb": 0.46,
+   "index_keys": 5551842
+  },
+  "4_api_first_call_seconds": 6.0,
+  "4_realtime": {
+   "writes": 300,
+   "ms_p50": 23.7,
+   "ms_p95": 29.7,
+   "lookup_ms_p50": 6.7,
+   "lookup_ms_p95": 9.6
+  },
+  "5_later_loads": {
+   "incremental_updated": 5112,
+   "incremental_seconds": 8.8,
+   "full_deleted": 2476,
+   "full_unchanged": 492674,
+   "full_seconds": 10.2,
+   "peak_gb": 1.87
+  },
+  "6_batch_run_2": {
+   "records": 1004224,
+   "seconds": 159.6,
+   "peak_gb": 2.41,
+   "labels_dropped": 7
+  },
+  "6_batch_run_3": {
+   "seconds": 158.7,
+   "peak_gb": 2.27,
+   "statuses": {
+    "2": "published",
+    "3": "published",
+    "1": "retired"
+   }
+  },
+  "6_database": {
+   "total_mb": 1777,
+   "largest_tables_mb": {
+    "source_records": 445,
+    "source_record_versions": 445,
+    "record_customer_r2": 152,
+    "record_customer_r3": 152,
+    "links_r2": 148,
+    "links_r3": 148
+   }
+  }
+ }
+}

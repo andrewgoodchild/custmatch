@@ -1,0 +1,35 @@
+{
+ "sources": [
+  {
+   "name": "crm",
+   "path": "crm.csv",
+   "columns": {
+    "record_id": "id",
+    "first_name": "first_name",
+    "last_name": "last_name",
+    "date_of_birth": "dob",
+    "address": "address",
+    "email": "email",
+    "phone": "phone"
+   }
+  },
+  {
+   "name": "billing",
+   "path": "billing.csv",
+   "columns": {
+    "record_id": "id",
+    "first_name": "first_name",
+    "last_name": "last_name",
+    "date_of_birth": "dob",
+    "address": "address",
+    "email": "email",
+    "phone": "phone"
+   }
+  }
+ ],
+ "country": "US",
+ "source_priority": [
+  "crm",
+  "billing"
+ ]
+}

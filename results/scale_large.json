@@ -1,0 +1,553 @@
+{
+ "scale_2m": {
+  "command": "scripts/custmatch_scale.py 100",
+  "wall_seconds": 551.3,
+  "peak_memory_gb": 7.72,
+  "machine": "Modal, 16 cores, 128 GiB",
+  "log_tail": [
+   "{\"copies\": 100, \"records\": 2013400, \"blocking\": \"core\", \"run_candidate_pairs\": 4875900, \"stage_seconds\": {\"load and profile\": 26.87, \"blocking (4,875,900 candidate pairs)\": 44.13, \"forest: cross-fitted clustered F1 97.35\": 125.43, \"threshold (clustered, in-cluster precision check)\": -0.0, \"matcher chosen\": -0.0, \"households, golden records, outputs\": 148.35}, \"candidate_pairs\": 4875900, \"load_seconds\": 6.09, \"profile_seconds\": 14.04, \"block_seconds\": 38.11, \"features_seconds\": 26.24, \"full_run_seconds\": 345.76, \"clustered_f1\": 97.04}"
+  ],
+  "result": {
+   "copies": 100,
+   "records": 2013400,
+   "blocking": "core",
+   "run_candidate_pairs": 4875900,
+   "stage_seconds": {
+    "load and profile": 26.87,
+    "blocking (4,875,900 candidate pairs)": 44.13,
+    "forest: cross-fitted clustered F1 97.35": 125.43,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 148.35
+   },
+   "candidate_pairs": 4875900,
+   "load_seconds": 6.09,
+   "profile_seconds": 14.04,
+   "block_seconds": 38.11,
+   "features_seconds": 26.24,
+   "full_run_seconds": 345.76,
+   "clustered_f1": 97.04
+  }
+ },
+ "scale_5m": {
+  "command": "scripts/custmatch_scale.py 250",
+  "wall_seconds": 2177.5,
+  "peak_memory_gb": 17.61,
+  "machine": "Modal, 16 cores, 128 GiB",
+  "log_tail": [
+   "{\"copies\": 250, \"records\": 5033500, \"blocking\": \"core\", \"run_candidate_pairs\": 12189750, \"stage_seconds\": {\"load and profile\": 94.14, \"blocking (12,189,750 candidate pairs)\": 233.85, \"forest: cross-fitted clustered F1 97.25\": 439.48, \"threshold (clustered, in-cluster precision check)\": 0.0, \"matcher chosen\": 0.0, \"households, golden records, outputs\": 628.15}, \"candidate_pairs\": 12189750, \"load_seconds\": 27.98, \"profile_seconds\": 51.14, \"block_seconds\": 118.62, \"features_seconds\": 107.91, \"full_run_seconds\": 1398.71, \"clustered_f1\": 97.55}"
+  ],
+  "result": {
+   "copies": 250,
+   "records": 5033500,
+   "blocking": "core",
+   "run_candidate_pairs": 12189750,
+   "stage_seconds": {
+    "load and profile": 94.14,
+    "blocking (12,189,750 candidate pairs)": 233.85,
+    "forest: cross-fitted clustered F1 97.25": 439.48,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "matcher chosen": 0.0,
+    "households, golden records, outputs": 628.15
+   },
+   "candidate_pairs": 12189750,
+   "load_seconds": 27.98,
+   "profile_seconds": 51.14,
+   "block_seconds": 118.62,
+   "features_seconds": 107.91,
+   "full_run_seconds": 1398.71,
+   "clustered_f1": 97.55
+  }
+ },
+ "scale_10m": {
+  "command": "scripts/custmatch_scale.py 500",
+  "wall_seconds": 5251.8,
+  "peak_memory_gb": 33.68,
+  "machine": "Modal, 16 cores, 128 GiB",
+  "log_tail": [
+   "{\"copies\": 500, \"records\": 10067000, \"blocking\": \"core\", \"run_candidate_pairs\": 24379500, \"stage_seconds\": {\"load and profile\": 191.7, \"blocking (24,379,500 candidate pairs)\": 650.09, \"forest: cross-fitted clustered F1 97.25\": 942.01, \"threshold (clustered, in-cluster precision check)\": -0.0, \"matcher chosen\": -0.0, \"households, golden records, outputs\": 1612.48}, \"candidate_pairs\": 24379500, \"load_seconds\": 40.18, \"profile_seconds\": 86.25, \"block_seconds\": 347.81, \"features_seconds\": 276.96, \"full_run_seconds\": 3401.81, \"clustered_f1\": 96.89}"
+  ],
+  "result": {
+   "copies": 500,
+   "records": 10067000,
+   "blocking": "core",
+   "run_candidate_pairs": 24379500,
+   "stage_seconds": {
+    "load and profile": 191.7,
+    "blocking (24,379,500 candidate pairs)": 650.09,
+    "forest: cross-fitted clustered F1 97.25": 942.01,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 1612.48
+   },
+   "candidate_pairs": 24379500,
+   "load_seconds": 40.18,
+   "profile_seconds": 86.25,
+   "block_seconds": 347.81,
+   "features_seconds": 276.96,
+   "full_run_seconds": 3401.81,
+   "clustered_f1": 96.89
+  }
+ },
+ "ncvr_all": {
+  "result": {
+   "records": 5000000,
+   "people": 3500840,
+   "true_pairs": 3331384,
+   "clustered": {
+    "precision": 90.16,
+    "recall": 79.56,
+    "f1": 84.53,
+    "clusters": 3603139,
+    "largest_cluster": 21,
+    "adjusted_rand": 0.8453
+   },
+   "threshold": 0.45,
+   "candidate_pairs": 69080902,
+   "stage_seconds": {
+    "load and profile": 50.93,
+    "blocking (69,080,902 candidate pairs)": 449.43,
+    "forest: cross-fitted clustered F1 98.71": 842.88,
+    "threshold (clustered, in-cluster precision check)": 0.01,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 277.03
+   },
+   "warnings": [
+    "only 11 of your randomly drawn labels are matches, and the threshold is judged on those: label more random pairs (custmatch sample) until at least 30 are matches",
+    "4,956,624 records are in blocks larger than max_block, which were skipped - records sharing only such a value were never compared. Largest: x / 0 / 28269 (34369), x / 0 / 28277 (33003), x / 0 / 27858 (32044). See blocking_report.json; raise \"max_block\" if these values are legitimately common, or check them for placeholders",
+    "largest customer has 21 records - check it for chaining (clusters.csv)"
+   ]
+  },
+  "progress": {
+   "prepare": {
+    "seconds": 10.2,
+    "peak_memory_gb_so_far": 1.14
+   },
+   "random_300": {
+    "seconds": 574.0,
+    "peak_memory_gb_so_far": 15.01
+   },
+   "active_1": {
+    "seconds": 1291.3,
+    "peak_memory_gb_so_far": 55.15
+   },
+   "active_2": {
+    "seconds": 1298.7,
+    "peak_memory_gb_so_far": 55.15
+   },
+   "active_3": {
+    "seconds": 1304.8,
+    "peak_memory_gb_so_far": 55.15
+   },
+   "active_4": {
+    "seconds": 1327.0,
+    "peak_memory_gb_so_far": 55.15
+   },
+   "active_5": {
+    "seconds": 1313.1,
+    "peak_memory_gb_so_far": 55.15
+   },
+   "active_6": {
+    "seconds": 1281.9,
+    "peak_memory_gb_so_far": 55.15
+   },
+   "active_7": {
+    "seconds": 1294.6,
+    "peak_memory_gb_so_far": 55.15
+   },
+   "final_run": {
+    "seconds": 1664.7,
+    "peak_memory_gb_so_far": 55.15
+   }
+  },
+  "machine": "Modal, 16 cores, 128 GiB"
+ },
+ "scale_2m_before_memory_redesign": {
+  "command": "scripts/custmatch_scale.py 100",
+  "wall_seconds": 594.2,
+  "peak_memory_gb": 7.45,
+  "machine": "Modal, 16 cores, 128 GiB",
+  "log_tail": [
+   "{\"copies\": 100, \"records\": 2013400, \"blocking\": \"core\", \"run_candidate_pairs\": 4875900, \"stage_seconds\": {\"load and profile\": 28.47, \"blocking (4,875,900 candidate pairs)\": 49.05, \"forest: cross-fitted clustered F1 97.35\": 121.31, \"threshold (clustered, in-cluster precision check)\": 0.0, \"matcher chosen\": 0.0, \"households, golden records, outputs\": 147.57}, \"candidate_pairs\": 4875900, \"load_seconds\": 5.99, \"profile_seconds\": 14.0, \"block_seconds\": 50.96, \"features_seconds\": 22.88, \"full_run_seconds\": 347.41, \"clustered_f1\": 97.04}"
+  ],
+  "result": {
+   "copies": 100,
+   "records": 2013400,
+   "blocking": "core",
+   "run_candidate_pairs": 4875900,
+   "stage_seconds": {
+    "load and profile": 28.47,
+    "blocking (4,875,900 candidate pairs)": 49.05,
+    "forest: cross-fitted clustered F1 97.35": 121.31,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "matcher chosen": 0.0,
+    "households, golden records, outputs": 147.57
+   },
+   "candidate_pairs": 4875900,
+   "load_seconds": 5.99,
+   "profile_seconds": 14.0,
+   "block_seconds": 50.96,
+   "features_seconds": 22.88,
+   "full_run_seconds": 347.41,
+   "clustered_f1": 97.04
+  }
+ },
+ "scale_5m_before_memory_redesign": {
+  "command": "scripts/custmatch_scale.py 250",
+  "wall_seconds": 1570.7,
+  "peak_memory_gb": 17.55,
+  "machine": "Modal, 16 cores, 128 GiB",
+  "log_tail": [
+   "{\"copies\": 250, \"records\": 5033500, \"blocking\": \"core\", \"run_candidate_pairs\": 12189750, \"stage_seconds\": {\"load and profile\": 70.6, \"blocking (12,189,750 candidate pairs)\": 132.06, \"forest: cross-fitted clustered F1 97.25\": 286.91, \"threshold (clustered, in-cluster precision check)\": -0.0, \"matcher chosen\": -0.0, \"households, golden records, outputs\": 452.02}, \"candidate_pairs\": 12189750, \"load_seconds\": 14.9, \"profile_seconds\": 33.02, \"block_seconds\": 129.94, \"features_seconds\": 56.72, \"full_run_seconds\": 944.21, \"clustered_f1\": 97.55}"
+  ],
+  "result": {
+   "copies": 250,
+   "records": 5033500,
+   "blocking": "core",
+   "run_candidate_pairs": 12189750,
+   "stage_seconds": {
+    "load and profile": 70.6,
+    "blocking (12,189,750 candidate pairs)": 132.06,
+    "forest: cross-fitted clustered F1 97.25": 286.91,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 452.02
+   },
+   "candidate_pairs": 12189750,
+   "load_seconds": 14.9,
+   "profile_seconds": 33.02,
+   "block_seconds": 129.94,
+   "features_seconds": 56.72,
+   "full_run_seconds": 944.21,
+   "clustered_f1": 97.55
+  }
+ },
+ "scale_10m_before_memory_redesign": {
+  "command": "scripts/custmatch_scale.py 500",
+  "wall_seconds": 3451.5,
+  "peak_memory_gb": 33.36,
+  "machine": "Modal, 16 cores, 128 GiB",
+  "log_tail": [
+   "{\"copies\": 500, \"records\": 10067000, \"blocking\": \"core\", \"run_candidate_pairs\": 24379500, \"stage_seconds\": {\"load and profile\": 137.43, \"blocking (24,379,500 candidate pairs)\": 255.55, \"forest: cross-fitted clustered F1 97.25\": 633.72, \"threshold (clustered, in-cluster precision check)\": 0.0, \"matcher chosen\": 0.0, \"households, golden records, outputs\": 1184.84}, \"candidate_pairs\": 24379500, \"load_seconds\": 28.81, \"profile_seconds\": 63.11, \"block_seconds\": 249.46, \"features_seconds\": 110.75, \"full_run_seconds\": 2216.8, \"clustered_f1\": 96.89}"
+  ],
+  "result": {
+   "copies": 500,
+   "records": 10067000,
+   "blocking": "core",
+   "run_candidate_pairs": 24379500,
+   "stage_seconds": {
+    "load and profile": 137.43,
+    "blocking (24,379,500 candidate pairs)": 255.55,
+    "forest: cross-fitted clustered F1 97.25": 633.72,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "matcher chosen": 0.0,
+    "households, golden records, outputs": 1184.84
+   },
+   "candidate_pairs": 24379500,
+   "load_seconds": 28.81,
+   "profile_seconds": 63.11,
+   "block_seconds": 249.46,
+   "features_seconds": 110.75,
+   "full_run_seconds": 2216.8,
+   "clustered_f1": 96.89
+  }
+ },
+ "ncvr_all_default_memory_redesign": {
+  "result": {
+   "records": 5000000,
+   "people": 3500840,
+   "true_pairs": 3331384,
+   "clustered": {
+    "precision": 89.83,
+    "recall": 79.47,
+    "f1": 84.33,
+    "clusters": 3605905,
+    "largest_cluster": 26,
+    "adjusted_rand": 0.8433
+   },
+   "threshold": 0.45,
+   "candidate_pairs": 69080900,
+   "stage_seconds": {
+    "load and profile": 49.65,
+    "blocking (69,080,900 candidate pairs)": 1697.51,
+    "forest: cross-fitted clustered F1 98.37": 1052.09,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "matcher chosen": 0.0,
+    "households, golden records, outputs": 291.06
+   },
+   "warnings": [
+    "only 13 of your randomly drawn labels are matches, and the threshold is judged on those: label more random pairs (custmatch sample) until at least 30 are matches",
+    "399,433 records were never compared with any other: every block they share is larger than max_block, so it was skipped. Largest: x / 0 / 28269 (34369), x / 0 / 28277 (33003), x / 0 / 27858 (32044). See blocking_report.json; raise \"max_block\" if these values are legitimately common, or check them for placeholders",
+    "largest customer has 26 records - check it for chaining (clusters.csv)"
+   ],
+   "random_matches": 13,
+   "config_changes": {}
+  },
+  "progress": {
+   "prepare": {
+    "seconds": 11.2,
+    "peak_memory_gb_so_far": 1.14
+   },
+   "random_300": {
+    "seconds": 2196.7,
+    "peak_memory_gb_so_far": 12.5
+   },
+   "active_1": {
+    "seconds": 2624.8,
+    "peak_memory_gb_so_far": 12.57
+   },
+   "active_2": {
+    "seconds": 2521.0,
+    "peak_memory_gb_so_far": 12.97
+   },
+   "active_3": {
+    "seconds": 2477.1,
+    "peak_memory_gb_so_far": 13.0
+   },
+   "active_4": {
+    "seconds": 2529.3,
+    "peak_memory_gb_so_far": 13.0
+   },
+   "active_5": {
+    "seconds": 2544.7,
+    "peak_memory_gb_so_far": 13.0
+   },
+   "active_6": {
+    "seconds": 2461.0,
+    "peak_memory_gb_so_far": 13.02
+   },
+   "active_7": {
+    "seconds": 2346.8,
+    "peak_memory_gb_so_far": 13.02
+   },
+   "final_run": {
+    "seconds": 3136.2,
+    "peak_memory_gb_so_far": 18.62
+   }
+  },
+  "machine": "Modal, 16 cores, 128 GiB"
+ },
+ "ncvr_all_fixed_blocking": {
+  "result": {
+   "records": 5000000,
+   "people": 3500840,
+   "true_pairs": 3331384,
+   "clustered": {
+    "precision": 87.72,
+    "recall": 86.66,
+    "f1": 87.19,
+    "clusters": 3496116,
+    "largest_cluster": 38,
+    "adjusted_rand": 0.8719
+   },
+   "threshold": 0.5,
+   "candidate_pairs": 125558912,
+   "stage_seconds": {
+    "load and profile": 52.32,
+    "blocking (125,558,912 candidate pairs)": 586.36,
+    "forest: cross-fitted clustered F1 94.33": 1923.46,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "matcher chosen": 0.01,
+    "households, golden records, outputs": 297.69
+   },
+   "warnings": [
+    "largest customer has 38 records - check it for chaining (clusters.csv)"
+   ],
+   "random_matches": 30,
+   "config_changes": {
+    "blocking": "fixed"
+   }
+  },
+  "progress": {
+   "prepare": {
+    "seconds": 13.5,
+    "peak_memory_gb_so_far": 1.14
+   },
+   "random_1000": {
+    "seconds": 765.7,
+    "peak_memory_gb_so_far": 25.54
+   },
+   "active_1": {
+    "seconds": 2555.7,
+    "peak_memory_gb_so_far": 25.64
+   },
+   "active_2": {
+    "seconds": 2439.1,
+    "peak_memory_gb_so_far": 26.22
+   },
+   "active_3": {
+    "seconds": 2460.3,
+    "peak_memory_gb_so_far": 26.22
+   },
+   "active_4": {
+    "seconds": 2552.5,
+    "peak_memory_gb_so_far": 26.08
+   },
+   "active_5": {
+    "seconds": 2641.2,
+    "peak_memory_gb_so_far": 26.08
+   },
+   "active_6": {
+    "seconds": 2053.1,
+    "peak_memory_gb_so_far": 26.1
+   },
+   "active_7": {
+    "seconds": 1999.3,
+    "peak_memory_gb_so_far": 26.1
+   },
+   "final_run": {
+    "seconds": 2907.2,
+    "peak_memory_gb_so_far": 26.42
+   }
+  },
+  "machine": "Modal, 16 cores, 128 GiB"
+ },
+ "scale_10m_tier1": {
+  "command": "scripts/custmatch_scale.py 500",
+  "wall_seconds": 3837.8,
+  "peak_memory_gb": 50.56,
+  "machine": "Modal, 16 cores, 128 GiB",
+  "log_tail": [
+   "{\"copies\": 500, \"records\": 10067000, \"blocking\": \"core\", \"run_candidate_pairs\": 24379500, \"stage_seconds\": {\"load and profile\": 187.98, \"blocking (24,379,500 candidate pairs)\": 471.5, \"forest: cross-fitted clustered F1 97.25\": 432.9, \"threshold (clustered, in-cluster precision check)\": -0.0, \"matcher chosen\": -0.0, \"households, golden records, outputs\": 1180.35}, \"candidate_pairs\": 24379500, \"load_seconds\": 41.15, \"profile_seconds\": 90.54, \"block_seconds\": 331.74, \"features_seconds\": 95.91, \"full_run_seconds\": 2278.44, \"clustered_f1\": 96.89}"
+  ],
+  "result": {
+   "copies": 500,
+   "records": 10067000,
+   "blocking": "core",
+   "run_candidate_pairs": 24379500,
+   "stage_seconds": {
+    "load and profile": 187.98,
+    "blocking (24,379,500 candidate pairs)": 471.5,
+    "forest: cross-fitted clustered F1 97.25": 432.9,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 1180.35
+   },
+   "candidate_pairs": 24379500,
+   "load_seconds": 41.15,
+   "profile_seconds": 90.54,
+   "block_seconds": 331.74,
+   "features_seconds": 95.91,
+   "full_run_seconds": 2278.44,
+   "clustered_f1": 96.89
+  }
+ },
+ "scale_2m_tier1_same_image": {
+  "before": {
+   "command": "scripts/custmatch_scale.py 100",
+   "wall_seconds": 600.1,
+   "peak_memory_gb": 7.64,
+   "machine": "Modal, 16 cores, 128 GiB",
+   "log_tail": [
+    "{\"copies\": 100, \"records\": 2013400, \"blocking\": \"core\", \"run_candidate_pairs\": 4875900, \"stage_seconds\": {\"load and profile\": 26.79, \"blocking (4,875,900 candidate pairs)\": 61.51, \"forest: cross-fitted clustered F1 97.35\": 150.99, \"threshold (clustered, in-cluster precision check)\": 0.0, \"matcher chosen\": 0.0, \"households, golden records, outputs\": 148.74}, \"candidate_pairs\": 4875900, \"load_seconds\": 6.24, \"profile_seconds\": 13.61, \"block_seconds\": 37.95, \"features_seconds\": 18.29, \"full_run_seconds\": 389.03, \"clustered_f1\": 97.04}"
+   ],
+   "result": {
+    "copies": 100,
+    "records": 2013400,
+    "blocking": "core",
+    "run_candidate_pairs": 4875900,
+    "stage_seconds": {
+     "load and profile": 26.79,
+     "blocking (4,875,900 candidate pairs)": 61.51,
+     "forest: cross-fitted clustered F1 97.35": 150.99,
+     "threshold (clustered, in-cluster precision check)": 0.0,
+     "matcher chosen": 0.0,
+     "households, golden records, outputs": 148.74
+    },
+    "candidate_pairs": 4875900,
+    "load_seconds": 6.24,
+    "profile_seconds": 13.61,
+    "block_seconds": 37.95,
+    "features_seconds": 18.29,
+    "full_run_seconds": 389.03,
+    "clustered_f1": 97.04
+   },
+   "note": "the commit before Tier 1, run at the same time in the same image"
+  },
+  "after": {
+   "command": "scripts/custmatch_scale.py 100",
+   "wall_seconds": 667.9,
+   "peak_memory_gb": 8.49,
+   "machine": "Modal, 16 cores, 128 GiB",
+   "log_tail": [
+    "{\"copies\": 100, \"records\": 2013400, \"blocking\": \"core\", \"run_candidate_pairs\": 4875900, \"stage_seconds\": {\"load and profile\": 36.97, \"blocking (4,875,900 candidate pairs)\": 89.6, \"forest: cross-fitted clustered F1 97.35\": 93.34, \"threshold (clustered, in-cluster precision check)\": -0.0, \"matcher chosen\": -0.0, \"households, golden records, outputs\": 162.77}, \"candidate_pairs\": 4875900, \"load_seconds\": 7.49, \"profile_seconds\": 17.89, \"block_seconds\": 49.18, \"features_seconds\": 14.53, \"full_run_seconds\": 383.9, \"clustered_f1\": 97.04}"
+   ],
+   "result": {
+    "copies": 100,
+    "records": 2013400,
+    "blocking": "core",
+    "run_candidate_pairs": 4875900,
+    "stage_seconds": {
+     "load and profile": 36.97,
+     "blocking (4,875,900 candidate pairs)": 89.6,
+     "forest: cross-fitted clustered F1 97.35": 93.34,
+     "threshold (clustered, in-cluster precision check)": -0.0,
+     "matcher chosen": -0.0,
+     "households, golden records, outputs": 162.77
+    },
+    "candidate_pairs": 4875900,
+    "load_seconds": 7.49,
+    "profile_seconds": 17.89,
+    "block_seconds": 49.18,
+    "features_seconds": 14.53,
+    "full_run_seconds": 383.9,
+    "clustered_f1": 97.04
+   },
+   "note": "Tier 1 with caches released after scoring"
+  }
+ },
+ "tier1_local_1m": {
+  "what": "1,006,700 records (custmatch_scale 50 copies), pipeline.run, 1,000 labels; the commit before Tier 1 and Tier 1 alternated three times on one laptop; every output identical",
+  "machine": "laptop (Apple silicon)",
+  "before_seconds": [
+   114.6,
+   97.7,
+   89.8
+  ],
+  "after_seconds": [
+   83.8,
+   72.7,
+   72.9
+  ],
+  "before_forest_seconds": [
+   48.38,
+   40.76,
+   36.11
+  ],
+  "after_forest_seconds": [
+   23.99,
+   21.57,
+   21.3
+  ]
+ },
+ "scale_10m_tier2": {
+  "command": "scripts/custmatch_scale.py 500",
+  "wall_seconds": 3280.1,
+  "peak_memory_gb": 34.02,
+  "machine": "Modal, 16 cores, 128 GiB",
+  "log_tail": [
+   "{\"copies\": 500, \"records\": 10067000, \"blocking\": \"core\", \"run_candidate_pairs\": 24379500, \"stage_seconds\": {\"load and profile\": 191.54, \"blocking (24,379,500 candidate pairs)\": 444.69, \"forest: cross-fitted clustered F1 97.25\": 403.14, \"threshold (clustered, in-cluster precision check)\": -0.0, \"matcher chosen\": -0.0, \"households, golden records, outputs\": 795.88}, \"candidate_pairs\": 24379500, \"load_seconds\": 40.44, \"profile_seconds\": 92.13, \"block_seconds\": 250.72, \"features_seconds\": 97.17, \"full_run_seconds\": 1840.74, \"clustered_f1\": 96.89}"
+  ],
+  "result": {
+   "copies": 500,
+   "records": 10067000,
+   "blocking": "core",
+   "run_candidate_pairs": 24379500,
+   "stage_seconds": {
+    "load and profile": 191.54,
+    "blocking (24,379,500 candidate pairs)": 444.69,
+    "forest: cross-fitted clustered F1 97.25": 403.14,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 795.88
+   },
+   "candidate_pairs": 24379500,
+   "load_seconds": 40.44,
+   "profile_seconds": 92.13,
+   "block_seconds": 250.72,
+   "features_seconds": 97.17,
+   "full_run_seconds": 1840.74,
+   "clustered_f1": 96.89
+  }
+ }
+}

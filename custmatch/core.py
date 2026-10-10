@@ -1,0 +1,652 @@
+"""The customer-matching pipeline's stages, as measured in docs/report/05-customer-data.md.
+
+profile contacts -> block (hub suppression, junk never a key) -> features (contact agreement
+weighted by rarity, junk treated as missing) -> [a supervised matcher] -> connected components
+-> households. `scripts/customer_pipeline.py` (the experiment) and `custmatch.pipeline` (the
+tool) both use these functions, so the tool runs exactly the code the report measured.
+
+Records use the canonical columns in `custmatch.io.CANONICAL`; missing values are "".
+"""
+import re
+from collections import Counter, defaultdict
+
+import numpy as np
+import pandas as pd
+from rapidfuzz.distance import JaroWinkler
+from scipy.sparse import coo_matrix
+from scipy.sparse.csgraph import connected_components
+from sklearn.metrics import adjusted_rand_score
+
+MAX_BLOCK = 60          # blocks larger than this are hubs; skip them
+JUNK_MIN_RECORDS = 8    # a value this common, carried by unrelated people, is junk
+JUNK_DIVERSITY = 0.5    # distinct surnames / records
+FAMILY_MAX = 20         # above this an address is group quarters, not a family
+HOUSEHOLD_DIVERSITY = 0.5
+THRESHOLDS = np.round(np.arange(0.05, 0.96, 0.05), 2)
+
+JUNK_PATTERNS = [                                       # values no one can own: junk on sight
+    re.compile(r"^(.)\1{6,}$"),                        # 0000000, aaaaaaa
+    re.compile(r"^(?:0123456789|1234567890|9876543210)$"),
+    re.compile(r"^5{3}\d{7}$"),                        # 555-xxx-xxxx
+    re.compile(r"^61491570\d{3}$"),                     # ACMA fictional mobiles (E.164)
+    re.compile(r"^61[2378](?:5550|7010)\d{4}$"),         # ACMA fictional landlines (E.164)
+    re.compile(r"^(?:test|asdf|none|noreply|no|xxx+|abc|a)@"),
+    re.compile(r"@(?:test|example|none|xxx)\.(?:com|org|net)$"),
+    re.compile(r"^(?:mailinator|yopmail)\."),
+]
+# Numbers that look made up but can be real: people buy "gold" numbers (0411 111111, 0412 121212).
+# A pattern alone is not enough - such a number is junk only when PATTERN_MIN_RECORDS or more
+# records carry it and they are different people (profile_contacts).
+PATTERNED_NUMBERS = [
+    re.compile(r"^\d*(\d)\1{6,}$"),                     # 0400000000, 0411111111
+    re.compile(r"^\d*12345678\d?$"),                  # 0412345678
+    re.compile(r"^\d*(?:0123456|1234567|2345678|3456789|9876543|8765432|7654321|6543210)$"),   # ends in a run of 7
+    re.compile(r"^\d*?(\d\d)\1{3,}$"),                 # a pair 4+ times at the end: 0412121212
+    re.compile(r"^\d*?(\d{3})\1{2,}$"),               # a triple 3+ times: 0123123123
+    re.compile(r"^\d*8675309$"),                       # 867-5309, the song's number, in any area code
+]
+PATTERN_MIN_RECORDS = 3
+
+
+def syntactic_junk(v):
+    return any(p.search(v) for p in JUNK_PATTERNS)
+
+
+def looks_fake(v):
+    """Junk on sight, or a patterned number: what the benchmark scripts' generators treat as fake."""
+    return syntactic_junk(v) or any(p.search(v) for p in PATTERNED_NUMBERS)
+
+
+def syntactic_junk_mask(values, patterns=None):
+    """syntactic_junk for many values (or `patterns`, e.g. PATTERNED_NUMBERS): each pattern in one
+    vectorised pass (Python's regex engine, since some patterns use backreferences). Identical
+    results, without a Python call per value per pattern (6 s of a million-record run)."""
+    import warnings
+    s = pd.Series(list(values), dtype=object)
+    mask = np.zeros(len(s), dtype=bool)
+    with warnings.catch_warnings():               # the patterns' groups are for backreferences, not extraction
+        warnings.filterwarnings("ignore", message="This pattern is interpreted as a regular expression")
+        for p in JUNK_PATTERNS if patterns is None else patterns:
+            mask |= s.str.contains(p, regex=True, na=False).to_numpy(dtype=bool)
+    return mask
+
+
+def patterned_junk(values, n, names, addr_diversity, other_contacts_differ):
+    """A patterned number (PATTERNED_NUMBERS) carried by PATTERN_MIN_RECORDS or more records
+    that are different people - mostly different names, or, with no names, mostly different
+    other contacts - and not one address: the pattern and the strangers confirm each other. One
+    person's bought gold number shares their name."""
+    pattern = syntactic_junk_mask(values, PATTERNED_NUMBERS)
+    strangers = (np.asarray(names) > JUNK_DIVERSITY) | np.asarray(other_contacts_differ)
+    return (pattern & (np.asarray(n) >= PATTERN_MIN_RECORDS) & strangers
+            & ~(np.asarray(addr_diversity) <= JUNK_DIVERSITY))
+
+
+# ---------------------------------------------------------------- stage 1: profile contacts
+def profile_contacts(df, field, aware=True):
+    """Classify each distinct value. Returns {value: (class, weight)}.
+
+    weight is the evidential weight of agreeing on this value: rare -> 1.0, common -> ~0.
+    Vectorised: one group-by over all values (a per-value loop took 7 s of an 8 s run).
+    """
+    sub = df[df[field] != ""]
+    if not len(sub):
+        return {}
+    # blank surnames and addresses are unknown, not shared: diversity is measured over the records
+    # that have one. Counting blanks as one value made na@na.com, typed by 223 unrelated web
+    # customers with no address, look like one household's email (sparse Australian file).
+    addr = (sub.addr_number + " " + sub.addr_street).str.strip()
+    g = pd.DataFrame({"v": sub[field], "fn": sub.first_name, "ln": sub.last_name.where(sub.last_name != ""),
+                      "ad": addr.where(addr != "")}).groupby("v")
+    stats = pd.DataFrame({"n": g.size(), "first_names": g.fn.nunique(), "surnames": g.ln.nunique(),
+                          "with_surname": g.ln.count(), "addrs": g.ad.nunique(), "with_addr": g.ad.count()})
+    if not aware:
+        return {v: ("personal", 1.0) for v in stats.index}
+    n = stats.n.to_numpy()
+    diversity, addr_diversity = name_and_address_diversity(
+        n, stats.first_names.to_numpy(), stats.surnames.to_numpy(), stats.with_surname.to_numpy(),
+        stats.addrs.to_numpy(), stats.with_addr.to_numpy())
+    syntax = syntactic_junk_mask(stats.index)
+    # junk: carried by many records that agree on nothing - not the same family, and not
+    # the same address. A big household is diverse in surname but NOT in address.
+    junk = syntax | ((n >= JUNK_MIN_RECORDS) & (diversity > JUNK_DIVERSITY)
+                     & ~(addr_diversity <= JUNK_DIVERSITY))
+    other = np.zeros(len(n), bool)
+    if field in OTHER_CONTACT and OTHER_CONTACT[field] in sub:
+        args = (field, sub[OTHER_CONTACT[field]].to_numpy(), sub[field].to_numpy(), n, diversity,
+                stats.with_surname.to_numpy(), addr_diversity)
+        junk |= contact_junk(*args)
+        other = contact_junk(*args, min_records=PATTERN_MIN_RECORDS)
+    junk |= patterned_junk(stats.index, n, diversity, addr_diversity, other)
+    # DIFFERENT people (distinct first names) sharing a surname or an address: a household.
+    # One person's records duplicated across sources share a first name, so stay "personal".
+    household = ~junk & (stats.first_names.to_numpy() >= 2) & (
+        (diversity <= HOUSEHOLD_DIVERSITY) | (addr_diversity <= 0.5))
+    weight = np.where(junk, 0.0, np.where(household, 0.35, 1.0 / (1.0 + np.log1p(n - 1))))
+    cls = np.where(junk, "junk", np.where(household, "household", "personal"))
+    return {v: (str(c), float(w)) for v, c, w in zip(stats.index, cls, weight)}
+
+
+OTHER_CONTACT = {"email": "phone", "phone": "email"}
+
+
+def contact_junk(field, values, groups, n, names, with_surname, addr_diversity, min_records=JUNK_MIN_RECORDS):
+    """A contact shared by many records that carry many different other contacts - one email with
+    a dozen mobiles, one mobile with a dozen emails - and agree on no surname or address. People
+    reuse the same fake email or mobile, and it collects whatever real contact they also gave;
+    this holds when the records have no names, where name diversity cannot tell. values: the
+    other contact per record (blank = unknown); groups: the record's value of `field`."""
+    if field not in OTHER_CONTACT:
+        return np.zeros(len(n), bool)
+    o = pd.Series(np.asarray(values, dtype=object)).where(lambda s: s != "")
+    g = o.groupby(np.asarray(groups, dtype=object), sort=True)
+    distinct, count = g.nunique().to_numpy(), g.count().to_numpy()
+    diverse = (count >= min_records) & (distinct / np.maximum(count, 1) > JUNK_DIVERSITY)
+    family = (np.asarray(with_surname) >= 2) & (np.asarray(names) <= JUNK_DIVERSITY)
+    return (np.asarray(n) >= min_records) & diverse & ~family & ~(np.asarray(addr_diversity) <= JUNK_DIVERSITY)
+
+
+def name_and_address_diversity(n, first_names, surnames, with_surname, addrs, with_addr):
+    """(surname diversity, address diversity) per value, over the records that have each. With
+    fewer than two surnames, first-name diversity stands in; with fewer than two addresses,
+    address diversity is NaN - unknown, so it neither proves a household nor clears junk."""
+    n, with_surname, with_addr = (np.asarray(x, dtype=float) for x in (n, with_surname, with_addr))
+    names = np.where(with_surname >= 2, np.asarray(surnames) / np.maximum(with_surname, 1),
+                     np.asarray(first_names) / n)
+    addr = np.where(with_addr >= 2, np.asarray(addrs) / np.maximum(with_addr, 1), np.nan)
+    return names, addr
+
+
+# ------------------------------------------------------------------------- stage 2: blocking
+def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, skipped=None, by_key=None):
+    """Candidate pairs: records sharing any blocking key. Returns (pairs int32 (m, 2), i < j,
+    sorted; number of blocks skipped as hubs).
+
+    Keys: surname + first three letters of the first name, surname + street, house number +
+    street, first name + street, email, phone (not junk), the country keys (nickname root + date
+    of birth, ...), `extra_blocking` and similarity (LSH) keys. extra_keys: column tuples from the
+    config's `extra_blocking` - records sharing all of a tuple's (non-empty) values become
+    candidates, under the same hub rule. A column may carry a transform, as blocking rules do:
+    "first_name:first1", "last_name:soundex", "postcode:first3".
+    skipped: a list to fill with (key, record indices) for each skipped block whose values are all
+    set - a very common name, say - as opposed to blank ones (no address), which mean nothing.
+    by_key: a list to fill with each key family's candidate pairs and how many of them no earlier
+    family proposed (Splink's cumulative comparisons chart): exact up to BY_KEY_EXACT_PAIRS
+    candidate pairs; above that, each family's pairs without the overlap ("new" is None).
+
+    Everything is integer codes and numpy: each key family is factorised to codes, a block is a
+    (family, code), and pairs are generated block by block in vectorised steps and de-duplicated
+    as int64 codes. The first version built a Python dict of key lists and a Python set of pair
+    tuples - about 160 bytes per candidate pair, and most of a full-size run's memory."""
+    n = len(df)
+    limit = (max_block or MAX_BLOCK) if aware else 400   # even the naive run needs some ceiling
+    fams = []                                           # (codes per entry, record per entry, key of a code)
+    labels = []
+    for fam in blocking_families(df, profiles, aware, extra_keys, lsh):
+        labels.append(_family_label(fam, len(labels)))
+        if fam[0] == "tuples":
+            keys, idx = fam[1], fam[2]
+            codes, uniq = pd.factorize(pd.Series(list(keys), dtype=object))
+            fams.append((codes.astype(np.int64), np.asarray(idx, dtype=np.int64), lambda c, u=uniq: u[c]))
+        else:
+            _, tag, arrays, idx = fam
+            codes, uniq = _factorize_columns(arrays)
+            fams.append((codes.astype(np.int64), idx.astype(np.int64),
+                         lambda c, u=uniq, t=tag: tuple(t) + tuple(u[c])))
+    if not fams:
+        return np.zeros((0, 2), np.int32), 0
+    # one block id per (family, code); entries de-duplicated in case a key lists a record twice
+    sizes_by_fam = [int(c.max()) + 1 if len(c) else 0 for c, _, _ in fams]
+    offsets = np.cumsum([0] + sizes_by_fam[:-1])
+    block_id = np.concatenate([c + o for (c, _, _), o in zip(fams, offsets)])
+    rec = np.concatenate([i for _, i, _ in fams])
+    entry = np.unique(block_id * n + rec)
+    block_id, rec = entry // n, entry % n
+    sizes = np.bincount(block_id)
+    hubs = int(((sizes > limit) & (sizes >= 2)).sum()) if aware else 0
+    if skipped is not None and aware:
+        # entries are sorted by block, so a block's records are one slice: binary search, not a scan
+        # of every entry per block (that was thousands of full scans at five million records)
+        big = np.flatnonzero(sizes > limit)
+        starts, ends = np.searchsorted(block_id, big, side="left"), np.searchsorted(block_id, big, side="right")
+        for b, lo, hi in zip(big.tolist(), starts.tolist(), ends.tolist()):
+            f = int(np.searchsorted(offsets, b, side="right") - 1)
+            key = fams[f][2](int(b - offsets[f]))
+            if all(str(v) for v in key[1:]):
+                skipped.append((key, rec[lo:hi].tolist()))
+    keep = (sizes[block_id] >= 2) & (sizes[block_id] <= limit)
+    block_id, rec = block_id[keep], rec[keep]           # sorted by block, then record
+    codes = _block_codes(block_id, rec, n)
+    if by_key is not None:
+        exact = len(codes) <= BY_KEY_EXACT_PAIRS
+        seen = np.zeros(0, np.int64)
+        for f, label in enumerate(labels):
+            lo, hi = offsets[f], offsets[f] + sizes_by_fam[f]
+            m = (block_id >= lo) & (block_id < hi)
+            row = {"key": label, "blocks_used": int(len(np.unique(block_id[m]))),
+                   "blocks_skipped": int(((sizes[lo:hi] > limit) & (sizes[lo:hi] >= 2)).sum()) if aware else 0}
+            if exact:
+                fc = _block_codes(block_id[m], rec[m], n)
+                new = np.setdiff1d(fc, seen, assume_unique=True)
+                seen = np.union1d(seen, new)
+                row |= {"pairs": int(len(fc)), "new": int(len(new)), "cumulative": int(len(seen))}
+            else:                                   # within-block pairs, before removing overlap
+                _, counts = np.unique(block_id[m], return_counts=True)
+                row |= {"pairs": int((counts * (counts - 1) // 2).sum()), "new": None, "cumulative": None}
+            by_key.append(row)
+    return np.column_stack([codes // n, codes % n]).astype(np.int32), hubs
+
+
+BY_KEY_EXACT_PAIRS = 50_000_000
+_KEY_LABELS = {"nm": "surname + first 3 letters", "ns": "surname + street", "ad": "house number + street",
+               "fn": "first name + street", "email": "email", "phone": "phone"}
+
+
+def _family_label(fam, k):
+    if fam[0] == "tuples":
+        return "nickname, email user and name-skeleton keys" if k == 0 else "similarity (LSH)"
+    tag = fam[1]
+    return f"extra blocking {tag[1] + 1}" if tag[0] == "x" else _KEY_LABELS.get(tag[0], tag[0])
+
+
+def _block_codes(block_id, rec, n):
+    """Distinct pairs (as i * n + j, i < j) of records sharing a block; entries sorted by block,
+    then record. Pairs are generated in vectorised steps: the k-th step pairs each entry with
+    the k-th entry after it while both are in one block."""
+    if not len(block_id):
+        return np.zeros(0, np.int64)
+    end = np.repeat(np.r_[np.flatnonzero(np.diff(block_id)) + 1, len(block_id)],
+                    np.diff(np.r_[0, np.flatnonzero(np.diff(block_id)) + 1, len(block_id)]))
+    pos = np.arange(len(block_id))
+    out = []
+    for k in range(1, int((end - pos).max())):
+        a = pos[pos + k < end]
+        out.append(np.unique(rec[a] * n + rec[a + k]))  # rec ascending within a block: i < j
+    return np.unique(np.concatenate(out)) if out else np.zeros(0, np.int64)
+
+
+def _factorize_columns(arrays):
+    """(codes, keys) for rows of several columns: each column factorised on its own, the codes
+    combined as integers and factorised again - the same codes, in order of first appearance, as
+    a MultiIndex factorize of the tuples, without building the tuples (a third of blocking)."""
+    if len(arrays) == 1:
+        codes, uniq = pd.factorize(arrays[0])
+        return codes, [(u,) for u in uniq]
+    parts = [pd.factorize(a) for a in arrays]
+    combined = np.zeros(len(arrays[0]), dtype=np.int64)
+    for codes, uniq in parts:
+        # +1 keeps every code distinct; compressed after each column, so millions of values in
+        # three or more columns cannot overflow 64 bits
+        combined = pd.factorize(combined * (len(uniq) + 1) + codes)[0].astype(np.int64)
+    codes, first = pd.factorize(combined)
+    # each combined code's key: the column values of its first row
+    rows = pd.Series(np.arange(len(combined))).groupby(codes).first().to_numpy() if len(combined) else np.zeros(0, int)
+    keys = list(zip(*(np.asarray(a, dtype=object)[rows] for a in arrays))) if len(rows) else []
+    return codes, keys
+
+
+def blocking_families(df, profiles, aware=True, extra_keys=(), lsh=None):
+    """The default blocker's keys (block's docstring lists them), family by family - the one
+    definition block and the real-time matcher (blocking_hashes) both use. Yields
+    ("tuples", [key tuple, ...], [record index, ...]) or ("columns", tag, [value arrays], record
+    indices): a column family's key is the tag plus the records' values in those columns."""
+    from . import country
+    from .blocking import Keys
+    n = len(df)
+    entries = country.blocking_keys(df, profiles if aware else None)
+    if entries:
+        keys, idx = zip(*entries)
+        yield "tuples", list(keys), list(idx)
+    if lsh:                                             # similarity keys (blocking.lsh_keys)
+        from .blocking import lsh_keys
+        entries = lsh_keys(df, lsh)
+        if entries:
+            idx, keys = zip(*entries)
+            yield "tuples", list(keys), list(idx)
+
+    def columns(tag, cols, mask=None):
+        idx = np.arange(n) if mask is None else np.flatnonzero(mask)
+        return "columns", tag, [np.asarray(c, dtype=object)[idx] for c in cols], idx
+
+    kk = Keys(df)
+    for m, cols in enumerate(extra_keys):
+        vals = [kk.get(c if ":" in c else f"{c}:exact") for c in cols]
+        yield columns(("x", m), vals, np.logical_and.reduce([np.asarray(v, dtype=object) != "" for v in vals]))
+    fn, ln = df.first_name.to_numpy(dtype=object), df.last_name.to_numpy(dtype=object)
+    st, num = df.addr_street.to_numpy(dtype=object), df.addr_number.to_numpy(dtype=object)
+    yield columns(("nm",), [ln, df.first_name.str[:3].to_numpy(dtype=object)])
+    yield columns(("ns",), [ln, st])
+    yield columns(("ad",), [num, st])
+    yield columns(("fn",), [fn, st])
+    for field in ("email", "phone"):
+        v = df[field].to_numpy(dtype=object)
+        keep = v != ""
+        if aware:
+            prof = profiles[field]
+            keep &= np.array([prof.get(x, ("personal",))[0] != "junk" if x else False for x in v], dtype=bool)
+        yield columns((field,), [v], keep)
+
+
+_MIX = np.uint64(0x100000001B3)
+
+
+def _hash_strings(values):
+    return pd.util.hash_array(np.asarray(values, dtype=object), categorize=False)
+
+
+def blocking_hashes(df, profiles, extra_keys=(), lsh=None):
+    """Every blocking key of every record as a 64-bit hash: (hashes uint64, record indices int64).
+    The real-time matcher's index: 16 bytes an entry instead of a Python tuple in a dict of lists.
+    Two keys sharing a hash (about 1 in 10^19) would only add candidates, which are then scored."""
+    hs, rs = [], []
+    for fam in blocking_families(df, profiles, True, extra_keys, lsh):
+        if fam[0] == "tuples":
+            h = _hash_strings(["\x1f".join(map(str, k)) for k in fam[1]])
+            idx = np.asarray(fam[2], dtype=np.int64)
+        else:
+            _, tag, arrays, idx = fam
+            h = np.full(len(idx), _hash_strings(["\x1f".join(map(str, tag))])[0], dtype=np.uint64)
+            with np.errstate(over="ignore"):
+                for a in arrays:
+                    h = (h * _MIX) ^ _hash_strings(a)
+        hs.append(h)
+        rs.append(np.asarray(idx, dtype=np.int64))
+    if not hs:
+        return np.zeros(0, np.uint64), np.zeros(0, np.int64)
+    return np.concatenate(hs), np.concatenate(rs)
+
+
+# ------------------------------------------------------------------------- stage 3: features
+_DATE_PATTERNS = [
+    (re.compile(r"^(\d{4})-(\d{1,2})-(\d{1,2})$"), (0, 1, 2)),     # 1971-06-24
+    (re.compile(r"^(\d{4})(\d{2})(\d{2})$"), (0, 1, 2)),           # 19560409
+    (re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})$"), (2, 0, 1)),     # 05/06/1994 (month first)
+]
+
+
+def parse_dates(values):
+    """(year, month, day) int arrays, -1 where a value does not parse. Handles dates pandas
+    cannot (historical_50k has births before 1677)."""
+    out = np.full((len(values), 3), -1, dtype=np.int64)
+    for k, v in enumerate(values):
+        for pat, order in _DATE_PATTERNS:
+            m = pat.match(v)
+            if m:
+                g = m.groups()
+                out[k] = [int(g[order[0]]), int(g[order[1]]), int(g[order[2]])]
+                break
+    return out
+
+
+def record_arrays(df):
+    """Per-record values the rich features need, computed once per run: parsed dates and their
+    normalised strings, name counts, first initials. Recomputing them on every features() call
+    cost 44 s of a 155 s run at 500k records (the in-cluster check calls it once per threshold)."""
+    dates = parse_dates(df.date_of_birth.to_numpy())
+    out = {"dates": dates,
+           "date_str": np.array([f"{y:04d}{m:02d}{d:02d}" for y, m, d in dates]),
+           "initial": df.first_name.str[:1].to_numpy()}
+    for field in ("first_name", "last_name"):
+        v = pd.Series(df[field].to_numpy())
+        out[f"{field}_count"] = v.map(v.value_counts()).to_numpy().astype(float)
+    return out
+
+
+def rich_features(df, pairs, rec=None):
+    """Nine extra features for data where names and dates drift (docs/report/ and docs/guide.md: what Splink's
+    comparison levels carry and the 13 standard features do not):
+
+      rarity of an agreeing first / last name (agreeing on a rare name is strong evidence),
+      the best first-last swapped name similarity, matching first initials,
+      graded dates: log day difference, same year, day-month swapped, month-day equal
+      (a year typo), and date strings one edit apart.  -1 where a value is missing."""
+    from rapidfuzz.distance import Levenshtein
+    from rapidfuzz.process import cpdist
+    rec = rec if rec is not None else record_arrays(df)
+    i, j = pairs[:, 0], pairs[:, 1]
+    cols = []
+    for field in ("first_name", "last_name"):
+        v = _object_column(df, field)
+        counts = rec[f"{field}_count"]
+        agree = (v[i] == v[j]) & (v[i] != "")
+        n_file = rec.get("n_records", len(v))     # the whole file's size when scoring a few records
+        cols.append(np.where(v[i] == "", -1.0, np.where(agree, np.log(n_file / counts[i]), 0.0)))
+    fn, ln = _object_column(df, "first_name"), _object_column(df, "last_name")
+    swap = np.maximum(cpdist(list(fn[i]), list(ln[j]), scorer=JaroWinkler.normalized_similarity, workers=-1),
+                      cpdist(list(ln[i]), list(fn[j]), scorer=JaroWinkler.normalized_similarity, workers=-1))
+    cols.append(swap)
+    has = (fn[i] != "") & (fn[j] != "")
+    cols.append(np.where(has, rec["initial"][i] == rec["initial"][j], -1.0))
+    a, b = rec["dates"][i], rec["dates"][j]
+    ok = (a[:, 0] >= 0) & (b[:, 0] >= 0)
+    days = np.abs((a[:, 0] - b[:, 0]) * 365.25 + (a[:, 1] - b[:, 1]) * 30.44 + (a[:, 2] - b[:, 2]))
+    cols.append(np.where(ok, np.log1p(days), -1.0))
+    cols.append(np.where(ok, a[:, 0] == b[:, 0], -1.0))
+    cols.append(np.where(ok, (a[:, 1] == b[:, 2]) & (a[:, 2] == b[:, 1]) & (a[:, 0] == b[:, 0]), -1.0))
+    cols.append(np.where(ok, (a[:, 1] == b[:, 1]) & (a[:, 2] == b[:, 2]), -1.0))
+    sa, sb = rec["date_str"][i], rec["date_str"][j]
+    edits = cpdist(list(sa), list(sb), scorer=Levenshtein.distance, workers=-1) if len(sa) else np.zeros(0)
+    cols.append(np.where(ok, edits <= 1, -1.0))
+    return np.column_stack(cols).astype(np.float32) if len(pairs) else np.zeros((0, 9), np.float32)
+
+
+FEATURE_CHUNK = 2_000_000
+
+
+def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None):
+    """13 standard features, then one per extra field: `exact` -> 1 / 0 / -1 (missing),
+    `similarity` -> Jaro-Winkler, `edit` -> normalised Levenshtein (dates, codes); -1 when missing.
+    An extra field may name a standard column (e.g. date_of_birth) to compare it fuzzily too.
+
+    Computed FEATURE_CHUNK pairs at a time into one float32 array: each pair's row depends only
+    on its two records, and the per-chunk temporaries (string lists for the similarity scorers)
+    stay bounded however many pairs there are."""
+    if len(pairs) <= FEATURE_CHUNK:
+        return _features(df, pairs, profiles, aware, extra_fields, rich, records)
+    if rich and records is None:
+        records = record_arrays(df)
+    X = None
+    for s in range(0, len(pairs), FEATURE_CHUNK):
+        part = _features(df, pairs[s:s + FEATURE_CHUNK], profiles, aware, extra_fields, rich, records)
+        if X is None:
+            X = np.empty((len(pairs), part.shape[1]), np.float32)
+        X[s:s + len(part)] = part
+    return X
+
+
+def _features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None):
+    from . import country
+    X = _standard_features(df, pairs, profiles, aware)
+    if rich:
+        X = np.hstack([X, rich_features(df, pairs, records)])
+    X = np.hstack([X, country.features(df, pairs, profiles)])
+    if not extra_fields or not len(pairs):
+        return X if not extra_fields else np.zeros((0, X.shape[1] + len(extra_fields)), np.float32)
+    cols = []
+    for name, compare in extra_fields:
+        if compare == "years_apart":
+            t = pd.to_datetime(df[name].replace("", None), errors="coerce", format="mixed", utc=True)
+            yr = (t.dt.year + (t.dt.dayofyear - 1) / 365.25).to_numpy(dtype=float)
+            gap = np.abs(yr[pairs[:, 0]] - yr[pairs[:, 1]])
+            cols.append(np.where(np.isnan(gap), -1.0, gap))
+            continue
+        v = df[name].to_numpy()
+        a, b = v[pairs[:, 0]], v[pairs[:, 1]]
+        both = (a != "") & (b != "")
+        if compare in ("similarity", "edit"):
+            from rapidfuzz.distance import Levenshtein
+            from rapidfuzz.process import cpdist
+            scorer = JaroWinkler.normalized_similarity if compare == "similarity" \
+                else Levenshtein.normalized_similarity
+            sim = cpdist(list(a), list(b), scorer=scorer, workers=-1)
+            cols.append(np.where(both, sim, -1.0))
+        else:
+            cols.append(np.where(both, (a == b).astype(float), -1.0))
+    return np.hstack([X, np.column_stack(cols).astype(np.float32)])
+
+
+STANDARD_FEATURES = ["first name similarity", "surname similarity", "full name similarity", "middle initial agrees",
+                     "house number agrees", "street similarity", "unit agrees", "email agrees", "email weight",
+                     "phone agrees", "phone weight", "date of birth agrees", "SSN agrees"]
+RICH_FEATURES = ["first name rarity (agreeing)", "surname rarity (agreeing)", "first/last name swapped",
+                 "first initial agrees", "date gap (log days)", "birth year agrees", "day and month swapped",
+                 "day and month agree", "dates one edit apart"]
+
+
+def feature_names(columns, extra_fields=(), rich=False, match_weight=False):
+    """The features' names, in the order core.features builds them, for a record frame with these
+    columns - for explaining a score (which feature moved it, and by how much)."""
+    names = list(STANDARD_FEATURES) + (list(RICH_FEATURES) if rich else [])
+    columns = set(columns)
+    names += [n for col, n in (("first_roots", "first names share a root"), ("email_user", "email user names agree"),
+                               ("name_skeleton", "name skeletons agree (across scripts)")) if col in columns]
+    names += [f"{name} ({compare})" for name, compare in extra_fields]
+    return names + (["match weight (Fellegi-Sunter)"] if match_weight else [])
+
+
+_WEIGHTS, _COLUMNS = {}, {}
+
+
+def clear_caches():
+    """Drop the feature caches (object columns, contact weights). The pipeline calls it once
+    scoring is done: at ten million records the cached columns are several gigabytes."""
+    _COLUMNS.clear()
+    _WEIGHTS.clear()
+
+
+def _object_column(df, c):
+    """df[c] (blanks for missing) as a numpy object array, converted once per frame: features
+    are computed dozens of times on the same records, and converting Arrow strings each time cost
+    about 8 s of a million-record run. Keyed by the frame's identity; a frame changed in place
+    must not be reused (the pipeline makes new frames rather than changing them)."""
+    hit = _COLUMNS.get(id(df))
+    if hit is None or hit[0] is not df:
+        if len(_COLUMNS) > 4:
+            _COLUMNS.clear()
+        hit = _COLUMNS[id(df)] = (df, {})
+    cols = hit[1]
+    if c not in cols:
+        cols[c] = df[c].fillna("").to_numpy(dtype=object)
+    return cols[c]
+
+
+def _weight_series(profile):
+    """{value: (class, weight)} as a Series of weights, built once per profile: the threshold
+    search computes features dozens of times, and rebuilding it each time cost 9 s at a million."""
+    hit = _WEIGHTS.get(id(profile))
+    if hit is None or hit[0] is not profile:
+        if len(_WEIGHTS) > 8:
+            _WEIGHTS.clear()
+        hit = _WEIGHTS[id(profile)] = (profile, pd.Series({k: t[1] for k, t in profile.items()}, dtype=float))
+    return hit[1]
+
+
+def _standard_features(df, pairs, profiles, aware=True):
+    """Two blank surnames score 1.0 (agreement) and a surname against a blank 0.0. (Scoring a
+    blank as unknown, -1, was tried as "missing_as_unknown" and removed: with no labelled example
+    of a blank the model could not use it, and it made sparse records worse.)
+
+    Column by column with numpy and rapidfuzz's cpdist: the first version built each pair's row
+    in a Python loop - identical values, 2.8x slower at a million records (poc/vectorised_features.py)."""
+    from rapidfuzz.process import cpdist
+    i, j = pairs[:, 0], pairs[:, 1]
+    col = lambda c: _object_column(df, c)  # noqa: E731
+    fn, ln, mi, num, st, unit, em, ph, dob, ssn = (col(c) for c in (
+        "first_name", "last_name", "middle_initial", "addr_number", "addr_street", "addr_unit", "email", "phone",
+        "date_of_birth", "ssn"))
+    jw = lambda a, b: cpdist(list(a), list(b), scorer=JaroWinkler.similarity, workers=-1)  # noqa: E731
+    agree = lambda v: (v[i] != "") & (v[i] == v[j])  # noqa: E731
+    both = lambda v: (v[i] != "") & (v[j] != "")  # noqa: E731
+    full = (df.first_name.fillna("") + df.last_name.fillna("")).to_numpy(dtype=object)
+    e_match, p_match = agree(em), agree(ph)
+
+    def weight(field, v, match):
+        if not aware:
+            return match.astype(float)
+        w = _weight_series(profiles[field])
+        got = w.reindex(v[i]).to_numpy() if len(w) else np.full(len(i), np.nan)
+        return np.where(match, np.nan_to_num(got, nan=1.0), 0.0)        # a value not profiled weighs 1.0
+
+    if not len(pairs):
+        return np.zeros((0, 13), dtype=np.float32)
+    return np.column_stack([
+        jw(fn[i], fn[j]), jw(ln[i], ln[j]), jw(full[i], full[j]),
+        agree(mi), agree(num), jw(st[i], st[j]), agree(unit),
+        e_match, weight("email", em, e_match), p_match, weight("phone", ph, p_match),
+        np.where(both(dob), agree(dob), -1.0), np.where(both(ssn), agree(ssn), -1.0)]).astype(np.float32)
+
+
+# -------------------------------------------------------------- stages 5/6: cluster + score
+def pair_scores(y, pred, n_true_all):
+    tp = int(np.sum(y & pred))
+    fp = int(np.sum(~y & pred))
+    p = tp / (tp + fp) if tp + fp else 0.0
+    r = tp / n_true_all
+    return {"precision": round(100 * p, 2), "recall": round(100 * r, 2),
+            "f1": round(200 * p * r / (p + r), 2) if p + r else 0.0,
+            "false_merges": fp}
+
+
+def partition_scores(labels_pred, labels_true, n_true_all):
+    def n2(c):
+        c = np.asarray(c, dtype=np.float64)
+        return float(np.sum(c * (c - 1) / 2))
+    _, pi = np.unique(labels_pred, return_inverse=True)
+    _, ti = np.unique(labels_true, return_inverse=True)
+    sizes = np.bincount(pi)
+    m = coo_matrix((np.ones(len(pi)), (pi, ti))).tocsr()
+    tp, pred_total = n2(m.data), n2(sizes)
+    p = tp / pred_total if pred_total else 0.0
+    r = tp / n_true_all
+    return {"precision": round(100 * p, 2), "recall": round(100 * r, 2),
+            "f1": round(200 * p * r / (p + r), 2) if p + r else 0.0,
+            "clusters": int(len(sizes)), "largest_cluster": int(sizes.max()),
+            "adjusted_rand": round(adjusted_rand_score(labels_true, labels_pred), 4)}
+
+
+def components(n, pairs, keep):
+    r, c = pairs[keep, 0], pairs[keep, 1]
+    g = coo_matrix((np.ones(keep.sum()), (r, c)), shape=(n, n))
+    return connected_components(g, directed=False)[1]
+
+
+def household_partition(df, profiles, identity_labels):
+    """Assign every record to a household.
+
+    A household is an ADDRESS, not a connected component: closure over address edges chains
+    separate homes together through anyone who appears at two of them (which is exactly how
+    the naive version produced a 2,252-record "household"). So we partition directly:
+
+      1. each customer (identity cluster) is placed at its modal address
+      2. customers with no usable address fall back to a shared household-class contact
+      3. anything left over is its own household
+    """
+    addr = (df.addr_number.astype(str) + "|" + df.addr_street.astype(str)
+            + "|" + df.addr_unit.astype(str)).to_numpy()
+    has_addr = (df.addr_number.astype(str).str.strip() != "").to_numpy()
+    hh_contact = np.array([
+        next((f"{f}:{v}" for f, v in (("email", e), ("phone", p))
+              if v and profiles[f].get(v, ("", 0))[0] == "household"), "")
+        for e, p in zip(df.email.to_numpy(), df.phone.to_numpy())])
+
+    by_cluster = defaultdict(list)
+    for i, lab in enumerate(identity_labels):
+        by_cluster[lab].append(i)
+
+    household_of = {}
+    for lab, idx in by_cluster.items():
+        addrs = [addr[i] for i in idx if has_addr[i]]
+        if addrs:
+            # most common address; ties go to the first seen. (max over a set broke ties by
+            # string-hash order, which Python randomises per run - households varied run to run)
+            household_of[lab] = "addr:" + Counter(addrs).most_common(1)[0][0]
+            continue
+        contacts = [hh_contact[i] for i in idx if hh_contact[i]]
+        household_of[lab] = ("hh:" + contacts[0]) if contacts else f"own:{lab}"
+
+    labels = np.array([household_of[lab] for lab in identity_labels])
+    _, out = np.unique(labels, return_inverse=True)
+    n_group = int(np.sum(np.bincount(out) > FAMILY_MAX))
+    return out, n_group
+
+

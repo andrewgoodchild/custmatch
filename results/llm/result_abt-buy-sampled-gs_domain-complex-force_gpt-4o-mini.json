@@ -1,0 +1,13 @@
+{
+ "precision": 89.45,
+ "recall": 94.66,
+ "f1": 91.98,
+ "accuracy": 97.18,
+ "n": 1206,
+ "predicted_matches": 218,
+ "dataset": "abt-buy-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-4o-mini",
+ "unclear_or_long_answers": 0,
+ "cost_usd": 0.0157
+}

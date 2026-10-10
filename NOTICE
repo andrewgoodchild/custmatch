@@ -1,0 +1,29 @@
+custmatch
+Copyright 2026 Andrew Goodchild
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+patches/ditto-mps-and-fixes.patch modifies Ditto (https://github.com/megagonlabs/ditto),
+Copyright Megagon Labs, licensed under the Apache License, Version 2.0. The patch contains
+lines of Ditto's source as diff context.
+
+No third-party datasets are included in the current tree. (Earlier commits in the history
+contained the nickname list below and a Wikidata name list, CC0, since removed.) custmatch
+downloads it into ~/.cache/custmatch (or $CUSTMATCH_DATA) when first needed:
+
+- nicknames.csv: the carltonnorthern/nicknames list (https://github.com/carltonnorthern/nicknames,
+  commit ed160b3), Copyright its contributors, licensed under the Apache License, Version 2.0.
+  Downloaded unmodified on first use and checked against its SHA-256.
+- profanity_en.txt: the English list of LDNOOBW, the List of Dirty, Naughty, Obscene, and
+  Otherwise Bad Words (https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words,
+  commit 5faf2ba), Copyright its contributors, licensed under CC BY 4.0. Downloaded unmodified
+  on first use and checked against its SHA-256; custmatch uses it without the words that are
+  real names (custmatch/suspect.py).
+
+
+Other datasets used by the research scripts are not included either. Scripts download or generate them (FEBRL and
+historical_50k via recordlinkage and splink, the Magellan / DeepMatcher and MatchGPT
+benchmarks from their own repositories, synthetic people via pseudopeople, name frequencies
+from the US Census and Social Security via the FiveThirtyEight data repository (CC BY 4.0)
+for the Australian test file), each under its own licence; see docs/reproducing.md. Files in results/ are metrics and logs computed from
+them.

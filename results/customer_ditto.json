@@ -1,0 +1,134 @@
+{
+ "test_pairs": 14997,
+ "test_records": 10073,
+ "routed_frac": 0.41735013669400545,
+ "picked_on_test": {
+  "forest_only": {
+   "precision": 97.33,
+   "recall": 98.28,
+   "f1": 97.81,
+   "clusters": 5412,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9781,
+   "threshold": 0.7
+  },
+  "ditto_only": {
+   "precision": 98.66,
+   "recall": 98.71,
+   "f1": 98.69,
+   "clusters": 5414,
+   "largest_cluster": 10,
+   "adjusted_rand": 0.9869,
+   "threshold": 0.98
+  },
+  "forest_veto_then_ditto": {
+   "precision": 98.54,
+   "recall": 99.02,
+   "f1": 98.78,
+   "clusters": 5391,
+   "largest_cluster": 6,
+   "adjusted_rand": 0.9878,
+   "threshold": 0.9
+  }
+ },
+ "split_half": {
+  "forest_only": {
+   "held_out_f1": [
+    98.49,
+    98.58
+   ],
+   "mean": 98.53
+  },
+  "ditto_only": {
+   "held_out_f1": [
+    99.0,
+    99.28
+   ],
+   "mean": 99.14
+  },
+  "forest_veto_then_ditto": {
+   "held_out_f1": [
+    99.12,
+    99.16
+   ],
+   "mean": 99.14
+  }
+ },
+ "ditto_train": {
+  "valid_f1": 99.89,
+  "threshold": 0.35000000000000003,
+  "epoch": 3,
+  "epochs": 5,
+  "max_len": 160,
+  "batch_size": 16,
+  "warmup_frac": 0.1
+ },
+ "golden_records_on_test": {
+  "forest_only": {
+   "first_seen": {
+    "per_field": {
+     "first_name": 96.19,
+     "last_name": 97.32,
+     "addr_number": 98.13,
+     "addr_street": 97.86
+    },
+    "all_fields_correct": 90.41,
+    "clusters_scored": 5412
+   },
+   "most_complete": {
+    "per_field": {
+     "first_name": 96.75,
+     "last_name": 97.65,
+     "addr_number": 96.1,
+     "addr_street": 95.6
+    },
+    "all_fields_correct": 89.34,
+    "clusters_scored": 5412
+   }
+  },
+  "forest_veto_then_ditto": {
+   "first_seen": {
+    "per_field": {
+     "first_name": 96.51,
+     "last_name": 97.57,
+     "addr_number": 98.2,
+     "addr_street": 97.92
+    },
+    "all_fields_correct": 90.93,
+    "clusters_scored": 5391
+   },
+   "most_complete": {
+    "per_field": {
+     "first_name": 97.05,
+     "last_name": 97.9,
+     "addr_number": 96.12,
+     "addr_street": 95.62
+    },
+    "all_fields_correct": 89.78,
+    "clusters_scored": 5391
+   }
+  },
+  "perfect_linkage": {
+   "first_seen": {
+    "per_field": {
+     "first_name": 96.8,
+     "last_name": 97.75,
+     "addr_number": 98.42,
+     "addr_street": 98.16
+    },
+    "all_fields_correct": 91.52,
+    "clusters_scored": 5368
+   },
+   "most_complete": {
+    "per_field": {
+     "first_name": 97.37,
+     "last_name": 98.08,
+     "addr_number": 96.26,
+     "addr_street": 95.81
+    },
+    "all_fields_correct": 90.35,
+    "clusters_scored": 5368
+   }
+  }
+ }
+}

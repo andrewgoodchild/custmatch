@@ -1,0 +1,16 @@
+{
+ "precision": 93.8,
+ "recall": 96.8,
+ "f1": 95.28,
+ "accuracy": 96.36,
+ "n": 660,
+ "predicted_matches": 258,
+ "dataset": "customer-person-hard",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-4o-2024-08-06",
+ "unclear_or_long_answers": 2,
+ "empty_answers": 0,
+ "cost_usd": 0.1736,
+ "temperature": 0,
+ "max_tokens": 12
+}

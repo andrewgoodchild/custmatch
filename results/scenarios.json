@@ -1,0 +1,2324 @@
+{
+ "repeats": 10,
+ "background_people": 1000,
+ "default": {
+  "runs": [
+   {
+    "seed": 1,
+    "labels": 1500,
+    "background_f1": 96.74,
+    "threshold": 0.4,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 2,
+    "labels": 1500,
+    "background_f1": 98.3,
+    "threshold": 0.6,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 3,
+    "labels": 1500,
+    "background_f1": 98.55,
+    "threshold": 0.6,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   }
+  ],
+  "scenarios": {
+   "typo_first": {
+    "description": "A typo in the first name (Jonathon / Jonathan)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "nickname": {
+    "description": "A nickname (Bill / William)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "name_swapped": {
+    "description": "First and last name swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "married_name": {
+    "description": "A new surname after marriage; same date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "moved": {
+    "description": "Moved house: a new address and phone; same name, date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "gmail_variants": {
+    "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "phone_formats": {
+    "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "dob_day_month_swapped": {
+    "description": "Day and month of birth swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "no_surname_email": {
+    "description": "One record has only a first name and email (a web sign-up)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "initial_only": {
+    "description": "First initial only, with the same email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "hyphenated": {
+    "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "punctuation_case": {
+    "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "accents": {
+    "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "apartment_forms": {
+    "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "sparse_pair": {
+    "description": "Both records sparse: first name, surname and phone only",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "twins": {
+    "description": "Twins: same surname, birthday, address and phone; different first names",
+    "expected": "different",
+    "passed_pct": 0.0
+   },
+   "father_son_same_name": {
+    "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "spouses_shared_contacts": {
+    "description": "A couple sharing surname, address, family email and phone",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "common_name_strangers": {
+    "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "reissued_phone": {
+    "description": "Strangers with the same mobile (a reissued number)",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "junk_contacts": {
+    "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "roommates": {
+    "description": "Unrelated people at one address",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "no_chaining": {
+    "description": "A record with one person's name and another's email and phone must not join the two",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "siblings_same_initial": {
+    "description": "Sisters at one address, both recorded by first initial only",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "fake_mobile_many_emails": {
+    "description": "Nameless sign-ups, each with their own email, all typing one made-up mobile",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "gold_number": {
+    "description": "A bought gold mobile ((212) 222-2222): a sign-up with only a first name and it",
+    "expected": "same",
+    "passed_pct": 100.0
+   }
+  },
+  "background_f1": 97.86
+ },
+ "twin_guard": {
+  "runs": [
+   {
+    "seed": 1,
+    "labels": 1500,
+    "background_f1": 96.54,
+    "threshold": 0.4,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 100.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 2,
+    "labels": 1500,
+    "background_f1": 98.09,
+    "threshold": 0.6,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 100.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 3,
+    "labels": 1500,
+    "background_f1": 98.34,
+    "threshold": 0.6,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 100.0,
+     "typo_first": 100.0
+    }
+   }
+  ],
+  "scenarios": {
+   "typo_first": {
+    "description": "A typo in the first name (Jonathon / Jonathan)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "nickname": {
+    "description": "A nickname (Bill / William)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "name_swapped": {
+    "description": "First and last name swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "married_name": {
+    "description": "A new surname after marriage; same date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "moved": {
+    "description": "Moved house: a new address and phone; same name, date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "gmail_variants": {
+    "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "phone_formats": {
+    "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "dob_day_month_swapped": {
+    "description": "Day and month of birth swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "no_surname_email": {
+    "description": "One record has only a first name and email (a web sign-up)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "initial_only": {
+    "description": "First initial only, with the same email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "hyphenated": {
+    "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "punctuation_case": {
+    "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "accents": {
+    "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "apartment_forms": {
+    "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "sparse_pair": {
+    "description": "Both records sparse: first name, surname and phone only",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "twins": {
+    "description": "Twins: same surname, birthday, address and phone; different first names",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "father_son_same_name": {
+    "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "spouses_shared_contacts": {
+    "description": "A couple sharing surname, address, family email and phone",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "common_name_strangers": {
+    "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "reissued_phone": {
+    "description": "Strangers with the same mobile (a reissued number)",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "junk_contacts": {
+    "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "roommates": {
+    "description": "Unrelated people at one address",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "no_chaining": {
+    "description": "A record with one person's name and another's email and phone must not join the two",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "siblings_same_initial": {
+    "description": "Sisters at one address, both recorded by first initial only",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "fake_mobile_many_emails": {
+    "description": "Nameless sign-ups, each with their own email, all typing one made-up mobile",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "gold_number": {
+    "description": "A bought gold mobile ((212) 222-2222): a sign-up with only a first name and it",
+    "expected": "same",
+    "passed_pct": 100.0
+   }
+  },
+  "background_f1": 97.66
+ },
+ "missing_as_unknown": {
+  "runs": [
+   {
+    "seed": 1,
+    "labels": 1500,
+    "background_f1": 98.26,
+    "threshold": 0.6,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 0.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 2,
+    "labels": 1500,
+    "background_f1": 98.26,
+    "threshold": 0.6,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 0.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 3,
+    "labels": 1500,
+    "background_f1": 98.31,
+    "threshold": 0.65,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 0.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   }
+  ],
+  "scenarios": {
+   "typo_first": {
+    "description": "A typo in the first name (Jonathon / Jonathan)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "nickname": {
+    "description": "A nickname (Bill / William)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "name_swapped": {
+    "description": "First and last name swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "married_name": {
+    "description": "A new surname after marriage; same date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "moved": {
+    "description": "Moved house: a new address and phone; same name, date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "gmail_variants": {
+    "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "phone_formats": {
+    "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "dob_day_month_swapped": {
+    "description": "Day and month of birth swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "no_surname_email": {
+    "description": "One record has only a first name and email (a web sign-up)",
+    "expected": "same",
+    "passed_pct": 0.0
+   },
+   "initial_only": {
+    "description": "First initial only, with the same email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "hyphenated": {
+    "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "punctuation_case": {
+    "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "accents": {
+    "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "apartment_forms": {
+    "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "sparse_pair": {
+    "description": "Both records sparse: first name, surname and phone only",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "twins": {
+    "description": "Twins: same surname, birthday, address and phone; different first names",
+    "expected": "different",
+    "passed_pct": 0.0
+   },
+   "father_son_same_name": {
+    "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "spouses_shared_contacts": {
+    "description": "A couple sharing surname, address, family email and phone",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "common_name_strangers": {
+    "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "reissued_phone": {
+    "description": "Strangers with the same mobile (a reissued number)",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "junk_contacts": {
+    "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "roommates": {
+    "description": "Unrelated people at one address",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "no_chaining": {
+    "description": "A record with one person's name and another's email and phone must not join the two",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "siblings_same_initial": {
+    "description": "Sisters at one address, both recorded by first initial only",
+    "expected": "different",
+    "passed_pct": 100.0
+   }
+  },
+  "background_f1": 98.28
+ },
+ "active": {
+  "runs": [
+   {
+    "seed": 1,
+    "labels": 1500,
+    "background_f1": 99.19,
+    "threshold": 0.5,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 2,
+    "labels": 1500,
+    "background_f1": 99.62,
+    "threshold": 0.55,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 3,
+    "labels": 1500,
+    "background_f1": 99.51,
+    "threshold": 0.65,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   }
+  ],
+  "scenarios": {
+   "typo_first": {
+    "description": "A typo in the first name (Jonathon / Jonathan)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "nickname": {
+    "description": "A nickname (Bill / William)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "name_swapped": {
+    "description": "First and last name swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "married_name": {
+    "description": "A new surname after marriage; same date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "moved": {
+    "description": "Moved house: a new address and phone; same name, date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "gmail_variants": {
+    "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "phone_formats": {
+    "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "dob_day_month_swapped": {
+    "description": "Day and month of birth swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "no_surname_email": {
+    "description": "One record has only a first name and email (a web sign-up)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "initial_only": {
+    "description": "First initial only, with the same email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "hyphenated": {
+    "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "punctuation_case": {
+    "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "accents": {
+    "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "apartment_forms": {
+    "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "sparse_pair": {
+    "description": "Both records sparse: first name, surname and phone only",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "twins": {
+    "description": "Twins: same surname, birthday, address and phone; different first names",
+    "expected": "different",
+    "passed_pct": 0.0
+   },
+   "father_son_same_name": {
+    "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "spouses_shared_contacts": {
+    "description": "A couple sharing surname, address, family email and phone",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "common_name_strangers": {
+    "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "reissued_phone": {
+    "description": "Strangers with the same mobile (a reissued number)",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "junk_contacts": {
+    "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "roommates": {
+    "description": "Unrelated people at one address",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "no_chaining": {
+    "description": "A record with one person's name and another's email and phone must not join the two",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "siblings_same_initial": {
+    "description": "Sisters at one address, both recorded by first initial only",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "fake_mobile_many_emails": {
+    "description": "Nameless sign-ups, each with their own email, all typing one made-up mobile",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "gold_number": {
+    "description": "A bought gold mobile ((212) 222-2222): a sign-up with only a first name and it",
+    "expected": "same",
+    "passed_pct": 100.0
+   }
+  },
+  "background_f1": 99.44
+ },
+ "twin_guard_active": {
+  "runs": [
+   {
+    "seed": 1,
+    "labels": 1500,
+    "background_f1": 98.99,
+    "threshold": 0.5,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 100.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 2,
+    "labels": 1500,
+    "background_f1": 99.42,
+    "threshold": 0.55,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 100.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 3,
+    "labels": 1500,
+    "background_f1": 99.3,
+    "threshold": 0.65,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 100.0,
+     "typo_first": 100.0
+    }
+   }
+  ],
+  "scenarios": {
+   "typo_first": {
+    "description": "A typo in the first name (Jonathon / Jonathan)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "nickname": {
+    "description": "A nickname (Bill / William)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "name_swapped": {
+    "description": "First and last name swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "married_name": {
+    "description": "A new surname after marriage; same date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "moved": {
+    "description": "Moved house: a new address and phone; same name, date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "gmail_variants": {
+    "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "phone_formats": {
+    "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "dob_day_month_swapped": {
+    "description": "Day and month of birth swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "no_surname_email": {
+    "description": "One record has only a first name and email (a web sign-up)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "initial_only": {
+    "description": "First initial only, with the same email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "hyphenated": {
+    "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "punctuation_case": {
+    "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "accents": {
+    "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "apartment_forms": {
+    "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "sparse_pair": {
+    "description": "Both records sparse: first name, surname and phone only",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "twins": {
+    "description": "Twins: same surname, birthday, address and phone; different first names",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "father_son_same_name": {
+    "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "spouses_shared_contacts": {
+    "description": "A couple sharing surname, address, family email and phone",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "common_name_strangers": {
+    "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "reissued_phone": {
+    "description": "Strangers with the same mobile (a reissued number)",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "junk_contacts": {
+    "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "roommates": {
+    "description": "Unrelated people at one address",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "no_chaining": {
+    "description": "A record with one person's name and another's email and phone must not join the two",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "siblings_same_initial": {
+    "description": "Sisters at one address, both recorded by first initial only",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "fake_mobile_many_emails": {
+    "description": "Nameless sign-ups, each with their own email, all typing one made-up mobile",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "gold_number": {
+    "description": "A bought gold mobile ((212) 222-2222): a sign-up with only a first name and it",
+    "expected": "same",
+    "passed_pct": 100.0
+   }
+  },
+  "background_f1": 99.24
+ },
+ "twin_guard_missing_as_unknown": {
+  "runs": [
+   {
+    "seed": 1,
+    "labels": 1500,
+    "background_f1": 98.05,
+    "threshold": 0.6,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 0.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 100.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 2,
+    "labels": 1500,
+    "background_f1": 98.06,
+    "threshold": 0.6,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 0.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 100.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 3,
+    "labels": 1500,
+    "background_f1": 98.11,
+    "threshold": 0.65,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 0.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 100.0,
+     "typo_first": 100.0
+    }
+   }
+  ],
+  "scenarios": {
+   "typo_first": {
+    "description": "A typo in the first name (Jonathon / Jonathan)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "nickname": {
+    "description": "A nickname (Bill / William)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "name_swapped": {
+    "description": "First and last name swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "married_name": {
+    "description": "A new surname after marriage; same date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "moved": {
+    "description": "Moved house: a new address and phone; same name, date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "gmail_variants": {
+    "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "phone_formats": {
+    "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "dob_day_month_swapped": {
+    "description": "Day and month of birth swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "no_surname_email": {
+    "description": "One record has only a first name and email (a web sign-up)",
+    "expected": "same",
+    "passed_pct": 0.0
+   },
+   "initial_only": {
+    "description": "First initial only, with the same email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "hyphenated": {
+    "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "punctuation_case": {
+    "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "accents": {
+    "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "apartment_forms": {
+    "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "sparse_pair": {
+    "description": "Both records sparse: first name, surname and phone only",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "twins": {
+    "description": "Twins: same surname, birthday, address and phone; different first names",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "father_son_same_name": {
+    "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "spouses_shared_contacts": {
+    "description": "A couple sharing surname, address, family email and phone",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "common_name_strangers": {
+    "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "reissued_phone": {
+    "description": "Strangers with the same mobile (a reissued number)",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "junk_contacts": {
+    "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "roommates": {
+    "description": "Unrelated people at one address",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "no_chaining": {
+    "description": "A record with one person's name and another's email and phone must not join the two",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "siblings_same_initial": {
+    "description": "Sisters at one address, both recorded by first initial only",
+    "expected": "different",
+    "passed_pct": 100.0
+   }
+  },
+  "background_f1": 98.07
+ },
+ "match_weight": {
+  "runs": [
+   {
+    "seed": 1,
+    "labels": 1500,
+    "background_f1": 97.97,
+    "threshold": 0.6,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 10.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 2,
+    "labels": 1500,
+    "background_f1": 98.08,
+    "threshold": 0.7,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 0.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 3,
+    "labels": 1500,
+    "background_f1": 98.75,
+    "threshold": 0.65,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 0.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   }
+  ],
+  "scenarios": {
+   "typo_first": {
+    "description": "A typo in the first name (Jonathon / Jonathan)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "nickname": {
+    "description": "A nickname (Bill / William)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "name_swapped": {
+    "description": "First and last name swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "married_name": {
+    "description": "A new surname after marriage; same date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "moved": {
+    "description": "Moved house: a new address and phone; same name, date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "gmail_variants": {
+    "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "phone_formats": {
+    "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "dob_day_month_swapped": {
+    "description": "Day and month of birth swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "no_surname_email": {
+    "description": "One record has only a first name and email (a web sign-up)",
+    "expected": "same",
+    "passed_pct": 3.3
+   },
+   "initial_only": {
+    "description": "First initial only, with the same email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "hyphenated": {
+    "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "punctuation_case": {
+    "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "accents": {
+    "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "apartment_forms": {
+    "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "sparse_pair": {
+    "description": "Both records sparse: first name, surname and phone only",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "twins": {
+    "description": "Twins: same surname, birthday, address and phone; different first names",
+    "expected": "different",
+    "passed_pct": 0.0
+   },
+   "father_son_same_name": {
+    "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "spouses_shared_contacts": {
+    "description": "A couple sharing surname, address, family email and phone",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "common_name_strangers": {
+    "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "reissued_phone": {
+    "description": "Strangers with the same mobile (a reissued number)",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "junk_contacts": {
+    "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "roommates": {
+    "description": "Unrelated people at one address",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "no_chaining": {
+    "description": "A record with one person's name and another's email and phone must not join the two",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "siblings_same_initial": {
+    "description": "Sisters at one address, both recorded by first initial only",
+    "expected": "different",
+    "passed_pct": 100.0
+   }
+  },
+  "background_f1": 98.27
+ },
+ "active_match_weight": {
+  "runs": [
+   {
+    "seed": 1,
+    "labels": 1500,
+    "background_f1": 99.62,
+    "threshold": 0.65,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 0.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 2,
+    "labels": 1500,
+    "background_f1": 99.48,
+    "threshold": 0.7,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 0.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 3,
+    "labels": 1500,
+    "background_f1": 99.31,
+    "threshold": 0.5,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 30.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 20.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   }
+  ],
+  "scenarios": {
+   "typo_first": {
+    "description": "A typo in the first name (Jonathon / Jonathan)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "nickname": {
+    "description": "A nickname (Bill / William)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "name_swapped": {
+    "description": "First and last name swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "married_name": {
+    "description": "A new surname after marriage; same date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "moved": {
+    "description": "Moved house: a new address and phone; same name, date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "gmail_variants": {
+    "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "phone_formats": {
+    "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "dob_day_month_swapped": {
+    "description": "Day and month of birth swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "no_surname_email": {
+    "description": "One record has only a first name and email (a web sign-up)",
+    "expected": "same",
+    "passed_pct": 10.0
+   },
+   "initial_only": {
+    "description": "First initial only, with the same email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "hyphenated": {
+    "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "punctuation_case": {
+    "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "accents": {
+    "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "apartment_forms": {
+    "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "sparse_pair": {
+    "description": "Both records sparse: first name, surname and phone only",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "twins": {
+    "description": "Twins: same surname, birthday, address and phone; different first names",
+    "expected": "different",
+    "passed_pct": 0.0
+   },
+   "father_son_same_name": {
+    "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "spouses_shared_contacts": {
+    "description": "A couple sharing surname, address, family email and phone",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "common_name_strangers": {
+    "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "reissued_phone": {
+    "description": "Strangers with the same mobile (a reissued number)",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "junk_contacts": {
+    "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "roommates": {
+    "description": "Unrelated people at one address",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "no_chaining": {
+    "description": "A record with one person's name and another's email and phone must not join the two",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "siblings_same_initial": {
+    "description": "Sisters at one address, both recorded by first initial only",
+    "expected": "different",
+    "passed_pct": 73.3
+   }
+  },
+  "background_f1": 99.47
+ },
+ "default_before_contact_junk": {
+  "runs": [
+   {
+    "seed": 1,
+    "labels": 1500,
+    "background_f1": 98.37,
+    "threshold": 0.6,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 0.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 90.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 2,
+    "labels": 1500,
+    "background_f1": 97.46,
+    "threshold": 0.5,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 0.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 3,
+    "labels": 1500,
+    "background_f1": 98.27,
+    "threshold": 0.4,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 0.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   }
+  ],
+  "scenarios": {
+   "typo_first": {
+    "description": "A typo in the first name (Jonathon / Jonathan)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "nickname": {
+    "description": "A nickname (Bill / William)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "name_swapped": {
+    "description": "First and last name swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "married_name": {
+    "description": "A new surname after marriage; same date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "moved": {
+    "description": "Moved house: a new address and phone; same name, date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "gmail_variants": {
+    "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "phone_formats": {
+    "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "dob_day_month_swapped": {
+    "description": "Day and month of birth swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "no_surname_email": {
+    "description": "One record has only a first name and email (a web sign-up)",
+    "expected": "same",
+    "passed_pct": 96.7
+   },
+   "initial_only": {
+    "description": "First initial only, with the same email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "hyphenated": {
+    "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "punctuation_case": {
+    "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "accents": {
+    "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "apartment_forms": {
+    "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "sparse_pair": {
+    "description": "Both records sparse: first name, surname and phone only",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "twins": {
+    "description": "Twins: same surname, birthday, address and phone; different first names",
+    "expected": "different",
+    "passed_pct": 0.0
+   },
+   "father_son_same_name": {
+    "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "spouses_shared_contacts": {
+    "description": "A couple sharing surname, address, family email and phone",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "common_name_strangers": {
+    "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "reissued_phone": {
+    "description": "Strangers with the same mobile (a reissued number)",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "junk_contacts": {
+    "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "roommates": {
+    "description": "Unrelated people at one address",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "no_chaining": {
+    "description": "A record with one person's name and another's email and phone must not join the two",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "siblings_same_initial": {
+    "description": "Sisters at one address, both recorded by first initial only",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "fake_mobile_many_emails": {
+    "description": "Nameless sign-ups, each with their own email, all typing one made-up mobile",
+    "expected": "different",
+    "passed_pct": 0.0
+   }
+  },
+  "background_f1": 98.03,
+  "note": "commit ad62c08 (before contact profiling read the other contact), the scenario file and labels as they were then"
+ },
+ "default_before_patterned_numbers": {
+  "runs": [
+   {
+    "seed": 1,
+    "labels": 1500,
+    "background_f1": 98.17,
+    "threshold": 0.65,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 0.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 60.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 2,
+    "labels": 1500,
+    "background_f1": 97.58,
+    "threshold": 0.65,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 0.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 60.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   },
+   {
+    "seed": 3,
+    "labels": 1500,
+    "background_f1": 98.55,
+    "threshold": 0.5,
+    "scenarios": {
+     "accents": 100.0,
+     "apartment_forms": 100.0,
+     "common_name_strangers": 100.0,
+     "dob_day_month_swapped": 100.0,
+     "fake_mobile_many_emails": 100.0,
+     "father_son_same_name": 100.0,
+     "gmail_variants": 100.0,
+     "gold_number": 0.0,
+     "hyphenated": 100.0,
+     "initial_only": 100.0,
+     "junk_contacts": 100.0,
+     "married_name": 100.0,
+     "moved": 100.0,
+     "name_swapped": 100.0,
+     "nickname": 100.0,
+     "no_chaining": 100.0,
+     "no_surname_email": 100.0,
+     "phone_formats": 100.0,
+     "punctuation_case": 100.0,
+     "reissued_phone": 100.0,
+     "roommates": 100.0,
+     "siblings_same_initial": 100.0,
+     "sparse_pair": 100.0,
+     "spouses_shared_contacts": 100.0,
+     "twins": 0.0,
+     "typo_first": 100.0
+    }
+   }
+  ],
+  "scenarios": {
+   "typo_first": {
+    "description": "A typo in the first name (Jonathon / Jonathan)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "nickname": {
+    "description": "A nickname (Bill / William)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "name_swapped": {
+    "description": "First and last name swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "married_name": {
+    "description": "A new surname after marriage; same date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "moved": {
+    "description": "Moved house: a new address and phone; same name, date of birth and email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "gmail_variants": {
+    "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "phone_formats": {
+    "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "dob_day_month_swapped": {
+    "description": "Day and month of birth swapped",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "no_surname_email": {
+    "description": "One record has only a first name and email (a web sign-up)",
+    "expected": "same",
+    "passed_pct": 73.3
+   },
+   "initial_only": {
+    "description": "First initial only, with the same email",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "hyphenated": {
+    "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "punctuation_case": {
+    "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "accents": {
+    "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "apartment_forms": {
+    "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "sparse_pair": {
+    "description": "Both records sparse: first name, surname and phone only",
+    "expected": "same",
+    "passed_pct": 100.0
+   },
+   "twins": {
+    "description": "Twins: same surname, birthday, address and phone; different first names",
+    "expected": "different",
+    "passed_pct": 0.0
+   },
+   "father_son_same_name": {
+    "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "spouses_shared_contacts": {
+    "description": "A couple sharing surname, address, family email and phone",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "common_name_strangers": {
+    "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "reissued_phone": {
+    "description": "Strangers with the same mobile (a reissued number)",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "junk_contacts": {
+    "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "roommates": {
+    "description": "Unrelated people at one address",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "no_chaining": {
+    "description": "A record with one person's name and another's email and phone must not join the two",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "siblings_same_initial": {
+    "description": "Sisters at one address, both recorded by first initial only",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "fake_mobile_many_emails": {
+    "description": "Nameless sign-ups, each with their own email, all typing one made-up mobile",
+    "expected": "different",
+    "passed_pct": 100.0
+   },
+   "gold_number": {
+    "description": "A bought gold mobile ((212) 222-2222): a sign-up with only a first name and it",
+    "expected": "same",
+    "passed_pct": 0.0
+   }
+  },
+  "background_f1": 98.1,
+  "note": "commit bc0301a (patterned numbers junk on sight), same file and labels"
+ }
+}

@@ -1,0 +1,98 @@
+{
+ "customer": {
+  "labels": {
+   "pairs": 15444,
+   "positives": 6054,
+   "precision": 98.26,
+   "recall": 98.99,
+   "accuracy": 98.92,
+   "cutoff": 0.5
+  },
+  "split_half": {
+   "forest_true_labels": {
+    "held_out_f1": [
+     98.49,
+     98.58
+    ],
+    "mean": 98.53
+   },
+   "forest_jev_hard_labels": {
+    "held_out_f1": [
+     98.1,
+     97.88
+    ],
+    "mean": 97.99
+   },
+   "forest_jev_soft_labels": {
+    "held_out_f1": [
+     98.2,
+     97.86
+    ],
+    "mean": 98.03
+   },
+   "forest_jev_labels_cutoff_0.5_from_300": {
+    "held_out_f1": [
+     98.1,
+     97.88
+    ],
+    "mean": 97.99
+   }
+  },
+  "labels_at_sample_cutoff": {
+   "pairs": 15444,
+   "positives": 6054,
+   "precision": 98.26,
+   "recall": 98.99,
+   "accuracy": 98.92,
+   "cutoff": 0.5
+  }
+ },
+ "historical": {
+  "labels": {
+   "pairs": 12000,
+   "positives": 3686,
+   "precision": 97.66,
+   "recall": 73.44,
+   "accuracy": 91.3,
+   "cutoff": 0.5
+  },
+  "split_half": {
+   "forest_true_labels": {
+    "held_out_f1": [
+     88.3,
+     81.06
+    ],
+    "mean": 84.68
+   },
+   "forest_jev_hard_labels": {
+    "held_out_f1": [
+     75.93,
+     72.24
+    ],
+    "mean": 74.09
+   },
+   "forest_jev_soft_labels": {
+    "held_out_f1": [
+     71.92,
+     73.81
+    ],
+    "mean": 72.87
+   },
+   "forest_jev_labels_cutoff_0.35_from_300": {
+    "held_out_f1": [
+     70.21,
+     73.55
+    ],
+    "mean": 71.88
+   }
+  },
+  "labels_at_sample_cutoff": {
+   "pairs": 12000,
+   "positives": 3686,
+   "precision": 91.85,
+   "recall": 85.95,
+   "accuracy": 93.34,
+   "cutoff": 0.35
+  }
+ }
+}

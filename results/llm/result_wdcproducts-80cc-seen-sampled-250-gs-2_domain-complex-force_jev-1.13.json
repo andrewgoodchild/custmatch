@@ -1,0 +1,20 @@
+{
+ "precision": 86.22,
+ "recall": 87.6,
+ "f1": 86.9,
+ "accuracy": 94.67,
+ "n": 1239,
+ "predicted_matches": 254,
+ "f1_at_0.5": 86.9,
+ "f1_tuned_held_out": 85.74,
+ "auc": 0.9769,
+ "brier": 0.0443,
+ "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+ "prompt": "domain-complex-force",
+ "model": "typesafe/jev-1.13",
+ "snapshots": [
+  "typesafe/jev-1.13-20260917"
+ ],
+ "threshold": 0.5,
+ "cost_usd": 0.0189
+}

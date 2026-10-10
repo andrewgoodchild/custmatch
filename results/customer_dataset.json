@@ -1,0 +1,15 @@
+{
+ "crm_records": 10231,
+ "billing_records": 9903,
+ "people": 10735,
+ "shared_people": 6712,
+ "households": 4305,
+ "contact_mix": {
+  "personal": 5328,
+  "household": 2668,
+  "junk": 1619,
+  "missing": 1120
+ },
+ "distinct_emails": 8725,
+ "junk_email_records": 2768
+}

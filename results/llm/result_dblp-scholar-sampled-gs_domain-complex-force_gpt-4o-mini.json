@@ -1,0 +1,13 @@
+{
+ "precision": 85.55,
+ "recall": 87.6,
+ "f1": 86.56,
+ "accuracy": 94.56,
+ "n": 1250,
+ "predicted_matches": 256,
+ "dataset": "dblp-scholar-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-4o-mini",
+ "unclear_or_long_answers": 0,
+ "cost_usd": 0.0193
+}

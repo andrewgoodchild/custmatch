@@ -1,0 +1,14 @@
+{
+ "task": "customer-person-hard",
+ "train_pairs": {
+  "pos": 537,
+  "neg": 552
+ },
+ "random_forest": {
+  "precision": 96.06,
+  "recall": 97.6,
+  "f1": 96.83,
+  "predicted_matches": 254,
+  "accuracy": 97.58
+ }
+}

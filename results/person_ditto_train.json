@@ -1,0 +1,9 @@
+{
+ "valid_f1": 98.06,
+ "threshold": 0.05,
+ "epoch": 5,
+ "epochs": 5,
+ "max_len": 96,
+ "batch_size": 16,
+ "warmup_frac": 0.1
+}

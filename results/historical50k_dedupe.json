@@ -1,0 +1,36 @@
+{
+ "dataset": "historical_50k (50,578 records, 5,156 people)",
+ "true_pairs": 303961,
+ "candidate_pairs": 918609,
+ "blocking_recall": 81.66,
+ "rules": {
+  "precision": 84.7,
+  "recall": 20.65,
+  "f1": 33.21,
+  "predicted": 74125,
+  "true_positives": 62783
+ },
+ "splink": {
+  "precision": 98.88,
+  "recall": 43.63,
+  "f1": 60.55,
+  "predicted": 134139,
+  "true_positives": 132632
+ },
+ "rf_supervised_heldout_clusters": {
+  "precision": 83.34,
+  "recall": 76.14,
+  "f1": 79.58,
+  "predicted": 140740,
+  "true_positives": 117298,
+  "note": "held-out half of the clusters"
+ },
+ "rf_within_candidates": {
+  "precision": 83.34,
+  "recall": 93.02,
+  "f1": 87.91,
+  "predicted": 140740,
+  "true_positives": 117298,
+  "note": "same predictions, scored only against true pairs blocking retrieved"
+ }
+}

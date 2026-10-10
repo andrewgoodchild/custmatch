@@ -1,0 +1,43 @@
+[project]
+name = "custmatch"
+version = "0.1.0"
+description = "Customer matching: contact profiling, blocking, a forest matcher tuned on clusters, households and golden records"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{name = "Andrew Goodchild"}]
+keywords = ["entity resolution", "record linkage", "deduplication", "customer matching", "householding"]
+classifiers = ["Development Status :: 3 - Alpha", "Programming Language :: Python :: 3",
+               "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11",
+               "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13",
+               "Intended Audience :: Developers", "Intended Audience :: Science/Research",
+               "Operating System :: OS Independent", "Topic :: Database",
+               "Topic :: Scientific/Engineering :: Information Analysis"]
+requires-python = ">=3.10"
+dependencies = ["numpy", "pandas", "scipy", "scikit-learn", "rapidfuzz", "certifi", "pyarrow", "phonenumbers",
+                "anyascii", "networkx"]
+
+[project.urls]
+Repository = "https://github.com/andrewgoodchild/custmatch"
+Documentation = "https://github.com/andrewgoodchild/custmatch/blob/main/docs/guide.md"
+Issues = "https://github.com/andrewgoodchild/custmatch/issues"
+
+[project.optional-dependencies]
+test = ["pytest", "tomli; python_version < '3.11'"]
+catboost = ["catboost>=1.2"]
+
+[project.scripts]
+custmatch = "custmatch.cli:main"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["custmatch"]
+
+[tool.setuptools.package-data]
+custmatch = ["data/*.csv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

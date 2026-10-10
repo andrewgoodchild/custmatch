@@ -1,0 +1,327 @@
+{
+ "events": {
+  "cookies": 14544,
+  "identified_events": 36455,
+  "shared_laptops": 466,
+  "heavy_agents": 10,
+  "light_agents": 100
+ },
+ "no_cookies": {
+  "runs": [
+   {
+    "all_records": {
+     "precision": 88.92,
+     "recall": 74.72,
+     "f1": 81.2,
+     "clusters": 11574,
+     "largest_cluster": 10,
+     "adjusted_rand": 0.812
+    },
+    "no_surname_records": {
+     "precision": 91.76,
+     "recall": 70.18,
+     "f1": 79.53,
+     "clusters": 5772,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7953
+    },
+    "cookies": {}
+   },
+   {
+    "all_records": {
+     "precision": 96.13,
+     "recall": 69.69,
+     "f1": 80.8,
+     "clusters": 12160,
+     "largest_cluster": 8,
+     "adjusted_rand": 0.808
+    },
+    "no_surname_records": {
+     "precision": 96.37,
+     "recall": 67.63,
+     "f1": 79.48,
+     "clusters": 5846,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7948
+    },
+    "cookies": {}
+   },
+   {
+    "all_records": {
+     "precision": 93.31,
+     "recall": 73.89,
+     "f1": 82.47,
+     "clusters": 11745,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.8247
+    },
+    "no_surname_records": {
+     "precision": 95.2,
+     "recall": 70.18,
+     "f1": 80.8,
+     "clusters": 5798,
+     "largest_cluster": 4,
+     "adjusted_rand": 0.808
+    },
+    "cookies": {}
+   }
+  ],
+  "mean": {
+   "all_records": 81.49,
+   "no_surname_records": 79.94
+  },
+  "precision": 92.79
+ },
+ "cookies": {
+  "runs": [
+   {
+    "all_records": {
+     "precision": 88.23,
+     "recall": 78.76,
+     "f1": 83.23,
+     "clusters": 11187,
+     "largest_cluster": 13,
+     "adjusted_rand": 0.8323
+    },
+    "no_surname_records": {
+     "precision": 91.02,
+     "recall": 76.77,
+     "f1": 83.29,
+     "clusters": 5674,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.8329
+    },
+    "cookies": {
+     "cookies": 14544,
+     "stitched": 11309,
+     "no_known_identity": 1337,
+     "shared_device": 961,
+     "conflicting_names": 937,
+     "links": 4368
+    }
+   },
+   {
+    "all_records": {
+     "precision": 95.64,
+     "recall": 74.24,
+     "f1": 83.59,
+     "clusters": 11722,
+     "largest_cluster": 8,
+     "adjusted_rand": 0.8359
+    },
+    "no_surname_records": {
+     "precision": 95.41,
+     "recall": 75.0,
+     "f1": 83.98,
+     "clusters": 5739,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.8398
+    },
+    "cookies": {
+     "cookies": 14544,
+     "stitched": 11309,
+     "no_known_identity": 1337,
+     "shared_device": 961,
+     "conflicting_names": 937,
+     "links": 4368
+    }
+   },
+   {
+    "all_records": {
+     "precision": 92.49,
+     "recall": 78.26,
+     "f1": 84.78,
+     "clusters": 11329,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.8478
+    },
+    "no_surname_records": {
+     "precision": 94.07,
+     "recall": 77.55,
+     "f1": 85.02,
+     "clusters": 5692,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.8501
+    },
+    "cookies": {
+     "cookies": 14544,
+     "stitched": 11309,
+     "no_known_identity": 1337,
+     "shared_device": 961,
+     "conflicting_names": 937,
+     "links": 4368
+    }
+   }
+  ],
+  "mean": {
+   "all_records": 83.87,
+   "no_surname_records": 84.1
+  },
+  "precision": 92.12
+ },
+ "cookies_no_name_check": {
+  "runs": [
+   {
+    "all_records": {
+     "precision": 80.32,
+     "recall": 80.24,
+     "f1": 80.28,
+     "clusters": 10768,
+     "largest_cluster": 14,
+     "adjusted_rand": 0.8028
+    },
+    "no_surname_records": {
+     "precision": 79.11,
+     "recall": 79.11,
+     "f1": 79.11,
+     "clusters": 5524,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7911
+    },
+    "cookies": {
+     "cookies": 14544,
+     "stitched": 12246,
+     "no_known_identity": 1337,
+     "shared_device": 961,
+     "links": 5341
+    }
+   },
+   {
+    "all_records": {
+     "precision": 85.58,
+     "recall": 76.2,
+     "f1": 80.62,
+     "clusters": 11202,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.8062
+    },
+    "no_surname_records": {
+     "precision": 81.32,
+     "recall": 78.33,
+     "f1": 79.8,
+     "clusters": 5560,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.798
+    },
+    "cookies": {
+     "cookies": 14544,
+     "stitched": 12246,
+     "no_known_identity": 1337,
+     "shared_device": 961,
+     "links": 5341
+    }
+   },
+   {
+    "all_records": {
+     "precision": 83.3,
+     "recall": 79.44,
+     "f1": 81.32,
+     "clusters": 10890,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.8132
+    },
+    "no_surname_records": {
+     "precision": 80.62,
+     "recall": 79.25,
+     "f1": 79.93,
+     "clusters": 5539,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7993
+    },
+    "cookies": {
+     "cookies": 14544,
+     "stitched": 12246,
+     "no_known_identity": 1337,
+     "shared_device": 961,
+     "links": 5341
+    }
+   }
+  ],
+  "mean": {
+   "all_records": 80.74,
+   "no_surname_records": 79.61
+  },
+  "precision": 83.07
+ },
+ "cookies_unprotected": {
+  "runs": [
+   {
+    "all_records": {
+     "precision": 3.64,
+     "recall": 81.66,
+     "f1": 6.96,
+     "clusters": 10135,
+     "largest_cluster": 713,
+     "adjusted_rand": 0.0695
+    },
+    "no_surname_records": {
+     "precision": 2.83,
+     "recall": 81.16,
+     "f1": 5.47,
+     "clusters": 5220,
+     "largest_cluster": 280,
+     "adjusted_rand": 0.0546
+    },
+    "cookies": {
+     "cookies": 14544,
+     "stitched": 13161,
+     "no_known_identity": 1383,
+     "links": 6467
+    }
+   },
+   {
+    "all_records": {
+     "precision": 3.67,
+     "recall": 77.96,
+     "f1": 7.01,
+     "clusters": 10541,
+     "largest_cluster": 694,
+     "adjusted_rand": 0.07
+    },
+    "no_surname_records": {
+     "precision": 2.95,
+     "recall": 80.59,
+     "f1": 5.7,
+     "clusters": 5253,
+     "largest_cluster": 273,
+     "adjusted_rand": 0.0568
+    },
+    "cookies": {
+     "cookies": 14544,
+     "stitched": 13161,
+     "no_known_identity": 1383,
+     "links": 6467
+    }
+   },
+   {
+    "all_records": {
+     "precision": 3.68,
+     "recall": 81.01,
+     "f1": 7.04,
+     "clusters": 10243,
+     "largest_cluster": 706,
+     "adjusted_rand": 0.0703
+    },
+    "no_surname_records": {
+     "precision": 2.9,
+     "recall": 81.37,
+     "f1": 5.59,
+     "clusters": 5233,
+     "largest_cluster": 277,
+     "adjusted_rand": 0.0558
+    },
+    "cookies": {
+     "cookies": 14544,
+     "stitched": 13161,
+     "no_known_identity": 1383,
+     "links": 6467
+    }
+   }
+  ],
+  "mean": {
+   "all_records": 7.0,
+   "no_surname_records": 5.59
+  },
+  "precision": 3.66
+ }
+}

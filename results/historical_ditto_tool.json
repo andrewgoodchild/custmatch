@@ -1,0 +1,41 @@
+{
+ "labels": 12000,
+ "config_overrides": {},
+ "forest": {
+  "precision": 96.84,
+  "recall": 81.64,
+  "f1": 88.59,
+  "clusters": 10082,
+  "largest_cluster": 41,
+  "adjusted_rand": 0.8859,
+  "seconds": 23,
+  "matcher": "forest",
+  "threshold": 0.9,
+  "ditto": null
+ },
+ "forest_veto_then_ditto": {
+  "precision": 98.69,
+  "recall": 81.75,
+  "f1": 89.43,
+  "clusters": 10188,
+  "largest_cluster": 37,
+  "adjusted_rand": 0.8943,
+  "seconds": 5561,
+  "matcher": "forest_veto_then_ditto",
+  "threshold": 0.999,
+  "ditto": {
+   "used": true,
+   "threshold": 0.999,
+   "cross_fitted_closure_aware": {
+    "precision": 95.15,
+    "recall": 96.38,
+    "f1": 95.76,
+    "labelled_pair_precision": 98.44,
+    "pairs": 12000,
+    "folds": 2,
+    "pairs_scored": 240723,
+    "veto": 0.2
+   }
+  }
+ }
+}

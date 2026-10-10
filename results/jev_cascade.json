@@ -1,0 +1,116 @@
+{
+ "pairs": 152772,
+ "routed_to_llm": 67630,
+ "routed_frac": 0.44268583248239207,
+ "band_auc": {
+  "jev": 0.9336,
+  "ditto": 0.9941,
+  "forest": 0.9304
+ },
+ "picked_on_test": {
+  "forest_only": {
+   "precision": 96.44,
+   "recall": 73.67,
+   "f1": 83.53,
+   "clusters": 3033,
+   "largest_cluster": 36,
+   "implied_pairs": 59361,
+   "adjusted_rand": 0.8352,
+   "threshold": 0.95
+  },
+  "ditto_only": {
+   "precision": 96.08,
+   "recall": 93.28,
+   "f1": 94.66,
+   "clusters": 1780,
+   "largest_cluster": 50,
+   "implied_pairs": 75438,
+   "adjusted_rand": 0.9465,
+   "threshold": 0.998
+  },
+  "forest_veto_then_ditto": {
+   "precision": 97.54,
+   "recall": 93.34,
+   "f1": 95.4,
+   "clusters": 1773,
+   "largest_cluster": 34,
+   "implied_pairs": 74354,
+   "adjusted_rand": 0.9539,
+   "threshold": 0.995
+  },
+  "forest_veto_then_jev": {
+   "precision": 85.04,
+   "recall": 66.9,
+   "f1": 74.89,
+   "clusters": 3704,
+   "largest_cluster": 110,
+   "implied_pairs": 61127,
+   "adjusted_rand": 0.7487,
+   "threshold": 0.7
+  },
+  "forest_veto_then_mean_forest_jev": {
+   "precision": 89.17,
+   "recall": 76.35,
+   "f1": 82.26,
+   "clusters": 3005,
+   "largest_cluster": 108,
+   "implied_pairs": 66530,
+   "adjusted_rand": 0.8225,
+   "threshold": 0.75
+  },
+  "forest_veto_then_mean_jev_ditto": {
+   "precision": 95.4,
+   "recall": 93.69,
+   "f1": 94.53,
+   "clusters": 1749,
+   "largest_cluster": 38,
+   "implied_pairs": 76314,
+   "adjusted_rand": 0.9453,
+   "threshold": 0.6
+  }
+ },
+ "split_half": {
+  "forest_only": {
+   "held_out_f1": [
+    88.3,
+    81.06
+   ],
+   "mean": 84.68
+  },
+  "ditto_only": {
+   "held_out_f1": [
+    96.38,
+    94.46
+   ],
+   "mean": 95.42
+  },
+  "forest_veto_then_ditto": {
+   "held_out_f1": [
+    96.34,
+    95.84
+   ],
+   "mean": 96.09
+  },
+  "forest_veto_then_jev": {
+   "held_out_f1": [
+    88.42,
+    77.51
+   ],
+   "mean": 82.97
+  },
+  "forest_veto_then_mean_forest_jev": {
+   "held_out_f1": [
+    90.71,
+    82.86
+   ],
+   "mean": 86.78
+  },
+  "forest_veto_then_mean_jev_ditto": {
+   "held_out_f1": [
+    96.5,
+    94.86
+   ],
+   "mean": 95.68
+  }
+ }
+}

@@ -1,0 +1,476 @@
+{
+ "high": {
+  "data": {
+   "accounts_pct": 70.0,
+   "events": 28002,
+   "cookies": 12073,
+   "records_with_cookie_pct": 53.1,
+   "records_with_user_id_pct": 46.2
+  },
+  "sparse_records_pct": 7.7,
+  "runs": [
+   {
+    "seed": 1,
+    "segment_raw": {
+     "all_records": {
+      "precision": 11.0,
+      "recall": 59.89,
+      "f1": 18.59,
+      "clusters": 11389,
+      "largest_cluster": 146,
+      "adjusted_rand": 0.1858
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1425,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_normalised": {
+     "all_records": {
+      "precision": 12.33,
+      "recall": 69.54,
+      "f1": 20.95,
+      "clusters": 10603,
+      "largest_cluster": 146,
+      "adjusted_rand": 0.2094
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1425,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_tuned": {
+     "all_records": {
+      "precision": 92.13,
+      "recall": 71.1,
+      "f1": 80.26,
+      "clusters": 11702,
+      "largest_cluster": 6,
+      "adjusted_rand": 0.8026
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1425,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "custmatch": {
+     "all_records": {
+      "precision": 94.23,
+      "recall": 87.04,
+      "f1": 90.49,
+      "clusters": 10709,
+      "largest_cluster": 11,
+      "adjusted_rand": 0.9049
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 90.0,
+      "recall": 75.0,
+      "f1": 81.82,
+      "clusters": 1405,
+      "largest_cluster": 2,
+      "adjusted_rand": 0.8182
+     }
+    }
+   },
+   {
+    "seed": 2,
+    "segment_raw": {
+     "all_records": {
+      "precision": 11.43,
+      "recall": 59.91,
+      "f1": 19.2,
+      "clusters": 11384,
+      "largest_cluster": 133,
+      "adjusted_rand": 0.1919
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1425,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_normalised": {
+     "all_records": {
+      "precision": 12.89,
+      "recall": 69.5,
+      "f1": 21.74,
+      "clusters": 10605,
+      "largest_cluster": 133,
+      "adjusted_rand": 0.2173
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1425,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_tuned": {
+     "all_records": {
+      "precision": 91.75,
+      "recall": 71.32,
+      "f1": 80.25,
+      "clusters": 11687,
+      "largest_cluster": 8,
+      "adjusted_rand": 0.8025
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1425,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "custmatch": {
+     "all_records": {
+      "precision": 90.48,
+      "recall": 86.52,
+      "f1": 88.46,
+      "clusters": 10747,
+      "largest_cluster": 27,
+      "adjusted_rand": 0.8846
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 90.0,
+      "recall": 75.0,
+      "f1": 81.82,
+      "clusters": 1405,
+      "largest_cluster": 2,
+      "adjusted_rand": 0.8182
+     }
+    }
+   },
+   {
+    "seed": 3,
+    "segment_raw": {
+     "all_records": {
+      "precision": 10.1,
+      "recall": 59.93,
+      "f1": 17.29,
+      "clusters": 11395,
+      "largest_cluster": 154,
+      "adjusted_rand": 0.1728
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1425,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_normalised": {
+     "all_records": {
+      "precision": 11.42,
+      "recall": 69.57,
+      "f1": 19.61,
+      "clusters": 10611,
+      "largest_cluster": 154,
+      "adjusted_rand": 0.196
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1425,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_tuned": {
+     "all_records": {
+      "precision": 91.74,
+      "recall": 70.94,
+      "f1": 80.01,
+      "clusters": 11706,
+      "largest_cluster": 7,
+      "adjusted_rand": 0.8001
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1425,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "custmatch": {
+     "all_records": {
+      "precision": 91.81,
+      "recall": 87.18,
+      "f1": 89.44,
+      "clusters": 10651,
+      "largest_cluster": 12,
+      "adjusted_rand": 0.8944
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 81.82,
+      "recall": 75.0,
+      "f1": 78.26,
+      "clusters": 1403,
+      "largest_cluster": 2,
+      "adjusted_rand": 0.7826
+     }
+    }
+   }
+  ]
+ },
+ "low": {
+  "data": {
+   "accounts_pct": 15.3,
+   "events": 14044,
+   "cookies": 8353,
+   "records_with_cookie_pct": 53.4,
+   "records_with_user_id_pct": 10.2
+  },
+  "sparse_records_pct": 8.6,
+  "runs": [
+   {
+    "seed": 1,
+    "segment_raw": {
+     "all_records": {
+      "precision": 3.54,
+      "recall": 49.6,
+      "f1": 6.61,
+      "clusters": 11378,
+      "largest_cluster": 214,
+      "adjusted_rand": 0.066
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1592,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_normalised": {
+     "all_records": {
+      "precision": 4.29,
+      "recall": 61.48,
+      "f1": 8.03,
+      "clusters": 10370,
+      "largest_cluster": 215,
+      "adjusted_rand": 0.0801
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1592,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_tuned": {
+     "all_records": {
+      "precision": 88.52,
+      "recall": 64.33,
+      "f1": 74.51,
+      "clusters": 12112,
+      "largest_cluster": 7,
+      "adjusted_rand": 0.7451
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1592,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "custmatch": {
+     "all_records": {
+      "precision": 88.7,
+      "recall": 83.64,
+      "f1": 86.1,
+      "clusters": 10881,
+      "largest_cluster": 16,
+      "adjusted_rand": 0.861
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 77.42,
+      "recall": 82.76,
+      "f1": 80.0,
+      "clusters": 1561,
+      "largest_cluster": 2,
+      "adjusted_rand": 0.8
+     }
+    }
+   },
+   {
+    "seed": 2,
+    "segment_raw": {
+     "all_records": {
+      "precision": 3.61,
+      "recall": 49.57,
+      "f1": 6.72,
+      "clusters": 11389,
+      "largest_cluster": 245,
+      "adjusted_rand": 0.0671
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1592,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_normalised": {
+     "all_records": {
+      "precision": 4.38,
+      "recall": 61.47,
+      "f1": 8.17,
+      "clusters": 10382,
+      "largest_cluster": 245,
+      "adjusted_rand": 0.0816
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1592,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_tuned": {
+     "all_records": {
+      "precision": 88.5,
+      "recall": 64.44,
+      "f1": 74.58,
+      "clusters": 12110,
+      "largest_cluster": 7,
+      "adjusted_rand": 0.7458
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1592,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "custmatch": {
+     "all_records": {
+      "precision": 93.48,
+      "recall": 82.95,
+      "f1": 87.9,
+      "clusters": 11026,
+      "largest_cluster": 10,
+      "adjusted_rand": 0.879
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 95.83,
+      "recall": 79.31,
+      "f1": 86.79,
+      "clusters": 1568,
+      "largest_cluster": 2,
+      "adjusted_rand": 0.8679
+     }
+    }
+   },
+   {
+    "seed": 3,
+    "segment_raw": {
+     "all_records": {
+      "precision": 3.61,
+      "recall": 49.71,
+      "f1": 6.73,
+      "clusters": 11366,
+      "largest_cluster": 218,
+      "adjusted_rand": 0.0672
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1592,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_normalised": {
+     "all_records": {
+      "precision": 4.37,
+      "recall": 61.58,
+      "f1": 8.15,
+      "clusters": 10358,
+      "largest_cluster": 219,
+      "adjusted_rand": 0.0814
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1592,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "segment_tuned": {
+     "all_records": {
+      "precision": 88.85,
+      "recall": 64.68,
+      "f1": 74.86,
+      "clusters": 12111,
+      "largest_cluster": 7,
+      "adjusted_rand": 0.7486
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "clusters": 1592,
+      "largest_cluster": 1,
+      "adjusted_rand": 0.0
+     }
+    },
+    "custmatch": {
+     "all_records": {
+      "precision": 93.61,
+      "recall": 82.43,
+      "f1": 87.66,
+      "clusters": 11058,
+      "largest_cluster": 10,
+      "adjusted_rand": 0.8766
+     },
+     "records_without_email_phone_or_user_id": {
+      "precision": 87.5,
+      "recall": 72.41,
+      "f1": 79.25,
+      "clusters": 1568,
+      "largest_cluster": 2,
+      "adjusted_rand": 0.7924
+     }
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "precision": 57.07,
+ "recall": 92.0,
+ "f1": 70.44,
+ "accuracy": 84.42,
+ "n": 1239,
+ "predicted_matches": 403,
+ "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+ "prompt": "domain-complex-force",
+ "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+ "unclear_or_long_answers": 357,
+ "seconds": 1043.5
+}

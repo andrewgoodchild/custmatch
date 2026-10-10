@@ -1,0 +1,40 @@
+# python
+.venv/
+.venv-*/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.tmp/
+.DS_Store
+__pycache__/
+*.pyc
+
+# upstream clones (see patches/ for our modifications, docs/reproducing.md for clone commands)
+external/
+
+# generated datasets and databases (rebuild with scripts/*_build.py, customer_data.py)
+/data/
+
+# large binary score dumps (regenerate by rerunning the scorers)
+results/*.npz
+results/llm/answers_*.jsonl
+results/llm/openrouter_spend.jsonl
+results/llm/smoketest/
+
+# secrets
+.env
+
+# CatBoost training logs
+catboost_info/
+.coverage
+
+# data we do not own is no longer committed: third-party name lists are downloaded or built into
+# ~/.cache/custmatch on first use (custmatch/country.py data_file); outputs keyed on others' data
+custmatch/data/nicknames.csv
+custmatch/data/name_variants.csv
+results/*.parquet
+
+# the scheduler inbox holds customer records: never commit them
+server/inbox/*
+!server/inbox/.gitkeep

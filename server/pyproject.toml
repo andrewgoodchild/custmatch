@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "custmatch-server"
+version = "0.1.0"
+description = "custmatch as a self-hosted service: scheduled batch runs, real-time matching, a steward dashboard"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{name = "Andrew Goodchild"}]
+keywords = ["entity resolution", "record linkage", "customer matching", "master data management", "data stewardship"]
+classifiers = ["Development Status :: 3 - Alpha", "Programming Language :: Python :: 3",
+               "Framework :: FastAPI", "Operating System :: OS Independent", "Topic :: Database"]
+requires-python = ">=3.10"
+dependencies = ["custmatch>=0.1.0", "sqlalchemy>=2", "alembic", "fastapi", "uvicorn", "psycopg[binary]"]
+
+[project.optional-dependencies]
+test = ["pytest", "httpx"]
+
+[project.urls]
+Repository = "https://github.com/andrewgoodchild/custmatch"
+Documentation = "https://github.com/andrewgoodchild/custmatch/blob/main/server/README.md"
+Issues = "https://github.com/andrewgoodchild/custmatch/issues"
+
+[project.scripts]
+custmatch-server = "custmatch_server.__main__:main"
+
+[tool.setuptools]
+packages = ["custmatch_server"]
+
+[tool.setuptools.package-data]
+custmatch_server = ["migrations/*.py", "migrations/*.mako", "migrations/versions/*.py", "static/*.html"]

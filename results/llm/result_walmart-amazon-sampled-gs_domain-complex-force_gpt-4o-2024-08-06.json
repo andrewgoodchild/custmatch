@@ -1,0 +1,13 @@
+{
+ "precision": 75.3,
+ "recall": 96.37,
+ "f1": 84.55,
+ "accuracy": 94.3,
+ "n": 1193,
+ "predicted_matches": 247,
+ "dataset": "walmart-amazon-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-4o-2024-08-06",
+ "unclear_or_long_answers": 0,
+ "cost_usd": 0.3161
+}

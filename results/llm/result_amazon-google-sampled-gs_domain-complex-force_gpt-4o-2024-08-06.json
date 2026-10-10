@@ -1,0 +1,13 @@
+{
+ "precision": 61.67,
+ "recall": 94.87,
+ "f1": 74.75,
+ "accuracy": 87.84,
+ "n": 1234,
+ "predicted_matches": 360,
+ "dataset": "amazon-google-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-4o-2024-08-06",
+ "unclear_or_long_answers": 0,
+ "cost_usd": 0.2581
+}

@@ -1,0 +1,632 @@
+{
+ "hand_500": {
+  "all_records": {
+   "precision": 96.88,
+   "recall": 97.86,
+   "f1": 97.37,
+   "clusters": 10843,
+   "largest_cluster": 9,
+   "adjusted_rand": 0.9737
+  },
+  "unlabelled_people_only": {
+   "precision": 97.25,
+   "recall": 97.8,
+   "f1": 97.52,
+   "clusters": 10038,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9752
+  },
+  "households": {
+   "precision": 92.24,
+   "recall": 89.06,
+   "f1": 90.62,
+   "clusters": 4695,
+   "largest_cluster": 332,
+   "adjusted_rand": 0.9061
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 48759,
+   "hub_blocks_skipped": 13,
+   "labelled_pairs": {
+    "total": 500,
+    "matches": 119,
+    "active": 0
+   },
+   "matcher": "forest",
+   "matcher_model": "forest",
+   "model_reused_from": null,
+   "overrides": {
+    "must_link": 0,
+    "cannot_link": 0,
+    "trusted_id_links": 0,
+    "links_cut_to_keep_cannot_links_apart": 0
+   },
+   "review_pairs": 569,
+   "ambiguous_records_held": 0,
+   "twin_pairs_kept_apart": 0,
+   "threshold": 0.5,
+   "cross_fitted_closure_aware": {
+    "precision": 98.3,
+    "recall": 94.12,
+    "f1": 96.16,
+    "labelled_pair_precision": 97.39,
+    "pairs": 500,
+    "folds": 4
+   },
+   "ditto": null,
+   "customers": 10843,
+   "largest_customer": 9,
+   "households": 4695,
+   "links": 12080,
+   "bridge_links": 4955,
+   "customers_recut": 0,
+   "placeholder_names": 0,
+   "placeholder_addresses": 0,
+   "stage_seconds": {
+    "load and profile": 0.16,
+    "blocking (48,759 candidate pairs)": 0.19,
+    "forest: cross-fitted clustered F1 96.16": 3.96,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 0.83
+   },
+   "junk_contact_values": 15,
+   "shared_contact_values": 832,
+   "warnings": [
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
+   ]
+  }
+ },
+ "hand_1000": {
+  "all_records": {
+   "precision": 98.64,
+   "recall": 95.95,
+   "f1": 97.28,
+   "clusters": 11038,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9728
+  },
+  "unlabelled_people_only": {
+   "precision": 99.04,
+   "recall": 95.68,
+   "f1": 97.33,
+   "clusters": 9526,
+   "largest_cluster": 6,
+   "adjusted_rand": 0.9733
+  },
+  "households": {
+   "precision": 92.51,
+   "recall": 89.42,
+   "f1": 90.94,
+   "clusters": 4702,
+   "largest_cluster": 332,
+   "adjusted_rand": 0.9093
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 48759,
+   "hub_blocks_skipped": 13,
+   "labelled_pairs": {
+    "total": 1000,
+    "matches": 257,
+    "active": 0
+   },
+   "matcher": "forest",
+   "matcher_model": "forest",
+   "model_reused_from": null,
+   "overrides": {
+    "must_link": 0,
+    "cannot_link": 0,
+    "trusted_id_links": 0,
+    "links_cut_to_keep_cannot_links_apart": 0
+   },
+   "review_pairs": 438,
+   "ambiguous_records_held": 0,
+   "twin_pairs_kept_apart": 0,
+   "threshold": 0.55,
+   "cross_fitted_closure_aware": {
+    "precision": 98.7,
+    "recall": 96.89,
+    "f1": 97.79,
+    "labelled_pair_precision": 99.6,
+    "pairs": 1000,
+    "folds": 4
+   },
+   "ditto": null,
+   "customers": 11038,
+   "largest_customer": 7,
+   "households": 4702,
+   "links": 11729,
+   "bridge_links": 4954,
+   "customers_recut": 0,
+   "placeholder_names": 0,
+   "placeholder_addresses": 0,
+   "stage_seconds": {
+    "load and profile": 0.17,
+    "blocking (48,759 candidate pairs)": 0.28,
+    "forest: cross-fitted clustered F1 97.79": 4.18,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "matcher chosen": 0.0,
+    "households, golden records, outputs": 0.78
+   },
+   "junk_contact_values": 15,
+   "shared_contact_values": 1032,
+   "warnings": [
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
+   ]
+  }
+ },
+ "hand_3000": {
+  "all_records": {
+   "precision": 97.65,
+   "recall": 97.96,
+   "f1": 97.8,
+   "clusters": 10849,
+   "largest_cluster": 9,
+   "adjusted_rand": 0.978
+  },
+  "unlabelled_people_only": {
+   "precision": 98.85,
+   "recall": 97.55,
+   "f1": 98.19,
+   "clusters": 7316,
+   "largest_cluster": 5,
+   "adjusted_rand": 0.9819
+  },
+  "households": {
+   "precision": 92.52,
+   "recall": 89.37,
+   "f1": 90.92,
+   "clusters": 4702,
+   "largest_cluster": 332,
+   "adjusted_rand": 0.909
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 48759,
+   "hub_blocks_skipped": 13,
+   "labelled_pairs": {
+    "total": 3000,
+    "matches": 758,
+    "active": 0
+   },
+   "matcher": "forest",
+   "matcher_model": "forest",
+   "model_reused_from": null,
+   "overrides": {
+    "must_link": 0,
+    "cannot_link": 0,
+    "trusted_id_links": 0,
+    "links_cut_to_keep_cannot_links_apart": 0
+   },
+   "review_pairs": 263,
+   "ambiguous_records_held": 0,
+   "twin_pairs_kept_apart": 0,
+   "threshold": 0.5,
+   "cross_fitted_closure_aware": {
+    "precision": 98.65,
+    "recall": 97.76,
+    "f1": 98.2,
+    "labelled_pair_precision": 98.02,
+    "pairs": 3000,
+    "folds": 4
+   },
+   "ditto": null,
+   "customers": 10849,
+   "largest_customer": 9,
+   "households": 4702,
+   "links": 12007,
+   "bridge_links": 5004,
+   "customers_recut": 0,
+   "placeholder_names": 0,
+   "placeholder_addresses": 0,
+   "stage_seconds": {
+    "load and profile": 0.19,
+    "blocking (48,759 candidate pairs)": 0.36,
+    "forest: cross-fitted clustered F1 98.2": 4.94,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 0.78
+   },
+   "junk_contact_values": 15,
+   "shared_contact_values": 864,
+   "warnings": [
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
+   ]
+  }
+ },
+ "jev_2000_gated_on_300": {
+  "all_records": {
+   "precision": 93.74,
+   "recall": 98.06,
+   "f1": 95.85,
+   "clusters": 10751,
+   "largest_cluster": 12,
+   "adjusted_rand": 0.9585
+  },
+  "unlabelled_people_only": {
+   "precision": 96.78,
+   "recall": 97.91,
+   "f1": 97.34,
+   "clusters": 7916,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9734
+  },
+  "households": {
+   "precision": 92.02,
+   "recall": 88.15,
+   "f1": 90.04,
+   "clusters": 4797,
+   "largest_cluster": 331,
+   "adjusted_rand": 0.9003
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 48759,
+   "hub_blocks_skipped": 13,
+   "labelled_pairs": {
+    "total": 2300,
+    "matches": 592
+   },
+   "threshold": 0.5,
+   "cross_fitted_closure_aware": {
+    "precision": 94.97,
+    "recall": 95.78,
+    "f1": 95.37,
+    "pairs": 2300,
+    "folds": 4
+   },
+   "customers": 10751,
+   "largest_customer": 12,
+   "households": 4797,
+   "junk_contact_values": 15,
+   "shared_contact_values": 1487,
+   "warnings": []
+  },
+  "gate": {
+   "check_pairs": 300,
+   "accuracy": 98.0,
+   "precision": 91.78,
+   "recall": 100.0,
+   "min_accuracy": 98.0,
+   "cost_usd": 0.008,
+   "labelled_by_jev": 2000,
+   "total_cost_usd": 0.0615,
+   "jev_label_accuracy_vs_truth": 98.75
+  }
+ },
+ "hand_1000_ditto": {
+  "all_records": {
+   "precision": 97.22,
+   "recall": 97.26,
+   "f1": 97.24,
+   "clusters": 10888,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9724
+  },
+  "unlabelled_people_only": {
+   "precision": 97.99,
+   "recall": 97.08,
+   "f1": 97.53,
+   "clusters": 9411,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9753
+  },
+  "households": {
+   "precision": 92.31,
+   "recall": 88.05,
+   "f1": 90.13,
+   "clusters": 4805,
+   "largest_cluster": 331,
+   "adjusted_rand": 0.9011
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 48759,
+   "hub_blocks_skipped": 13,
+   "labelled_pairs": {
+    "total": 1000,
+    "matches": 257
+   },
+   "matcher": "forest",
+   "threshold": 0.45,
+   "cross_fitted_closure_aware": {
+    "precision": 98.83,
+    "recall": 98.44,
+    "f1": 98.64,
+    "pairs": 1000,
+    "folds": 4
+   },
+   "ditto": {
+    "used": false,
+    "threshold": 0.05,
+    "cross_fitted_closure_aware": {
+     "precision": 98.42,
+     "recall": 96.89,
+     "f1": 97.65,
+     "pairs": 1000,
+     "folds": 2,
+     "pairs_scored": 12989,
+     "veto": 0.2
+    }
+   },
+   "customers": 10888,
+   "largest_customer": 7,
+   "households": 4805,
+   "junk_contact_values": 15,
+   "shared_contact_values": 1487,
+   "warnings": [
+    "Ditto did not beat the forest on your labels (97.65 vs 98.64 cross-fitted closure-aware F1); kept the forest"
+   ]
+  }
+ },
+ "hand_3000_ditto": {
+  "all_records": {
+   "precision": 96.25,
+   "recall": 98.19,
+   "f1": 97.21,
+   "clusters": 10788,
+   "largest_cluster": 9,
+   "adjusted_rand": 0.9721
+  },
+  "unlabelled_people_only": {
+   "precision": 97.69,
+   "recall": 97.68,
+   "f1": 97.69,
+   "clusters": 7292,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9769
+  },
+  "households": {
+   "precision": 92.13,
+   "recall": 87.93,
+   "f1": 89.98,
+   "clusters": 4804,
+   "largest_cluster": 331,
+   "adjusted_rand": 0.8996
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 48759,
+   "hub_blocks_skipped": 13,
+   "labelled_pairs": {
+    "total": 3000,
+    "matches": 758
+   },
+   "matcher": "forest",
+   "threshold": 0.5,
+   "cross_fitted_closure_aware": {
+    "precision": 97.77,
+    "recall": 98.15,
+    "f1": 97.96,
+    "pairs": 3000,
+    "folds": 4
+   },
+   "ditto": {
+    "used": false,
+    "threshold": 0.2,
+    "cross_fitted_closure_aware": {
+     "precision": 99.05,
+     "recall": 95.91,
+     "f1": 97.45,
+     "pairs": 3000,
+     "folds": 2,
+     "pairs_scored": 12782,
+     "veto": 0.2
+    }
+   },
+   "customers": 10788,
+   "largest_customer": 9,
+   "households": 4804,
+   "junk_contact_values": 15,
+   "shared_contact_values": 1487,
+   "warnings": [
+    "Ditto did not beat the forest on your labels (97.45 vs 97.96 cross-fitted closure-aware F1); kept the forest"
+   ]
+  }
+ },
+ "active_500": {
+  "all_records": {
+   "precision": 98.02,
+   "recall": 94.93,
+   "f1": 96.45,
+   "clusters": 11090,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9645
+  },
+  "unlabelled_people_only": {
+   "precision": 98.59,
+   "recall": 94.82,
+   "f1": 96.67,
+   "clusters": 10396,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9667
+  },
+  "households": {
+   "precision": 92.08,
+   "recall": 89.44,
+   "f1": 90.74,
+   "clusters": 4695,
+   "largest_cluster": 332,
+   "adjusted_rand": 0.9073
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 48759,
+   "hub_blocks_skipped": 13,
+   "labelled_pairs": {
+    "total": 500,
+    "matches": 200,
+    "active": 200
+   },
+   "matcher": "forest",
+   "matcher_model": "forest",
+   "model_reused_from": null,
+   "overrides": {
+    "must_link": 0,
+    "cannot_link": 0,
+    "trusted_id_links": 0,
+    "links_cut_to_keep_cannot_links_apart": 0
+   },
+   "review_pairs": 159,
+   "ambiguous_records_held": 0,
+   "twin_pairs_kept_apart": 0,
+   "threshold": 0.55,
+   "cross_fitted_closure_aware": {
+    "precision": 99.35,
+    "recall": 98.67,
+    "f1": 99.01,
+    "labelled_pair_precision": 98.67,
+    "pairs": 500,
+    "folds": 4
+   },
+   "ditto": null,
+   "customers": 11090,
+   "largest_customer": 7,
+   "households": 4695,
+   "links": 11684,
+   "bridge_links": 4893,
+   "customers_recut": 0,
+   "placeholder_names": 0,
+   "placeholder_addresses": 0,
+   "stage_seconds": {
+    "load and profile": 0.18,
+    "blocking (48,759 candidate pairs)": 0.23,
+    "forest: cross-fitted clustered F1 99.01": 4.28,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "matcher chosen": 0.0,
+    "households, golden records, outputs": 0.8
+   },
+   "junk_contact_values": 15,
+   "shared_contact_values": 1236,
+   "warnings": []
+  }
+ },
+ "active_1000": {
+  "all_records": {
+   "precision": 97.96,
+   "recall": 99.28,
+   "f1": 98.61,
+   "clusters": 10739,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9861
+  },
+  "unlabelled_people_only": {
+   "precision": 98.83,
+   "recall": 99.28,
+   "f1": 99.05,
+   "clusters": 9711,
+   "largest_cluster": 6,
+   "adjusted_rand": 0.9905
+  },
+  "households": {
+   "precision": 92.42,
+   "recall": 89.7,
+   "f1": 91.04,
+   "clusters": 4690,
+   "largest_cluster": 332,
+   "adjusted_rand": 0.9102
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 48759,
+   "hub_blocks_skipped": 13,
+   "labelled_pairs": {
+    "total": 1000,
+    "matches": 470,
+    "active": 700
+   },
+   "matcher": "forest",
+   "matcher_model": "forest",
+   "model_reused_from": null,
+   "overrides": {
+    "must_link": 0,
+    "cannot_link": 0,
+    "trusted_id_links": 0,
+    "links_cut_to_keep_cannot_links_apart": 0
+   },
+   "review_pairs": 141,
+   "ambiguous_records_held": 0,
+   "twin_pairs_kept_apart": 0,
+   "threshold": 0.55,
+   "cross_fitted_closure_aware": {
+    "precision": 98.5,
+    "recall": 98.67,
+    "f1": 98.58,
+    "labelled_pair_precision": 97.37,
+    "pairs": 1000,
+    "folds": 4
+   },
+   "ditto": null,
+   "customers": 10739,
+   "largest_customer": 7,
+   "households": 4690,
+   "links": 12181,
+   "bridge_links": 5012,
+   "customers_recut": 0,
+   "placeholder_names": 0,
+   "placeholder_addresses": 0,
+   "stage_seconds": {
+    "load and profile": 0.17,
+    "blocking (48,759 candidate pairs)": 0.2,
+    "forest: cross-fitted clustered F1 98.58": 4.43,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "matcher chosen": 0.0,
+    "households, golden records, outputs": 0.79
+   },
+   "junk_contact_values": 15,
+   "shared_contact_values": 832,
+   "warnings": []
+  }
+ },
+ "active_vs_random_1000_seeds": [
+  {
+   "seed": 2,
+   "random_1000": 97.58,
+   "active_1000": 98.85
+  },
+  {
+   "seed": 3,
+   "random_1000": 97.74,
+   "active_1000": 98.81
+  },
+  {
+   "seed": 4,
+   "random_1000": 97.78,
+   "active_1000": 98.9
+  }
+ ]
+}

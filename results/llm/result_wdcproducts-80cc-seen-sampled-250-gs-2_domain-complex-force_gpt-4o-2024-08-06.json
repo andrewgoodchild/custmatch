@@ -1,0 +1,13 @@
+{
+ "precision": 85.61,
+ "recall": 92.8,
+ "f1": 89.06,
+ "accuracy": 95.4,
+ "n": 1239,
+ "predicted_matches": 271,
+ "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-4o-2024-08-06",
+ "unclear_or_long_answers": 0,
+ "cost_usd": 0.323
+}

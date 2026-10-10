@@ -1,0 +1,43 @@
+{
+ "labels": 12000,
+ "config_overrides": {
+  "ditto_model": "answerdotai/ModernBERT-base"
+ },
+ "forest": {
+  "precision": 96.84,
+  "recall": 81.64,
+  "f1": 88.59,
+  "clusters": 10082,
+  "largest_cluster": 41,
+  "adjusted_rand": 0.8859,
+  "seconds": 24,
+  "matcher": "forest",
+  "threshold": 0.9,
+  "ditto": null
+ },
+ "forest_veto_then_ditto": {
+  "precision": 97.27,
+  "recall": 83.78,
+  "f1": 90.02,
+  "clusters": 9559,
+  "largest_cluster": 38,
+  "adjusted_rand": 0.9002,
+  "seconds": 6838,
+  "matcher": "forest_veto_then_ditto",
+  "threshold": 0.998,
+  "ditto": {
+   "used": true,
+   "threshold": 0.998,
+   "cross_fitted_closure_aware": {
+    "precision": 94.25,
+    "recall": 98.01,
+    "f1": 96.09,
+    "labelled_pair_precision": 97.48,
+    "pairs": 12000,
+    "folds": 2,
+    "pairs_scored": 240723,
+    "veto": 0.2
+   }
+  }
+ }
+}

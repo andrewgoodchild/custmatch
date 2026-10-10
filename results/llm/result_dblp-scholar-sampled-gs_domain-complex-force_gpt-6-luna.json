@@ -1,0 +1,16 @@
+{
+ "precision": 85.93,
+ "recall": 90.4,
+ "f1": 88.11,
+ "accuracy": 95.12,
+ "n": 1250,
+ "predicted_matches": 263,
+ "dataset": "dblp-scholar-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-6-luna",
+ "unclear_or_long_answers": 270,
+ "empty_answers": 0,
+ "cost_usd": 0.0984,
+ "temperature": null,
+ "max_tokens": 8000
+}

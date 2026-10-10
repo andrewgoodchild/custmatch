@@ -1,0 +1,198 @@
+{
+ "default": {
+  "candidates": 547050,
+  "true_candidates": 217385,
+  "true_pairs_found_directly_pct": 71.52,
+  "ceiling": {
+   "precision": 100.0,
+   "recall": 87.51,
+   "f1": 93.34,
+   "clusters": 8449,
+   "largest_cluster": 21,
+   "adjusted_rand": 0.9334
+  },
+  "seconds": 1.1,
+  "runs": {
+   "random_1": {
+    "f1": 85.31,
+    "threshold": 0.85,
+    "seconds": 18.0
+   },
+   "random_2": {
+    "f1": 86.84,
+    "threshold": 0.8,
+    "seconds": 18.0
+   },
+   "random_3": {
+    "f1": 84.89,
+    "threshold": 0.85,
+    "seconds": 16.7
+   },
+   "active_1": {
+    "f1": 87.4,
+    "threshold": 0.75,
+    "seconds": 18.1
+   },
+   "active_2": {
+    "f1": 87.69,
+    "threshold": 0.75,
+    "seconds": 17.8
+   },
+   "active_3": {
+    "f1": 85.96,
+    "threshold": 0.8,
+    "seconds": 19.7
+   }
+  },
+  "mean_f1": 86.35,
+  "mean_random": 85.68,
+  "mean_active": 87.02
+ },
+ "lsh_names_birth_place": {
+  "candidates": 619385,
+  "true_candidates": 238878,
+  "true_pairs_found_directly_pct": 78.59,
+  "ceiling": {
+   "precision": 100.0,
+   "recall": 93.82,
+   "f1": 96.81,
+   "clusters": 6944,
+   "largest_cluster": 21,
+   "adjusted_rand": 0.9681
+  },
+  "seconds": 2.2,
+  "runs": {
+   "random_1": {
+    "f1": 87.75,
+    "threshold": 0.8,
+    "seconds": 19.6
+   },
+   "random_2": {
+    "f1": 88.06,
+    "threshold": 0.8,
+    "seconds": 19.8
+   },
+   "random_3": {
+    "f1": 86.56,
+    "threshold": 0.8,
+    "seconds": 19.4
+   },
+   "active_1": {
+    "f1": 85.45,
+    "threshold": 0.8,
+    "seconds": 17.9
+   },
+   "active_2": {
+    "f1": 87.31,
+    "threshold": 0.8,
+    "seconds": 19.3
+   },
+   "active_3": {
+    "f1": 88.83,
+    "threshold": 0.8,
+    "seconds": 19.7
+   }
+  },
+  "mean_f1": 87.33,
+  "mean_random": 87.46,
+  "mean_active": 87.2
+ },
+ "gb": {
+  "candidates": 567644,
+  "true_candidates": 220357,
+  "true_pairs_found_directly_pct": 72.5,
+  "ceiling": {
+   "precision": 100.0,
+   "recall": 87.98,
+   "f1": 93.6,
+   "clusters": 8323,
+   "largest_cluster": 21,
+   "adjusted_rand": 0.936
+  },
+  "seconds": 1.5,
+  "runs": {
+   "random_1": {
+    "f1": 87.57,
+    "threshold": 0.75,
+    "seconds": 21.5
+   },
+   "random_2": {
+    "f1": 87.21,
+    "threshold": 0.8,
+    "seconds": 22.1
+   },
+   "random_3": {
+    "f1": 86.16,
+    "threshold": 0.8,
+    "seconds": 20.4
+   },
+   "active_1": {
+    "f1": 86.98,
+    "threshold": 0.8,
+    "seconds": 21.3
+   },
+   "active_2": {
+    "f1": 86.68,
+    "threshold": 0.75,
+    "seconds": 20.9
+   },
+   "active_3": {
+    "f1": 85.78,
+    "threshold": 0.8,
+    "seconds": 21.3
+   }
+  },
+  "mean_f1": 86.73,
+  "mean_random": 86.98,
+  "mean_active": 86.48
+ },
+ "gb_lsh_names_birth_place": {
+  "candidates": 639480,
+  "true_candidates": 241353,
+  "true_pairs_found_directly_pct": 79.4,
+  "ceiling": {
+   "precision": 100.0,
+   "recall": 94.05,
+   "f1": 96.93,
+   "clusters": 6872,
+   "largest_cluster": 21,
+   "adjusted_rand": 0.9693
+  },
+  "seconds": 2.6,
+  "runs": {
+   "random_1": {
+    "f1": 87.1,
+    "threshold": 0.85,
+    "seconds": 21.7
+   },
+   "random_2": {
+    "f1": 85.65,
+    "threshold": 0.8,
+    "seconds": 20.8
+   },
+   "random_3": {
+    "f1": 85.1,
+    "threshold": 0.85,
+    "seconds": 20.8
+   },
+   "active_1": {
+    "f1": 87.52,
+    "threshold": 0.8,
+    "seconds": 24.3
+   },
+   "active_2": {
+    "f1": 88.19,
+    "threshold": 0.75,
+    "seconds": 36.0
+   },
+   "active_3": {
+    "f1": 86.6,
+    "threshold": 0.8,
+    "seconds": 45.1
+   }
+  },
+  "mean_f1": 86.69,
+  "mean_random": 85.95,
+  "mean_active": 87.44
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "dataset": "FEBRL4 (5,000 x 5,000; 5,000 true links)",
+ "candidate_pairs": 185055,
+ "blocking_recall": 100.0,
+ "rules": {
+  "precision": 100.0,
+  "recall": 95.56,
+  "f1": 97.73,
+  "predicted": 4778,
+  "true_positives": 4778
+ },
+ "ecm": {
+  "precision": 100.0,
+  "recall": 99.98,
+  "f1": 99.99,
+  "predicted": 4999,
+  "true_positives": 4999
+ },
+ "splink": {
+  "precision": 99.98,
+  "recall": 100.0,
+  "f1": 99.99,
+  "predicted": 5001,
+  "true_positives": 5000
+ },
+ "rf_trained_on_febrl3": {
+  "precision": 99.82,
+  "recall": 100.0,
+  "f1": 99.91,
+  "predicted": 5009,
+  "true_positives": 5000,
+  "train_pairs": 87583,
+  "train_pos": 6531
+ }
+}

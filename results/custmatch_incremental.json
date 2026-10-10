@@ -1,0 +1,74 @@
+{
+ "incremental": {
+  "all_records": {
+   "precision": 98.17,
+   "recall": 95.5,
+   "f1": 96.82,
+   "clusters": 11060,
+   "largest_cluster": 9,
+   "adjusted_rand": 0.9682
+  },
+  "unlabelled_people_only": {
+   "precision": 98.42,
+   "recall": 95.52,
+   "f1": 96.95,
+   "clusters": 9536,
+   "largest_cluster": 9,
+   "adjusted_rand": 0.9695
+  },
+  "households": {
+   "precision": 92.28,
+   "recall": 88.46,
+   "f1": 90.33,
+   "clusters": 4706,
+   "largest_cluster": 332,
+   "adjusted_rand": 0.9031
+  },
+  "add_seconds": 3.43,
+  "batch_90_seconds": 5.16,
+  "summary": {
+   "existing_records": 18090,
+   "new_records": 2044,
+   "updated_records": 0,
+   "deleted_records": 0,
+   "pairs_scored": 9230,
+   "links_accepted": 2235,
+   "joined_existing": 1483,
+   "new_customers": 497,
+   "merges_of_existing_customers": 11,
+   "links_refused_by_max_cluster": 0,
+   "links_refused_by_cannot_link": 0,
+   "threshold": 0.5,
+   "warnings": [
+    "11 existing customers were merged by new records - review merges.csv"
+   ]
+  }
+ },
+ "full_rerun": {
+  "all_records": {
+   "precision": 99.16,
+   "recall": 95.18,
+   "f1": 97.13,
+   "clusters": 11115,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9713
+  },
+  "unlabelled_people_only": {
+   "precision": 99.3,
+   "recall": 95.19,
+   "f1": 97.2,
+   "clusters": 9579,
+   "largest_cluster": 6,
+   "adjusted_rand": 0.972
+  },
+  "households": {
+   "precision": 92.65,
+   "recall": 89.44,
+   "f1": 91.01,
+   "clusters": 4708,
+   "largest_cluster": 332,
+   "adjusted_rand": 0.91
+  },
+  "seconds": 5.18
+ }
+}

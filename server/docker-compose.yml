@@ -1,0 +1,51 @@
+# Set CUSTMATCH_DB_PASSWORD for anything but a local trial.
+# A local trial with Postgres (API on localhost:8765): docker compose -f server/docker-compose.yml up --build
+#   load the demo and run a batch: docker compose -f server/docker-compose.yml --profile batch run --rm batch
+#   rebuild both images after a change: docker compose -f server/docker-compose.yml --profile batch build
+#   (a plain `build` skips the batch service, which sits in a profile)
+#   an API key (shown once): docker compose -f server/docker-compose.yml run --rm api key create me --role admin
+#   then: curl -H "Authorization: Bearer <key>" localhost:8765/runs/current
+#   the dashboard: http://localhost:8765/dashboard (a key with the steward role)
+#   the scheduler loads files dropped in ./inbox (web.full.csv, app.incremental.csv, ...) and runs the
+#   batch at 02:00 UTC; for a first run now, before starting it (one scheduler at a time):
+#   cp examples/demo/web.csv server/inbox/web.full.csv (and app, store), then
+#   docker compose -f server/docker-compose.yml run --rm scheduler schedule /demo/config.json \
+#        --labels /demo/labels.csv --inbox /inbox --once
+#   health: docker compose -f server/docker-compose.yml run --rm api check
+#   operator guide: server/README.md
+services:
+  db:
+    image: postgres:16
+    environment: {POSTGRES_USER: custmatch, POSTGRES_PASSWORD: "${CUSTMATCH_DB_PASSWORD:-custmatch}", POSTGRES_DB: custmatch}
+    healthcheck: {test: ["CMD", "pg_isready", "-U", "custmatch"], interval: 2s, retries: 30}
+  api:
+    build: {context: .., dockerfile: server/Dockerfile, args: {CUSTMATCH_EXTRAS: "${CUSTMATCH_EXTRAS:-}"}}
+    environment: &env
+      CUSTMATCH_DB_URL: postgresql+psycopg://custmatch:${CUSTMATCH_DB_PASSWORD:-custmatch}@db/custmatch
+      CUSTMATCH_DATA_DIR: /data
+    volumes: ["runs:/data:ro", ../examples/demo:/demo:ro]     # the API only reads run files
+    ports: ["127.0.0.1:8765:8000"]                            # this machine only; put TLS in front to expose it
+    depends_on: {db: {condition: service_healthy}}
+    restart: unless-stopped
+  batch:
+    build: {context: .., dockerfile: server/Dockerfile, args: {CUSTMATCH_EXTRAS: "${CUSTMATCH_EXTRAS:-}"}}
+    environment: *env
+    volumes: [runs:/data, ../examples/demo:/demo:ro]
+    # the demo: load each source (a full load), then a batch run over the database
+    entrypoint: ["sh", "-c"]
+    command:
+      - >-
+        for s in web app store; do custmatch-server load /demo/config.json $$s /demo/$$s.csv --full; done &&
+        custmatch-server batch /demo/config.json --labels /demo/labels.csv
+    depends_on: {db: {condition: service_healthy}}
+    profiles: [batch]
+  scheduler:
+    build: {context: .., dockerfile: server/Dockerfile, args: {CUSTMATCH_EXTRAS: "${CUSTMATCH_EXTRAS:-}"}}
+    environment:
+      <<: *env
+      # CUSTMATCH_ALERT_WEBHOOK: https://hooks.slack.com/services/...   (alerts; any URL taking a JSON POST)
+    volumes: [runs:/data, ../examples/demo:/demo:ro, ./inbox:/inbox]
+    command: ["schedule", "/demo/config.json", "--labels", "/demo/labels.csv", "--inbox", "/inbox", "--batch-at", "02:00"]
+    depends_on: {db: {condition: service_healthy}}
+    restart: unless-stopped
+volumes: {runs: {}}

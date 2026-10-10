@@ -1,0 +1,113 @@
+{
+ "historical_50k_postcode": {
+  "values": 12363,
+  "max_records_per_value": 34,
+  "share_of_values_with_1_entity": 98.18,
+  "top": [
+   {
+    "value": "se1 7sg",
+    "records": 34,
+    "entities": 5,
+    "distinct_surname": 10,
+    "distinct_dob": 9,
+    "diversity": 0.29411764705882354,
+    "same_entity_pct": 24.96
+   },
+   {
+    "value": "sw1h 9aa",
+    "records": 28,
+    "entities": 4,
+    "distinct_surname": 6,
+    "distinct_dob": 9,
+    "diversity": 0.21428571428571427,
+    "same_entity_pct": 32.01
+   },
+   {
+    "value": "se1 8xz",
+    "records": 28,
+    "entities": 6,
+    "distinct_surname": 11,
+    "distinct_dob": 12,
+    "diversity": 0.39285714285714285,
+    "same_entity_pct": 16.93
+   },
+   {
+    "value": "sw1p 3pl",
+    "records": 28,
+    "entities": 3,
+    "distinct_surname": 6,
+    "distinct_dob": 11,
+    "diversity": 0.21428571428571427,
+    "same_entity_pct": 32.28
+   },
+   {
+    "value": "l3 0ah",
+    "records": 28,
+    "entities": 4,
+    "distinct_surname": 5,
+    "distinct_dob": 14,
+    "diversity": 0.17857142857142858,
+    "same_entity_pct": 29.1
+   },
+   {
+    "value": "sw1a 2jh",
+    "records": 28,
+    "entities": 5,
+    "distinct_surname": 9,
+    "distinct_dob": 13,
+    "diversity": 0.32142857142857145,
+    "same_entity_pct": 21.69
+   },
+   {
+    "value": "sw1a 2bj",
+    "records": 27,
+    "entities": 4,
+    "distinct_surname": 6,
+    "distinct_dob": 11,
+    "diversity": 0.2222222222222222,
+    "same_entity_pct": 27.64
+   },
+   {
+    "value": "pl1 3dq",
+    "records": 27,
+    "entities": 2,
+    "distinct_surname": 8,
+    "distinct_dob": 8,
+    "diversity": 0.2962962962962963,
+    "same_entity_pct": 48.15
+   }
+  ]
+ },
+ "febrl_address": {
+  "values": 7341,
+  "shared_values": 1762,
+  "shared_across_entities": 0
+ },
+ "febrl_soc_sec_id": {
+  "values": 5439,
+  "shared_values": 4561,
+  "shared_across_entities": 0
+ },
+ "injected_email": {
+  "junk_flagged": [
+   "test@test.com"
+  ],
+  "junk_records": 400,
+  "household_like_values": 75,
+  "detector": "records>=5 and surname-diversity>0.5 -> junk; 2-4 records and diversity<=0.5 -> household",
+  "same_entity_pct": {
+   "test@test.com": 0.01
+  }
+ },
+ "injected_phone": {
+  "junk_flagged": [
+   "0000000000"
+  ],
+  "junk_records": 400,
+  "household_like_values": 0,
+  "detector": "records>=5 and surname-diversity>0.5 -> junk; 2-4 records and diversity<=0.5 -> household",
+  "same_entity_pct": {
+   "0000000000": 0.01
+  }
+ }
+}

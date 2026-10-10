@@ -1,0 +1,20 @@
+{
+ "precision": 61.85,
+ "recall": 91.45,
+ "f1": 73.79,
+ "accuracy": 87.68,
+ "n": 1234,
+ "predicted_matches": 346,
+ "f1_at_0.5": 73.79,
+ "f1_tuned_held_out": 72.63,
+ "auc": 0.9503,
+ "brier": 0.0872,
+ "dataset": "amazon-google-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "typesafe/jev-1.13",
+ "snapshots": [
+  "typesafe/jev-1.13-20260917"
+ ],
+ "threshold": 0.5,
+ "cost_usd": 0.0175
+}

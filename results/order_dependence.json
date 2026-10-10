@@ -1,0 +1,220 @@
+{
+ "rerun/seed1": {
+  "churn": 954,
+  "returns": 5,
+  "swap": 1,
+  "final_f1": 77.54,
+  "id_changes": 34027
+ },
+ "add/seed1": {
+  "churn": 0,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 71.55,
+  "id_changes": 1818
+ },
+ "rerun_fixed/seed1": {
+  "churn": 384,
+  "returns": 3,
+  "swap": 0,
+  "final_f1": 77.54,
+  "id_changes": 39921
+ },
+ "rerun_fixed_ids/seed1": {
+  "churn": 384,
+  "returns": 3,
+  "swap": 0,
+  "final_f1": 77.54,
+  "id_changes": 503
+ },
+ "add_fixed/seed1": {
+  "churn": 0,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 78.17,
+  "id_changes": 74
+ },
+ "rerun_hyst05/seed1": {
+  "churn": 297,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 78.14,
+  "id_changes": 396
+ },
+ "rerun_hyst10/seed1": {
+  "churn": 260,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 79.01,
+  "id_changes": 342
+ },
+ "rerun/seed2": {
+  "churn": 686,
+  "returns": 1,
+  "swap": 1,
+  "final_f1": 77.54,
+  "id_changes": 33915
+ },
+ "add/seed2": {
+  "churn": 0,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 69.71,
+  "id_changes": 1766
+ },
+ "rerun_fixed/seed2": {
+  "churn": 381,
+  "returns": 2,
+  "swap": 0,
+  "final_f1": 77.54,
+  "id_changes": 39834
+ },
+ "rerun_fixed_ids/seed2": {
+  "churn": 381,
+  "returns": 2,
+  "swap": 0,
+  "final_f1": 77.54,
+  "id_changes": 482
+ },
+ "add_fixed/seed2": {
+  "churn": 0,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 77.12,
+  "id_changes": 79
+ },
+ "rerun_hyst05/seed2": {
+  "churn": 261,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 77.61,
+  "id_changes": 357
+ },
+ "rerun_hyst10/seed2": {
+  "churn": 228,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 78.31,
+  "id_changes": 304
+ },
+ "rerun/seed1/couples": {
+  "churn": 807,
+  "returns": 11,
+  "swap": 1,
+  "final_f1": 76.07,
+  "id_changes": 35277,
+  "couple_records": 162,
+  "couple_record_moves": 0,
+  "couple_final": {
+   "own_person": 18,
+   "partner": 0,
+   "both": 1,
+   "alone": 143
+  }
+ },
+ "rerun_fixed_ids/seed1/couples": {
+  "churn": 294,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 76.07,
+  "id_changes": 368,
+  "couple_records": 162,
+  "couple_record_moves": 0,
+  "couple_final": {
+   "own_person": 18,
+   "partner": 0,
+   "both": 1,
+   "alone": 143
+  }
+ },
+ "rerun_hyst05/seed1/couples": {
+  "churn": 206,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 75.72,
+  "id_changes": 277,
+  "couple_records": 162,
+  "couple_record_moves": 0,
+  "couple_final": {
+   "own_person": 17,
+   "partner": 0,
+   "both": 1,
+   "alone": 144
+  }
+ },
+ "add_fixed/seed1/couples": {
+  "churn": 0,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 74.2,
+  "id_changes": 75,
+  "couple_records": 162,
+  "couple_record_moves": 0,
+  "couple_final": {
+   "own_person": 15,
+   "partner": 0,
+   "both": 1,
+   "alone": 146
+  }
+ },
+ "rerun/seed2/couples": {
+  "churn": 646,
+  "returns": 8,
+  "swap": 0,
+  "final_f1": 76.07,
+  "id_changes": 33657,
+  "couple_records": 162,
+  "couple_record_moves": 0,
+  "couple_final": {
+   "own_person": 18,
+   "partner": 0,
+   "both": 1,
+   "alone": 143
+  }
+ },
+ "rerun_fixed_ids/seed2/couples": {
+  "churn": 306,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 76.07,
+  "id_changes": 351,
+  "couple_records": 162,
+  "couple_record_moves": 0,
+  "couple_final": {
+   "own_person": 18,
+   "partner": 0,
+   "both": 1,
+   "alone": 143
+  }
+ },
+ "rerun_hyst05/seed2/couples": {
+  "churn": 215,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 75.91,
+  "id_changes": 279,
+  "couple_records": 162,
+  "couple_record_moves": 0,
+  "couple_final": {
+   "own_person": 17,
+   "partner": 0,
+   "both": 3,
+   "alone": 142
+  }
+ },
+ "add_fixed/seed2/couples": {
+  "churn": 0,
+  "returns": 0,
+  "swap": 0,
+  "final_f1": 74.94,
+  "id_changes": 70,
+  "couple_records": 162,
+  "couple_record_moves": 0,
+  "couple_final": {
+   "own_person": 15,
+   "partner": 0,
+   "both": 3,
+   "alone": 144
+  }
+ }
+}

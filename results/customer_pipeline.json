@@ -1,0 +1,751 @@
+{
+ "pathology_aware": {
+  "mode": "pathology_aware",
+  "records": 20134,
+  "candidate_pairs": 48759,
+  "hubs_suppressed": 13,
+  "blocking_recall": 99.52,
+  "tuned_on": "clustered_f1",
+  "chosen_threshold": 0.7,
+  "pairwise": {
+   "precision": 98.6,
+   "recall": 97.73,
+   "f1": 98.16,
+   "false_merges": 85
+  },
+  "clustered": {
+   "precision": 97.33,
+   "recall": 98.28,
+   "f1": 97.81,
+   "clusters": 5412,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9781
+  },
+  "best_possible_clustered": {
+   "precision": 97.33,
+   "recall": 98.28,
+   "f1": 97.81,
+   "clusters": 5412,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9781
+  },
+  "households": {
+   "precision": 92.38,
+   "recall": 88.16,
+   "f1": 90.22,
+   "clusters": 4799,
+   "largest_cluster": 331,
+   "adjusted_rand": 0.902,
+   "group_quarters_sized": 7
+  },
+  "contact_detection": {
+   "email_junk": {
+    "precision": 100.0,
+    "recall": 100.0,
+    "f1": 100.0,
+    "gold_values": 8
+   },
+   "email_household": {
+    "precision": 57.87,
+    "recall": 96.85,
+    "f1": 72.45,
+    "gold_values": 444
+   },
+   "phone_junk": {
+    "precision": 100.0,
+    "recall": 100.0,
+    "f1": 100.0,
+    "gold_values": 7
+   },
+   "phone_household": {
+    "precision": 57.93,
+    "recall": 97.29,
+    "f1": 72.62,
+    "gold_values": 443
+   }
+  },
+  "sweep": [
+   {
+    "threshold": 0.05,
+    "pairwise": {
+     "precision": 94.06,
+     "recall": 99.36,
+     "f1": 96.64,
+     "false_merges": 384
+    },
+    "clustered": {
+     "precision": 89.22,
+     "recall": 99.64,
+     "f1": 94.14,
+     "clusters": 5218,
+     "largest_cluster": 10,
+     "adjusted_rand": 0.9414
+    }
+   },
+   {
+    "threshold": 0.1,
+    "pairwise": {
+     "precision": 95.78,
+     "recall": 99.26,
+     "f1": 97.49,
+     "false_merges": 268
+    },
+    "clustered": {
+     "precision": 91.89,
+     "recall": 99.59,
+     "f1": 95.59,
+     "clusters": 5270,
+     "largest_cluster": 10,
+     "adjusted_rand": 0.9559
+    }
+   },
+   {
+    "threshold": 0.15,
+    "pairwise": {
+     "precision": 96.33,
+     "recall": 99.15,
+     "f1": 97.72,
+     "false_merges": 231
+    },
+    "clustered": {
+     "precision": 93.02,
+     "recall": 99.48,
+     "f1": 96.14,
+     "clusters": 5294,
+     "largest_cluster": 10,
+     "adjusted_rand": 0.9614
+    }
+   },
+   {
+    "threshold": 0.2,
+    "pairwise": {
+     "precision": 96.9,
+     "recall": 99.07,
+     "f1": 97.97,
+     "false_merges": 194
+    },
+    "clustered": {
+     "precision": 93.8,
+     "recall": 99.43,
+     "f1": 96.53,
+     "clusters": 5307,
+     "largest_cluster": 10,
+     "adjusted_rand": 0.9653
+    }
+   },
+   {
+    "threshold": 0.25,
+    "pairwise": {
+     "precision": 97.52,
+     "recall": 99.02,
+     "f1": 98.27,
+     "false_merges": 154
+    },
+    "clustered": {
+     "precision": 94.87,
+     "recall": 99.38,
+     "f1": 97.07,
+     "clusters": 5324,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9707
+    }
+   },
+   {
+    "threshold": 0.3,
+    "pairwise": {
+     "precision": 97.84,
+     "recall": 98.97,
+     "f1": 98.4,
+     "false_merges": 134
+    },
+    "clustered": {
+     "precision": 95.7,
+     "recall": 99.33,
+     "f1": 97.48,
+     "clusters": 5338,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9748
+    }
+   },
+   {
+    "threshold": 0.35,
+    "pairwise": {
+     "precision": 97.93,
+     "recall": 98.84,
+     "f1": 98.38,
+     "false_merges": 128
+    },
+    "clustered": {
+     "precision": 95.82,
+     "recall": 99.25,
+     "f1": 97.5,
+     "clusters": 5345,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.975
+    }
+   },
+   {
+    "threshold": 0.4,
+    "pairwise": {
+     "precision": 98.07,
+     "recall": 98.79,
+     "f1": 98.43,
+     "false_merges": 119
+    },
+    "clustered": {
+     "precision": 96.0,
+     "recall": 99.23,
+     "f1": 97.59,
+     "clusters": 5350,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9759
+    }
+   },
+   {
+    "threshold": 0.45,
+    "pairwise": {
+     "precision": 98.18,
+     "recall": 98.64,
+     "f1": 98.41,
+     "false_merges": 112
+    },
+    "clustered": {
+     "precision": 96.21,
+     "recall": 99.15,
+     "f1": 97.66,
+     "clusters": 5359,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9766
+    }
+   },
+   {
+    "threshold": 0.5,
+    "pairwise": {
+     "precision": 98.27,
+     "recall": 98.48,
+     "f1": 98.38,
+     "false_merges": 106
+    },
+    "clustered": {
+     "precision": 96.45,
+     "recall": 99.02,
+     "f1": 97.72,
+     "clusters": 5367,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9772
+    }
+   },
+   {
+    "threshold": 0.55,
+    "pairwise": {
+     "precision": 98.32,
+     "recall": 98.37,
+     "f1": 98.34,
+     "false_merges": 103
+    },
+    "clustered": {
+     "precision": 96.54,
+     "recall": 98.92,
+     "f1": 97.72,
+     "clusters": 5373,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9772
+    }
+   },
+   {
+    "threshold": 0.6,
+    "pairwise": {
+     "precision": 98.36,
+     "recall": 98.27,
+     "f1": 98.32,
+     "false_merges": 100
+    },
+    "clustered": {
+     "precision": 96.63,
+     "recall": 98.82,
+     "f1": 97.71,
+     "clusters": 5380,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9771
+    }
+   },
+   {
+    "threshold": 0.65,
+    "pairwise": {
+     "precision": 98.39,
+     "recall": 98.01,
+     "f1": 98.2,
+     "false_merges": 98
+    },
+    "clustered": {
+     "precision": 96.7,
+     "recall": 98.53,
+     "f1": 97.61,
+     "clusters": 5395,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.976
+    }
+   },
+   {
+    "threshold": 0.7,
+    "pairwise": {
+     "precision": 98.6,
+     "recall": 97.73,
+     "f1": 98.16,
+     "false_merges": 85
+    },
+    "clustered": {
+     "precision": 97.33,
+     "recall": 98.28,
+     "f1": 97.81,
+     "clusters": 5412,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9781
+    }
+   },
+   {
+    "threshold": 0.75,
+    "pairwise": {
+     "precision": 98.76,
+     "recall": 97.47,
+     "f1": 98.11,
+     "false_merges": 75
+    },
+    "clustered": {
+     "precision": 97.59,
+     "recall": 98.02,
+     "f1": 97.81,
+     "clusters": 5425,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9781
+    }
+   },
+   {
+    "threshold": 0.8,
+    "pairwise": {
+     "precision": 98.84,
+     "recall": 97.29,
+     "f1": 98.06,
+     "false_merges": 70
+    },
+    "clustered": {
+     "precision": 97.75,
+     "recall": 97.86,
+     "f1": 97.8,
+     "clusters": 5434,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.978
+    }
+   },
+   {
+    "threshold": 0.85,
+    "pairwise": {
+     "precision": 99.1,
+     "recall": 96.8,
+     "f1": 97.93,
+     "false_merges": 54
+    },
+    "clustered": {
+     "precision": 98.13,
+     "recall": 97.5,
+     "f1": 97.81,
+     "clusters": 5453,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9781
+    }
+   },
+   {
+    "threshold": 0.9,
+    "pairwise": {
+     "precision": 99.41,
+     "recall": 96.34,
+     "f1": 97.85,
+     "false_merges": 35
+    },
+    "clustered": {
+     "precision": 98.49,
+     "recall": 97.14,
+     "f1": 97.81,
+     "clusters": 5472,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9781
+    }
+   },
+   {
+    "threshold": 0.95,
+    "pairwise": {
+     "precision": 99.62,
+     "recall": 95.12,
+     "f1": 97.32,
+     "false_merges": 22
+    },
+    "clustered": {
+     "precision": 99.04,
+     "recall": 96.05,
+     "f1": 97.52,
+     "clusters": 5526,
+     "largest_cluster": 6,
+     "adjusted_rand": 0.9752
+    }
+   }
+  ]
+ },
+ "naive": {
+  "mode": "naive",
+  "records": 20134,
+  "candidate_pairs": 1064490,
+  "hubs_suppressed": 0,
+  "blocking_recall": 99.69,
+  "tuned_on": "pairwise_f1",
+  "chosen_threshold": 0.55,
+  "pairwise": {
+   "precision": 98.39,
+   "recall": 98.06,
+   "f1": 98.22,
+   "false_merges": 98
+  },
+  "clustered": {
+   "precision": 96.28,
+   "recall": 98.53,
+   "f1": 97.39,
+   "clusters": 5386,
+   "largest_cluster": 9,
+   "adjusted_rand": 0.9739
+  },
+  "best_possible_clustered": {
+   "precision": 98.16,
+   "recall": 97.44,
+   "f1": 97.79,
+   "clusters": 5456,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9779
+  },
+  "households": null,
+  "contact_detection": {},
+  "sweep": [
+   {
+    "threshold": 0.05,
+    "pairwise": {
+     "precision": 92.9,
+     "recall": 99.41,
+     "f1": 96.05,
+     "false_merges": 465
+    },
+    "clustered": {
+     "precision": 81.99,
+     "recall": 99.69,
+     "f1": 89.97,
+     "clusters": 5180,
+     "largest_cluster": 28,
+     "adjusted_rand": 0.8997
+    }
+   },
+   {
+    "threshold": 0.1,
+    "pairwise": {
+     "precision": 95.27,
+     "recall": 99.35,
+     "f1": 97.27,
+     "false_merges": 302
+    },
+    "clustered": {
+     "precision": 88.67,
+     "recall": 99.62,
+     "f1": 93.83,
+     "clusters": 5248,
+     "largest_cluster": 16,
+     "adjusted_rand": 0.9383
+    }
+   },
+   {
+    "threshold": 0.15,
+    "pairwise": {
+     "precision": 96.26,
+     "recall": 99.23,
+     "f1": 97.72,
+     "false_merges": 236
+    },
+    "clustered": {
+     "precision": 91.13,
+     "recall": 99.53,
+     "f1": 95.14,
+     "clusters": 5278,
+     "largest_cluster": 14,
+     "adjusted_rand": 0.9514
+    }
+   },
+   {
+    "threshold": 0.2,
+    "pairwise": {
+     "precision": 96.95,
+     "recall": 99.15,
+     "f1": 98.04,
+     "false_merges": 191
+    },
+    "clustered": {
+     "precision": 93.53,
+     "recall": 99.46,
+     "f1": 96.41,
+     "clusters": 5303,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9641
+    }
+   },
+   {
+    "threshold": 0.25,
+    "pairwise": {
+     "precision": 97.26,
+     "recall": 98.97,
+     "f1": 98.11,
+     "false_merges": 171
+    },
+    "clustered": {
+     "precision": 94.05,
+     "recall": 99.38,
+     "f1": 96.64,
+     "clusters": 5316,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9664
+    }
+   },
+   {
+    "threshold": 0.3,
+    "pairwise": {
+     "precision": 97.48,
+     "recall": 98.74,
+     "f1": 98.11,
+     "false_merges": 156
+    },
+    "clustered": {
+     "precision": 94.4,
+     "recall": 99.22,
+     "f1": 96.75,
+     "clusters": 5329,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9675
+    }
+   },
+   {
+    "threshold": 0.35,
+    "pairwise": {
+     "precision": 97.62,
+     "recall": 98.64,
+     "f1": 98.13,
+     "false_merges": 147
+    },
+    "clustered": {
+     "precision": 94.63,
+     "recall": 99.1,
+     "f1": 96.82,
+     "clusters": 5336,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9682
+    }
+   },
+   {
+    "threshold": 0.4,
+    "pairwise": {
+     "precision": 97.78,
+     "recall": 98.55,
+     "f1": 98.16,
+     "false_merges": 137
+    },
+    "clustered": {
+     "precision": 94.9,
+     "recall": 98.99,
+     "f1": 96.9,
+     "clusters": 5346,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.969
+    }
+   },
+   {
+    "threshold": 0.45,
+    "pairwise": {
+     "precision": 97.89,
+     "recall": 98.45,
+     "f1": 98.17,
+     "false_merges": 130
+    },
+    "clustered": {
+     "precision": 95.07,
+     "recall": 98.92,
+     "f1": 96.96,
+     "clusters": 5353,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9696
+    }
+   },
+   {
+    "threshold": 0.5,
+    "pairwise": {
+     "precision": 97.98,
+     "recall": 98.3,
+     "f1": 98.14,
+     "false_merges": 124
+    },
+    "clustered": {
+     "precision": 95.2,
+     "recall": 98.77,
+     "f1": 96.95,
+     "clusters": 5361,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9695
+    }
+   },
+   {
+    "threshold": 0.55,
+    "pairwise": {
+     "precision": 98.39,
+     "recall": 98.06,
+     "f1": 98.22,
+     "false_merges": 98
+    },
+    "clustered": {
+     "precision": 96.28,
+     "recall": 98.53,
+     "f1": 97.39,
+     "clusters": 5386,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9739
+    }
+   },
+   {
+    "threshold": 0.6,
+    "pairwise": {
+     "precision": 98.47,
+     "recall": 97.94,
+     "f1": 98.21,
+     "false_merges": 93
+    },
+    "clustered": {
+     "precision": 96.59,
+     "recall": 98.42,
+     "f1": 97.49,
+     "clusters": 5396,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9749
+    }
+   },
+   {
+    "threshold": 0.65,
+    "pairwise": {
+     "precision": 98.62,
+     "recall": 97.78,
+     "f1": 98.2,
+     "false_merges": 84
+    },
+    "clustered": {
+     "precision": 96.91,
+     "recall": 98.24,
+     "f1": 97.57,
+     "clusters": 5409,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9757
+    }
+   },
+   {
+    "threshold": 0.7,
+    "pairwise": {
+     "precision": 98.65,
+     "recall": 97.53,
+     "f1": 98.09,
+     "false_merges": 82
+    },
+    "clustered": {
+     "precision": 97.04,
+     "recall": 98.06,
+     "f1": 97.55,
+     "clusters": 5420,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9755
+    }
+   },
+   {
+    "threshold": 0.75,
+    "pairwise": {
+     "precision": 98.85,
+     "recall": 97.3,
+     "f1": 98.07,
+     "false_merges": 69
+    },
+    "clustered": {
+     "precision": 97.6,
+     "recall": 97.83,
+     "f1": 97.72,
+     "clusters": 5437,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.9772
+    }
+   },
+   {
+    "threshold": 0.8,
+    "pairwise": {
+     "precision": 99.16,
+     "recall": 96.86,
+     "f1": 98.0,
+     "false_merges": 50
+    },
+    "clustered": {
+     "precision": 98.16,
+     "recall": 97.44,
+     "f1": 97.79,
+     "clusters": 5456,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9779
+    }
+   },
+   {
+    "threshold": 0.85,
+    "pairwise": {
+     "precision": 99.38,
+     "recall": 96.37,
+     "f1": 97.85,
+     "false_merges": 37
+    },
+    "clustered": {
+     "precision": 98.36,
+     "recall": 97.01,
+     "f1": 97.68,
+     "clusters": 5475,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9768
+    }
+   },
+   {
+    "threshold": 0.9,
+    "pairwise": {
+     "precision": 99.49,
+     "recall": 95.79,
+     "f1": 97.6,
+     "false_merges": 30
+    },
+    "clustered": {
+     "precision": 98.75,
+     "recall": 96.44,
+     "f1": 97.58,
+     "clusters": 5506,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9758
+    }
+   },
+   {
+    "threshold": 0.95,
+    "pairwise": {
+     "precision": 99.59,
+     "recall": 94.95,
+     "f1": 97.22,
+     "false_merges": 24
+    },
+    "clustered": {
+     "precision": 98.84,
+     "recall": 95.79,
+     "f1": 97.29,
+     "clusters": 5532,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.9729
+    }
+   }
+  ]
+ }
+}

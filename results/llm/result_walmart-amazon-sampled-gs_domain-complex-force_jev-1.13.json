@@ -1,0 +1,20 @@
+{
+ "precision": 84.62,
+ "recall": 91.19,
+ "f1": 87.78,
+ "accuracy": 95.89,
+ "n": 1193,
+ "predicted_matches": 208,
+ "f1_at_0.5": 87.78,
+ "f1_tuned_held_out": 86.93,
+ "auc": 0.9863,
+ "brier": 0.0365,
+ "dataset": "walmart-amazon-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "typesafe/jev-1.13",
+ "snapshots": [
+  "typesafe/jev-1.13-20260917"
+ ],
+ "threshold": 0.5,
+ "cost_usd": 0.0183
+}

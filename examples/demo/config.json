@@ -1,0 +1,54 @@
+{
+ "sources": [
+  {
+   "name": "web",
+   "path": "web.csv",
+   "columns": {
+    "record_id": "record_id",
+    "first_name": "first_name",
+    "last_name": "last_name",
+    "date_of_birth": "date_of_birth",
+    "email": "email",
+    "phone": "mobile",
+    "postcode": "postcode"
+   }
+  },
+  {
+   "name": "app",
+   "path": "app.csv",
+   "columns": {
+    "record_id": "record_id",
+    "first_name": "first_name",
+    "last_name": "last_name",
+    "date_of_birth": "date_of_birth",
+    "email": "email",
+    "phone": "mobile"
+   }
+  },
+  {
+   "name": "store",
+   "path": "store.csv",
+   "columns": {
+    "record_id": "record_id",
+    "first_name": "first_name",
+    "last_name": "last_name",
+    "date_of_birth": "date_of_birth",
+    "email": "email",
+    "phone": "mobile",
+    "address": "address"
+   }
+  }
+ ],
+ "extra_fields": [
+  {
+   "name": "postcode",
+   "compare": "exact"
+  }
+ ],
+ "source_priority": [
+  "store",
+  "app",
+  "web"
+ ],
+ "country": "AU"
+}

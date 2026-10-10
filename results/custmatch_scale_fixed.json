@@ -1,0 +1,23 @@
+[
+ {
+  "copies": 50,
+  "records": 1006700,
+  "blocking": "fixed",
+  "run_candidate_pairs": 2488500,
+  "stage_seconds": {
+   "load and profile": 7.22,
+   "blocking (2,488,500 candidate pairs)": 7.32,
+   "forest: cross-fitted clustered F1 97.65": 36.72,
+   "threshold (clustered, in-cluster precision check)": -0.0,
+   "matcher chosen": -0.0,
+   "households, golden records, outputs": 42.2
+  },
+  "candidate_pairs": 2437950,
+  "load_seconds": 1.95,
+  "profile_seconds": 3.62,
+  "block_seconds": 17.11,
+  "features_seconds": 8.0,
+  "full_run_seconds": 93.71,
+  "clustered_f1": 96.9
+ }
+]

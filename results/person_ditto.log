@@ -1,0 +1,99 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+train=12,000 valid=3,000 test=152,772 device=mps
+Loading weights:   0%|          | 0/197 [00:00<?, ?it/s]Loading weights: 100%|██████████| 197/197 [00:00<00:00, 6507.25it/s]
+[transformers] [1mRobertaModel LOAD REPORT[0m from: roberta-base
+Key                       | Status     | 
+--------------------------+------------+-
+lm_head.dense.bias        | UNEXPECTED | 
+lm_head.layer_norm.weight | UNEXPECTED | 
+lm_head.dense.weight      | UNEXPECTED | 
+lm_head.layer_norm.bias   | UNEXPECTED | 
+lm_head.bias              | UNEXPECTED | 
+pooler.dense.weight       | MISSING    | 
+pooler.dense.bias         | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  epoch 1 step 0/750 loss 0.6974
+  epoch 1 step 50/750 loss 0.7181
+  epoch 1 step 100/750 loss 0.6539
+  epoch 1 step 150/750 loss 0.1639
+  epoch 1 step 200/750 loss 0.0975
+  epoch 1 step 250/750 loss 0.3127
+  epoch 1 step 300/750 loss 0.0592
+  epoch 1 step 350/750 loss 0.0132
+  epoch 1 step 400/750 loss 0.1324
+  epoch 1 step 450/750 loss 0.3428
+  epoch 1 step 500/750 loss 0.3418
+  epoch 1 step 550/750 loss 0.1542
+  epoch 1 step 600/750 loss 0.0386
+  epoch 1 step 650/750 loss 0.1199
+  epoch 1 step 700/750 loss 0.0383
+epoch 1: valid_f1=97.29 th=0.40 (303s)
+  epoch 2 step 0/750 loss 0.0039
+  epoch 2 step 50/750 loss 0.0014
+  epoch 2 step 100/750 loss 0.1167
+  epoch 2 step 150/750 loss 0.0023
+  epoch 2 step 200/750 loss 0.2637
+  epoch 2 step 250/750 loss 0.0130
+  epoch 2 step 300/750 loss 0.2960
+  epoch 2 step 350/750 loss 0.0171
+  epoch 2 step 400/750 loss 0.0227
+  epoch 2 step 450/750 loss 0.0344
+  epoch 2 step 500/750 loss 0.0153
+  epoch 2 step 550/750 loss 0.0090
+  epoch 2 step 600/750 loss 0.0411
+  epoch 2 step 650/750 loss 0.0965
+  epoch 2 step 700/750 loss 0.0611
+epoch 2: valid_f1=97.48 th=0.60 (314s)
+  epoch 3 step 0/750 loss 0.0274
+  epoch 3 step 50/750 loss 0.0009
+  epoch 3 step 100/750 loss 0.0051
+  epoch 3 step 150/750 loss 0.0016
+  epoch 3 step 200/750 loss 0.0101
+  epoch 3 step 250/750 loss 0.0103
+  epoch 3 step 300/750 loss 0.5917
+  epoch 3 step 350/750 loss 0.0058
+  epoch 3 step 400/750 loss 0.0717
+  epoch 3 step 450/750 loss 0.0037
+  epoch 3 step 500/750 loss 0.0057
+  epoch 3 step 550/750 loss 0.0043
+  epoch 3 step 600/750 loss 0.0056
+  epoch 3 step 650/750 loss 0.0883
+  epoch 3 step 700/750 loss 0.0088
+epoch 3: valid_f1=97.60 th=0.05 (517s)
+  epoch 4 step 0/750 loss 0.0069
+  epoch 4 step 50/750 loss 0.0015
+  epoch 4 step 100/750 loss 0.0107
+  epoch 4 step 150/750 loss 0.0007
+  epoch 4 step 200/750 loss 0.0007
+  epoch 4 step 250/750 loss 0.0045
+  epoch 4 step 300/750 loss 0.0003
+  epoch 4 step 350/750 loss 0.0302
+  epoch 4 step 400/750 loss 0.0080
+  epoch 4 step 450/750 loss 0.0072
+  epoch 4 step 500/750 loss 0.0016
+  epoch 4 step 550/750 loss 0.0004
+  epoch 4 step 600/750 loss 0.0011
+  epoch 4 step 650/750 loss 0.0024
+  epoch 4 step 700/750 loss 0.0025
+epoch 4: valid_f1=97.94 th=0.05 (580s)
+  epoch 5 step 0/750 loss 0.0004
+  epoch 5 step 50/750 loss 0.1151
+  epoch 5 step 100/750 loss 0.0353
+  epoch 5 step 150/750 loss 0.0018
+  epoch 5 step 200/750 loss 0.0025
+  epoch 5 step 250/750 loss 0.0135
+  epoch 5 step 300/750 loss 0.0122
+  epoch 5 step 350/750 loss 0.0014
+  epoch 5 step 400/750 loss 0.0003
+  epoch 5 step 450/750 loss 0.0005
+  epoch 5 step 500/750 loss 0.0003
+  epoch 5 step 550/750 loss 0.0006
+  epoch 5 step 600/750 loss 0.0054
+  epoch 5 step 650/750 loss 0.0009
+  epoch 5 step 700/750 loss 0.0003
+epoch 5: valid_f1=98.06 th=0.05 (416s)
+best epoch 5 valid_f1=98.06
+test inference on 152,772 pairs in 5988s

@@ -1,0 +1,13 @@
+{
+ "precision": 41.53,
+ "recall": 95.34,
+ "f1": 57.86,
+ "accuracy": 77.54,
+ "n": 1193,
+ "predicted_matches": 443,
+ "dataset": "walmart-amazon-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+ "unclear_or_long_answers": 162,
+ "seconds": 963.3
+}

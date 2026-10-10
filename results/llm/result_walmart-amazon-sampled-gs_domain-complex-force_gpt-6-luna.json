@@ -1,0 +1,16 @@
+{
+ "precision": 89.76,
+ "recall": 95.34,
+ "f1": 92.46,
+ "accuracy": 97.49,
+ "n": 1193,
+ "predicted_matches": 205,
+ "dataset": "walmart-amazon-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-6-luna",
+ "unclear_or_long_answers": 326,
+ "empty_answers": 0,
+ "cost_usd": 0.0616,
+ "temperature": null,
+ "max_tokens": 2000
+}

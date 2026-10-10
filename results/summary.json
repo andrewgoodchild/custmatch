@@ -1,0 +1,958 @@
+{
+ "ditto": [
+  {
+   "task": "Structured_Amazon-Google",
+   "epochs_done": 15,
+   "best_test_f1": 35.29,
+   "final_dev_f1": 35.53,
+   "paper_f1": 75.58
+  },
+  {
+   "task": "Structured_Amazon-Google_warmup",
+   "epochs_done": 15,
+   "best_test_f1": 74.03,
+   "final_dev_f1": 73.66,
+   "paper_f1": null
+  },
+  {
+   "task": "Structured_Amazon-Google_warmup_partial",
+   "epochs_done": 3,
+   "best_test_f1": 72.27,
+   "final_dev_f1": 71.56,
+   "paper_f1": null
+  },
+  {
+   "task": "Structured_Beer",
+   "epochs_done": 40,
+   "best_test_f1": 80.0,
+   "final_dev_f1": 89.66,
+   "paper_f1": 94.37
+  },
+  {
+   "task": "Structured_Beer_mixda",
+   "epochs_done": 40,
+   "best_test_f1": 55.56,
+   "final_dev_f1": 78.26,
+   "paper_f1": null
+  },
+  {
+   "task": "Structured_DBLP-ACM",
+   "epochs_done": 15,
+   "best_test_f1": 98.31,
+   "final_dev_f1": 98.87,
+   "paper_f1": 98.99
+  },
+  {
+   "task": "Structured_DBLP-GoogleScholar",
+   "epochs_done": 15,
+   "best_test_f1": 95.32,
+   "final_dev_f1": 96.12,
+   "paper_f1": 95.6
+  },
+  {
+   "task": "Structured_Fodors-Zagats",
+   "epochs_done": 40,
+   "best_test_f1": 97.67,
+   "final_dev_f1": 100.0,
+   "paper_f1": 100.0
+  },
+  {
+   "task": "Structured_Walmart-Amazon",
+   "epochs_done": 15,
+   "best_test_f1": 84.76,
+   "final_dev_f1": 85.41,
+   "paper_f1": 86.76
+  },
+  {
+   "task": "Structured_Walmart-Amazon_mixda",
+   "epochs_done": 15,
+   "best_test_f1": 17.22,
+   "final_dev_f1": 17.22,
+   "paper_f1": null
+  },
+  {
+   "task": "Structured_iTunes-Amazon",
+   "epochs_done": 40,
+   "best_test_f1": 82.35,
+   "final_dev_f1": 76.0,
+   "paper_f1": 97.06
+  },
+  {
+   "task": "Structured_iTunes-Amazon_mixda",
+   "epochs_done": 40,
+   "best_test_f1": 63.83,
+   "final_dev_f1": 67.86,
+   "paper_f1": null
+  },
+  {
+   "task": "Textual_Abt-Buy",
+   "epochs_done": 15,
+   "best_test_f1": 85.1,
+   "final_dev_f1": 85.98,
+   "paper_f1": 89.33
+  }
+ ],
+ "llm": [
+  {
+   "precision": 55.43,
+   "recall": 91.75,
+   "f1": 69.1,
+   "accuracy": 85.99,
+   "n": 1206,
+   "predicted_matches": 341,
+   "dataset": "abt-buy-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+   "unclear_or_long_answers": 295,
+   "seconds": 925.8,
+   "reference": {
+    "gpt-4o-mini": 90.95,
+    "gpt-4-0613": 95.15,
+    "llama-3.1-70b_best": 89.84,
+    "ditto_same_testset": 91.31,
+    "tailormatch_llama31_8b": 56.57
+   }
+  },
+  {
+   "precision": 83.88,
+   "recall": 98.54,
+   "f1": 90.62,
+   "accuracy": 96.52,
+   "n": 1206,
+   "predicted_matches": 242,
+   "dataset": "abt-buy-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-2024-08-06",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.2627,
+   "reference": {
+    "gpt-4o-mini": 90.95,
+    "gpt-4-0613": 95.15,
+    "llama-3.1-70b_best": 89.84,
+    "ditto_same_testset": 91.31,
+    "tailormatch_llama31_8b": 56.57
+   }
+  },
+  {
+   "precision": 89.45,
+   "recall": 94.66,
+   "f1": 91.98,
+   "accuracy": 97.18,
+   "n": 1206,
+   "predicted_matches": 218,
+   "dataset": "abt-buy-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-mini",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.0157,
+   "reference": {
+    "gpt-4o-mini": 90.95,
+    "gpt-4-0613": 95.15,
+    "llama-3.1-70b_best": 89.84,
+    "ditto_same_testset": 91.31,
+    "tailormatch_llama31_8b": 56.57
+   }
+  },
+  {
+   "precision": 91.86,
+   "recall": 98.54,
+   "f1": 95.08,
+   "accuracy": 98.26,
+   "n": 1206,
+   "predicted_matches": 221,
+   "dataset": "abt-buy-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-6-luna",
+   "unclear_or_long_answers": 174,
+   "empty_answers": 0,
+   "cost_usd": 0.0484,
+   "temperature": null,
+   "max_tokens": 2000,
+   "reference": {
+    "gpt-4o-mini": 90.95,
+    "gpt-4-0613": 95.15,
+    "llama-3.1-70b_best": 89.84,
+    "ditto_same_testset": 91.31,
+    "tailormatch_llama31_8b": 56.57
+   }
+  },
+  {
+   "precision": 84.85,
+   "recall": 95.15,
+   "f1": 89.7,
+   "accuracy": 96.27,
+   "n": 1206,
+   "predicted_matches": 231,
+   "f1_at_0.5": 89.7,
+   "f1_tuned_held_out": 89.77,
+   "auc": 0.9939,
+   "brier": 0.0261,
+   "dataset": "abt-buy-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-1.13",
+   "snapshots": [
+    "typesafe/jev-1.13-20260917"
+   ],
+   "threshold": 0.5,
+   "cost_usd": 0.0174,
+   "reference": {
+    "gpt-4o-mini": 90.95,
+    "gpt-4-0613": 95.15,
+    "llama-3.1-70b_best": 89.84,
+    "ditto_same_testset": 91.31,
+    "tailormatch_llama31_8b": 56.57
+   }
+  },
+  {
+   "precision": 93.98,
+   "recall": 98.54,
+   "f1": 96.21,
+   "accuracy": 98.67,
+   "n": 1206,
+   "predicted_matches": 216,
+   "dataset": "abt-buy-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-router",
+   "unclear_or_long_answers": 37,
+   "empty_answers": 0,
+   "cost_usd": 0.1134,
+   "temperature": null,
+   "max_tokens": 8000,
+   "answered_by": {
+    "openai/gpt-6-luna": 867,
+    "deepseek/deepseek-v4.1-flash": 298,
+    "google/gemini-3.8-flash": 34,
+    "anthropic/claude-sonnet-5": 4,
+    "openai/gpt-6-sol": 3
+   },
+   "reference": {
+    "gpt-4o-mini": 90.95,
+    "gpt-4-0613": 95.15,
+    "llama-3.1-70b_best": 89.84,
+    "ditto_same_testset": 91.31,
+    "tailormatch_llama31_8b": 56.57
+   }
+  },
+  {
+   "precision": 61.67,
+   "recall": 94.87,
+   "f1": 74.75,
+   "accuracy": 87.84,
+   "n": 1234,
+   "predicted_matches": 360,
+   "dataset": "amazon-google-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-2024-08-06",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.2581,
+   "reference": {
+    "gpt-4o-mini": 70.98,
+    "gpt-4-0613": 75.61,
+    "llama-3.1-70b_best": 73.99,
+    "ditto_same_testset": 80.07,
+    "tailormatch_llama31_8b": 49.16
+   }
+  },
+  {
+   "precision": 66.07,
+   "recall": 79.06,
+   "f1": 71.98,
+   "accuracy": 88.33,
+   "n": 1234,
+   "predicted_matches": 280,
+   "dataset": "amazon-google-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-mini",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.0155,
+   "reference": {
+    "gpt-4o-mini": 70.98,
+    "gpt-4-0613": 75.61,
+    "llama-3.1-70b_best": 73.99,
+    "ditto_same_testset": 80.07,
+    "tailormatch_llama31_8b": 49.16
+   }
+  },
+  {
+   "precision": 69.54,
+   "recall": 96.58,
+   "f1": 80.86,
+   "accuracy": 91.33,
+   "n": 1234,
+   "predicted_matches": 325,
+   "dataset": "amazon-google-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-6-luna",
+   "unclear_or_long_answers": 163,
+   "empty_answers": 0,
+   "cost_usd": 0.0599,
+   "temperature": null,
+   "max_tokens": 2000,
+   "reference": {
+    "gpt-4o-mini": 70.98,
+    "gpt-4-0613": 75.61,
+    "llama-3.1-70b_best": 73.99,
+    "ditto_same_testset": 80.07,
+    "tailormatch_llama31_8b": 49.16
+   }
+  },
+  {
+   "precision": 61.85,
+   "recall": 91.45,
+   "f1": 73.79,
+   "accuracy": 87.68,
+   "n": 1234,
+   "predicted_matches": 346,
+   "f1_at_0.5": 73.79,
+   "f1_tuned_held_out": 72.63,
+   "auc": 0.9503,
+   "brier": 0.0872,
+   "dataset": "amazon-google-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-1.13",
+   "snapshots": [
+    "typesafe/jev-1.13-20260917"
+   ],
+   "threshold": 0.5,
+   "cost_usd": 0.0175,
+   "reference": {
+    "gpt-4o-mini": 70.98,
+    "gpt-4-0613": 75.61,
+    "llama-3.1-70b_best": 73.99,
+    "ditto_same_testset": 80.07,
+    "tailormatch_llama31_8b": 49.16
+   }
+  },
+  {
+   "precision": 70.87,
+   "recall": 93.59,
+   "f1": 80.66,
+   "accuracy": 91.49,
+   "n": 1234,
+   "predicted_matches": 309,
+   "dataset": "amazon-google-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-router",
+   "unclear_or_long_answers": 16,
+   "empty_answers": 0,
+   "cost_usd": 0.2409,
+   "temperature": null,
+   "max_tokens": 8000,
+   "answered_by": {
+    "openai/gpt-6-luna": 746,
+    "deepseek/deepseek-v4.1-flash": 419,
+    "google/gemini-3.8-flash": 58,
+    "anthropic/claude-sonnet-5": 7,
+    "openai/gpt-6-sol": 3,
+    "moonshotai/kimi-k3": 1
+   },
+   "reference": {
+    "gpt-4o-mini": 70.98,
+    "gpt-4-0613": 75.61,
+    "llama-3.1-70b_best": 73.99,
+    "ditto_same_testset": 80.07,
+    "tailormatch_llama31_8b": 49.16
+   }
+  },
+  {
+   "precision": 93.8,
+   "recall": 96.8,
+   "f1": 95.28,
+   "accuracy": 96.36,
+   "n": 660,
+   "predicted_matches": 258,
+   "dataset": "customer-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-2024-08-06",
+   "unclear_or_long_answers": 2,
+   "empty_answers": 0,
+   "cost_usd": 0.1736,
+   "temperature": 0,
+   "max_tokens": 12,
+   "reference": {}
+  },
+  {
+   "precision": 98.05,
+   "recall": 80.4,
+   "f1": 88.35,
+   "accuracy": 91.97,
+   "n": 660,
+   "predicted_matches": 205,
+   "dataset": "customer-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-mini",
+   "unclear_or_long_answers": 0,
+   "empty_answers": 0,
+   "cost_usd": 0.0104,
+   "temperature": 0,
+   "max_tokens": 12,
+   "reference": {}
+  },
+  {
+   "precision": 99.17,
+   "recall": 95.2,
+   "f1": 97.14,
+   "accuracy": 97.88,
+   "n": 660,
+   "predicted_matches": 240,
+   "dataset": "customer-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-6-luna",
+   "unclear_or_long_answers": 12,
+   "empty_answers": 0,
+   "cost_usd": 0.0271,
+   "temperature": null,
+   "max_tokens": 2000,
+   "reference": {}
+  },
+  {
+   "precision": 95.92,
+   "recall": 94.0,
+   "f1": 94.95,
+   "accuracy": 96.21,
+   "n": 660,
+   "predicted_matches": 245,
+   "f1_at_0.5": 94.95,
+   "f1_tuned_held_out": 94.31,
+   "auc": 0.9906,
+   "brier": 0.0481,
+   "dataset": "customer-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-1.13",
+   "snapshots": [
+    "typesafe/jev-1.13-20260917"
+   ],
+   "threshold": 0.5,
+   "cost_usd": 0.0104,
+   "reference": {}
+  },
+  {
+   "precision": 99.57,
+   "recall": 93.6,
+   "f1": 96.49,
+   "accuracy": 97.42,
+   "n": 660,
+   "predicted_matches": 235,
+   "dataset": "customer-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-router",
+   "unclear_or_long_answers": 1,
+   "empty_answers": 0,
+   "cost_usd": 0.2271,
+   "temperature": null,
+   "max_tokens": 8000,
+   "answered_by": {
+    "deepseek/deepseek-v4.1-flash": 364,
+    "openai/gpt-6-luna": 210,
+    "google/gemini-3.8-flash": 76,
+    "anthropic/claude-sonnet-5": 10
+   },
+   "reference": {}
+  },
+  {
+   "precision": 85.0,
+   "recall": 95.2,
+   "f1": 89.81,
+   "accuracy": 95.68,
+   "n": 1250,
+   "predicted_matches": 280,
+   "dataset": "dblp-scholar-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-2024-08-06",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.3217,
+   "reference": {
+    "gpt-4o-mini": 86.11,
+    "gpt-4-0613": 88.44,
+    "llama-3.1-70b_best": 86.32,
+    "ditto_same_testset": 94.31,
+    "tailormatch_llama31_8b": 67.69
+   }
+  },
+  {
+   "precision": 85.55,
+   "recall": 87.6,
+   "f1": 86.56,
+   "accuracy": 94.56,
+   "n": 1250,
+   "predicted_matches": 256,
+   "dataset": "dblp-scholar-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-mini",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.0193,
+   "reference": {
+    "gpt-4o-mini": 86.11,
+    "gpt-4-0613": 88.44,
+    "llama-3.1-70b_best": 86.32,
+    "ditto_same_testset": 94.31,
+    "tailormatch_llama31_8b": 67.69
+   }
+  },
+  {
+   "precision": 85.93,
+   "recall": 90.4,
+   "f1": 88.11,
+   "accuracy": 95.12,
+   "n": 1250,
+   "predicted_matches": 263,
+   "dataset": "dblp-scholar-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-6-luna",
+   "unclear_or_long_answers": 270,
+   "empty_answers": 0,
+   "cost_usd": 0.0984,
+   "temperature": null,
+   "max_tokens": 8000,
+   "reference": {
+    "gpt-4o-mini": 86.11,
+    "gpt-4-0613": 88.44,
+    "llama-3.1-70b_best": 86.32,
+    "ditto_same_testset": 94.31,
+    "tailormatch_llama31_8b": 67.69
+   }
+  },
+  {
+   "precision": 85.05,
+   "recall": 95.6,
+   "f1": 90.02,
+   "accuracy": 95.76,
+   "n": 1250,
+   "predicted_matches": 281,
+   "f1_at_0.5": 90.02,
+   "f1_tuned_held_out": 89.05,
+   "auc": 0.9885,
+   "brier": 0.0366,
+   "dataset": "dblp-scholar-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-1.13",
+   "snapshots": [
+    "typesafe/jev-1.13-20260917"
+   ],
+   "threshold": 0.5,
+   "cost_usd": 0.0185,
+   "reference": {
+    "gpt-4o-mini": 86.11,
+    "gpt-4-0613": 88.44,
+    "llama-3.1-70b_best": 86.32,
+    "ditto_same_testset": 94.31,
+    "tailormatch_llama31_8b": 67.69
+   }
+  },
+  {
+   "precision": 86.85,
+   "recall": 87.2,
+   "f1": 87.03,
+   "accuracy": 94.8,
+   "n": 1250,
+   "predicted_matches": 251,
+   "dataset": "dblp-scholar-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-router",
+   "unclear_or_long_answers": 32,
+   "empty_answers": 4,
+   "cost_usd": 0.5289,
+   "temperature": null,
+   "max_tokens": 8000,
+   "answered_by": {
+    "openai/gpt-6-luna": 632,
+    "deepseek/deepseek-v4.1-flash": 408,
+    "google/gemini-3.8-flash": 185,
+    "openai/gpt-6-sol": 15,
+    "anthropic/claude-sonnet-5": 9,
+    "moonshotai/kimi-k3": 1
+   },
+   "reference": {
+    "gpt-4o-mini": 86.11,
+    "gpt-4-0613": 88.44,
+    "llama-3.1-70b_best": 86.32,
+    "ditto_same_testset": 94.31,
+    "tailormatch_llama31_8b": 67.69
+   }
+  },
+  {
+   "precision": 80.0,
+   "recall": 1.6,
+   "f1": 3.14,
+   "accuracy": 62.58,
+   "n": 660,
+   "predicted_matches": 5,
+   "dataset": "historical50k-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+   "unclear_or_long_answers": 18,
+   "seconds": 457.9,
+   "reference": {}
+  },
+  {
+   "precision": 99.22,
+   "recall": 50.8,
+   "f1": 67.2,
+   "accuracy": 81.21,
+   "n": 660,
+   "predicted_matches": 128,
+   "dataset": "historical50k-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-2024-08-06",
+   "unclear_or_long_answers": 8,
+   "cost_usd": 0.1431,
+   "reference": {}
+  },
+  {
+   "precision": 89.72,
+   "recall": 38.4,
+   "f1": 53.78,
+   "accuracy": 75.0,
+   "n": 660,
+   "predicted_matches": 107,
+   "dataset": "historical50k-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-mini",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.0085,
+   "reference": {}
+  },
+  {
+   "precision": 95.02,
+   "recall": 76.4,
+   "f1": 84.7,
+   "accuracy": 89.55,
+   "n": 660,
+   "predicted_matches": 201,
+   "dataset": "historical50k-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-6-luna",
+   "unclear_or_long_answers": 50,
+   "empty_answers": 0,
+   "cost_usd": 0.0664,
+   "temperature": null,
+   "max_tokens": 8000,
+   "reference": {}
+  },
+  {
+   "precision": 91.53,
+   "recall": 64.8,
+   "f1": 75.88,
+   "accuracy": 84.39,
+   "n": 660,
+   "predicted_matches": 177,
+   "f1_at_0.5": 75.88,
+   "f1_tuned_held_out": 84.97,
+   "auc": 0.9484,
+   "brier": 0.1086,
+   "dataset": "historical50k-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-1.13",
+   "snapshots": [
+    "typesafe/jev-1.13-20260917"
+   ],
+   "threshold": 0.5,
+   "cost_usd": 0.0095,
+   "reference": {}
+  },
+  {
+   "precision": 96.79,
+   "recall": 72.4,
+   "f1": 82.84,
+   "accuracy": 88.64,
+   "n": 660,
+   "predicted_matches": 187,
+   "dataset": "historical50k-person-hard",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-router",
+   "unclear_or_long_answers": 7,
+   "empty_answers": 4,
+   "cost_usd": 0.6507,
+   "temperature": null,
+   "max_tokens": 8000,
+   "answered_by": {
+    "deepseek/deepseek-v4.1-flash": 395,
+    "openai/gpt-6-luna": 131,
+    "google/gemini-3.8-flash": 117,
+    "anthropic/claude-sonnet-5": 12,
+    "openai/gpt-6-sol": 5
+   },
+   "reference": {}
+  },
+  {
+   "precision": 41.53,
+   "recall": 95.34,
+   "f1": 57.86,
+   "accuracy": 77.54,
+   "n": 1193,
+   "predicted_matches": 443,
+   "dataset": "walmart-amazon-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+   "unclear_or_long_answers": 162,
+   "seconds": 963.3,
+   "reference": {
+    "gpt-4o-mini": 86.36,
+    "gpt-4-0613": 89.0,
+    "llama-3.1-70b_best": 84.85,
+    "ditto_same_testset": 86.39,
+    "tailormatch_llama31_8b": 42.04
+   }
+  },
+  {
+   "precision": 75.3,
+   "recall": 96.37,
+   "f1": 84.55,
+   "accuracy": 94.3,
+   "n": 1193,
+   "predicted_matches": 247,
+   "dataset": "walmart-amazon-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-2024-08-06",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.3161,
+   "reference": {
+    "gpt-4o-mini": 86.36,
+    "gpt-4-0613": 89.0,
+    "llama-3.1-70b_best": 84.85,
+    "ditto_same_testset": 86.39,
+    "tailormatch_llama31_8b": 42.04
+   }
+  },
+  {
+   "precision": 86.15,
+   "recall": 87.05,
+   "f1": 86.6,
+   "accuracy": 95.64,
+   "n": 1193,
+   "predicted_matches": 195,
+   "dataset": "walmart-amazon-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-mini",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.019,
+   "reference": {
+    "gpt-4o-mini": 86.36,
+    "gpt-4-0613": 89.0,
+    "llama-3.1-70b_best": 84.85,
+    "ditto_same_testset": 86.39,
+    "tailormatch_llama31_8b": 42.04
+   }
+  },
+  {
+   "precision": 89.76,
+   "recall": 95.34,
+   "f1": 92.46,
+   "accuracy": 97.49,
+   "n": 1193,
+   "predicted_matches": 205,
+   "dataset": "walmart-amazon-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-6-luna",
+   "unclear_or_long_answers": 326,
+   "empty_answers": 0,
+   "cost_usd": 0.0616,
+   "temperature": null,
+   "max_tokens": 2000,
+   "reference": {
+    "gpt-4o-mini": 86.36,
+    "gpt-4-0613": 89.0,
+    "llama-3.1-70b_best": 84.85,
+    "ditto_same_testset": 86.39,
+    "tailormatch_llama31_8b": 42.04
+   }
+  },
+  {
+   "precision": 84.62,
+   "recall": 91.19,
+   "f1": 87.78,
+   "accuracy": 95.89,
+   "n": 1193,
+   "predicted_matches": 208,
+   "f1_at_0.5": 87.78,
+   "f1_tuned_held_out": 86.93,
+   "auc": 0.9863,
+   "brier": 0.0365,
+   "dataset": "walmart-amazon-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-1.13",
+   "snapshots": [
+    "typesafe/jev-1.13-20260917"
+   ],
+   "threshold": 0.5,
+   "cost_usd": 0.0183,
+   "reference": {
+    "gpt-4o-mini": 86.36,
+    "gpt-4-0613": 89.0,
+    "llama-3.1-70b_best": 84.85,
+    "ditto_same_testset": 86.39,
+    "tailormatch_llama31_8b": 42.04
+   }
+  },
+  {
+   "precision": 92.96,
+   "recall": 95.85,
+   "f1": 94.39,
+   "accuracy": 98.16,
+   "n": 1193,
+   "predicted_matches": 199,
+   "dataset": "walmart-amazon-sampled-gs",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-router",
+   "unclear_or_long_answers": 59,
+   "empty_answers": 0,
+   "cost_usd": 0.2106,
+   "temperature": null,
+   "max_tokens": 8000,
+   "answered_by": {
+    "openai/gpt-6-luna": 765,
+    "deepseek/deepseek-v4.1-flash": 357,
+    "google/gemini-3.8-flash": 61,
+    "anthropic/claude-sonnet-5": 7,
+    "z-ai/glm-5.3-flash": 3
+   },
+   "reference": {
+    "gpt-4o-mini": 86.36,
+    "gpt-4-0613": 89.0,
+    "llama-3.1-70b_best": 84.85,
+    "ditto_same_testset": 86.39,
+    "tailormatch_llama31_8b": 42.04
+   }
+  },
+  {
+   "precision": 57.07,
+   "recall": 92.0,
+   "f1": 70.44,
+   "accuracy": 84.42,
+   "n": 1239,
+   "predicted_matches": 403,
+   "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+   "prompt": "domain-complex-force",
+   "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+   "unclear_or_long_answers": 357,
+   "seconds": 1043.5,
+   "reference": {
+    "gpt-4o-mini": 80.84,
+    "gpt-4-0613": 88.35,
+    "llama-3.1-70b_best": 83.67,
+    "ditto_same_testset": 84.9,
+    "tailormatch_llama31_8b": 53.36
+   }
+  },
+  {
+   "precision": 85.61,
+   "recall": 92.8,
+   "f1": 89.06,
+   "accuracy": 95.4,
+   "n": 1239,
+   "predicted_matches": 271,
+   "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-2024-08-06",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.323,
+   "reference": {
+    "gpt-4o-mini": 80.84,
+    "gpt-4-0613": 88.35,
+    "llama-3.1-70b_best": 83.67,
+    "ditto_same_testset": 84.9,
+    "tailormatch_llama31_8b": 53.36
+   }
+  },
+  {
+   "precision": 86.49,
+   "recall": 76.8,
+   "f1": 81.36,
+   "accuracy": 92.9,
+   "n": 1239,
+   "predicted_matches": 222,
+   "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-4o-mini",
+   "unclear_or_long_answers": 0,
+   "cost_usd": 0.0194,
+   "reference": {
+    "gpt-4o-mini": 80.84,
+    "gpt-4-0613": 88.35,
+    "llama-3.1-70b_best": 83.67,
+    "ditto_same_testset": 84.9,
+    "tailormatch_llama31_8b": 53.36
+   }
+  },
+  {
+   "precision": 92.37,
+   "recall": 92.0,
+   "f1": 92.18,
+   "accuracy": 96.85,
+   "n": 1239,
+   "predicted_matches": 249,
+   "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+   "prompt": "domain-complex-force",
+   "model": "openai/gpt-6-luna",
+   "unclear_or_long_answers": 295,
+   "empty_answers": 0,
+   "cost_usd": 0.059,
+   "temperature": null,
+   "max_tokens": 2000,
+   "reference": {
+    "gpt-4o-mini": 80.84,
+    "gpt-4-0613": 88.35,
+    "llama-3.1-70b_best": 83.67,
+    "ditto_same_testset": 84.9,
+    "tailormatch_llama31_8b": 53.36
+   }
+  },
+  {
+   "precision": 86.22,
+   "recall": 87.6,
+   "f1": 86.9,
+   "accuracy": 94.67,
+   "n": 1239,
+   "predicted_matches": 254,
+   "f1_at_0.5": 86.9,
+   "f1_tuned_held_out": 85.74,
+   "auc": 0.9769,
+   "brier": 0.0443,
+   "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-1.13",
+   "snapshots": [
+    "typesafe/jev-1.13-20260917"
+   ],
+   "threshold": 0.5,
+   "cost_usd": 0.0189,
+   "reference": {
+    "gpt-4o-mini": 80.84,
+    "gpt-4-0613": 88.35,
+    "llama-3.1-70b_best": 83.67,
+    "ditto_same_testset": 84.9,
+    "tailormatch_llama31_8b": 53.36
+   }
+  },
+  {
+   "precision": 94.12,
+   "recall": 89.6,
+   "f1": 91.8,
+   "accuracy": 96.77,
+   "n": 1239,
+   "predicted_matches": 238,
+   "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+   "prompt": "domain-complex-force",
+   "model": "typesafe/jev-router",
+   "unclear_or_long_answers": 70,
+   "empty_answers": 2,
+   "cost_usd": 0.3213,
+   "temperature": null,
+   "max_tokens": 8000,
+   "answered_by": {
+    "openai/gpt-6-luna": 766,
+    "deepseek/deepseek-v4.1-flash": 401,
+    "google/gemini-3.8-flash": 62,
+    "anthropic/claude-sonnet-5": 5,
+    "openai/gpt-6-sol": 5
+   },
+   "reference": {
+    "gpt-4o-mini": 80.84,
+    "gpt-4-0613": 88.35,
+    "llama-3.1-70b_best": 83.67,
+    "ditto_same_testset": 84.9,
+    "tailormatch_llama31_8b": 53.36
+   }
+  }
+ ]
+}

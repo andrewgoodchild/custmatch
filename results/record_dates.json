@@ -1,0 +1,309 @@
+{
+ "data": {
+  "people_moved": 1850,
+  "people_renamed": 836,
+  "recycled_mobiles": 1459
+ },
+ "without_dates": {
+  "runs": [
+   {
+    "all_records": {
+     "precision": 94.4,
+     "recall": 72.03,
+     "f1": 81.72,
+     "clusters": 13672,
+     "largest_cluster": 13,
+     "adjusted_rand": 0.8171
+    },
+    "across_a_move": {
+     "pairs": 2699,
+     "kept_together_pct": 68.28
+    },
+    "across_a_name_change": {
+     "pairs": 1245,
+     "kept_together_pct": 62.73
+    },
+    "recycled_mobile_owner_vs_stranger": {
+     "pairs": 4070,
+     "wrongly_together_pct": 0.39
+    }
+   },
+   {
+    "all_records": {
+     "precision": 92.74,
+     "recall": 74.59,
+     "f1": 82.68,
+     "clusters": 13395,
+     "largest_cluster": 19,
+     "adjusted_rand": 0.8268
+    },
+    "across_a_move": {
+     "pairs": 2699,
+     "kept_together_pct": 69.88
+    },
+    "across_a_name_change": {
+     "pairs": 1245,
+     "kept_together_pct": 62.25
+    },
+    "recycled_mobile_owner_vs_stranger": {
+     "pairs": 4070,
+     "wrongly_together_pct": 0.25
+    }
+   },
+   {
+    "all_records": {
+     "precision": 92.54,
+     "recall": 75.46,
+     "f1": 83.13,
+     "clusters": 13281,
+     "largest_cluster": 8,
+     "adjusted_rand": 0.8313
+    },
+    "across_a_move": {
+     "pairs": 2699,
+     "kept_together_pct": 71.03
+    },
+    "across_a_name_change": {
+     "pairs": 1245,
+     "kept_together_pct": 63.69
+    },
+    "recycled_mobile_owner_vs_stranger": {
+     "pairs": 4070,
+     "wrongly_together_pct": 0.34
+    }
+   }
+  ]
+ },
+ "record_dates": {
+  "runs": [
+   {
+    "all_records": {
+     "precision": 89.49,
+     "recall": 76.22,
+     "f1": 82.32,
+     "clusters": 13111,
+     "largest_cluster": 10,
+     "adjusted_rand": 0.8232
+    },
+    "across_a_move": {
+     "pairs": 2699,
+     "kept_together_pct": 71.66
+    },
+    "across_a_name_change": {
+     "pairs": 1245,
+     "kept_together_pct": 63.69
+    },
+    "recycled_mobile_owner_vs_stranger": {
+     "pairs": 4070,
+     "wrongly_together_pct": 0.1
+    }
+   },
+   {
+    "all_records": {
+     "precision": 94.77,
+     "recall": 75.25,
+     "f1": 83.89,
+     "clusters": 13375,
+     "largest_cluster": 10,
+     "adjusted_rand": 0.8389
+    },
+    "across_a_move": {
+     "pairs": 2699,
+     "kept_together_pct": 70.58
+    },
+    "across_a_name_change": {
+     "pairs": 1245,
+     "kept_together_pct": 63.05
+    },
+    "recycled_mobile_owner_vs_stranger": {
+     "pairs": 4070,
+     "wrongly_together_pct": 0.25
+    }
+   },
+   {
+    "all_records": {
+     "precision": 93.3,
+     "recall": 75.71,
+     "f1": 83.59,
+     "clusters": 13295,
+     "largest_cluster": 12,
+     "adjusted_rand": 0.8359
+    },
+    "across_a_move": {
+     "pairs": 2699,
+     "kept_together_pct": 70.92
+    },
+    "across_a_name_change": {
+     "pairs": 1245,
+     "kept_together_pct": 62.73
+    },
+    "recycled_mobile_owner_vs_stranger": {
+     "pairs": 4070,
+     "wrongly_together_pct": 0.15
+    }
+   }
+  ]
+ },
+ "data_seed_1": {
+  "without_dates": {
+   "runs": [
+    {
+     "all_records": {
+      "precision": 93.51,
+      "recall": 75.59,
+      "f1": 83.6,
+      "clusters": 13310,
+      "largest_cluster": 8,
+      "adjusted_rand": 0.836
+     },
+     "across_a_move": {
+      "pairs": 2700,
+      "kept_together_pct": 69.59
+     },
+     "across_a_name_change": {
+      "pairs": 1172,
+      "kept_together_pct": 61.18
+     },
+     "recycled_mobile_owner_vs_stranger": {
+      "pairs": 4236,
+      "wrongly_together_pct": 0.38
+     }
+    }
+   ]
+  },
+  "record_dates": {
+   "runs": [
+    {
+     "all_records": {
+      "precision": 94.91,
+      "recall": 75.69,
+      "f1": 84.22,
+      "clusters": 13359,
+      "largest_cluster": 7,
+      "adjusted_rand": 0.8422
+     },
+     "across_a_move": {
+      "pairs": 2700,
+      "kept_together_pct": 70.26
+     },
+     "across_a_name_change": {
+      "pairs": 1172,
+      "kept_together_pct": 60.58
+     },
+     "recycled_mobile_owner_vs_stranger": {
+      "pairs": 4236,
+      "wrongly_together_pct": 0.66
+     }
+    }
+   ]
+  }
+ },
+ "data_seed_2": {
+  "without_dates": {
+   "runs": [
+    {
+     "all_records": {
+      "precision": 94.69,
+      "recall": 74.75,
+      "f1": 83.55,
+      "clusters": 13472,
+      "largest_cluster": 11,
+      "adjusted_rand": 0.8355
+     },
+     "across_a_move": {
+      "pairs": 2589,
+      "kept_together_pct": 67.9
+     },
+     "across_a_name_change": {
+      "pairs": 1307,
+      "kept_together_pct": 61.29
+     },
+     "recycled_mobile_owner_vs_stranger": {
+      "pairs": 4284,
+      "wrongly_together_pct": 0.05
+     }
+    }
+   ]
+  },
+  "record_dates": {
+   "runs": [
+    {
+     "all_records": {
+      "precision": 94.56,
+      "recall": 75.86,
+      "f1": 84.18,
+      "clusters": 13366,
+      "largest_cluster": 8,
+      "adjusted_rand": 0.8418
+     },
+     "across_a_move": {
+      "pairs": 2589,
+      "kept_together_pct": 68.87
+     },
+     "across_a_name_change": {
+      "pairs": 1307,
+      "kept_together_pct": 62.36
+     },
+     "recycled_mobile_owner_vs_stranger": {
+      "pairs": 4284,
+      "wrongly_together_pct": 0.14
+     }
+    }
+   ]
+  }
+ },
+ "data_seed_3": {
+  "without_dates": {
+   "runs": [
+    {
+     "all_records": {
+      "precision": 95.18,
+      "recall": 73.43,
+      "f1": 82.91,
+      "clusters": 13590,
+      "largest_cluster": 8,
+      "adjusted_rand": 0.8291
+     },
+     "across_a_move": {
+      "pairs": 2596,
+      "kept_together_pct": 67.06
+     },
+     "across_a_name_change": {
+      "pairs": 1281,
+      "kept_together_pct": 58.39
+     },
+     "recycled_mobile_owner_vs_stranger": {
+      "pairs": 4296,
+      "wrongly_together_pct": 0.28
+     }
+    }
+   ]
+  },
+  "record_dates": {
+   "runs": [
+    {
+     "all_records": {
+      "precision": 93.15,
+      "recall": 75.6,
+      "f1": 83.46,
+      "clusters": 13357,
+      "largest_cluster": 10,
+      "adjusted_rand": 0.8346
+     },
+     "across_a_move": {
+      "pairs": 2596,
+      "kept_together_pct": 70.42
+     },
+     "across_a_name_change": {
+      "pairs": 1281,
+      "kept_together_pct": 59.88
+     },
+     "recycled_mobile_owner_vs_stranger": {
+      "pairs": 4296,
+      "wrongly_together_pct": 0.47
+     }
+    }
+   ]
+  }
+ }
+}

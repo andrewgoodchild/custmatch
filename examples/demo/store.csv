@@ -1,0 +1,600 @@
+record_id,first_name,last_name,email,mobile,date_of_birth,person_id,household_id,address
+s000003,Sara,Abdallah,nasserfamily69@bigpond.example,,13/04/1945,333,127,"238 jacaranda pl, darwin nt 0800"
+s000027,EMMA,PENDLEY,,0440227444,21/08/2003,1162,458,"29/208 victoria gr, glenelg sa 5045"
+s000030,antonio,russo,,0497 065 920,,319,123,"u20 106 elizabeth terrace, st kilda"
+s000033,LISA,BARNES,,,,393,151,"231 king ave, southport"
+s000038,SANDRA,KEELEY,,0484276895,,796,311,"146 high gr, newcastle"
+s000061,PATRICE,REED,,,23/03/1946,91,32,"213 banksia terrace, darwin nt 0800"
+s000075,SUSAN,PRITCHARD,,,28/03/1962,242,93,"21 banksia close, liverpool nsw 2170"
+s000078,patrick,thomas,,0491570156,,1207,477,"120 george grove, richmond vic 3121"
+s000098,PAUL,VILLANUEVA,,,,40,15,"85 hill parade, darwin"
+s000143,natalie,bailey,natalieb@outlook.example,,28/04/2002,1023,406,24/136 forest drive fremantle WA 6160
+s000147,Stephen,Schrader,,0412345678,27/04/1995,149,51,"unit 18, 230 oxford road, bondi"
+s000153,Yingtei,Ding,,0427459746,,1139,447,158 queet wy bondi NSW 2026
+s000171,DEEPIKA,SINGH,deepika.singh3@bigpond.example,,16/08/1985,76,27,"52 hume tce, box hill vic 3128"
+s000188,vivian,zhou,a@a.com,,21/05/2003,1239,488,"1/109 smith parade, darwin nt 0800"
+s000189,Hoa,Nguyn,,0453267690,27/06/2026,784,305,"6/186 albert parade, liverpool"
+s000200,WAYNE,SKIDMORE,,,,343,131,19/120 king circuit cabramatta NSW 2166
+s000208,christopher,spitzer,,,,416,158,"215 wattle wy, geelong vic 3220"
+s000229,ZEINAB,HADDAD,,0456281274,10/06/1996,1272,497,166 oxford cerscent liverpool NSW 2170
+s000232,david,schrader,,,20/06/2018,148,51,
+s000236,lewis,thomson,,0475 288 725,,1146,449,"13/216 banksia gr, newcastle nsw 2300"
+s000263,AARON,SHERWOOD,,(04) 0257 7818,11/03/1995,106,36,
+s000272,Huong,Nguyen,,,27/01/1996,828,321,
+s000274,patrice,reed,patrice.reed41@gmail.example,,,91,32,"213 banksia tce, darwin nt 0800"
+s000276,hannah,shiflett,hshifflett@gmail.example,0466 314 252,21/06/2002,981,390,15/102 church pde joondalup WA 6027
+s000279,LISA,PIEPER,,61477743208,10/03/1969,920,363,
+s000281,Weihong,Sun,weihong548@bigpond.example,0491570110,,1215,479,"197 hume dr, hurstville nsw 2220"
+s000290,dominic,hulett,,414964204,,329,126,"100 hume drive, newcastle"
+s000305,mark,ramos,markramos@gmail.example,+61439845164,21/02/1989,1246,491,
+s000312,ERNEST,TODD,,0469 817 640,27/05/1949,936,370,
+s000327,CELESTE,CLEVELAND,,,06/07/1948,633,243,"225 river ln, sunnybank qld 4109"
+s000329,TINA,GEHL,,0470 736 766,07/09/1962,669,257,66 bridge tce bondi NSW 2026
+s000339,STEVE,CHANEY,,61419104393,,409,157,
+s000342,Lois,Colby,,0400000000,,1196,469,"243 wattle ct, newcastle"
+s000346,ROSIE,ROOD,,,,843,327,"156 main parade, cairns qld 4870"
+s000350,anthony,shanklin,,,28/02/2002,762,297,"unit 19, 218 pacific parade liverpool NSW 2170"
+s000362,Marissa,Cantrell,,,01/08/1989,542,206,"unit 16, 31 oxford wy, box hill"
+s000368,Larry,Murphy,,,10/05/1958,967,383,15/127 forest grove southport QLD 4215
+s000384,LESA,SHAW,none@none.com,0400123456,04/08/1965,893,351,"unit 3, 239 hill dr, geelong vic 3220"
+s000386,Christopher,Goodwin,a@a.com,0425695401,13/11/2001,812,315,"u8 67 george cct, parramatta nsw 2150"
+s000393,SARA,HAMRICK,,,21/07/1989,1173,461,"137 beach avenue, bankstown nsw 2200"
+s000424,Taar,Murray,,,19/12/1999,839,326,"205 king ln, hobart tas 7000"
+s000429,Phec,Tran,,0494753662,,827,321,"243 princes dr, chatswood nsw 2067"
+s000432,John,Santos,,0400000000,,945,372,119 wattle grove chatswood NSW 2067
+s000436,Eva,Hughes,evahughes@gmail.example,(04) 0293 2890,,901,354,"33 church pl, cabramatta"
+s000441,Divya,,,0400050894,,1138,446,
+s000461,PAUL,,,0498 297 176,,392,151,231 king ave
+s000463,Erica,Orchard,erica.orchard@hotmail.example,0472965527,06/07/1976,909,358,"73 smith cres, belconnen act 2617"
+s000476,hunter,,,,,537,203,71 church circuit fremantle WA 6160
+s000501,STEVEN,TIGUE,,+61 436 779 513,,982,391,"4 george st, footscray vic 3011"
+s000514,TARA,NAPIER,tara.napier@gmail.example,61473743982,,159,56,"5 waratah place, newcastle nsw 2300"
+s000531,jren,villalobos,,,,743,289,"38 king dr, toowong qld 4066"
+s000563,Emma,Villalobos,e.m.m.a.v.i.l.l.a.l.o.b.o.s@gmail.example,,03/01/2002,744,289,16/38 king dr toowong QLD 4066
+s000574,KAYLEE,BARK,,,28/11/2000,1135,445,
+s000588,lakshmi,patel,,0471601315,,866,338,"u17 219 elizabeth cres, hobart tas 7000"
+s000602,singh,sneha,,,16/10/1964,489,181,9/119 church terrace
+s000603,LANDON,SNEED,,,10/09/2006,135,47,173 station avenue
+s000647,Kenneth,Luse,kenneth892@yahoo.au.example,,,309,119,148 elizabeth crescent geelong VIC 3220
+s000648,Holly,Herzg,,,15/10/1988,564,215,"u18 74 river ln, bankstown nsw 2200"
+s000659,dave,winn,,+61 499 664 163,,267,101,"66 acacia st, glenelg"
+s000672,Ellen,Rhoads,ellen395@live.au.example,(04) 2846 3711,,824,319,"7 hill road, fremantle wa 6160"
+s000695,CAROL,RIPPLINGER,,,,272,105,"177 princes place, parramatta nsw 2150"
+s000706,Mary,Bair,,,,757,294,"unit 24, 242 hill pl parramatta NSW 2150"
+s000712,margaret,toro,,,,792,309,"125 king parade, toowong qld 4066"
+s000725,Elizabeth,Ingle,elizabethingle@gmail.example,,11/02/2011,808,314,"28 church ct, newcastle nsw 2300"
+s000739,jerry,clouse,,,,361,140,"219 main ct, cabramatta nsw 2166"
+s000742,DUNG,PHAM,,61485965761,,588,225,
+s000784,Pinghia,Zhang,,,20/05/1993,1054,416,84 king tce penrith NSW 2750
+s000787,Julie,,,0411 463 241,17/02/1961,359,139,"81 hume avenue, bankstown"
+s000792,william,lee,wlee@icloud.example,,17/08/1950,77,28,174 railway cl bankstown NSW 2200
+s000806,ROBERT,LUKE,asdf@asdf.com,0413902347,,39,14,"68 king dr, hobart tas 7000"
+s000810,vincenzo,esposito,,0411111111,11/03/1972,1037,412,"18/227 main way, cabramatta nsw 2166"
+s000814,Suresh,Sharma,,+61405882138,,1052,416,"84 king tce, penrith nsw 2750"
+s000846,ROCCO,GALLO,,0483659248,21/05/2006,182,66,205 oxford tce cabramatta NSW 2166
+s000851,allison,sawyer,allison627@bigpond.example,0486959707,10/02/2002,1193,467,"182 oxford pde, hobart"
+s000858,haylee,newton,a@a.com,,03/06/1994,803,312,6/16 waratah parade geelong VIC 3220
+s000860,jimmy,tran,,,,916,361,"193 princes ct, footscray vic 3011"
+s000880,Robert,Beaudoin,,0446 626 925,,1206,476,"u27 125 river cct, geelong"
+s000881,faith,gibson,,0434 179 509,17/04/2000,488,180,119 main drive norwood SA 5067
+s000890,Marcella,Ingle,,,,806,314,"28 church ct, newcastle nsw 2300"
+s000892,NATALIE,SKIDMORE,,0445 530 689,07/02/1997,344,131,"19/120 king circuit, cabramatta nsw 2166"
+s000896,tom,kazmierczak,,+61 458 214 241,,259,99,"183 bottlebrush close, bondi"
+s000917,Simran,Reddy,,0451688982,,473,177,"1 victoria wy, chatswood"
+s000976,Tylor,Clinton,,0446 309 120,14/07/1999,1218,480,"208 river ln, liverpool nsw 2170"
+s000979,Jessica,Reynolds,,,21/07/1992,647,247,170 wattle drive springvale VIC 3171
+s000982,Maria,Papadopoulos,mariap@gmail.example,,04/11/1948,189,70,"94 bottlebrush st, liverpool"
+s000986,lan,nguyen,,0421043912,02/03/1988,443,167,
+s000992,Hoang,Hung,,0489307238,,783,305,"unit 6, 186 albert pde, liverpool"
+s000997,Tao,Wang,jason.wang40@icloud.example,0475 496 699,,454,170,"10 hill pl, southport qld 4215"
+s001012,Michele,Byers,,0447168605,20/10/1980,101,35,
+s001022,cecilia,heaton,,0491570110,,158,55,63 mill parade richmond VIC 3121
+s001033,karen,mckee,karen55@gmail.example,,,546,209,"198 lake cct, liverpool nsw 2170"
+s001035,OMAR,KHOURY,,0496255512,,207,80,115 hume road hobart TAS 7000
+s001044,vikram,singh,,,,550,211,"72 king cres, chatswood nsw 2067"
+s001052,Josie,Rossi,josie615@gmail.example,+61451709223,,50,19,"29/228 waratah drive, footscray vic 3011"
+s001056,Jennifer,Lightfoot,,,24/11/1974,1119,439,"89 main cl, springvale vic 3171"
+s001081,angela,rossi,,,26/01/1985,731,285,"u1 40 beach pde, joondalup wa 6027"
+s001085,simran,singh,simran584@gmail.example,463294683,,846,329,"86 hume road, darwin nt 0800"
+s001097,Jeramie,Lipski,asdf@asdf.com,,07/01/1982,1226,483,"236 jacaranda drive, geelong vic 3220"
+s001105,Danny,Fry,dfry+shop@gmail.example,,,202,77,"unit 20, 8 lake tce, fremantle wa 6160"
+s001110,Donald,Clark,,0474045774,,536,202,"18 banksia pde, darwin"
+s001128,Melissa,Balentine,,(04) 2725 1497,,75,26,
+s001138,CINDY,ZHOU,,0401614589,02/01/1991,892,350,93 pacific drive newcastle NSW 2300
+s001144,tess,georgiou,,,,426,162,118 princes gr springvale VIC 3171
+s001160,Luaren,Clark,lauren.clark@yahoo.au.example,,19/05/1986,579,222,"13 station street, bankstown"
+s001171,Debra,White,debra99@optusnet.au.example,,19/09/1964,876,342,"225 elizabeth cct, darwin nt 0800"
+s001203,marvin,beck,MBECK@GMAIL.example,+61 421 381 511,10/09/1963,1175,462,"216 beach wy, chatswood nsw 2067"
+s001207,Aimt,,,0462 053 594,,446,168,18/171 lake rd footscray VIC 3011
+s001208,Deborah,Schwind,test@test.com,(04) 1836 7916,05/02/1950,815,316,"213 william way, norwood sa 5067"
+s001213,devin,ford,,,01/09/1991,576,220,"241 smith way, bankstown nsw 2200"
+s001214,SIGNH,ARJUN,,0474865964,26/03/1994,232,90,
+s001215,Jasmine,Gall,jasmine94@icloud.example,,10/12/1994,222,86,
+s001240,VAN PHUC,TRAN,test@test.com,0491570157,,827,321,243 princes drive
+s001246,Nour,Haddad,,,04/01/2003,1268,497,"166 oxford cres, liverpool"
+s001250,bruce,edwards,bruce64@outlook.example,,,183,67,24 jacaranda court
+s001251,AUDREY,JOHNSON,audrey990@yahoo.au.example,0407629048,,430,163,"79 king st, southport qld 4215"
+s001253,Yong,Li,,+61 425 216 246,,608,233,
+s001282,jen,tobin,jennifer_tobin@gmail.example,0416870553,14/04/1982,833,323,"237 wattle ave, st kilda vic 3182"
+s001291,GURPREET,RAO,noemail@noemail.com,0494 485 717,24/02/1980,863,337,217 banksia circuit southport QLD 4215
+s001334,katelyn,baker,,+61491644374,19/12/1999,166,60,
+s001342,Peter,Ngyuen,pnguyen@hotmail.example,,,367,142,"unit 16, 162 banksia drive"
+s001348,LAN,TRAN,lan.tran@hotmail.example,,,354,136,"211 hume close, sunnybank qld 4109"
+s001354,SURESH,GUPTA,,,,357,137,"244 elizabeth lane, box hill vic 3128"
+s001369,Pete,Hulrbut,,,22/09/1977,114,39,"159 queen st, hobart tas 7000"
+s001374,sofia,lafave,,61455078872,,1182,464,"17/46 oxford street, cairns"
+s001378,ASPEN,REED,,0446 856 624,,92,32,
+s001381,ANNA,CAGGIANO,,0473429328,28/04/2001,153,53,"11/167 princes court, cairns"
+s001386,Anthony,Buffa,anthonybuffa@bigpond.example,,01/03/1957,686,265,"18 banksia grove, hurstville nsw 2220"
+s001401,Mallory,Sheehy,mallory92@hotmail.example,,,1210,478,"17 queen ln, penrith nsw 2750"
+s001404,TREVOR,FRIZZELL,trevor00@hotmail.example,0420600552,07/07/2000,774,303,
+s001408,Sneha,Singh,snehas@bigpond.au.example,61431333544,,713,277,"138 park avenue, st kilda vic 3182"
+s001415,Richard,Lister,,,11/04/1951,1046,415,
+s001418,GANGNA,LIN,annie55@icloud.example,0485 230 421,09/01/1955,1237,488,
+s001426,JULIN,HICKS,,0433 394 419,,1008,402,"213 beach st, footscray vic 3011"
+s001428,Anjali,Nair,anjalinair@gmail.example,,,897,352,"162 station ln, sunnybank qld 4109"
+s001430,matthew,tibbetts,matthew.tibbetts62@gmail.example,+61436994460,,1020,405,125 bridge wy
+s001433,Colin,Buscher,,,,81,29,"14 oxford place, sunnybank qld 4109"
+s001436,sara,harrell,,,,758,295,"123 victoria st, chatswood nsw 2067"
+s001446,andre,lister,,+61400465664,,1048,415,"202 railway cl, norwood"
+s001472,Qiangbo,Zhang,,0448 732 377,09/03/1953,1250,492,150 queen tce sunnybank QLD 4109
+s001477,DAVID,LOUDERMILK,,,,223,86,"203 jacaranda cct, st kilda vic 3182"
+s001479,STUART,MULLINIX,,,,650,248,167 albert ln
+s001497,Natalie,Bailey,,0429 538 796,,1023,406,24/136 forest dr fremantle WA 6160
+s001500,TIAN,XIU,,0444267844,,657,252,19 smith ln penrith NSW 2750
+s001514,jesse,napier,,+61 458 651 839,,570,218,"127 hume court, darwin"
+s001524,ELENI,GEORGIOU,helengeorgiou@gmail.example,,,331,126,"100 huie drive, newcastle"
+s001527,jorge,dawson,none@none.com,,,382,147,"122 lake way, richmond vic 3121"
+s001530,james,prillaman,,0451 956 470,,360,139,"38 acacia place, cairns qld 4870"
+s001533,ARYANNA,WISNER,aryanna.wisner8@bigpond.example,0452660805,24/02/2004,1073,422,"239 william cres, geelong"
+s001539,Divya,Nair,,+61 467 624 973,07/03/1956,445,168,
+s001556,Roselyn,Menezes,,,,1051,416,
+s001561,JOHN,SANTOS,,,23/01/1988,417,159,"173 church ave, springvale vic 3171"
+s001564,LAKSHMI,KUMAR,,0491570156,,921,364,
+s001586,Van Peter,Ngyuen,,0457736014,07/09/1978,582,224,"91 king crescent, fremantle wa 6160"
+s001605,carmela,conti,cconti@gmail.example,,13/06/1961,849,330,
+s001607,MELISSA,SPARKS,,0424483305,04/10/2025,1219,480,208 river ln
+s001612,sybil,hambright,,0474 946 143,,676,261,
+s001617,LI,WANG,test@test.com,,,620,238,"118 victoria wy, footscray vic 3011"
+s001619,Jessica,Borsholder,,0408446232,04/11/1937,397,153,
+s001628,bob,katz,,437464091,,8,3,"101 bottlebrush drive, bankstown nsw 2200"
+s001630,Liang,Wenqing,WENQINGLIANG@OPTUSNET.AU.example,(04) 7401 8587,,966,382,
+s001639,Kenneth,Wilkins,test@test.com,400204099,,154,54,126 george wy richmond VIC 3121
+s001640,Caitlyn,Baumgardner,,,19/08/1997,119,41,
+s001658,christian,cruz,,0401925714,,1223,481,"138 river gr, southport"
+s001676,jesus,johnson,,+61 429 842 335,,1076,423,121 main street fremantle WA 6160
+s001681,jackson,robinson,,+61403964958,20/03/2008,315,120,"164 acacia cct, cairns qld 4870"
+s001689,joy,santos,joy.santos@yahoo.au.example,61424261729,05/01/1986,1245,491,14 railway pde
+s001696,Ivy,Craven,,,,186,69,
+s001727,muriel,sutton,,,,1265,496,
+s001734,Richard,Gray,rgray@gmail.example,0437943454,,62,23,"unit 4, 236 banusia tce, springvale vic 3171"
+s001751,Beau,Freyer,,,,1262,494,"unit 3, 22 oxford gr"
+s001767,Carmelo,Greco,na@na.com,0408014670,,504,188,"135 hill terrace, cabramatta"
+s001771,kenneth,,,+61 472 844 559,,894,351,"3/239 hill dr, geelong vic 3220"
+s001780,diana,,diana.thompson@icloud.example,(04) 7002 2168,02/02/1964,208,81,
+s001785,Evan,Johnson,no@email.example,0479 708 861,,431,163,"37 smith avenue, belconnen act 2617"
+s001798,quang,nguyen,,0431142516,,462,173,234 beach crescent
+s001808,lois,stonge,stonge.lois@gmail.example,,01/12/1962,917,362,"123 king way, liverpool"
+s001809,William,Baugher,williamb@live.au.example,,02/10/1971,1200,473,"35 hill gr, footscray"
+s001810,RYAN,SANTOS,r.y.a.n.9.5@gmail.example,+61464332800,14/11/1995,899,353,"63 forest rd, richmond vic 3121"
+s001815,hung,phan,,,,184,68,"23 lake ct, bankstown nsw 2200"
+s001838,MIKE,FORT,fortfamily38@bigpond.example,,14/11/1989,520,196,"71 high road, cairns qld 4870"
+s001849,Arjun,Nair,arjun.nair@gmail.example,428946414,27/03/1981,995,395,7/63 albert crescent parramatta NSW 2150
+s001876,FINLEY,JORDAN,no@email.example,0424 920 383,09/09/2006,763,297,19/218 pacific pde liverpool NSW 2170
+s001887,ruby,lashley,ruby953@gmail.example,,,1086,427,23/3 pacific avenue
+s001895,lorraine,schmitt,na@na.com,,,1016,404,"181 george lane, southport qld 4215"
+s001898,lizeth,gibson,lizeth.gibson@hotmail.example,,22/05/1999,595,228,
+s001903,Jack,Mann,,,11/11/1999,132,46,u4 116 elizabeth cct
+s001913,KAREN,ADAMS,,+61492891142,12/02/1954,1112,437,"u18 76 banksia close, chatswood nsw 2067"
+s001931,RUTH,SCRIVEN,,,26/05/1942,350,134,160 elizabeth st
+s001932,NATASHA,DONOVAN,richter.natasha@hotmail.example,61463094815,01/02/1978,942,371,u4 75 church wy sunnybank QLD 4109
+s001958,wenqing,liang,,0474 018 587,09/10/1978,966,382,"u24 222 hill ct, springvale vic 3171"
+s001971,bob,feigenbaum,test@test.com,,02/04/1948,643,246,
+s001972,Joy,Santos,,61489983617,,55,20,"242 william gr, newcastle nsw 2300"
+s001991,Harlan,Hernandez,,,02/09/1967,1230,485,"13 main wy, chatswood nsw 2067"
+s001993,Dave,Smith,,0411111111,23/11/1969,960,379,"122 hill rd, norwood sa 5067"
+s002029,jak,niemann,no@email.example,0465877017,20/02/1948,1194,468,16 railway wy toowong QLD 4066
+s002034,Ryan,Fontaine,,,,974,388,218 victoria street hobart TAS 7000
+s002039,Alejandra,Dinatale,alejandradinatale@gmail.example,0490 462 818,20/09/2006,104,35,"210 elizabeth drive, springvale vic 3171"
+s002042,Kelly,Werner,,429902764,,1002,398,17/134 waratah drive sunnybank QLD 4109
+s002048,GIUSEPPE,DE,,,,732,285,"u1 40 beach pde, joondalup wa 6027"
+s002052,Will,Donley,,,,204,78,
+s002060,frances,tucker,,(04) 9427 1384,05/11/1947,737,287,"78 smith terrace, geelong"
+s002062,Kate,Dailey,,,,540,205,63 acacia st belconnen ACT 2617
+s002068,robert,mann,,0491570110,07/02/1966,130,46,"4/116 elizabeth circuit, glenelg"
+s002071,Debra,Goodwin,debrag@gmail.example,,,810,315,90 park pde st kilda VIC 3182
+s002084,Hasean,Haddad,,,,1267,497,166 oxford crescent
+s002086,NIC,FORD,nicole.ford46@gmail.example,0492 570 855,,545,208,
+s002089,Bob,Mayo,,,12/02/1985,655,251,"108 queen terrace, bondi nsw 2026"
+s002103,JESS,TIMMONS,,0470 124 292,,695,269,"139 william drive, norwood"
+s002107,judy,pippenger,,,28/08/1958,883,346,"126 wattle circuit, belconnen act 2617"
+s002137,sctot,sandberg,,,09/12/1976,607,232,
+s002144,mariam,el-hassan,fakhouryfamily38@bigpond.example,,,66,24,
+s002151,nicole,strickland,,0428 323 137,,494,183,"242 king cl, box hill"
+s002153,AMY,HILDEBRAND,,471055992,06/04/1967,248,95,4/190 george road
+s002166,JOYCE,KOCIAN,a@a.com,,,987,392,"105 george lane, hobart tas 7000"
+s002174,John,Madden,,+61414371078,,772,301,"241 station st, parramatta"
+s002183,jess,branan,,0404422022,19/02/1990,192,72,"8/249 beach pde, chatswood nsw 2067"
+s002190,amanda,beer,,+61 475 543 487,,854,332,
+s002211,li,,,(04) 2119 7592,05/08/1957,879,344,"52 church way, bankstown nsw 2200"
+s002234,ALEX,BURAS,,,28/12/1989,1062,420,182 hume ct glenelg SA 5045
+s002282,Edward,Hamrick,,,19/11/1987,1172,461,137 beach avenue
+s002288,Gurpreet,Kaur,,,28/01/1996,1187,466,"27/174 beach ave, liverpool nsw 2170"
+s002307,snha,,sneha.kumar@optusnet.au.example,,,748,291,"unit 5, 162 pacific cct hurstville NSW 2220"
+s002308,rahul,chopra,rahul_chopra@bigpond.example,+61446550725,12/11/1972,1089,428,11 george terrace
+s002314,Dylan,,,,,813,315,
+s002329,ding,weifeng,,,,481,179,"114 railway ln, norwood sa 5067"
+s002330,Teresa,Gallo,,0430325568,,923,365,"73 high pl, penrith nsw 2750"
+s002344,JOHN,VESTAL,no@email.example,406479556,16/08/1944,1022,406,"unit 24, 136 forest dr, fremantle"
+s002349,GEOFFREY,,geoffrey.bruce@gmail.example,0491570156,12/10/1974,591,227,
+s002359,julianne,kemper,julianne172@hotmail.example,,21/07/1959,1005,400,106 pacific pde penrith NSW 2750
+s002361,tim,hanson,timothy.hanson@gmail.example,+61481091638,04/10/1970,881,345,"173 acacia court, glenelg sa 5045"
+s002367,keith,frazier,a@a.com,61422099585,,884,346,126 wattle circuit belconnen ACT 2617
+s002376,bill,fagin,,,,986,392,"105 george ln, hobart tas 7000"
+s002382,PAUL,,,0448061802,,1190,467,182 oxford parade hobart TAS 7000
+s002402,carmela,ferrari,carmel.ferrari98@gmail.example,,09/11/1983,47,18,61 hill parade fremantle WA 6160
+s002433,Debra,Goodwin,,0413 705 344,,810,315,"90 park pde, st kilda"
+s002436,ronald,lyon,,+61 467 822 718,03/11/1956,918,362,"123 king way, liverpool"
+s002439,Giovanni,Rossi,,0000000000,,229,88,"194 king cl, hurstville nsw 2220"
+s002443,elizabeth,lister,noemail@noemail.com,+61423894304,,1047,415,
+s002445,Grace,Lipski,,+61418847505,,1228,483,"236 jacaranda drive, geelong"
+s002453,jacqueline,straub,asdf@asdf.com,,04/02/1988,339,130,181 wattle cct liverpool NSW 2170
+s002471,michelle,robinson,,,14/07/1966,313,120,17/86 elizabeth drive fremantle WA 6160
+s002490,PAMELA,BEAIRD,asdf@asdf.com,,,770,299,"unit 3, 109 lake cct, footscray"
+s002517,Jose,Morefield,,,,286,111,"24/242 george lane, parramatta nsw 2150"
+s002537,LE,QUANG,,0453 486 552,08/06/1966,418,160,"240 park ct, penrith"
+s002555,peter,brown,peterbrown@yahoo.au.example,61499599112,,913,359,"183 bridge street, penrith nsw 2750"
+s002562,maria,georgiou,,461427761,17/10/1960,577,221,"15 george dr, toowong qld 4066"
+s002564,JOYCE,LAGANA,,+61446872706,,719,279,"160 jacraanda pl, southport"
+s002575,KAREN,MCKEE,,431064493,,546,209,"198 lake cct, liverpool nsw 2170"
+s002578,KAVYA,SHARMA,,+61409727032,13/07/1968,754,293,233 oxford drive joondalup WA 6027
+s002591,Michelle,Santos,michelle29@gmail.example,,,291,114,"26 high terrace, darwin nt 0800"
+s002607,Dorothy,Blankenship,noemail@noemail.com,+61 419 450 712,,1158,455,"238 church rd, hurstville nsw 2220"
+s002620,Jordan,Pinson,,0400123456,,25,7,"16/247 park lane, st kilda vic 3182"
+s002654,tonya,minton,tonya_minton@gmail.example,0414267619,,1199,472,
+s002659,elizabeth,cichocki,,,,912,359,"183 bridge atreet, penrith nsw 2750"
+s002669,RAHUL,,,,27/01/1989,972,386,21/245 bridge street cairns QLD 4870
+s002704,EDITH,OLIVEIRA,,61440829747,20/05/1957,726,282,"7 park cl, toowong qld 4066"
+s002723,RACHEL,HORNER,,,18/12/1993,767,298,"7 mill crescent, belconnen act 2617"
+s002728,nam,nguyen,nnguyen@hotmail.example,0429 195 240,,692,268,"122 albert close, cairns qld 4870"
+s002748,sabrina,gray,,0491570156,09/01/1996,64,23,4/236 banksia terrace
+s002761,YINGFENG,CAI,yingfengcai@hotmail.example,0465 338 046,07/07/1969,1148,450,"unit 29, 120 church ct, bankstown"
+s002774,CHRISTOPHER,HILDEBRAND,no@email.example,,,289,113,"194 mill cct, hurstville nsw 2220"
+s002777,Zoe,Brock,,0400123456,,1130,442,
+s002783,rahul,reddy,,,21/01/2022,554,212,
+s002797,ernesto,cooper,,,01/11/1998,21,6,92 oxford court footscray VIC 3011
+s002827,ANNA,CAGGIANO,,,28/04/2001,153,53,11/167 princes court cairns QLD 4870
+s002835,Duong,Hai,,61425407742,16/09/2002,1125,441,5/249 railway rd norwood SA 5067
+s002842,Douglas,Duncan,,,,187,69,
+s002867,isaac,lightfoot,,,,1120,439,
+s002869,Cody,,,0491570157,,325,125,
+s002886,Heather,Cole,,,,142,50,184 hill gr
+s002895,salvador,stripling,salvador205@bigpond.au.example,0400000000,,1134,445,"184 staton cres, st kilda vic 3182"
+s002905,timothy,massey,timothy203@bigpond.example,,25/05/1957,547,209,198 lake cct liverpool NSW 2170
+s002906,MAI,NGYUEN,,,,390,149,"163 high grove, chatswood"
+s002908,Dimitrios,Georgiou,,,,399,154,"110 mill tce, norwood sa 5067"
+s002921,muriel,sutton,,61481097907,18/06/1945,1265,496,"223 pacific place, liverpool nsw 2170"
+s002939,kevin,thurman,,0462 890 047,,400,155,24/136 mill st joondalup WA 6027
+s002950,brendan,lamb,,+61426474585,,594,228,"136 railway way, geelong vic 3220"
+s002959,MARY,CHIODO,,,,867,339,
+s002962,lucia,esposito,lucia.esposito@gmail.example,(04) 9044 3317,,831,322,"4/155 oxford lane, darwin nt 0800"
+s002973,christine,knapke,christineknapke@outlook.example,0441864873,,172,63,
+s003007,chao,guo,,,06/06/2004,1071,421,"240 wattle parade, geelong vic 3220"
+s003033,mike,gibson,mike.gibson@gmail.example,,21/08/1959,484,180,11 bottlebrush ct sunnybank QLD 4109
+s003038,Charles,Gilliam,charles48@gmail.example,,04/07/1948,395,152,"unit 12, 227 hill pde bondi NSW 2026"
+s003050,GEORGE,KILBY,halbertfamily14@bigpond.example,,05/09/1959,116,40,215 smith cl toowong QLD 4066
+s003060,CONCETTA,GRECO,,+61491191717,,1155,454,"4 high crescent, footscray"
+s003061,FREDDIE,SASSE,,0464963196,,1033,410,83 hume ct parramatta NSW 2150
+s003070,james,johnston,,(04) 2822 7500,,600,229,"66 main road, parramatta nsw 2150"
+s003072,CASSIDY,WHIPPLE,cassidy93@optusnet.au.example,,,1244,490,180 waratah pde newcastle NSW 2300
+s003074,hongying,gao,,0411111111,,891,350,"93 pacific dr, newcastle nsw 2300"
+s003076,EMMA,PRINCE,,+61478911707,,530,199,"20/97 lake avenue, fremantle wa 6160"
+s003081,NGUYEN,HANH,a@a.com,,,915,361,193 princes ct footscray VIC 3011
+s003082,MARY,SCHRADER,,,28/08/1955,145,51,"unit 18, 230 oxford rd bondi NSW 2026"
+s003089,sara,abdallah,,0416 642 346,,333,127,
+s003098,charles,douglas,,463288699,,644,246,"166 banksia pl, cairns qld 4870"
+s003110,SOPHIA,BECKER,,,,1275,499,
+s003112,holly,hall,hollyh@outlook.example,,,622,240,
+s003116,Kassie,Sherman,,+61 412 401 692,,1095,430,
+s003120,carmelo,russo,,447571856,16/08/1994,52,19,228 waratah dr footscray VIC 3011
+s003142,Steven,Cowden,,,,670,258,"85 oxford wy, darwin nt 0800"
+s003143,janet,frum,janetf@gmail.example,,,373,143,"10 hume road, richmond vic 3121"
+s003159,ANGELA,JACOBS,noemail@noemail.com,0493 047 784,10/11/1972,1231,485,13 main wy
+s003168,ANASTASIA,IOANNOU,tess.ioannou72@icloud.example,0439233564,,1060,419,"140 bottlebrush dr, norwood sa 5067"
+s003171,BELINDA,MCDONNELL,bmcdonnell@gmail.example,0400000000,,268,102,"198 river wy, bankstown nsw 2200"
+s003181,ANGELA,CONTI,angela225@gmail.example,,18/10/1987,836,325,"211 wattle road, bondi"
+s003183,jennifer,balentine,noemail@noemail.com,0411111111,,72,26,
+s003188,elaina,,,,,423,161,
+s003204,Geraldine,Fecht,,433636922,16/11/1954,1015,403,"5 bridge avenue, darwin nt 0800"
+s003220,Anna,Bruno,,,12/07/1987,320,123,106 elizabeth tce st kilda VIC 3182
+s003227,Maria,Hicks,noemail@noemail.com,0433394419,27/04/2026,1010,402,213 beach st footscray VIC 3011
+s003230,rachel,brugger,rachel.brugger@gmail.example,+61 489 699 550,,741,288,114 pacific cct chatswood NSW 2067
+s003234,ZHANG,LILY,,+61 489 968 956,25/02/1997,168,61,"184 acacia dr, cairns qld 4870"
+s003237,FRANCESCO,RUSSO,,,09/12/1970,49,19,u29 228 waratah drive footscray VIC 3011
+s003241,ALICIA,PINSON,,,,28,7,"unit 16, 247 park ln, st kilda vic 3182"
+s003242,Susan,Boden,,,03/08/1956,979,390,
+s003255,john,ruggieri,,,15/02/1993,432,164,4/176 elizabeth avenue bankstown NSW 2200
+s003266,Dennis,Rhoads,,,02/06/1942,823,319,"7 hill rd, fremantle wa 6160"
+s003274,DEBBIE,PAPADOPOULOS,,0466601852,03/02/1952,347,132,"170 victoria terrace, cabramatta"
+s003317,Divya,Patel,,0476 272 204,26/09/2002,128,45,119 beach street
+s003327,MICHAEL,PETERS,,61448576412,,950,373,"25/172 albert ave, glenelg sa 5045"
+s003335,Craig,Morton,,,14/08/1968,526,199,"89 albert lane, cabramatta nsw 2166"
+s003337,CHENYANG,WU,annie.wu@icloud.example,61446831591,14/10/1952,1,1,"11/248 queen terrace, newcastle nsw 2300"
+s003342,patrick,marion,,458532991,02/10/1947,790,308,"66 victoria ave, fremantle wa 6160"
+s003350,JAKE,HARRELL,,0495823328,,760,295,"123 victoria st, chatswood nsw 2067"
+s003369,Melissa,Sparks,,+61 424 483 305,,1219,480,"208 river ln, liverpool nsw 2170"
+s003387,amit,lnu,amit_singh@bigpond.example,,,690,267,219 pacific ave cabramatta NSW 2166
+s003397,johnny,maynor,noemail@noemail.com,0494 360 078,18/08/1992,935,369,"73 pacific ct, richmond vic 3121"
+s003421,LE,VAN PUC,,,,1222,481,"138 river gr, southport"
+s003429,HARRY,QUINN,,+61 422 995 879,,562,214,124 beach cl
+s003437,melissa,beddingfield,melissa.beddingfield34@bigpond.au.example,0484911915,03/07/1972,1044,414,"134 forest place, footscray vic 3011"
+s003442,SANDEEP,,,,,788,306,"14 wattle gr, hobart tas 7000"
+s003447,carmelo,rossi,,,27/04/1987,1040,413,
+s003454,david,robinson,na@na.com,0456 555 747,,1224,482,183 lake place
+s003463,Zachray,Norman,,0449605863,07/03/1982,623,240,23/106 park parade
+s003466,Ngoc,Nguyen,jenny.nguyen@icloud.example,,,1049,416,
+s003468,jne,balentine,,0404927598,14/04/1974,72,26,"23/18 main ct, geelong vic 3220"
+s003493,chris,hill,,(04) 7842 3007,,1045,414,"134 forest pl, footscray"
+s003499,vikram,kumar,vikram04@outlook.example,,,862,336,"198 river cct, bondi nsw 2026"
+s003506,mandy,dante,,,,244,94,"14 high wy, springvale vic 3171"
+s003510,Stephen,Mahoney,,,21/09/1987,140,50,"184 hill gr, chatswood nsw 2067"
+s003517,rania,khouri,,(04) 3027 8043,,195,74,"23/229 hill parade, chatswood nsw 2067"
+s003527,jon,johnston,,61411411913,11/07/2003,598,229,
+s003543,kath,bone,gibson.katherine@hotmail.example,,27/12/1956,485,180,"11 bottlebrush ct, sunnybank qld 4109"
+s003552,georgia,higbee,asdf@asdf.com,429520834,06/07/2012,518,194,"unit 9, 33 main pde darwin NT 0800"
+s003561,rania,abdallah,,,,1198,471,"61 railway rd, box hill vic 3128"
+s003567,RACHEL,ROYER,,,,1096,430,"136 queen crescent, penrith"
+s003575,KARNIA,SCHMITT,none@none.com,0444 657 867,,1018,404,"181 george ln, southport qld 4215"
+s003581,sylvia,sutherland,sylvia.sutherland98@gmail.example,,15/03/1961,218,84,"22 high pl, joondalup wa 6027"
+s003609,Richard,Hufford,test@test.com,0432947996,,759,295,
+s003613,Hiba,Haddrd,a@a.com,,09/11/2018,1270,497,
+s003618,laura,martone,laura670@yahoo.au.example,,09/03/1948,532,200,21 church street
+s003627,pooja,shah,malhotrafamily44@optusnet.au.example,0491 563 759,07/08/1970,1058,418,
+s003630,Jesse,Barnes,,,,1100,431,"unit 29, 239 jacaranda gr, geelong"
+s003632,zoe,sheehy,zoe.sheehy@outlook.example,+61 470 950 476,20/11/1966,1209,478,"17 queen ln, penrith nsw 2750"
+s003634,JOHN,SANTOS,,+61 453 005 572,05/01/1975,898,353,63 forest rd
+s003649,SURESH,SURESH,,,11/02/1971,278,109,"1 bottlebrush wy, hurstville nsw 2220"
+s003651,Larry,Dinatale,,+61 435 488 951,03/11/1981,100,35,210 elizabeth drive springvale VIC 3171
+s003658,DOMENICO,GALLO,,0444 756 368,,224,87,"71 river grove, southport qld 4215"
+s003660,BEN,BELL,,,12/08/1943,531,200,
+s003670,GARY,SMITH,,(04) 3243 1469,07/04/1960,1114,438,"139 acacia dr, footscray vic 3011"
+s003672,LARRY,PETERS,,474797750,,511,191,54 wattle cres chatswood NSW 2067
+s003674,joseph,sheehy,,,05/05/1966,1208,478,17 queen ln penrith NSW 2750
+s003686,Leila,Dawson,,+61 405 450 135,26/05/2021,384,147,"122 lake wy, richmond vic 3121"
+s003720,ROSS,PRITCHETT,,0447 947 098,,538,203,"71 church cct, fremantle wa 6160"
+s003723,trang,tran,trang.tran@gmail.example,,,353,136,"211 hume cl, sunnybank qld 4109"
+s003748,joseph,pickell,,0409 806 457,,1027,408,"3/242 wattle road, fremantle wa 6160"
+s003768,samuel,johnson,a@a.com,469305222,,429,163,10/37 smith avenue belconnen ACT 2617
+s003773,yang,michelle,,0444 386 581,,929,367,207 park rd
+s003775,MILES,MICHEL,,0431 357 658,,252,97,
+s003779,dennis,price,dennis.price@outlook.example,423972005,,85,30,"56 mill rd, geelong vic 3220"
+s003794,john,santos,,+61 487 752 069,28/01/1998,886,348,"18 high terrace, belconnen act 2617"
+s003829,Leanna,Satlzman,leanna.saltzman@yahoo.au.example,,21/11/1989,561,214,
+s003835,Nguyen,Peter Van,,,07/09/1978,582,224,"91 king cres, fremantle"
+s003859,GEORAIA,BRNUDAGE,,,,751,292,"136 waratah dr, geelong vic 3220"
+s003870,JOYCE,HOLLAND,,(04) 0069 8812,07/03/1973,386,148,145 mill place southport QLD 4215
+s003886,MATHEW,TREMBLAY,,61447052279,,260,99,"183 bottlebrush cl, bondi nsw 2026"
+s003907,anthony,rayman,,0411111111,,761,296,
+s003912,Sunita,Patel,sunita05@iinet.au.example,0461 849 461,11/02/2005,129,45,"119 beach st, toowong qld 4066"
+s003915,Shemar,Scmidt,,,,838,326,"205 king lane, hobart"
+s003937,anne,schrader,,0462 378 792,,146,51,
+s003943,Tiffany,Urso,,437337603,,671,258,"85 oxford way, darwin"
+s003950,Phyllis,Fahy,fahyfamily91@optusnet.au.example,,,1092,429,
+s003963,james,keller,,,21/03/1996,652,249,215 waratah ct parramatta NSW 2150
+s004019,kenneth,luse,,61450859322,,309,119,"148 elizabeth cres, geelong"
+s004045,anil,singh,,,,615,236,137 river ave norwood SA 5067
+s004049,Frank,Costa,,,,277,108,"26/198 river ct, box hill vic 3128"
+s004051,harpreet,kumar,,0491570110,14/07/1947,860,336,"198 river cct, bondi nsw 2026"
+s004056,GLORIA,JANIK,janikfamily42@gmail.example,,,1232,486,1/46 wattle cct penrith NSW 2750
+s004074,john,demaris,,,07/08/1964,539,204,12 main st parramatta NSW 2150
+s004077,dwayne,roos,,,24/10/1983,727,283,"225 wattle dr, joondalup wa 6027"
+s004096,HANH,PHAN,,0467631292,08/11/2019,632,242,"62 railway pl, glenelg sa 5045"
+s004117,Ryan,Andrews,,,15/04/1990,968,384,"4 wattle way, footscray"
+s004119,Toni,Courtney,,,,376,145,"113 george street, geelong"
+s004120,sharon,wipf,,0437292052,,1261,494,"22 oxford gr, joondalup wa 6027"
+s004142,Courtney,Sparks,,0411111111,,1217,480,"208 river ln, liverpool"
+s004148,STEVEN,MAHONEY,,(04) 5489 3645,,140,50,"184 hill gr, chatswood nsw 2067"
+s004149,nour,khoury,,406611769,,206,80,115 hume road hobart TAS 7000
+s004150,Tao,Huang,,,,477,178,"216 banksia cl, footscray vic 3011"
+s004155,anthony,werner,,,,1001,398,"unit 17, 134 waratah drive, sunnybank"
+s004161,Jess,Dinatale,,,11/12/2004,103,35,210 elizabeth drive springvale VIC 3171
+s004163,lisa,,lisa916@icloud.example,0486314258,,717,278,"56 princes cl, chatswood nsw 2067"
+s004174,trevor,frizzell,noemail@noemail.com,,07/07/2000,774,303,"18/28 victoria lane, cabramatta nsw 2166"
+s004189,eva,hughes,evahughes@gmail.example,,,901,354,
+s004197,Phyllis,Bullion,phyllis.bullion@hotmail.example,,,1144,448,"u21 63 queen ln, belconnen act 2617"
+s004201,Christian,Delos,christian770@gmail.example,61412375743,,1152,451,"11/27 highgr, belconnen"
+s004206,Mua,Peters,M.I.A._.P.E.T.E.R.S@GMAIL.example,,,512,191,"54 wattle cres, chatswood nsw 2067"
+s004213,Peter,Papadopoulos,peter.papadopoulos77@gmail.example,+61 467 387 942,20/04/1954,346,132,"170 victoria tce, cabramatta nsw 2166"
+s004220,zoe,baumgardner,,,03/06/1966,117,41,"70 oxford crescent, geelong"
+s004228,colin,simmons,,,,1123,440,"27/76 station lane, box hill vic 3128"
+s004236,Deng,Haowei,haowei.deng94@gmail.example,,07/10/1966,736,286,"u7 175 jacaranda cct, chatswood nsw 2067"
+s004237,xin,yang,,0496041895,,934,368,"unit 25, 233 church ave, newcastle nsw 2300"
+s004240,madisn,mayo,,,,498,185,"175 river gr, liverpool"
+s004244,Hai,Tran,jtran@hotmail.example,0440 227 444,23/06/1986,442,167,76 mill close darwin NT 0800
+s004255,frank,burrow,asdf@asdf.com,0412345678,,152,52,"109 hill pe, footscray vic 3011"
+s004258,ASHLEY,ZEPP,,0429803324,22/05/1984,794,310,
+s004260,CAROL,WORDEN,carol_worden+shop@gmail.example,+61460144971,16/07/1949,708,274,93 station road
+s004267,ANIL,,,,,270,103,"131 king avenue, norwood"
+s004272,patrick,hicks,patrickhicks@gmail.example,,11/03/1980,447,169,"107 hume rd, parramatta"
+s004283,Riley,Donahue,,0482671566,,197,75,"3/39 oxford pl, hobart"
+s004310,hailey,shea,haileyshea@icloud.example,,13/04/2003,707,273,"4/156 high ln, springvale vic 3171"
+s004340,George,Christodoulou,none@none.com,61480002950,01/09/1943,524,198,11 bottlebrush place chatswood NSW 2067
+s004354,colin,simmons,,,27/11/1992,1123,440,"27/76 station ln, box hill vic 3128"
+s004358,JIM,GEORGIOU,,0414 365 598,12/03/1941,399,154,"110 mill tce, norwood sa 5067"
+s004374,PAUL,MCPHERSON,,0436457073,,1111,436,"7/148 acacia wy, chatswood"
+s004383,Jennifer,,,+61 410 728 175,18/03/1981,728,283,225 wattle drive joondalup WA 6027
+s004384,conctta,gallo,,+61 414 141 762,,924,365,"73 high pl, penrith nsw 2750"
+s004396,orlando,scott,,,10/10/2001,799,311,"146 high gr, newcastle nsw 2300"
+s004401,shannon,olson,shannon.olson3@live.au.example,0489590026,19/03/1987,330,126,"100 hume dr, newcastle nsw 2300"
+s004405,Colton,Dante,cdante@gmail.example,,28/05/1992,243,94,45 william way
+s004408,Kenneth,,,,12/06/1980,221,85,228 albert cres toowong QLD 4066
+s004414,daniel,vandeusen,,,,375,144,"unit 28, 152 main court, belconnen act 2617"
+s004442,CHARLES,PARKER,,,06/05/1952,318,122,"14/73 railway street, footscray"
+s004468,Nour,Hanna,nour.hanna87@outlook.example,61438482102,,1036,411,"26 main cct, newcastle"
+s004475,Rita,Beck,RITA68@GMAIL.example,,,1176,462,
+s004484,maria,delos,,0425 511 085,12/05/1981,379,146,"unit 8, 50 queen place, cairns qld 4870"
+s004490,jimmy,nguyen,none@none.com,,,653,250,148 bridge cl st kilda VIC 3182
+s004494,lacey,holland,lacey.holland96@icloud.example,+61429573138,22/12/2006,388,148,"145 mill pl, southport qld 4215"
+s004512,meena,singh,meena.singh@optusnet.au.example,0485525630,,787,306,23/14 wattle gr
+s004517,kate,joslin,katherine83@icloud.example,0477 197 330,,285,111,"242 george ln, parramatta"
+s004530,steven,clark,stevenclark@icloud.example,0491570110,,61,22,"unit 8, 179 hill way, hobart tas 7000"
+s004535,Em,Siegel,emily.fort86@hotmail.example,0400708757,,521,196,"71 high road, cairns qld 4870"
+s004546,Christian,Byers,,,,256,99,
+s004549,RUBY,GIBSON,,0482 061 625,,593,228,"136 railway way, geelong"
+s004554,linda,lee,llee@icloud.example,,,78,28,174 railway cl bankstown NSW 2200
+s004560,RICHARD,SLIKER,,0445 569 504,,1274,499,"34 station cl, cabramatta"
+s004566,MARK,,,0466 382 277,,387,148,"145 mill pl, southport qld 4215"
+s004584,Jason,Panther,jason.panther69@gmail.example,+61405034936,22/08/1998,1243,490,
+s004609,PAULETTE,SMITH,,429756823,09/05/1957,1115,438,"139 acacia driev, footscray vic 3011"
+s004627,FAITH,FLANDERS,,(04) 5973 0403,,1159,456,"58 queen cct, glenelg"
+s004630,Tony,Ferrari,,0441 677 408,,180,66,"205 oxford tce, cabramatta nsw 2166"
+s004672,VIKRAM,SINGH,no@email.example,61401956558,24/03/2001,550,211,"59 wattle parade, newcastle"
+s004687,JOY,SANTOS,,,,468,175,67 beach cl st kilda VIC 3182
+s004742,melissa,raburn,,0440866170,01/01/2004,602,230,"2/239 william place, geelong"
+s004749,THI PHUONG,,phuong887@gmail.example,(04) 9494 7997,,693,268,109 river circuit cairns QLD 4870
+s004775,Carol,Aller,carol.aller23@gmail.example,0458 820 605,,663,255,
+s004779,brooke,messick,,0000000000,,1098,430,"136 queen crescent, penrith nsw 2750"
+s004801,Brooke,Messick,brookemessick@hotmail.example,0402 293 383,,1098,430,"136 queen cres, penrith nsw 2750"
+s004815,Patricia,Thompson,patricia.thompson61@hotmail.example,0478 352 818,06/11/1974,276,107,"168 victoria ct, hobart tas 7000"
+s004820,SUNITA,NAIR,,61428946414,25/06/2009,997,395,"7/63 albert cres, parramatta"
+s004823,DUNG,NGUYEN,,0477602069,,471,176,"27/38 oxford cres, toowong"
+s004827,Rajesh,Patel,rpatel@gmail.example,+61423605263,27/09/1975,126,45,216 queen close
+s004839,Gerald,Beaird,gerald44@bigpond.example,,,769,299,"3/109 lake circuit, footscray vic 3011"
+s004855,ZIZHI,SUN,,,,1213,479,197 hume dr
+s004871,gary,stevens,,,,178,65,"u12 238 acacia rd, hobart tas 7000"
+s004894,rebekah,kuhn,none@none.com,+61 429 750 605,,976,389,"122 banksia wy, norwood sa 5067"
+s004897,YANGLEI,SUN,yangleisun@icloud.example,,,773,302,
+s004902,JUSTIN,BRYANT,,,,752,292,"136 waratah dr, geelong vic 3220"
+s004909,anthony,brown,anthony59@gmail.example,,07/02/1959,877,342,"225 elizabeth cct, darwin nt 0800"
+s004923,Maria,Vlahos,mariavlahos@bigpond.au.example,,,965,381,"1/190 statio parade, hurstville nsw 2220"
+s004924,sunita,,,,,279,109,
+s004928,Ryan,Richter,,0406 783 357,,941,371,204 mill circuit
+s004939,VASILIOS,CHRISTODOULOU,vchristodoulou@outlook.example,,,1053,416,84 king tce penrith NSW 2750
+s004953,Ravi,Sharma,,0465 570 906,,236,92,"21/118 park pl, cairns"
+s004956,ROSE,SANTOS,rose429@gmail.example,0491570157,,290,114,
+s004969,Janet,Mccall,,468001272,,959,378,5/197 george road belconnen ACT 2617
+s004995,Rodney,Crawford,,,,908,357,"176 banksia gr, liverpool nsw 2170"
+s005006,aikaterii,papadakis,kathy.papadakis@optusnet.au.example,+61496020617,,3,2,
+s005014,RYAN,BARKER,rbarker@outlook.example,,08/03/1975,164,59,
+s005017,simran,nair,,,25/07/1997,231,90,153 river circuit joondalup WA 6027
+s005018,David,Smith,,0454443185,,960,379,122 hill rd norwood SA 5067
+s005032,Meena,Singh,,(04) 8552 5630,,787,306,"u23 14 wattle gr, hobart tas 7000"
+s005035,Duong,Khoa,jimmyduong@gmail.example,0476118299,,587,225,"180 albert cct, chatswood"
+s005042,brandon,crouse,,(04) 2941 5056,,200,76,"17 bottlebrush tce, sunnybank qld 4109"
+s005052,meghan,fontaine,meghanfontaine@hotmail.example,0439564105,26/11/1981,975,388,"218 victoria street, hobart tas 7000"
+s005060,NEHA,WRIGHT,,0457633983,,703,272,
+s005064,Anthony,Shanklin,,,28/02/2002,762,297,"unit 19, 218 pacific pde"
+s005068,MICHELE,BYERS,michelebyers@icloud.example,,,101,35,210 elizabeth dr
+s005080,MARIA,GRECO,,,10/02/1972,334,128,"2 jacaranda ln, hobart"
+s005093,VAN DUC,PHEM,,,18/10/1948,548,210,"194 church st, darwin nt 0800"
+s005094,TIMOTHY,TODD,,,19/02/2001,937,370,"178 queen ln, parramatta nsw 2150"
+s005108,Trang Thi,Nguyen,,,20/07/1973,472,176,"27/38 oxford cres, toowong qld 4066"
+s005120,janet,newbern,jnewbern@yahoo.au.example,,,789,307,"18 banksia dr, geelong"
+s005128,DANIEL,MELTON,DMELTON@TPG.AU.example,0400123456,,497,184,
+s005135,JANICE,BAILEY,janice.bailey@bigpond.example,+61499312629,,131,46,"4/116 elizabeth cct, glenelg sa 5045"
+s005136,wanda,werner,,,,32,10,
+s005144,Larry,Thomas,thomas.larry@live.au.example,,24/08/1963,219,84,"22 high pl, joondalup wa 6027"
+s005152,junlei,wang,,0458 765 766,19/09/2001,1149,450,"29/120 churhc court, bankstown nsw 2200"
+s005173,DIMITRIOS,GEORGIOU,,,09/02/1971,990,393,"201 lake ct, hurstville"
+s005174,RYAN,BAUTISTA,,,16/03/1983,534,201,"22 hume gr, hobart tas 7000"
+s005193,rajesh,sinh,,0408 721 519,03/06/1980,465,174,"9/217 queen tce, cairns"
+s005194,HARRY,QUINN,harry.quinn57@bigpond.example,0422 995 879,01/06/2007,562,214,
+s005215,antonio,rossi,,0449521635,18/12/1991,672,259,"32 jacaranda ave, belconnen act 2617"
+s005230,sandeep,rao,,,06/12/1995,723,281,"9/233 pacific cct, cabramatta nsw 2166"
+s005239,MTAHEW,GOULD,,0455150139,08/12/1993,930,367,"207 park road, fremantle wa 6160"
+s005248,israel,mielke,,61402331336,07/11/1992,904,356,"161 victoria cl, belconnen act 2617"
+s005269,khaled,hanna,,,,1034,411,"20 king st, hobart"
+s005271,GRACE,LIPSKI,grace682@gmail.example,0418 847 505,,1228,483,
+s005277,WLIL,BUEHRER,,0419983844,,351,134,"74 hill ct, southport qld 4215"
+s005301,erica,orchard,erica.orchard@hotmail.example,0492 382 837,06/07/1976,909,358,"73 smith crescent, belconnen"
+s005338,matt,tremblay,matthew.tremblay@iinet.au.example,+61 447 052 279,,260,99,"183 bottlebrush cl, bondi nsw 2026"
+s005356,Anjali,Kumar,,0438 356 879,,864,337,217 banksia circuit southport QLD 4215
+s005368,lisa,barnes,lisabarnes@outlook.example,0479986517,,393,151,"231 king avenue, southport qld 4215"
+s005388,BAILEY,SLACK,,,,742,288,"114 pacific cct, chatswood nsw 2067"
+s005389,Suzanne,Rutland,,,,1197,470,
+s005404,natalie,todd,,0473 527 861,,939,370,178 queen ln parramatta NSW 2150
+s005411,wang,boyang,,0463 279 599,25/05/1946,705,273,58 high st
+s005419,grae,ruggieri,,,,433,164,"u4 176 elizabeth ave, bankstown nsw 2200"
+s005425,RICHARD,SUTTON,,0408 791 739,17/05/1942,1264,496,"223 pacific pl, liverpool"
+s005427,faith,gibson,,,17/04/2000,488,180,"11 bottlebrush ct, sunnybank"
+s005432,Mikaila,Truesdale,,0424 334 845,,105,36,u23 215 acacia cres glenelg SA 5045
+s005444,ELSA,HIGBEE,elsa.higbee@outlook.example,,,517,194,"9/33 main pde, darwin"
+s005461,HAILEY,SHEA,,0432 890 203,13/04/2003,707,273,"4/156 high ln, springvale"
+s005464,KYLE,SHIFFLETT,kyle.shifflett@gmail.example,0408877328,11/04/1960,978,390,
+s005513,jacqueline,dillon,,+61481150834,,38,14,"68 king drive, hobart"
+s005533,THERESA,HUBER,,61403728368,24/03/1964,1132,444,"104 wattle pde, newcastle nsw 2300"
+s005541,CASSIDY,WHIPPLE,cassidy.whipple94@gmail.example,,,1244,490,180 waratah pde
+s005545,NAM VAN,LE,,,,565,216,"171 church ave, geelong vic 3220"
+s005554,antonio,rosni,trossi@hotmail.example,,,48,18,
+s005565,JENNIFER,,jennifer.perl@gmail.example,+61 425 293 761,14/03/1978,543,207,"12 park tce, glenelg sa 5045"
+s005572,MARY,HOLMES,none@none.com,0404928698,15/09/1942,1195,468,"16 railway way, toowong"
+s005574,haley,schultz,,0491570156,23/06/1992,621,239,"174 william drive, bankstown nsw 2200"
+s005578,Fatima,Khoury,,,12/01/1981,88,31,199 park lane richmond VIC 3121
+s005591,Kevin,Orchard,,,28/02/2024,911,358,"73 smith crescent, belconnen act 2617"
+s005599,ernesto,cooper,ernesto.cooper@tpg.au.example,0472 106 040,,21,6,"92 oxford ct, footscray vic 3011"
+s005603,elizabeth,cichocki,,(04) 2792 4101,,912,359,"183 bridge street, penrith"
+s005606,Vasiliki,Karagiannis,vkaragiannis@bigpond.example,,,398,154,"110 mill terrace, norwood sa 5067"
+s005607,THOMAS,RIEGLE,,0443 452 861,,273,105,"177 princes pl, parramatta"
+s005615,albert,knapke,albert.knapke@gmail.example,,,175,63,7 victoria gr
+s005618,James,Shea,,0497 109 490,25/06/1998,706,273,u4 156 high ln
+s005662,nevaeh,waters,,,22/05/2004,298,116,"192 princes terrace, springvale vic 3171"
+s005669,RAJESH,SHARMA,,+61 442 171 206,,240,92,"unit 21, 118 park pl, cairns qld 4870"
+s005675,Annalise,Cronkhite,,0491288416,,889,349,"u7 207 high cres, sunnybank qld 4109"
+s005694,Deepika,Patel,harpreet.patel24@outlook.example,0474 310 687,25/05/2021,284,110,"101 park cct, joondalup"
+s005713,robert,jackson,none@none.com,,18/12/1958,1255,493,29 pacific cct
+s005723,Despina,Papadopoulos,,0404822554,22/10/2007,407,156,63 george ln
+s005726,TRICIA,YOUNG,TRICIAYOUNG@OPTUSNET.AU.example,0413116361,03/12/1975,1102,432,"13 forest drive, st kilda vic 3182"
+s005730,JOHN,GORDON,john.gordon@hotmail.example,,,519,195,
+s005734,JOHN,GREEN,greenfamily94@bigpond.example,0496273929,,264,101,66 actcia st glenelg SA 5045
+s005737,kimberly,carpenter,kimberlycarpenter@hotmail.example,0493 890 839,,45,17,"177 victoria wy, darwin"
+s005744,WILLIAM,TORO,,0436 121 867,17/08/1950,791,309,"125 king pde, toowong qld 4066"
+s005753,Duc Van,Nugyen,jimmy.nguyen@gmail.example,+61456161134,,629,242,
+s005759,ant,snograss,,(04) 3947 5332,27/05/2002,30,9,"25/140 albert pde, st kilda"
+s005763,tina,nguyen,,+61 472 404 212,09/08/1966,419,160,"240 park court, penrith nsw 2750"
+s005766,Han,Baumgardner,,412219894,,120,41,"70 oxford crescent, geelong vic 3220"
+s005770,jasmine,williamson,,+61 467 042 104,03/10/2001,251,97,
+s005786,Marcia,Sweeney,,+61435008961,15/09/1945,96,34,"19/102 beach way, bondi"
+s005796,FINLEY,JORDAN,finley.jordan@yahoo.au.example,0424 920 383,09/09/2006,763,297,"u19 218 pacific pde, liverpool"
+s005803,sonia,kramer,soniah@bigpond.example,0400123456,10/06/1938,871,341,"214 banksia cres, belconnen act 2617"
+s005811,Richard,West,,,,255,98,"149 pacific st, st kilda vic 3182"
+s005815,DAVE,COOPER,david.cooper@gmail.example,,,214,83,"195 park tce, penrith nsw 2750"
+s005816,brian,helmer,brian.helmer@gmail.example,0492617748,,71,25,"26 hill tce, bondi nsw 2026"
+s005861,HUI,WANG,,,,822,318,"151 railway gr, chatswood nsw 2067"
+s005863,lakshmi,patel,,,20/12/1940,1028,409,31 railway wy penrith NSW 2750
+s005866,Ryan,Burgess,,,26/11/1982,1184,465,"238 station terrace, springvale"
+s005894,Hoang,Cathy,,+61 419 599 295,15/09/1960,352,135,
+s005901,DENG,LONG,,,,167,61,"184 acacia dr, cairns qld 4870"
+s005903,GRACE,VILLANUEVA,,0462174450,06/03/1995,1221,481,"138 river gr, southport qld 4215"
+s005917,kathy,franks,,445220374,,15,5,206 church terrace liverpool NSW 2170
+s005924,sandra,michaels,,,28/03/1946,701,271,"5/211 lake dr, southport qld 4215"
+s005957,REBECCA,KUHN,,0429750605,,976,389,"122 banksia wy, norwood sa 5067"
+s005971,GEORGE,PAPADAKIS,,,,405,156,"63 george ln, cairns qld 4870"
+s005977,Joy,Santos,,401879416,,0,0,"15/147 smith crescent, joondalup"
+s005979,Hoa,Le,,0468 801 214,20/01/1972,490,182,
+s006009,Pham,Trang,tpham@gmail.example,0448949482,,804,312,"unit 6, 16 waratah parade geelong VIC 3220"
+s006027,ZHANG,QIANGBO,,448732377,09/03/1953,1250,492,"150 queen tce, sunnybank qld 4109"
+s006033,Allie,Huem,allie.hume@gmail.example,0445694729,,261,100,"22/99 pacifci drive, darwin nt 0800"
+s006035,JIM,PAPADOPOULOS,,+61 465 013 906,10/09/1996,304,117,"56 main way, bankstown"
+s006066,PENNY,HURLEY,,,,335,129,"20/138 bridge terrace, cairns qld 4870"
+s006081,Grace,Santos,,(04) 8363 0133,,900,353,"63 forest rd, richmond vic 3121"
+s006088,TYRONE,ZEPP,,0437 279 601,01/05/1984,793,310,"17 william cl, bankstown"
+s006094,Michael,Stevenson,,,21/01/1956,1017,404,"26/181 geogre ln, southport qld 4215"
+s006107,patricia,gibbons,,61462572221,21/01/1954,678,262,114 victoria cl sunnybank QLD 4109
+s006135,SUE,NULL,suenull65@gmail.example,0497 629 209,21/03/1964,580,223,
+s006152,ALEX,BUNS,alexb@hotmail.example,0474831508,,1062,420,"182 hume court, glenelg sa 5045"
+s006154,Toni,Courtney,toni185@gmail.example,0437620178,04/11/1973,376,145,
+s006187,David,Frum,,,12/07/1961,372,143,
+s006189,jillian,hamrick,jillian06@gmail.example,,21/08/2006,1174,461,"137 beach avenue, bankstown"
+s006191,taylor,shepherd,taylor.shepherd@bigpond.example,0419 280 993,18/07/1998,196,75,"unit 3, 39 oxford pl, hobart"
+s006193,rahul,.,RNAIR@GMAIL.example,0439 933 303,,250,96,"12 queen way, bankstown nsw 2200"
+s006214,MYLES,ALLER,mylesaller@hotmail.example,,,665,255,u28 208 station pde
+s006215,carlo,santos,,,,458,171,u24 49 bridge grove st kilda VIC 3182
+s006227,MEENA,KAUR,,+61 439 763 961,,563,214,124 beach cl belconnen ACT 2617
+s006235,HARPREET,SINGH,,,,1103,433,"150 station pde, sunnybank qld 4109"
+s006238,Gloria,Schmidt,gloria874@gmail.example,0470 265 978,,949,373,"25/172 albert avenue, glenelg sa 5045"
+s006241,Chloe,Phalen,chloep@gmail.example,,,34,12,239 forest gr
+s006243,HI,WANG,,0408748826,02/12/1973,522,197,"139 princes court, bondi nsw 2026"
+s006272,RITA,BECK,rita68@gmail.example,0491570110,,1176,462,216 beach wy chatswood NSW 2067
+s006283,pooja,joshi,poojaj@icloud.example,,11/06/1946,682,264,"191 elizabeth st, bankstown nsw 2200"
+s006304,DANIEL,STRICKLAND,daniel47@bigpond.example,,08/12/1947,491,183,
+s006312,LISA,EADS,,0489 649 365,,771,300,180 wattle dr sunnybank QLD 4109

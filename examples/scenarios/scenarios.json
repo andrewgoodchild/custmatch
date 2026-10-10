@@ -1,0 +1,106 @@
+{
+ "typo_first": {
+  "description": "A typo in the first name (Jonathon / Jonathan)",
+  "expected": "same"
+ },
+ "nickname": {
+  "description": "A nickname (Bill / William)",
+  "expected": "same"
+ },
+ "name_swapped": {
+  "description": "First and last name swapped",
+  "expected": "same"
+ },
+ "married_name": {
+  "description": "A new surname after marriage; same date of birth and email",
+  "expected": "same"
+ },
+ "moved": {
+  "description": "Moved house: a new address and phone; same name, date of birth and email",
+  "expected": "same"
+ },
+ "gmail_variants": {
+  "description": "Gmail with dots and a +tag (j.smith+shop@gmail.com / jsmith@gmail.com)",
+  "expected": "same"
+ },
+ "phone_formats": {
+  "description": "One phone in different formats (+1 206 555 1234 / (206) 555-1234); no email",
+  "expected": "same"
+ },
+ "dob_day_month_swapped": {
+  "description": "Day and month of birth swapped",
+  "expected": "same"
+ },
+ "no_surname_email": {
+  "description": "One record has only a first name and email (a web sign-up)",
+  "expected": "same"
+ },
+ "initial_only": {
+  "description": "First initial only, with the same email",
+  "expected": "same"
+ },
+ "hyphenated": {
+  "description": "A double-barrelled surname on one record (Garcia-Lopez / Garcia)",
+  "expected": "same"
+ },
+ "punctuation_case": {
+  "description": "Case, spaces and punctuation (O'BRIEN  JOHN / obrien john)",
+  "expected": "same"
+ },
+ "accents": {
+  "description": "Accents on one record (Jos\u00e9 / Jose, Zo\u00eb / Zoe)",
+  "expected": "same"
+ },
+ "apartment_forms": {
+  "description": "Apartment written differently (12 Main St Apt 4 / 12 Main St #4)",
+  "expected": "same"
+ },
+ "sparse_pair": {
+  "description": "Both records sparse: first name, surname and phone only",
+  "expected": "same"
+ },
+ "twins": {
+  "description": "Twins: same surname, birthday, address and phone; different first names",
+  "expected": "different"
+ },
+ "father_son_same_name": {
+  "description": "Father and son with the same name and address (Sr / Jr); different birth years",
+  "expected": "different"
+ },
+ "spouses_shared_contacts": {
+  "description": "A couple sharing surname, address, family email and phone",
+  "expected": "different"
+ },
+ "common_name_strangers": {
+  "description": "Two John Smiths: same name, different birthdays, addresses and phones",
+  "expected": "different"
+ },
+ "reissued_phone": {
+  "description": "Strangers with the same mobile (a reissued number)",
+  "expected": "different"
+ },
+ "junk_contacts": {
+  "description": "Strangers who all typed test@test.com and 555-555-5555 / 0000000000",
+  "expected": "different"
+ },
+ "roommates": {
+  "description": "Unrelated people at one address",
+  "expected": "different"
+ },
+ "no_chaining": {
+  "description": "A record with one person's name and another's email and phone must not join the two",
+  "expected": "different"
+ },
+ "siblings_same_initial": {
+  "description": "Sisters at one address, both recorded by first initial only",
+  "expected": "different"
+ },
+ "fake_mobile_many_emails": {
+  "description": "Nameless sign-ups, each with their own email, all typing one made-up mobile",
+  "expected": "different"
+ },
+ "gold_number": {
+  "description": "A bought gold mobile ((212) 222-2222): a sign-up with only a first name and it",
+  "expected": "same"
+ }
+}

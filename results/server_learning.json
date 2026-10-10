@@ -1,0 +1,192 @@
+{
+ "what": "The demo with a small random label set; a steward (simulated from the demo's true people) answers every pair in the review queue, round after round, each round followed by a batch run. Two ways: decisions only override their own pairs, or they also train the next run's model (worker.run_batch(decisions_as_labels=...)). Measured each round: clustered pairwise F1 against the true people, and the queue's size.",
+ "labels": 200,
+ "runs": [
+  {
+   "seed": 0,
+   "decisions_train_the_model": false,
+   "rounds": [
+    {
+     "round": 0,
+     "f1": 81.49,
+     "review_queue": 120,
+     "decided": 120
+    },
+    {
+     "round": 1,
+     "f1": 86.09,
+     "review_queue": 0,
+     "decided": 0
+    },
+    {
+     "round": 2,
+     "f1": 86.09,
+     "review_queue": 5,
+     "decided": 5
+    },
+    {
+     "round": 3,
+     "f1": 86.09,
+     "review_queue": 0
+    }
+   ]
+  },
+  {
+   "seed": 0,
+   "decisions_train_the_model": true,
+   "rounds": [
+    {
+     "round": 0,
+     "f1": 81.49,
+     "review_queue": 120,
+     "decided": 120
+    },
+    {
+     "round": 1,
+     "f1": 85.96,
+     "review_queue": 31,
+     "decided": 31
+    },
+    {
+     "round": 2,
+     "f1": 87.03,
+     "review_queue": 14,
+     "decided": 14
+    },
+    {
+     "round": 3,
+     "f1": 87.7,
+     "review_queue": 18
+    }
+   ]
+  },
+  {
+   "seed": 1,
+   "decisions_train_the_model": false,
+   "rounds": [
+    {
+     "round": 0,
+     "f1": 77.85,
+     "review_queue": 138,
+     "decided": 138
+    },
+    {
+     "round": 1,
+     "f1": 81.56,
+     "review_queue": 0,
+     "decided": 0
+    },
+    {
+     "round": 2,
+     "f1": 81.56,
+     "review_queue": 0,
+     "decided": 0
+    },
+    {
+     "round": 3,
+     "f1": 81.56,
+     "review_queue": 0
+    }
+   ]
+  },
+  {
+   "seed": 1,
+   "decisions_train_the_model": true,
+   "rounds": [
+    {
+     "round": 0,
+     "f1": 77.85,
+     "review_queue": 138,
+     "decided": 138
+    },
+    {
+     "round": 1,
+     "f1": 82.55,
+     "review_queue": 30,
+     "decided": 30
+    },
+    {
+     "round": 2,
+     "f1": 85.04,
+     "review_queue": 95,
+     "decided": 95
+    },
+    {
+     "round": 3,
+     "f1": 88.94,
+     "review_queue": 6
+    }
+   ]
+  },
+  {
+   "seed": 2,
+   "decisions_train_the_model": false,
+   "rounds": [
+    {
+     "round": 0,
+     "f1": 80.79,
+     "review_queue": 173,
+     "decided": 173
+    },
+    {
+     "round": 1,
+     "f1": 86.08,
+     "review_queue": 0,
+     "decided": 0
+    },
+    {
+     "round": 2,
+     "f1": 86.08,
+     "review_queue": 0,
+     "decided": 0
+    },
+    {
+     "round": 3,
+     "f1": 86.08,
+     "review_queue": 0
+    }
+   ]
+  },
+  {
+   "seed": 2,
+   "decisions_train_the_model": true,
+   "rounds": [
+    {
+     "round": 0,
+     "f1": 80.79,
+     "review_queue": 173,
+     "decided": 173
+    },
+    {
+     "round": 1,
+     "f1": 86.27,
+     "review_queue": 25,
+     "decided": 25
+    },
+    {
+     "round": 2,
+     "f1": 87.14,
+     "review_queue": 13,
+     "decided": 13
+    },
+    {
+     "round": 3,
+     "f1": 87.65,
+     "review_queue": 11
+    }
+   ]
+  }
+ ],
+ "mean_f1_by_round_override_only": [
+  80.04,
+  84.58,
+  84.58,
+  84.58
+ ],
+ "mean_f1_by_round_learn": [
+  80.04,
+  84.93,
+  86.4,
+  88.1
+ ]
+}

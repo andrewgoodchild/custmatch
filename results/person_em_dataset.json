@@ -1,0 +1,31 @@
+{
+ "clusters": {
+  "train": 30173,
+  "valid": 7525,
+  "test": 12880
+ },
+ "train": {
+  "records": 30173,
+  "candidates": 474913,
+  "true_pairs": 180577,
+  "blocking_recall": 81.69,
+  "written_pairs": 12000,
+  "written_positives": 3686
+ },
+ "valid": {
+  "records": 7525,
+  "candidates": 87425,
+  "true_pairs": 45680,
+  "blocking_recall": 81.67,
+  "written_pairs": 3000,
+  "written_positives": 1299
+ },
+ "test": {
+  "records": 12880,
+  "candidates": 152772,
+  "true_pairs": 77704,
+  "blocking_recall": 82.14,
+  "written_pairs": 152772,
+  "written_positives": 63824
+ }
+}

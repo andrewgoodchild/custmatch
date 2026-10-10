@@ -1,0 +1,128 @@
+{
+ "baseline_raw_records": {
+  "first_name": 96.15,
+  "last_name": 97.05,
+  "addr_number": 93.0,
+  "addr_street": 92.4
+ },
+ "value_available_ceiling": {
+  "predicted": {
+   "first_name": 97.97,
+   "last_name": 98.5,
+   "addr_number": 98.97,
+   "addr_street": 98.67
+  },
+  "oracle": {
+   "first_name": 98.57,
+   "last_name": 98.91,
+   "addr_number": 99.19,
+   "addr_street": 98.96
+  }
+ },
+ "note_address_truth": "truth uses the census (residential) address, so rules that prefer the CRM source are favoured on address fields; the name fields are the clean comparison",
+ "note_first_seen": "first_seen and source_priority coincide because CRM rows are concatenated first",
+ "predicted": {
+  "first_seen": {
+   "per_field": {
+    "first_name": 96.14,
+    "last_name": 97.5,
+    "addr_number": 98.32,
+    "addr_street": 97.72
+   },
+   "all_fields_correct": 90.46,
+   "clusters_scored": 10744
+  },
+  "most_common": {
+   "per_field": {
+    "first_name": 96.78,
+    "last_name": 97.83,
+    "addr_number": 96.42,
+    "addr_street": 95.66
+   },
+   "all_fields_correct": 89.62,
+   "clusters_scored": 10744
+  },
+  "longest": {
+   "per_field": {
+    "first_name": 96.51,
+    "last_name": 97.48,
+    "addr_number": 97.22,
+    "addr_street": 96.01
+   },
+   "all_fields_correct": 88.74,
+   "clusters_scored": 10744
+  },
+  "source_priority": {
+   "per_field": {
+    "first_name": 96.14,
+    "last_name": 97.5,
+    "addr_number": 98.32,
+    "addr_street": 97.72
+   },
+   "all_fields_correct": 90.46,
+   "clusters_scored": 10744
+  },
+  "most_complete": {
+   "per_field": {
+    "first_name": 96.73,
+    "last_name": 97.84,
+    "addr_number": 96.41,
+    "addr_street": 95.63
+   },
+   "all_fields_correct": 89.56,
+   "clusters_scored": 10744
+  }
+ },
+ "oracle": {
+  "first_seen": {
+   "per_field": {
+    "first_name": 96.66,
+    "last_name": 97.79,
+    "addr_number": 98.57,
+    "addr_street": 98.01
+   },
+   "all_fields_correct": 91.38,
+   "clusters_scored": 10735
+  },
+  "most_common": {
+   "per_field": {
+    "first_name": 97.26,
+    "last_name": 98.1,
+    "addr_number": 96.52,
+    "addr_street": 95.82
+   },
+   "all_fields_correct": 90.34,
+   "clusters_scored": 10735
+  },
+  "longest": {
+   "per_field": {
+    "first_name": 97.17,
+    "last_name": 97.82,
+    "addr_number": 97.43,
+    "addr_street": 96.25
+   },
+   "all_fields_correct": 89.73,
+   "clusters_scored": 10735
+  },
+  "source_priority": {
+   "per_field": {
+    "first_name": 96.66,
+    "last_name": 97.79,
+    "addr_number": 98.57,
+    "addr_street": 98.01
+   },
+   "all_fields_correct": 91.38,
+   "clusters_scored": 10735
+  },
+  "most_complete": {
+   "per_field": {
+    "first_name": 97.29,
+    "last_name": 98.13,
+    "addr_number": 96.52,
+    "addr_street": 95.8
+   },
+   "all_fields_correct": 90.38,
+   "clusters_scored": 10735
+  }
+ }
+}

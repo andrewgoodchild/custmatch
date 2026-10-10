@@ -1,0 +1,23 @@
+{
+ "precision": 94.12,
+ "recall": 89.6,
+ "f1": 91.8,
+ "accuracy": 96.77,
+ "n": 1239,
+ "predicted_matches": 238,
+ "dataset": "wdcproducts-80cc-seen-sampled-250-gs-2",
+ "prompt": "domain-complex-force",
+ "model": "typesafe/jev-router",
+ "unclear_or_long_answers": 70,
+ "empty_answers": 2,
+ "cost_usd": 0.3213,
+ "temperature": null,
+ "max_tokens": 8000,
+ "answered_by": {
+  "openai/gpt-6-luna": 766,
+  "deepseek/deepseek-v4.1-flash": 401,
+  "google/gemini-3.8-flash": 62,
+  "anthropic/claude-sonnet-5": 5,
+  "openai/gpt-6-sol": 5
+ }
+}

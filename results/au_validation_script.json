@@ -1,0 +1,376 @@
+{
+ "country_au_active_no_script": {
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "runs": [
+   {
+    "all_records": {
+     "precision": 93.03,
+     "recall": 71.25,
+     "f1": 80.69,
+     "clusters": 11943,
+     "largest_cluster": 8,
+     "adjusted_rand": 0.8069
+    },
+    "no_surname_records": {
+     "precision": 89.03,
+     "recall": 69.52,
+     "f1": 78.08,
+     "clusters": 5793,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7807
+    },
+    "pairs_with_a_sign_up": {
+     "precision": 92.84,
+     "recall": 66.17,
+     "f1": 77.27,
+     "true_pairs": 7392
+    },
+    "households": {
+     "precision": 92.39,
+     "recall": 36.7,
+     "f1": 52.54,
+     "clusters": 10660,
+     "largest_cluster": 12,
+     "adjusted_rand": 0.5253
+    },
+    "native_script_people": {
+     "precision": 89.21,
+     "recall": 48.86,
+     "f1": 63.14,
+     "clusters": 390,
+     "largest_cluster": 6,
+     "adjusted_rand": 0.6307
+    },
+    "summary": {
+     "records": 18478,
+     "candidate_pairs": 184810,
+     "threshold": 0.7,
+     "customers": 11943,
+     "largest_customer": 8,
+     "junk_contact_values": 17,
+     "shared_contact_values": 121
+    },
+    "labelled_matches": 331
+   },
+   {
+    "all_records": {
+     "precision": 90.46,
+     "recall": 74.47,
+     "f1": 81.69,
+     "clusters": 11617,
+     "largest_cluster": 10,
+     "adjusted_rand": 0.8169
+    },
+    "no_surname_records": {
+     "precision": 86.58,
+     "recall": 71.32,
+     "f1": 78.21,
+     "clusters": 5746,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7821
+    },
+    "pairs_with_a_sign_up": {
+     "precision": 90.73,
+     "recall": 68.47,
+     "f1": 78.04,
+     "true_pairs": 7392
+    },
+    "households": {
+     "precision": 91.0,
+     "recall": 38.2,
+     "f1": 53.81,
+     "clusters": 10403,
+     "largest_cluster": 15,
+     "adjusted_rand": 0.538
+    },
+    "native_script_people": {
+     "precision": 93.53,
+     "recall": 59.09,
+     "f1": 72.42,
+     "clusters": 361,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7236
+    },
+    "summary": {
+     "records": 18478,
+     "candidate_pairs": 184810,
+     "threshold": 0.5,
+     "customers": 11617,
+     "largest_customer": 10,
+     "junk_contact_values": 17,
+     "shared_contact_values": 77
+    },
+    "labelled_matches": 361
+   },
+   {
+    "all_records": {
+     "precision": 91.52,
+     "recall": 74.1,
+     "f1": 81.89,
+     "clusters": 11698,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.8189
+    },
+    "no_surname_records": {
+     "precision": 93.09,
+     "recall": 68.9,
+     "f1": 79.19,
+     "clusters": 5831,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7919
+    },
+    "pairs_with_a_sign_up": {
+     "precision": 92.62,
+     "recall": 67.87,
+     "f1": 78.34,
+     "true_pairs": 7392
+    },
+    "households": {
+     "precision": 91.57,
+     "recall": 38.1,
+     "f1": 53.81,
+     "clusters": 10466,
+     "largest_cluster": 14,
+     "adjusted_rand": 0.538
+    },
+    "native_script_people": {
+     "precision": 80.24,
+     "recall": 61.82,
+     "f1": 69.83,
+     "clusters": 350,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.6976
+    },
+    "summary": {
+     "records": 18478,
+     "candidate_pairs": 184810,
+     "threshold": 0.6,
+     "customers": 11698,
+     "largest_customer": 9,
+     "junk_contact_values": 17,
+     "shared_contact_values": 91
+    },
+    "labelled_matches": 378
+   }
+  ],
+  "mean": {
+   "all_records": {
+    "precision": 91.67,
+    "recall": 73.27,
+    "f1": 81.42
+   },
+   "no_surname_records": {
+    "precision": 89.57,
+    "recall": 69.91,
+    "f1": 78.49
+   },
+   "pairs_with_a_sign_up": {
+    "precision": 92.06,
+    "recall": 67.5,
+    "f1": 77.88
+   },
+   "households": {
+    "precision": 91.65,
+    "recall": 37.67,
+    "f1": 53.39
+   },
+   "native_script_people": {
+    "precision": 87.66,
+    "recall": 56.59,
+    "f1": 68.46
+   }
+  },
+  "f1_sd": 0.52
+ },
+ "country_au_active": {
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "runs": [
+   {
+    "all_records": {
+     "precision": 95.68,
+     "recall": 70.47,
+     "f1": 81.16,
+     "clusters": 12061,
+     "largest_cluster": 8,
+     "adjusted_rand": 0.8116
+    },
+    "no_surname_records": {
+     "precision": 96.37,
+     "recall": 66.14,
+     "f1": 78.44,
+     "clusters": 5883,
+     "largest_cluster": 4,
+     "adjusted_rand": 0.7844
+    },
+    "pairs_with_a_sign_up": {
+     "precision": 96.3,
+     "recall": 65.5,
+     "f1": 77.97,
+     "true_pairs": 7392
+    },
+    "households": {
+     "precision": 93.56,
+     "recall": 36.74,
+     "f1": 52.76,
+     "clusters": 10715,
+     "largest_cluster": 12,
+     "adjusted_rand": 0.5276
+    },
+    "native_script_people": {
+     "precision": 96.84,
+     "recall": 62.73,
+     "f1": 76.14,
+     "clusters": 351,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7608
+    },
+    "summary": {
+     "records": 18478,
+     "candidate_pairs": 187123,
+     "threshold": 0.7,
+     "customers": 12061,
+     "largest_customer": 8,
+     "junk_contact_values": 17,
+     "shared_contact_values": 179
+    },
+    "labelled_matches": 465
+   },
+   {
+    "all_records": {
+     "precision": 92.05,
+     "recall": 74.13,
+     "f1": 82.12,
+     "clusters": 11714,
+     "largest_cluster": 8,
+     "adjusted_rand": 0.8212
+    },
+    "no_surname_records": {
+     "precision": 93.25,
+     "recall": 69.66,
+     "f1": 79.75,
+     "clusters": 5819,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7975
+    },
+    "pairs_with_a_sign_up": {
+     "precision": 93.35,
+     "recall": 67.8,
+     "f1": 78.55,
+     "true_pairs": 7392
+    },
+    "households": {
+     "precision": 91.64,
+     "recall": 37.93,
+     "f1": 53.66,
+     "clusters": 10486,
+     "largest_cluster": 12,
+     "adjusted_rand": 0.5365
+    },
+    "native_script_people": {
+     "precision": 94.27,
+     "recall": 67.27,
+     "f1": 78.51,
+     "clusters": 333,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7846
+    },
+    "summary": {
+     "records": 18478,
+     "candidate_pairs": 187123,
+     "threshold": 0.6,
+     "customers": 11714,
+     "largest_customer": 8,
+     "junk_contact_values": 17,
+     "shared_contact_values": 92
+    },
+    "labelled_matches": 360
+   },
+   {
+    "all_records": {
+     "precision": 89.63,
+     "recall": 74.68,
+     "f1": 81.47,
+     "clusters": 11597,
+     "largest_cluster": 11,
+     "adjusted_rand": 0.8147
+    },
+    "no_surname_records": {
+     "precision": 90.48,
+     "recall": 69.59,
+     "f1": 78.67,
+     "clusters": 5799,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7867
+    },
+    "pairs_with_a_sign_up": {
+     "precision": 90.58,
+     "recall": 68.15,
+     "f1": 77.78,
+     "true_pairs": 7392
+    },
+    "households": {
+     "precision": 91.42,
+     "recall": 38.77,
+     "f1": 54.45,
+     "clusters": 10395,
+     "largest_cluster": 15,
+     "adjusted_rand": 0.5444
+    },
+    "native_script_people": {
+     "precision": 93.63,
+     "recall": 66.82,
+     "f1": 77.98,
+     "clusters": 339,
+     "largest_cluster": 7,
+     "adjusted_rand": 0.7793
+    },
+    "summary": {
+     "records": 18478,
+     "candidate_pairs": 187123,
+     "threshold": 0.55,
+     "customers": 11597,
+     "largest_customer": 11,
+     "junk_contact_values": 17,
+     "shared_contact_values": 78
+    },
+    "labelled_matches": 389
+   }
+  ],
+  "mean": {
+   "all_records": {
+    "precision": 92.45,
+    "recall": 73.09,
+    "f1": 81.58
+   },
+   "no_surname_records": {
+    "precision": 93.37,
+    "recall": 68.46,
+    "f1": 78.95
+   },
+   "pairs_with_a_sign_up": {
+    "precision": 93.41,
+    "recall": 67.15,
+    "f1": 78.1
+   },
+   "households": {
+    "precision": 92.21,
+    "recall": 37.81,
+    "f1": 53.62
+   },
+   "native_script_people": {
+    "precision": 94.91,
+    "recall": 65.61,
+    "f1": 77.54
+   }
+  },
+  "f1_sd": 0.4
+ }
+}

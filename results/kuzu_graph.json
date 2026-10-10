@@ -1,0 +1,142 @@
+{
+ "kuzu_wcc_rf_0.3": {
+  "precision": 0.22,
+  "recall": 97.09,
+  "f1": 0.45,
+  "clusters": 742,
+  "largest_cluster": 8200,
+  "adjusted_rand": 0.0026
+ },
+ "kuzu_wcc_rf_0.95": {
+  "precision": 96.44,
+  "recall": 73.67,
+  "f1": 83.53,
+  "clusters": 3033,
+  "largest_cluster": 36,
+  "adjusted_rand": 0.8352
+ },
+ "bridge_aware_rf_prob": {
+  "precision": 0.37,
+  "recall": 95.04,
+  "f1": 0.73,
+  "clusters": 1066,
+  "largest_cluster": 6353,
+  "adjusted_rand": 0.0054,
+  "bridges_removed": 324
+ },
+ "bridge_aware_ditto_prob": {
+  "precision": 68.56,
+  "recall": 95.5,
+  "f1": 79.82,
+  "clusters": 1476,
+  "largest_cluster": 111,
+  "adjusted_rand": 0.798,
+  "bridges_removed": 113
+ },
+ "example_false_bridges": [
+  {
+   "a_first": "charlie",
+   "a_last": "barkley",
+   "a_dob": "1759-01-01",
+   "b_first": "rachel",
+   "b_last": "barkley",
+   "b_dob": "1743-01-01",
+   "prob": 0.89,
+   "surname_sim": 1.0,
+   "dob_exact": 0.0,
+   "postcode_exact": 0.0,
+   "occ": 0.0
+  },
+  {
+   "a_first": "john",
+   "a_last": "mcdougal",
+   "a_dob": "",
+   "b_first": "john",
+   "b_last": "mcdonald",
+   "b_dob": "1861-12-54",
+   "prob": 0.8766666666666667,
+   "surname_sim": 0.8999999761581421,
+   "dob_exact": 0.0,
+   "postcode_exact": 0.0,
+   "occ": 0.0
+  },
+  {
+   "a_first": "arthur",
+   "a_last": "catnell",
+   "a_dob": "",
+   "b_first": "arthur",
+   "b_last": "channell",
+   "b_dob": "",
+   "prob": 0.8574485194349042,
+   "surname_sim": 0.8821428418159485,
+   "dob_exact": 1.0,
+   "postcode_exact": 0.0,
+   "occ": 0.0
+  },
+  {
+   "a_first": "young",
+   "a_last": "",
+   "a_dob": "1823-08-11",
+   "b_first": "younger",
+   "b_last": "",
+   "b_dob": "",
+   "prob": 0.8566666666666667,
+   "surname_sim": 1.0,
+   "dob_exact": 0.0,
+   "postcode_exact": 0.0,
+   "occ": 0.0
+  },
+  {
+   "a_first": "henry",
+   "a_last": "young",
+   "a_dob": "1842-02-01",
+   "b_first": "george",
+   "b_last": "young",
+   "b_dob": "",
+   "prob": 0.8566666666666667,
+   "surname_sim": 1.0,
+   "dob_exact": 0.0,
+   "postcode_exact": 0.0,
+   "occ": 0.0
+  }
+ ],
+ "hub_surnames": [
+  {
+   "surname": "",
+   "edges": 3801
+  },
+  {
+   "surname": "baronet",
+   "edges": 1320
+  },
+  {
+   "surname": "moore",
+   "edges": 425
+  },
+  {
+   "surname": "jones",
+   "edges": 350
+  },
+  {
+   "surname": "smith",
+   "edges": 342
+  }
+ ],
+ "hub_suppressed_rf_0.30": {
+  "precision": 0.56,
+  "recall": 80.58,
+  "f1": 1.1,
+  "clusters": 2129,
+  "largest_cluster": 4732,
+  "adjusted_rand": 0.0092
+ },
+ "hub_suppressed_plus_bridges_rf": {
+  "precision": 0.73,
+  "recall": 80.41,
+  "f1": 1.44,
+  "clusters": 2324,
+  "largest_cluster": 4138,
+  "adjusted_rand": 0.0126,
+  "bridges_removed": 324
+ }
+}

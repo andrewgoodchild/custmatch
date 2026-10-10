@@ -1,0 +1,33 @@
+{
+ "n": 660,
+ "positives": 250,
+ "llm_llama31_8b": {
+  "precision": 80.0,
+  "recall": 1.6,
+  "f1": 3.14,
+  "accuracy": 62.58,
+  "n": 660,
+  "predicted_matches": 5,
+  "dataset": "historical50k-person-hard",
+  "prompt": "domain-complex-force",
+  "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+  "unclear_or_long_answers": 18,
+  "seconds": 457.9
+ },
+ "rule_name090_and_dob": {
+  "precision": 91.67,
+  "recall": 13.2,
+  "f1": 23.08,
+  "predicted_matches": 36,
+  "accuracy": 66.67
+ },
+ "rf_trained_on_disjoint_clusters": {
+  "precision": 62.37,
+  "recall": 98.8,
+  "f1": 76.47,
+  "predicted_matches": 396,
+  "accuracy": 76.97,
+  "train_pairs": 4681,
+  "train_positives": 4183
+ }
+}

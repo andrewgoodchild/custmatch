@@ -1,0 +1,16 @@
+{
+ "precision": 69.54,
+ "recall": 96.58,
+ "f1": 80.86,
+ "accuracy": 91.33,
+ "n": 1234,
+ "predicted_matches": 325,
+ "dataset": "amazon-google-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "openai/gpt-6-luna",
+ "unclear_or_long_answers": 163,
+ "empty_answers": 0,
+ "cost_usd": 0.0599,
+ "temperature": null,
+ "max_tokens": 2000
+}

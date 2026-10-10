@@ -1,0 +1,23 @@
+{
+ "precision": 93.98,
+ "recall": 98.54,
+ "f1": 96.21,
+ "accuracy": 98.67,
+ "n": 1206,
+ "predicted_matches": 216,
+ "dataset": "abt-buy-sampled-gs",
+ "prompt": "domain-complex-force",
+ "model": "typesafe/jev-router",
+ "unclear_or_long_answers": 37,
+ "empty_answers": 0,
+ "cost_usd": 0.1134,
+ "temperature": null,
+ "max_tokens": 8000,
+ "answered_by": {
+  "openai/gpt-6-luna": 867,
+  "deepseek/deepseek-v4.1-flash": 298,
+  "google/gemini-3.8-flash": 34,
+  "anthropic/claude-sonnet-5": 4,
+  "openai/gpt-6-sol": 3
+ }
+}

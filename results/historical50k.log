@@ -1,0 +1,108 @@
+records=50,578 clusters=5,156 true_pairs=303,961 candidates=918,609 blocking_recall=81.66%
+rules {'precision': 84.7, 'recall': 20.65, 'f1': 33.21, 'predicted': 74125, 'true_positives': 62783}
+Probability two random records match is estimated to be  5.21e-05.
+This means that amongst all possible pairwise record comparisons, one in 19,199.07 are expected to match.  With 1,279,041,753 total possible comparisons, we expect a total of around 66,620.00 matching pairs
+----- Estimating u probabilities using random sampling -----
+
+Estimated u probabilities using random sampling
+
+Your model is not yet fully trained. Missing estimates for:
+    - first_name_surname (no m values are trained).
+    - dob (no m values are trained).
+    - postcode_fake (no m values are trained).
+    - birth_place (no m values are trained).
+    - occupation (no m values are trained).
+
+----- Starting EM training session -----
+
+Estimating the m probabilities of the model by blocking on:
+l."dob" = r."dob"
+
+Parameter estimates will be made for the following comparison(s):
+    - first_name_surname
+    - postcode_fake
+    - birth_place
+    - occupation
+
+Parameter estimates cannot be made for the following comparison(s) since they are used in the blocking rules: 
+    - dob
+
+Iteration 1: Largest change in params was -0.538 in the m_probability of first_name_surname, level `(Exact match on first_name) AND (Exact match on surname)`
+Iteration 2: Largest change in params was -0.0676 in the m_probability of first_name_surname, level `(Exact match on first_name) AND (Exact match on surname)`
+Iteration 3: Largest change in params was 0.0642 in the m_probability of first_name_surname, level `All other comparisons`
+Iteration 4: Largest change in params was 0.0638 in the m_probability of first_name_surname, level `All other comparisons`
+Iteration 5: Largest change in params was 0.0633 in the m_probability of first_name_surname, level `All other comparisons`
+Iteration 6: Largest change in params was 0.0634 in the m_probability of first_name_surname, level `All other comparisons`
+Iteration 7: Largest change in params was 0.0643 in the m_probability of first_name_surname, level `All other comparisons`
+Iteration 8: Largest change in params was 0.0676 in the m_probability of birth_place, level `All other comparisons`
+Iteration 9: Largest change in params was -0.0773 in the m_probability of birth_place, level `Exact match on birth_place`
+Iteration 10: Largest change in params was -0.0823 in the m_probability of birth_place, level `Exact match on birth_place`
+Iteration 11: Largest change in params was -0.0786 in the m_probability of birth_place, level `Exact match on birth_place`
+Iteration 12: Largest change in params was 0.0653 in the m_probability of birth_place, level `All other comparisons`
+Iteration 13: Largest change in params was -0.0468 in the m_probability of birth_place, level `Exact match on birth_place`
+Iteration 14: Largest change in params was 0.0296 in the m_probability of birth_place, level `All other comparisons`
+Iteration 15: Largest change in params was -0.0298 in the m_probability of occupation, level `Exact match on occupation`
+Iteration 16: Largest change in params was -0.0405 in the m_probability of occupation, level `Exact match on occupation`
+Iteration 17: Largest change in params was -0.0441 in the m_probability of occupation, level `Exact match on occupation`
+Iteration 18: Largest change in params was 0.0404 in the m_probability of occupation, level `All other comparisons`
+Iteration 19: Largest change in params was -0.0325 in the m_probability of occupation, level `Exact match on occupation`
+Iteration 20: Largest change in params was -0.0236 in the m_probability of occupation, level `Exact match on occupation`
+Iteration 21: Largest change in params was -0.016 in the m_probability of occupation, level `Exact match on occupation`
+Iteration 22: Largest change in params was 0.0104 in the m_probability of occupation, level `All other comparisons`
+Iteration 23: Largest change in params was -0.00652 in the m_probability of occupation, level `Exact match on occupation`
+Iteration 24: Largest change in params was -0.00402 in the m_probability of occupation, level `Exact match on occupation`
+Iteration 25: Largest change in params was -0.00245 in the m_probability of occupation, level `Exact match on occupation`
+
+EM converged after 25 iterations
+
+Your model is not yet fully trained. Missing estimates for:
+    - dob (no m values are trained).
+
+----- Starting EM training session -----
+
+Estimating the m probabilities of the model by blocking on:
+(l."first_name" = r."first_name") AND (l."surname" = r."surname")
+
+Parameter estimates will be made for the following comparison(s):
+    - dob
+    - postcode_fake
+    - birth_place
+    - occupation
+
+Parameter estimates cannot be made for the following comparison(s) since they are used in the blocking rules: 
+    - first_name_surname
+
+Iteration 1: Largest change in params was 0.779 in the m_probability of birth_place, level `Exact match on birth_place`
+Iteration 2: Largest change in params was 0.18 in the m_probability of postcode_fake, level `All other comparisons`
+Iteration 3: Largest change in params was 0.0488 in the m_probability of birth_place, level `All other comparisons`
+Iteration 4: Largest change in params was -0.0201 in the m_probability of birth_place, level `Exact match on birth_place`
+Iteration 5: Largest change in params was -0.0094 in the m_probability of birth_place, level `Exact match on birth_place`
+Iteration 6: Largest change in params was 0.00582 in the m_probability of birth_place, level `All other comparisons`
+Iteration 7: Largest change in params was 0.00546 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 8: Largest change in params was 0.00494 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 9: Largest change in params was 0.00436 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 10: Largest change in params was 0.00377 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 11: Largest change in params was 0.00322 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 12: Largest change in params was 0.00272 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 13: Largest change in params was 0.00227 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 14: Largest change in params was 0.00189 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 15: Largest change in params was 0.00156 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 16: Largest change in params was 0.00128 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 17: Largest change in params was 0.00105 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 18: Largest change in params was 0.000856 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 19: Largest change in params was 0.000697 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 20: Largest change in params was 0.000567 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 21: Largest change in params was 0.00046 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 22: Largest change in params was 0.000373 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 23: Largest change in params was 0.000302 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 24: Largest change in params was 0.000244 in the m_probability of dob, level `Abs date difference <= 10 year`
+Iteration 25: Largest change in params was 0.000198 in the m_probability of dob, level `Abs date difference <= 10 year`
+
+EM converged after 25 iterations
+
+Your model is fully trained. All comparisons have at least one estimate for their m and u values
+Blocking time: 20.14 seconds
+Predict time: 25.57 seconds
+splink {'precision': 98.88, 'recall': 43.63, 'f1': 60.55, 'predicted': 134139, 'true_positives': 132632}
+rf {'precision': 83.34, 'recall': 76.14, 'f1': 79.58, 'predicted': 140740, 'true_positives': 117298, 'note': 'held-out half of the clusters'}
+rf_within_candidates {'precision': 83.34, 'recall': 93.02, 'f1': 87.91, 'predicted': 140740, 'true_positives': 117298, 'note': 'same predictions, scored only against true pairs blocking retrieved'}

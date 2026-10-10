@@ -1,0 +1,378 @@
+{
+ "false_positives_clean": {
+  "synthetic": {
+   "records": 20134,
+   "names_flagged": 23,
+   "addresses_flagged": 0,
+   "examples": [
+    "adam none",
+    "audrey anon",
+    "bradley none",
+    "brandon none",
+    "brandy xxx"
+   ]
+  },
+  "febrl3": {
+   "records": 5000,
+   "names_flagged": 0,
+   "addresses_flagged": 0,
+   "examples": []
+  },
+  "historical_50k": {
+   "records": 50578,
+   "names_flagged": 0,
+   "addresses_flagged": 0,
+   "examples": []
+  },
+  "fake_1000": {
+   "records": 1000,
+   "names_flagged": 0,
+   "addresses_flagged": 0,
+   "examples": []
+  }
+ },
+ "detection_injected": {
+  "names": {
+   "precision": 96.42,
+   "recall": 100.0,
+   "flagged": 615
+  },
+  "addresses": {
+   "precision": 100.0,
+   "recall": 100.0,
+   "flagged": 608
+  }
+ },
+ "placeholders_off": {
+  "all_records": {
+   "precision": 98.69,
+   "recall": 89.55,
+   "f1": 93.9,
+   "clusters": 11552,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.939
+  },
+  "unlabelled_people_only": {
+   "precision": 98.86,
+   "recall": 91.16,
+   "f1": 94.85,
+   "clusters": 9912,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9485
+  },
+  "households": {
+   "precision": 88.84,
+   "recall": 86.76,
+   "f1": 87.79,
+   "clusters": 4749,
+   "largest_cluster": 322,
+   "adjusted_rand": 0.8777
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 56919,
+   "hub_blocks_skipped": 23,
+   "labelled_pairs": {
+    "total": 1000,
+    "matches": 223,
+    "active": 0
+   },
+   "matcher": "forest",
+   "matcher_model": "forest",
+   "model_reused_from": null,
+   "overrides": {
+    "must_link": 0,
+    "cannot_link": 0,
+    "trusted_id_links": 0,
+    "links_cut_to_keep_cannot_links_apart": 0
+   },
+   "review_pairs": 561,
+   "ambiguous_records_held": 0,
+   "twin_pairs_kept_apart": 0,
+   "threshold": 0.55,
+   "cross_fitted_closure_aware": {
+    "precision": 98.75,
+    "recall": 91.48,
+    "f1": 94.98,
+    "labelled_pair_precision": 98.55,
+    "pairs": 1000,
+    "folds": 4
+   },
+   "ditto": null,
+   "customers": 11552,
+   "largest_customer": 7,
+   "households": 4749,
+   "links": 10926,
+   "bridge_links": 4827,
+   "customers_recut": 0,
+   "placeholder_names": 0,
+   "placeholder_addresses": 0,
+   "stage_seconds": {
+    "load and profile": 0.15,
+    "blocking (56,919 candidate pairs)": 0.21,
+    "forest: cross-fitted clustered F1 94.98": 4.39,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 0.8
+   },
+   "junk_contact_values": 15,
+   "shared_contact_values": 1482,
+   "warnings": [
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
+   ]
+  }
+ },
+ "placeholders_on": {
+  "all_records": {
+   "precision": 97.48,
+   "recall": 92.38,
+   "f1": 94.86,
+   "clusters": 11289,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9486
+  },
+  "unlabelled_people_only": {
+   "precision": 98.26,
+   "recall": 92.78,
+   "f1": 95.44,
+   "clusters": 9790,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9544
+  },
+  "households": {
+   "precision": 92.41,
+   "recall": 88.31,
+   "f1": 90.32,
+   "clusters": 4853,
+   "largest_cluster": 328,
+   "adjusted_rand": 0.903
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 49862,
+   "hub_blocks_skipped": 14,
+   "labelled_pairs": {
+    "total": 1000,
+    "matches": 223,
+    "active": 0
+   },
+   "matcher": "forest",
+   "matcher_model": "forest",
+   "model_reused_from": null,
+   "overrides": {
+    "must_link": 0,
+    "cannot_link": 0,
+    "trusted_id_links": 0,
+    "links_cut_to_keep_cannot_links_apart": 0
+   },
+   "review_pairs": 430,
+   "ambiguous_records_held": 0,
+   "twin_pairs_kept_apart": 0,
+   "threshold": 0.55,
+   "cross_fitted_closure_aware": {
+    "precision": 98.15,
+    "recall": 95.52,
+    "f1": 96.82,
+    "labelled_pair_precision": 98.61,
+    "pairs": 1000,
+    "folds": 4
+   },
+   "ditto": null,
+   "customers": 11289,
+   "largest_customer": 7,
+   "households": 4853,
+   "links": 11291,
+   "bridge_links": 4933,
+   "customers_recut": 0,
+   "placeholder_names": 615,
+   "placeholder_addresses": 608,
+   "stage_seconds": {
+    "load and profile": 0.26,
+    "blocking (49,862 candidate pairs)": 0.21,
+    "forest: cross-fitted clustered F1 96.82": 4.07,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "matcher chosen": 0.0,
+    "households, golden records, outputs": 0.84
+   },
+   "junk_contact_values": 15,
+   "shared_contact_values": 1147,
+   "warnings": [
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
+   ]
+  }
+ },
+ "clean_placeholders_off": {
+  "all_records": {
+   "precision": 98.64,
+   "recall": 95.95,
+   "f1": 97.28,
+   "clusters": 11038,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9728
+  },
+  "unlabelled_people_only": {
+   "precision": 99.04,
+   "recall": 95.68,
+   "f1": 97.33,
+   "clusters": 9526,
+   "largest_cluster": 6,
+   "adjusted_rand": 0.9733
+  },
+  "households": {
+   "precision": 92.51,
+   "recall": 89.42,
+   "f1": 90.94,
+   "clusters": 4702,
+   "largest_cluster": 332,
+   "adjusted_rand": 0.9093
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 48759,
+   "hub_blocks_skipped": 13,
+   "labelled_pairs": {
+    "total": 1000,
+    "matches": 257,
+    "active": 0
+   },
+   "matcher": "forest",
+   "matcher_model": "forest",
+   "model_reused_from": null,
+   "overrides": {
+    "must_link": 0,
+    "cannot_link": 0,
+    "trusted_id_links": 0,
+    "links_cut_to_keep_cannot_links_apart": 0
+   },
+   "review_pairs": 438,
+   "ambiguous_records_held": 0,
+   "twin_pairs_kept_apart": 0,
+   "threshold": 0.55,
+   "cross_fitted_closure_aware": {
+    "precision": 98.7,
+    "recall": 96.89,
+    "f1": 97.79,
+    "labelled_pair_precision": 99.6,
+    "pairs": 1000,
+    "folds": 4
+   },
+   "ditto": null,
+   "customers": 11038,
+   "largest_customer": 7,
+   "households": 4702,
+   "links": 11729,
+   "bridge_links": 4954,
+   "customers_recut": 0,
+   "placeholder_names": 0,
+   "placeholder_addresses": 0,
+   "stage_seconds": {
+    "load and profile": 0.16,
+    "blocking (48,759 candidate pairs)": 0.27,
+    "forest: cross-fitted clustered F1 97.79": 4.31,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "matcher chosen": 0.0,
+    "households, golden records, outputs": 0.78
+   },
+   "junk_contact_values": 15,
+   "shared_contact_values": 1032,
+   "warnings": [
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
+   ]
+  }
+ },
+ "clean_placeholders_on": {
+  "all_records": {
+   "precision": 98.6,
+   "recall": 96.0,
+   "f1": 97.29,
+   "clusters": 11032,
+   "largest_cluster": 7,
+   "adjusted_rand": 0.9729
+  },
+  "unlabelled_people_only": {
+   "precision": 99.0,
+   "recall": 95.74,
+   "f1": 97.34,
+   "clusters": 9520,
+   "largest_cluster": 6,
+   "adjusted_rand": 0.9734
+  },
+  "households": {
+   "precision": 92.51,
+   "recall": 89.42,
+   "f1": 90.94,
+   "clusters": 4702,
+   "largest_cluster": 332,
+   "adjusted_rand": 0.9093
+  },
+  "summary": {
+   "records": 20134,
+   "sources": [
+    "billing",
+    "crm"
+   ],
+   "candidate_pairs": 48790,
+   "hub_blocks_skipped": 13,
+   "labelled_pairs": {
+    "total": 1000,
+    "matches": 257,
+    "active": 0
+   },
+   "matcher": "forest",
+   "matcher_model": "forest",
+   "model_reused_from": null,
+   "overrides": {
+    "must_link": 0,
+    "cannot_link": 0,
+    "trusted_id_links": 0,
+    "links_cut_to_keep_cannot_links_apart": 0
+   },
+   "review_pairs": 440,
+   "ambiguous_records_held": 0,
+   "twin_pairs_kept_apart": 0,
+   "threshold": 0.55,
+   "cross_fitted_closure_aware": {
+    "precision": 99.2,
+    "recall": 96.89,
+    "f1": 98.03,
+    "labelled_pair_precision": 99.6,
+    "pairs": 1000,
+    "folds": 4
+   },
+   "ditto": null,
+   "customers": 11032,
+   "largest_customer": 7,
+   "households": 4702,
+   "links": 11738,
+   "bridge_links": 4952,
+   "customers_recut": 0,
+   "placeholder_names": 23,
+   "placeholder_addresses": 0,
+   "stage_seconds": {
+    "load and profile": 0.26,
+    "blocking (48,790 candidate pairs)": 0.23,
+    "forest: cross-fitted clustered F1 98.03": 4.22,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 0.84
+   },
+   "junk_contact_values": 15,
+   "shared_contact_values": 1026,
+   "warnings": [
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
+   ]
+  }
+ }
+}
