@@ -1,8 +1,13 @@
 # 2. Match whole customers, not pairs
 
-The central finding. A matcher scores pairs of records; a customer file needs groups. Joining
-every accepted pair into customers (transitive closure) turns a few false links into giant
-customers, so the threshold has to be chosen - and judged - on the customers it produces.
+A matcher scores pairs of records; a customer file needs groups. Joining every accepted pair
+into customers (transitive closure) turns a few false links into giant customers. That is not
+new: Hassanzadeh, Chiang, Lee and Miller ("Framework for Evaluating Clustering Algorithms in
+Duplicate Detection", PVLDB 2(1), 2009) showed how much the clustering step changes the result,
+and dedupe clusters hierarchically and re-cuts large clusters for this reason. What this chapter
+adds is a practical method, and custmatch's central design choice: choose the threshold from
+cross-fitted labels by closure-aware F1 - judged on the customers it produces, not the pairs -
+and measure how much that matters on person and customer data.
 
 ## RF vs Ditto on person records, and what clustering does to both
 

@@ -182,8 +182,10 @@ to C, A, B and C are one customer, even though A and C were never compared.
 
 **Chaining** is the danger in that: a few borderline links can join hundreds of records -
 whole families, or strangers - into one giant customer. A threshold that looks good pair by pair
-can be badly wrong once links are joined up. This is the central lesson of the research behind
-custmatch, and it shapes how the threshold is chosen:
+can be badly wrong once links are joined up. This is well known in entity-resolution research
+(Hassanzadeh et al., VLDB 2009, compared clustering methods for duplicate detection on exactly
+this), and tools guard against it in different ways: dedupe clusters hierarchically and re-cuts
+large clusters. custmatch's answer, its central design choice, is how the threshold is chosen:
 
 - **Judged on whole customers.** Each candidate threshold is scored by **closure-aware F1**: a
   held-out labelled pair counts as matched only if its two records end up in the same customer

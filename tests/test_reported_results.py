@@ -1105,3 +1105,19 @@ def test_readme_memory_claims():
     assert f"A million records peak at {m['peak_memory_gb']:.2f} GB on a laptop (Splink: {s['peak_memory_gb']:.2f} GB)" in readme
     assert f"at {big['peak_memory_gb']:.1f} GB, about {per_million:.1f} GB per million" in readme
     assert f"needed {h['copies_1']['dedupe']['peak_memory_gb']:.1f} GB for 20,134 records" in readme
+
+
+def test_readme_public_benchmarks():
+    """README "On other people's data": every figure is one chapter 9 reports (and tests above tie
+    chapter 9 to the results files)."""
+    import re
+    readme = (ROOT / "README.md").read_text()
+    table = readme[readme.index("**On other people's data.**"):readme.index("**At scale, on synthetic customer data.**")]
+    rows = [l for l in table.splitlines() if l.startswith("| ") and not l.startswith(("| Dataset", "| ---"))]
+    assert len(rows) == 8
+    chapter = (DOCS / "report" / "09-against-other-tools.md").read_text()
+    for row in rows:
+        for number in re.findall(r"\b\d{2}\.\d{2}\b", row):
+            assert number in chapter, (number, row)
+    assert "within a quarter of a point of what its blocking allows" in readme
+    assert 99.46 - 99.22 <= 0.25

@@ -4,7 +4,7 @@
   labelled pairs) -> threshold chosen AFTER clustering -> customers -> households -> golden
   records
 
-The threshold rule is the report's central lesson (docs/report/02-whole-customers.md): a threshold that is
+The threshold rule is custmatch's central design choice (docs/report/02-whole-customers.md): a threshold that is
 good pairwise can chain thousands of records into one customer. So the threshold is chosen by
 closure-aware F1 - a held-out labelled pair counts as matched only if its two records end up in
 the same cluster - cross-fitted over 4 folds so every labelled pair helps choose it (a single

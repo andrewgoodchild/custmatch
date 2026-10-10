@@ -49,7 +49,9 @@ alone. Unless a table says otherwise, numbers are clustered F1 on a 0-100 scale.
 1. **Judge the threshold on whole customers, not pairs.** Joining accepted pairs into customers
    turns a few false links into giant customers: a random forest at its best *pairwise*
    threshold merged 8,200 of 12,880 records into one customer. The threshold has to be chosen on
-   the customers it produces, and precision is worth more than recall ([chapter 2](02-whole-customers.md)).
+   the customers it produces, and precision is worth more than recall. The effect is known
+   (Hassanzadeh et al., VLDB 2009); the method here - the threshold chosen from cross-fitted
+   labels by closure-aware F1 - is custmatch's central design choice ([chapter 2](02-whole-customers.md)).
 2. **A random forest is enough for customer data.** On records with addresses, emails and phones
    a transformer (Ditto) adds under a point; on genealogy-style records with no contact details
    it adds eleven. Averaging the forest with CatBoost adds 0.4 on average, up to 1.8 on hard files (chapters [2](02-whole-customers.md)-[3](03-which-matcher.md)).
