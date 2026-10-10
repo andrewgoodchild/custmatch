@@ -1,6 +1,6 @@
 """Households and shared-contact classes, after identity clustering (docs/report/05-customer-data.md "Households").
 
-Two changes from the research (scripts/household_research.py, synthetic file, predicted
+Two changes from the research (research/scripts/household_research.py, synthetic file, predicted
 customers):
 
   contacts   classified over CUSTOMERS, not records. The first profiler counted distinct first

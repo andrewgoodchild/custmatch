@@ -37,7 +37,7 @@ with random labels, at most 0.02 lower anywhere, but it fails the web-sign-up sc
 first name and an email only). Splink is still used by the benchmark scripts, as the tool
 compared against.
 
-Removed after a review on six datasets (`scripts/modal_models.py`): the `"matcher_model"` options
+Removed after a review on six datasets (`research/scripts/modal_models.py`): the `"matcher_model"` options
 hgb, CatBoost, TabPFN and `"auto"`, the `models` extra and with it torch. None beat the forest by
 enough to justify its install; TabPFN, the best, gained 0.5 on average for a GPU and 7 to 12
 times the run time. Configs naming them are refused or warned.
@@ -45,7 +45,7 @@ times the run time. Configs naming them are refused or warned.
 Added after that review: `"matcher_model": "forest_catboost"`, opt-in with the `catboost` extra
 (`pip install "custmatch[catboost]"`), the forest's and CatBoost's probabilities averaged. Over
 the same six datasets and three label draws it gained +0.41 clustered F1 on average and was
-never more than 0.03 behind on a dataset's mean (historical_50k +1.3; `results/ensemble.json`),
+never more than 0.03 behind on a dataset's mean (historical_50k +1.3; `research/results/ensemble.json`),
 for runs about 30% longer on files of up to 50,000 records. The forest stays the default. The
 server image takes it with `--build-arg CUSTMATCH_EXTRAS=catboost`; a saved model that needs
 CatBoost where it is not installed now says so instead of failing on the import.
@@ -54,7 +54,7 @@ Also added: oversized blocks that are one real entity are compared after all. A 
 a hub is scored by the trained model on 50 sampled pairs; one whose pairs mostly match (an
 organisation with hundreds of records) joins the candidates, within a pair budget; `add` and
 `explain` repeat the check. It kept nothing on the six person benchmarks and lifted dedupe's
-patent applicants from 6.93 to 75.88 clustered F1 (`scripts/large_block_check.py`);
+patent applicants from 6.93 to 75.88 clustered F1 (`research/scripts/large_block_check.py`);
 `"check_large_blocks": false` turns it off. And contact profiling now reads the other contact:
 an email on 8+ records with mostly different mobiles, or a mobile with mostly different emails,
 and no shared surname or address, is junk - the made-up mobile typed on nameless sign-ups (a new
@@ -76,7 +76,7 @@ The real-time matcher no longer chains people through one sparse record: a recor
 customer only if it matches at least half of the customer's records (up to 25 scored), not just
 its best link. Over five replay seeds real-time precision rose from 86.60 to 89.98 and F1 from
 80.75 to 81.67, better on four of five seeds (`server/replay_test.py --all`, which now writes
-`results/server_replay.json`).
+`research/results/server_replay.json`).
 
 Also removed: LLM labelling (`custmatch label`, and the `"llm_fields"` key). It was tried on
 synthetic data to see what the hype was about, and dropped: it added little over active learning
@@ -103,7 +103,7 @@ and the forest gains about a point over three draws (docs/report/06-blocking-and
 The threshold rule: thresholds the random labels cannot tell apart (within half a held-out
 match's worth of the best estimate) count as tied and the middle one is chosen, instead of the
 strictest. Chosen on 15 captured cases and checked on 24 held-out public-benchmark cases
-(`scripts/threshold_capture.py`, `scripts/threshold_rules.py`): mean F1 lost against the best
+(`research/scripts/threshold_capture.py`, `research/scripts/threshold_rules.py`): mean F1 lost against the best
 threshold 0.84 -> 0.14 and 0.60 -> 0.27, worst case 10.2 -> 1.1 and 4.7 -> 1.8.
 `"threshold_rule": "strictest"` keeps the old rule. Every published result from a script that
 runs custmatch was rerun under it, except the classifier bake-off, the Ditto run on
@@ -134,11 +134,11 @@ record, in `run` and `add`), and warnings when labels are random-only or hold to
 `"unique_sources"` (one record per person in a duplicate-free source; run and add) and
 `"lsh_blocking"` (MinHash similarity blocking), both from anonlink, measured on NCVR. Splink
 compared on NCVR (`--splink`). Deterministic CDP matching compared with custmatch at high and
-low sign-up rates (`scripts/cdp_comparison.py`). Hashed first names no longer leave their
+low sign-up rates (`research/scripts/cdp_comparison.py`). Hashed first names no longer leave their
 nickname roots in plain text. The guide's privacy section now says what hashing does and does
 not protect, and points to anonlink for linkage between organisations.
 
-The Leipzig NCVR benchmark (`scripts/ncvr_leipzig.py`, report "A public benchmark"):
+The Leipzig NCVR benchmark (`research/scripts/ncvr_leipzig.py`, report "A public benchmark"):
 `extra_blocking` keys take blocking transforms (`"first_name:first1"`, `"last_name:soundex"`),
 which lift recall where postcode blocks are too big. Third-party data is no longer committed:
 the US nickname list downloads on first use (pinned, checksum-checked) and the Wikidata list is
@@ -146,16 +146,16 @@ built locally, both into `~/.cache/custmatch`.
 
 Cookie and device-ID stitching (`"identity_events"`, `custmatch/identity.py`, `cookies.csv`)
 with a value limit, excluded channels and staff cookies, and a first-name check against
-call-centre agents (+2.6 F1 on generated events, `scripts/cookie_research.py`).
+call-centre agents (+2.6 F1 on generated events, `research/scripts/cookie_research.py`).
 
-A scenario file (`examples/scenarios/`, `scripts/scenarios.py`): 24 hard cases with known
+A scenario file (`examples/scenarios/`, `research/scripts/scenarios.py`): 24 hard cases with known
 answers, scored in docs/report/05-customer-data.md "Scenarios". `"twin_guard"` keeps twins apart. Accented first
 names now find their nickname roots. `add`'s config may set decision and output options
 (`max_cluster`, `ambiguous_margin`, survivorship, ...) and is refused if it changes a setting
 the trained model depends on. Test coverage 88% to 95%.
 
 `"record_dates": true`: a years-apart feature from `updated_at` (+1.2 F1 on a dated build of the
-Australian file, `scripts/record_dates_research.py`); `years_apart` as an extra-field comparison.
+Australian file, `research/scripts/record_dates_research.py`); `years_apart` as an extra-field comparison.
 
 Monitoring: `monitor.json` per run and `custmatch monitor` (match-rate, fill-rate, score and
 threshold drift; `--fail-on-drift`). Survivorship rules are checked when the config loads, and
@@ -165,7 +165,7 @@ reissued; `summary.json` counts customers correctly with carried IDs; must-links
 ambiguity rule, correlation clustering and the size re-cut; `add` applies must-links between
 existing records; an updated record's old links are dropped and it keeps its customer's ID;
 `explain` no longer says "matched" for a link that was cut. The "stable matches" research is now
-`scripts/order_dependence.py`.
+`research/scripts/order_dependence.py`.
 
 Running it over time: `review.csv` (pairs near the threshold); `"overrides"` (must-link /
 cannot-link, honoured by `run` and `add`; a cannot-link unmerges); `"trusted_ids"`;

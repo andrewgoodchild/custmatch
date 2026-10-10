@@ -46,7 +46,7 @@ still name them get a warning in `summary.json`; the research behind them stays 
 - **The Wikidata cross-language name list**: 97,606 given-name equivalences (Giuseppe - Joseph).
   No measured gain, because most name variants in customer data are anglicisations (Wei ->
   Kevin) that no list holds. A controlled check - the same code with and without the list,
-  three label draws (`scripts/modal_name_list_ab.py`, `results/name_list_ab.json`) - found 80.82
+  three label draws (`research/scripts/modal_name_list_ab.py`, `research/results/name_list_ab.json`) - found 80.82
   against 80.85 on the Australian file and -0.05 F1 on average over eight CDP populations.
 
 ---

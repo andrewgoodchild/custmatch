@@ -11,7 +11,7 @@ evidence. Chapters [2](02-whole-customers.md)-[9](09-against-other-tools.md) are
 published results the rest builds on; [chapter 11](11-adopted-and-dropped.md) lists what the tool adopted and what it tried
 and dropped; [chapter 12](12-the-service.md) covers the service; [chapter 13](13-open-questions.md) what is still open. Every chapter is a file of its own and names the scripts that reproduce it
 ([reproducing.md](../reproducing.md) has the commands), and the test suite checks every number
-here against `results/*.json`.
+here against `research/results/*.json`.
 
 **Where it ran.** An Apple M1 Pro laptop (16 GB) for most of it, and cloud machines on Modal for
 the runs of millions of records. Hosted language models (GPT-4o, GPT-4o-mini, GPT-6 Luna, the
@@ -137,7 +137,7 @@ against an 82.1% blocking ceiling — closure infers pairs no blocking key ever 
 suggests a precise matcher plus closure can make up for tight blocking; it was not tested
 against wider blocking ([chapter 3](03-which-matcher.md) found wider blocking helped every pairwise method).
 
-**The full process is in `scripts/customer_pipeline.py`** — contact profiling → blocking with
+**The full process is in `research/scripts/customer_pipeline.py`** — contact profiling → blocking with
 hub suppression → frequency-weighted features → classifier → clustering → household layer. On a
 two-source pseudopeople file (20k records, 10,735 people, 4,305 households) it gets **98.53
 clustered F1** held out (97.8 with the threshold picked on the test set) and **90.2 F1** on

@@ -1,4 +1,4 @@
-"""Scale test of the service: the synthetic customer file copied K times (scripts/custmatch_scale.py:
+"""Scale test of the service: the synthetic customer file copied K times (research/scripts/custmatch_scale.py:
 copy-specific names and contacts, so copies never match each other), through every step, timed.
 
   1. full loads of both sources (300 records held back to arrive through the API)
@@ -9,7 +9,7 @@ copy-specific names and contacts, so copies never match each other), through eve
   6. a second and a third batch run (the third retires the first); database size
 
     CUSTMATCH_DB_URL=postgresql+psycopg://... python server/scale_test.py --copies 5
-Writes results/server_scale.json (one entry per size).
+Writes research/results/server_scale.json (one entry per size).
 """
 import argparse
 import json
@@ -26,7 +26,7 @@ import psutil
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "server"))
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "research/scripts"))
 import custmatch_scale as CS  # noqa: E402
 import custmatch_validate as V  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -40,7 +40,7 @@ from custmatch_server.matcher import Matcher  # noqa: E402
 from custmatch_server.worker import run_batch  # noqa: E402
 from test_support import fresh_engine  # noqa: E402
 
-OUT = ROOT / "results/server_scale.json"
+OUT = ROOT / "research/results/server_scale.json"
 HELD = 300
 
 

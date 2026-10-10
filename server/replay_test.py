@@ -118,7 +118,7 @@ def replay(first=0.5, seed=0, merge=None, coherence=None, log=lambda *_: None):
 
 
 def all_runs(seeds=(0, 1, 2, 3, 4)):
-    """results/server_replay.json: each merge policy, and "strong" without the coherence check."""
+    """research/results/server_replay.json: each merge policy, and "strong" without the coherence check."""
     import time
 
     from custmatch_server.matcher import COHERENCE
@@ -138,7 +138,7 @@ def all_runs(seeds=(0, 1, 2, 3, 4)):
             k: round(sum(x[k] for x in runs) / len(runs), 2)
             for k in ("agreement_f1", "realtime_f1_vs_truth", "realtime_precision", "realtime_recall",
                       "batch_f1_vs_truth")}
-    (ROOT / "results/server_replay.json").write_text(json.dumps(out, indent=1))
+    (ROOT / "research/results/server_replay.json").write_text(json.dumps(out, indent=1))
 
 
 if __name__ == "__main__":
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     ap.add_argument("--first", type=float, default=0.5)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--merge", choices=["always", "strong", "never"])
-    ap.add_argument("--all", action="store_true", help="every policy over five seeds: results/server_replay.json")
+    ap.add_argument("--all", action="store_true", help="every policy over five seeds: research/results/server_replay.json")
     a = ap.parse_args()
     if a.all:
         all_runs()

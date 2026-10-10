@@ -26,7 +26,7 @@ def test_service_smoke_on_sqlite(monkeypatch, capsys):
 def test_realtime_replay_keeps_up_with_the_batch_run():
     """server/replay_test.py: half the demo through the real-time matcher one record at a time.
     Real-time grouping must stay close to a batch run over the same records, and about as
-    accurate (results/server_replay.json, five seeds: 86.78 agreement, 81.67 vs the batch run's
+    accurate (research/results/server_replay.json, five seeds: 86.78 agreement, 81.67 vs the batch run's
     81.91; merging every linked customer fell to 80.46)."""
     sys.path.insert(0, str(ROOT / "server"))
     spec = importlib.util.spec_from_file_location("replay_test", ROOT / "server/replay_test.py")

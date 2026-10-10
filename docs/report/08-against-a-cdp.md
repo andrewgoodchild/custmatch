@@ -12,7 +12,7 @@ repeats it on three populations with the measures a marketer cares about, and su
 Customer data platforms such as Twilio Segment resolve identity deterministically: two
 profiles merge when they share an exact identifier - a user ID, email, phone or cookie - with
 limits on how many values of each a profile may hold. Many sites make accounts optional, so
-how much a CDP can link depends on how many visitors sign up. `scripts/cdp_comparison.py`
+how much a CDP can link depends on how many visitors sign up. `research/scripts/cdp_comparison.py`
 reimplements Segment's documented rules (user ID limit 1, others 5; on a limit, the incoming
 event's lowest-priority identifier is dropped and the match retried; case-insensitive values;
 its recommended blocked values) and runs them and custmatch on the same records and events: the
@@ -55,9 +55,9 @@ Mean of three runs:
 
 F1 weighs a wrong merge the same as a missed one. In marketing a wrong merge is worse - it sends
 one person's offers or details to someone else, often a former partner - and that complaint is
-why many marketers prefer deterministic matching. `scripts/cdp_reassess.py` reruns the
+why many marketers prefer deterministic matching. `research/scripts/cdp_reassess.py` reruns the
 comparison with that in view, on three independently generated populations
-(`scripts/au_customer_data.py --seed`), one label draw each:
+(`research/scripts/au_customer_data.py --seed`), one label draw each:
 
 - **The CDP tuned on the truth,** over value limits of 1, 2 and 5 emails and phones, blocking of
   values held by more than 3, 5, 10 or 20 records, and one or five cookies per profile. Two
@@ -111,7 +111,7 @@ commonest real one on its records - was never used by that record's person.
 
 **What this cannot show.** The populations are generated, and their error rates and shared
 contacts are our assumptions; without family emails the CDP's precision rises to 93-96
-(`scripts/au_customer_data.py --no-shared`, one dataset). One label draw per dataset. A CDP with
+(`research/scripts/au_customer_data.py --no-shared`, one dataset). One label draw per dataset. A CDP with
 a logged-in user ID on nearly every record would do better than either scenario here. The
 academic record-linkage literature agrees in direction: probabilistic linkage gives a better
 trade-off between missed and false matches when identifiers have errors, and deterministic
@@ -124,7 +124,7 @@ graphs that link people by IP address and behaviour - a different technique, mea
 
 The commonest complaint: a couple shared a home and perhaps a family email; they separate; one
 moves out, and the new records are matched to the old household, so offers or personal details
-reach the ex. `scripts/separation_research.py` builds that case on the many-sign-ups CDP data of
+reach the ex. `research/scripts/separation_research.py` builds that case on the many-sign-ups CDP data of
 three generated populations: in each, half the couples (two-person households, and adults
 sharing a family email) separate - 3,420 in all. The one who leaves has half their records made
 after the split, with a new address and postcode, made on their own new device, and - habits

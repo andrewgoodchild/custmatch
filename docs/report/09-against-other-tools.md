@@ -11,8 +11,8 @@ only one with built-in household and junk-contact handling. Since this compariso
 active learning, per-link explanations, incremental matching and a million-record run; it still
 lacks a no-labels start and distributed scale.
 
-**At a million records, against Splink 5** (`scripts/head_to_head.py --copies 50`,
-`results/head_to_head.json`). The synthetic customer file copied 50 times (1,006,700 records),
+**At a million records, against Splink 5** (`research/scripts/head_to_head.py --copies 50`,
+`research/results/head_to_head.json`). The synthetic customer file copied 50 times (1,006,700 records),
 one laptop (Apple silicon, 16 GB), one tool at a time, the same 1,000 labels. Splink 5.0.0 on
 DuckDB, configured as its documentation recommends: blocking rules mirroring custmatch's keys,
 name and email comparisons with term-frequency adjustment, u by random sampling, m by EM or
@@ -36,15 +36,15 @@ points more accurate, on both precision and recall: Splink's model cannot discou
 household values and placeholders, which this file is full of. At 20,134 records (one copy) the
 gap was 13 points (97.38 against 84.19) and the two took 5.4 and 4.4 seconds.
 
-**On each other's home data, with dedupe** (`scripts/home_data_benchmark.py`,
-`results/home_data_benchmark.json`). Splink's four bundled datasets and dedupe's two examples
+**On each other's home data, with dedupe** (`research/scripts/home_data_benchmark.py`,
+`research/results/home_data_benchmark.json`). Splink's four bundled datasets and dedupe's two examples
 (github.com/dedupeio/dedupe-examples). All three tools learn from the same labelled pairs
 (custmatch's sampler, seed 1, answered from the truth). dedupe 3.0.3 trains on them through its
 training file - not its interactive console - and clusters at its documented threshold, 0.5; it
 uses its examples' settings on its own data and fields mirroring Splink's comparisons on
 Splink's. It samples at random without a seed, so it ran three times: the mean, and the range
 where runs differed. Splink uses its documented settings on its own data
-(`scripts/splink_datasets_benchmark.py`, the threshold from the labels) and plain string
+(`research/scripts/splink_datasets_benchmark.py`, the threshold from the labels) and plain string
 comparisons on dedupe's, which document none. custmatch uses its defaults. Clustered F1:
 
 | Dataset | Records | custmatch | Splink | dedupe (3 runs) |
@@ -81,7 +81,7 @@ configure Splink or dedupe better than these documented setups, and the configur
 the scripts for anyone to improve. custmatch and Splink ran once per dataset, on one label draw.
 
 **Benchmarked against Splink** on the same synthetic file, scored identically
-(`scripts/splink_vs_custmatch.py`), clustered F1:
+(`research/scripts/splink_vs_custmatch.py`), clustered F1:
 
 | | Clustered F1 |
 | --- | --- |
@@ -109,7 +109,7 @@ set on match weight (the best was about 20, probability 0.999999).
 dedupe here is the open-source library (3.0.3, released August 2024; its repository was last
 pushed in July 2025). Dedupe.io, the hosted service built on it, shut down on 31 January 2023.
 
-**On Splink's own datasets, with Splink's own settings** (`scripts/splink_datasets_benchmark.py`).
+**On Splink's own datasets, with Splink's own settings** (`research/scripts/splink_datasets_benchmark.py`).
 Splink runs its official v4.0.17 example notebooks verbatim; custmatch gets the same fields and
 Splink's blocking rules through its config. Clustered F1 against each dataset's ground truth:
 
@@ -125,7 +125,7 @@ tailored as Splink's tutorial is: the same loose blocking, `max_block` 200 and f
 birth and email. With its default config it scored 76.00 / 78.38, and Splink with the
 tutorial's first, tighter blocking scored 58.11.
 
-**With rich features and the Splink feature** (removed in 0.1.0; `scripts/beat_splink.py`, same labels and seeds;
+**With rich features and the Splink feature** (removed in 0.1.0; `research/scripts/beat_splink.py`, same labels and seeds;
 random / active labels):
 
 | Dataset | Splink | custmatch, rich + Splink feature, 1,000 random | custmatch, rich + Splink feature, 300 + 700 active |
@@ -139,7 +139,7 @@ random / active labels):
 In this single label draw, with 1,000 random labels, custmatch scored at or above Splink on
 every dataset, by 3.8 points on the dense
 historical_50k; active learning added more everywhere except the dense file and febrl4. Over
-three draws (`scripts/matcher_bakeoff.py`, rich features, no Splink feature; the threshold rule
+three draws (`research/scripts/matcher_bakeoff.py`, rich features, no Splink feature; the threshold rule
 before 0.1.0) the forest averaged
 99.50 / 99.83 / 93.36 / 97.54 / 86.29 on febrl3 / febrl4 / fake_1000 / synthetic /
 historical_50k: ahead of Splink on four, 0.29 behind on febrl3. Two caveats: Splink here uses
@@ -182,7 +182,7 @@ from the North Carolina voter roll in five sources of a million records each, wi
 whose values were corrupted by a generator (20% of records, two changes each: "mar6ha litttle",
 "millers ceeek", postcode "28|73"). Four fields only - first name, surname, town and postcode -
 so it is a test of sparse, name-only matching at scale; its errors are synthetic. The data is
-not in this repository (it is real people's names); `scripts/ncvr_leipzig.py` says where to
+not in this repository (it is real people's names); `research/scripts/ncvr_leipzig.py` says where to
 download it. Each run takes a random sample of people with all their records across the five
 sources, 300 random + 700 active labels from the truth, and scores against the true people;
 the ceiling accepts every true pair blocking proposes.

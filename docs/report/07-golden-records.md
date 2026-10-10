@@ -5,7 +5,7 @@ record recovers, and why the source data, not the matcher, becomes the limit.
 
 ## Golden records: does the merged record say the right thing?
 
-`scripts/golden_record.py`.
+`research/scripts/golden_record.py`.
 
 Every benchmark in chapters [2](02-whole-customers.md)-[10](10-reproductions.md) — and every benchmark in the literature surveyed in [chapter 1](01-data.md)
 — scores only **linkage**: which records belong to the same customer. None of them scores

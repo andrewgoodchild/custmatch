@@ -11,14 +11,14 @@ import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "research/scripts"))
 
 PERSON = ROOT / "data/person_em"
 CUSTOMER = ROOT / "data/customer"
 person_em = pytest.mark.skipif(not (PERSON / "test.npz").exists(),
-                               reason="run scripts/person_em_build.py first")
+                               reason="run research/scripts/person_em_build.py first")
 customer = pytest.mark.skipif(not (CUSTOMER / "source_crm.parquet").exists(),
-                              reason="run scripts/customer_data.py first")
+                              reason="run research/scripts/customer_data.py first")
 
 
 @person_em

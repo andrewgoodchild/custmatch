@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-RESULTS = ROOT / "results"
+RESULTS = ROOT / "research/results"
 DOCS = ROOT / "docs"
 # the report: an introduction and one file per chapter, read together in order
 REPORT = "\n".join(p.read_text() for p in sorted((DOCS / "report").glob("*.md"), key=lambda p: (p.name != "README.md", p.name)))
@@ -25,7 +25,7 @@ def load(name):
     silently switch off every claim test that reads it."""
     path = RESULTS / name
     if not path.exists():
-        pytest.fail(f"results/{name} is missing - regenerate it or update the test and docs")
+        pytest.fail(f"research/results/{name} is missing - regenerate it or update the test and docs")
     return json.load(open(path))
 
 
@@ -918,7 +918,7 @@ def test_full_ncvr_reruns_claims():
 
 
 def test_tier1_speedups_match_the_results():
-    """The guide's Tier 1 paragraph quotes results/scale_large.json."""
+    """The guide's Tier 1 paragraph quotes research/results/scale_large.json."""
     import statistics
     r = load("scale_large.json")
     flat = " ".join(GUIDE.split())
@@ -939,7 +939,7 @@ def test_tier1_speedups_match_the_results():
 
 
 def test_tier2_speedups_match_the_results():
-    """The guide's second-round paragraph quotes results/scale_large.json."""
+    """The guide's second-round paragraph quotes research/results/scale_large.json."""
     r = load("scale_large.json")
     flat = " ".join(GUIDE.split())
     a, c = r["scale_10m"], r["scale_10m_tier2"]

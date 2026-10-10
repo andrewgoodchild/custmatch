@@ -6,7 +6,7 @@ check against your own labels.
 
 ## Can an LLM replace the hand labels? Only where its labels are near-perfect
 
-`scripts/jev_labels.py`. The use of LLMs the recent literature supports (Steiner & Bizer 2026) is
+`research/scripts/jev_labels.py`. The use of LLMs the recent literature supports (Steiner & Bizer 2026) is
 labelling training pairs for a supervised matcher. Here Jev — criteria + structured fields, nothing
 tuned on true labels — labels every training pair, and the forest (same features, same settings)
 trains on Jev's labels instead of the truth. Hard labels take P > 0.5; soft labels enter each pair
@@ -44,7 +44,7 @@ on synthetic data to see what the hype was about. In validation (before rich fea
 labels gated on 300 hand labels cost $0.06 and scored 95.85 clustered F1 on all records, 97.34 on
 people outside the labelled pairs - no better than active learning with hand labels, which keeps
 the data in house. Sending customer records to a third party is a security risk, so the command was
-removed; the code lives on in `scripts/jev_labelling.py` for the scripts that produced these
+removed; the code lives on in `research/scripts/jev_labelling.py` for the scripts that produced these
 numbers.
 
 ---

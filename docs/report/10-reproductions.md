@@ -27,7 +27,7 @@ mode; adding 10% warmup took Amazon-Google from 35.3 to 74.0, against the paper'
 
 ## Reproduction 1 — Magellan (Mudgal et al., SIGMOD 2018)
 
-`scripts/magellan_baseline.py`. Per-attribute similarity features (exact, token Jaccard,
+`research/scripts/magellan_baseline.py`. Per-attribute similarity features (exact, token Jaccard,
 3-gram Jaccard, Levenshtein, Jaro, Jaro–Winkler, Monge–Elkan, numeric differences), then the
 best of decision tree / random forest / logistic regression / naive Bayes / SVM chosen on the
 validation split and refitted on train+valid. Test F1 on the match class.
@@ -56,7 +56,7 @@ learning beats classical" gaps shrink substantially when the classical side is t
 
 ## Reproduction 2 — Ditto (Li et al., PVLDB 2021)
 
-`scripts/run_ditto_all.sh`, using the authors' own code from `megagonlabs/ditto` with the
+`research/scripts/run_ditto_all.sh`, using the authors' own code from `megagonlabs/ditto` with the
 minimum changes needed for Apple Silicon (see [chapter 6](06-blocking-and-scale.md)). Configuration follows the paper:
 RoBERTa-base, lr 3e-5, MixDA with the per-dataset operator from the repo's
 `run_all_er_magellan.py`, `--dk general`, 40 epochs on the small datasets and 15 otherwise,
@@ -121,7 +121,7 @@ protocol that quietly discards exactly these runs.
 
 ### The fix: 10% warmup
 
-The Ditto patch (`patches/ditto-mps-and-fixes.patch`) adds `DITTO_WARMUP_FRAC`, a linear warmup
+The Ditto patch (`research/patches/ditto-mps-and-fixes.patch`) adds `DITTO_WARMUP_FRAC`, a linear warmup
 over that fraction of training steps. With the paper's recipe unchanged otherwise, I reran
 Amazon-Google, the run that collapsed with MixDA already off, with 10% warmup. Same data, seed,
 15 epochs and `--dk general`; warmup is the only change:
@@ -137,7 +137,7 @@ recovered past 35.3; the warmup run never touched it. Amazon-Google therefore re
 the recipe was fine, but the schedule was not.
 
 One caveat on how far to lean on the exact figure: an earlier, interrupted warmup run
-(`results/ditto/Structured_Amazon-Google_warmup_partial.log`) had the same settings but diverged
+(`research/results/ditto/Structured_Amazon-Google_warmup_partial.log`) had the same settings but diverged
 from epoch 1 (63.7 vs 57.7) and reached 72.3 by epoch 2. MPS training is not bit-reproducible
 across runs even with a fixed seed, so treat single-run numbers here as ±2 F1. The collapse is
 different: it either happens or it does not, and with warmup it did not.
@@ -184,7 +184,7 @@ example is then simply identical to the original, which is harmless to MixDA.
 
 ## Reproduction 3 — zero-shot LLM matching (Peeters, Steiner & Bizer, EDBT 2025)
 
-`scripts/llm_zeroshot_mlx.py`. Their exact downsampled test sets and their `domain-complex-force`
+`research/scripts/llm_zeroshot_mlx.py`. Their exact downsampled test sets and their `domain-complex-force`
 prompt ("Do the two product descriptions refer to the same real-world product? Answer with
 'Yes' if they do and 'No' if they do not."), temperature 0, and their answer parsing (strip
 punctuation, lowercase, match on "yes"). The model is **Llama-3.1-8B-Instruct, 4-bit, via MLX**,
@@ -223,7 +223,7 @@ Two cautions for anyone citing 8B zero-shot numbers:
 
 ### The GPT rows, rerun
 
-`scripts/llm_zeroshot_openrouter.py`, the same prompts, parsing and test sets, with the models
+`research/scripts/llm_zeroshot_openrouter.py`, the same prompts, parsing and test sets, with the models
 pinned to the snapshots in the authors' workbook and served via OpenRouter (Azure).
 `gpt-4o-mini` is requested unpinned because the pinned name is only served by OpenAI directly,
 which a zero-data-retention account cannot use; 2024-07-18 is its only release.
@@ -273,7 +273,7 @@ table re-asks only those at an 8,000-token cap (Luna's 5 cut-off replies likewis
 still empty. Anyone running reasoning models through this protocol should set the cap high
 and count empty replies, because the parser silently scores them as "No".
 
-**Jev as the matcher.** `scripts/jev_decisions.py` calls Jev directly through OpenRouter's
+**Jev as the matcher.** `research/scripts/jev_decisions.py` calls Jev directly through OpenRouter's
 Decisions API: the two records as `state`, one yes/no ("noul") question whose wording is the
 task's own prompt sentence, no criteria or examples. It returns P(match) per pair, from one
 pinned snapshot (`typesafe/jev-1.13-20260917`), at $0.042 per million input tokens and nothing
@@ -298,7 +298,7 @@ says matters for clustering: a score you can threshold, rather than a verdict yo
 of the text models offer it.
 
 **Jev's options, one at a time.** The runs above used none of Jev's API beyond a bare yes/no
-question. `scripts/jev_variants.py` changes one thing at a time on the two person tasks: written
+question. `research/scripts/jev_variants.py` changes one thing at a time on the two person tasks: written
 `criteria` for yes and for no (fixed in advance from domain knowledge — clerical drift in names,
 dates and contacts counts as the same person; relatives and housemates do not), records as
 JSON objects with named fields instead of strings, both together, a three-way `choice`
@@ -326,7 +326,7 @@ A paired bootstrap (2,000 resamples of the same pairs) separates signal from the
 250-positive test can resolve:
 
 - **Criteria is the one change that clearly helps on both tasks.** On historical_50k it lifts
-  F1 at 0.5 by 6.1 (95% interval +3.4 to +9.1; `scripts/jev_bootstrap.py`) — the guidance about tolerable drift removes
+  F1 at 0.5 by 6.1 (95% interval +3.4 to +9.1; `research/scripts/jev_bootstrap.py`) — the guidance about tolerable drift removes
   most of the over-strictness that previously needed a tuned cut-off — and raises AUC on both.
 - **Structured fields sharpen the ranking but make Jev stricter still** (−9.7 F1 at 0.5 on
   historical_50k), so they pay off only with a tuned cut-off.
@@ -349,10 +349,10 @@ from a few hundred labelled pairs, and extra questions riding along free.
 
 ### The part that matters for customer matching
 
-I built the same kind of test from person records — `scripts/make_person_llm_task.py` samples
+I built the same kind of test from person records — `research/scripts/make_person_llm_task.py` samples
 660 hard pairs from historical_50k (250 positives where the two records' names differ;
 410 negatives that share a surname and have >0.75 name similarity) — and ran the identical
-prompt, then scored the **same 660 pairs** with classical matchers (`scripts/person_task_baselines.py`).
+prompt, then scored the **same 660 pairs** with classical matchers (`research/scripts/person_task_baselines.py`).
 
 | Method on the same 660 person pairs | P | R | F1 | Accuracy |
 |---|---|---|---|---|
@@ -407,7 +407,7 @@ what the next test controls for.
 
 ### Customer-style person records, where no model can know the people
 
-`scripts/customer_person_llm_task.py` builds the same kind of task from the synthetic
+`research/scripts/customer_person_llm_task.py` builds the same kind of task from the synthetic
 two-source customer file (`customer_data.py`): 660 pairs, 250 positive, same prompt. Positives
 are the same simulated person with the name written differently; negatives are different people
 sharing a surname with name similarity > 0.75 — mostly household members. The records carry what

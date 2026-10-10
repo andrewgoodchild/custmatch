@@ -12,12 +12,12 @@ import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "research/scripts"))
 from custmatch.core import components, household_partition  # noqa: E402
 
 
 def _kuzu_graph():
-    """The research graph code (scripts/kuzu_graph.py) needs kuzu, which custmatch does not:
+    """The research graph code (research/scripts/kuzu_graph.py) needs kuzu, which custmatch does not:
     `pip install kuzu` to run these two tests."""
     pytest.importorskip("kuzu")
     import kuzu_graph

@@ -3,7 +3,7 @@
 Enabled with "country": "AU" (any ISO 3166 region code) or several, ["AU", "NZ"], with a mapped
 `country` column choosing per record; custmatch/countries.py holds what each country means.
 Each step can be switched off for measurement with "normalise": {"phone": false, ...}. Measured on the sparse Australian file
-(scripts/au_customer_data.py, scripts/au_validate.py; docs/report/05-customer-data.md "Sparse records").
+(research/scripts/au_customer_data.py, research/scripts/au_validate.py; docs/report/05-customer-data.md "Sparse records").
 
   phone      parsed with Google's libphonenumber (`phonenumbers`) in the country's numbering
              plan and stored as E.164 digits: 0412 345 678, +61 412 345 678, 61412345678 and

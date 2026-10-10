@@ -139,7 +139,7 @@ def choose_threshold(n, pairs, lab_pairs, ly, fold_scores, grid, coherence=None,
         # recall of the best - count as tied, and the middle one is chosen. With few random matches
         # the recall estimate is flat across a wide range while the precision estimate creeps up,
         # and the strictest of them lost real recall: NCVR, 200,000 people, 8 random matches,
-        # 0.85 chosen against a best of 0.6 (scripts/threshold_rules.py)
+        # 0.85 chosen against a best of 0.6 (research/scripts/threshold_rules.py)
         matches = int(sum(ly[held].sum() for _, held in fold_scores))
         tol = 50.0 / max(matches, 1)
         near = sorted(t for t, v in pool.items() if v["f1"] >= best - tol)
@@ -348,7 +348,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             X_cand = np.vstack([X_cand, extra])
     # stability as records arrive (docs/guide.md "Stable matches"): keep the previous decision
     # unless evidence moves by "stability_margin"; hold records between two people
-    # measured (scripts/order_dependence.py): 0.05 halved partner changes and removed the
+    # measured (research/scripts/order_dependence.py): 0.05 halved partner changes and removed the
     # back-and-forth at no accuracy cost, so it is on whenever a previous run is given
     if previous_dir is not None and cfg.get("stability_margin", 0.05):
         prev_state = Path(previous_dir) / incremental.STATE

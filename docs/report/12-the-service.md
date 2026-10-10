@@ -23,7 +23,7 @@ published by a manifest. A critique found it the weakest part:
 - **Each process loads its own copy**, so memory and reads multiply with workers; and readers must
   notice a new manifest and switch, which is custom code a database does for free.
 - **A DuckDB database file is locked by its writer** - a second process could not open it even
-  read-only (`poc/storage_concurrency.py`) - so it can never be the shared state.
+  read-only (`research/poc/storage_concurrency.py`) - so it can never be the shared state.
 - **The manifest has no lock.** Two batch runs could race to publish; a transaction in the catalog
   table cannot.
 - **A database was needed anyway** for stewards' decisions.
@@ -33,7 +33,7 @@ with it. Nothing in the service depends on it.
 
 ## Real-time matching
 
-**Measured** (`poc/realtime.py`, the sparse Australian demo, 176 records arriving one at a time on
+**Measured** (`research/poc/realtime.py`, the sparse Australian demo, 176 records arriving one at a time on
 1,590): 21 ms median, 34 ms at the 95th percentile, 55 ms worst, on a laptop. `custmatch add` for one
 record took 0.18 s and grows with the file - fine for batches, not for real time.
 
@@ -71,7 +71,7 @@ What it has to handle, and what was measured:
    column was also an extra field; fixed.)
 7. **Merging on one record's say-so over-merges.** `server/replay_test.py` runs a batch over half
    the demo, sends the other half through the matcher one record at a time, then runs a batch over
-   everything (`server/replay_test.py --all`, `results/server_replay.json`, five seeds; pairwise
+   everything (`server/replay_test.py --all`, `research/results/server_replay.json`, five seeds; pairwise
    F1 against the true people, the batch run 81.91). Merging every customer a record links to -
    one record then bridges two people - gave 80.46; merging only at 0.9 or more ("strong", the
    default) 81.67, with 86.78 agreement with the batch run; never merging 81.15. The test suite
@@ -92,7 +92,7 @@ What it has to handle, and what was measured:
 A warehouse export (Parquet or Iceberg) is not built; this is what one would have to handle.
 For Iceberg exports, a delete is not enough: after deleting a person's rows, time travel to the
 earlier snapshot still returned them, and after expiring snapshots the original data file - still
-holding the rows - stayed on disk (`poc/storage_concurrency.py`). Erasing from an export means
+holding the rows - stayed on disk (`research/poc/storage_concurrency.py`). Erasing from an export means
 deleting the rows, expiring the snapshots **and removing data files no longer referenced**; pyiceberg
 0.12 does the first two, the service the third. Plain Parquet exports are simpler: rewrite them, or
 keep only the latest.
@@ -100,7 +100,7 @@ keep only the latest.
 ## Memory and the Arrow-strings question
 
 pandas 3 already stores text as Arrow strings: the loaded table is about 200 MB per million records,
-and converting it explicitly saved nothing (`poc/arrow_strings.py`). `pyproject.toml` does not pin
+and converting it explicitly saved nothing (`research/poc/arrow_strings.py`). `pyproject.toml` does not pin
 pandas, so a user on pandas 2 gets Python-object strings and more memory; the service image should
 pin pandas 3. The batch run's memory is in its working tables (blocking, features, model scores,
 outputs) - see the report, "Larger files".
@@ -156,9 +156,9 @@ values in place (corrections belong at the source), saved searches.
 
 | Script | Shows |
 | --- | --- |
-| `poc/storage_concurrency.py` | DuckDB file locking; partial reads by glob against a manifest; concurrent Iceberg appends; Iceberg erasure leaving data files |
-| `poc/realtime.py` | Online matching latency; candidate and feature equivalence with batch; consistency after arrivals; the duplicate-customer race and the one-writer fix |
-| `poc/arrow_strings.py` | Table memory with object and Arrow strings; behaviour of string operations |
+| `research/poc/storage_concurrency.py` | DuckDB file locking; partial reads by glob against a manifest; concurrent Iceberg appends; Iceberg erasure leaving data files |
+| `research/poc/realtime.py` | Online matching latency; candidate and feature equivalence with batch; consistency after arrivals; the duplicate-customer race and the one-writer fix |
+| `research/poc/arrow_strings.py` | Table memory with object and Arrow strings; behaviour of string operations |
 
 ---
 

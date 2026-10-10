@@ -296,7 +296,7 @@ See "Privacy" below.
   where chaining shows - and the figure the docs quote.
 - **The ceiling**: the clustered F1 a perfect model would reach given the blocking (step 4).
 
-Every number in the docs is checked against `results/*.json` by the test suite.
+Every number in the docs is checked against `research/results/*.json` by the test suite.
 
 ## Install
 
@@ -376,7 +376,7 @@ Davo, Lachie, and the Greek- and Italian-Australian Con, Jim, Joe, Sam) adds for
 lacks. To add a country, add a profile to `custmatch/countries.py`.
 
 On the public benchmarks, whose records are already in one clean format, a profile changes
-little - mean of three label draws, random / active labels (`scripts/matcher_bakeoff.py` (measured with the threshold rule before 0.1.0, which took the strictest of tied thresholds; not yet rerun)):
+little - mean of three label draws, random / active labels (`research/scripts/matcher_bakeoff.py` (measured with the threshold rule before 0.1.0, which took the strictest of tied thresholds; not yet rerun)):
 
 | Dataset | Profile | Without | With |
 | --- | --- | --- | --- |
@@ -456,7 +456,7 @@ bot, for a person to review; matching is not changed. Three reasons:
   list's 279 single words are the first name or surname of at least one of 5 million North
   Carolina voters - Hooker, Dick, Cumming, Felch, Negro, Bastardo - and are excluded. With that,
   no record was flagged in the voter files, nor, held out, in historical_50k, febrl3, fake_1000
-  or the generated customer files (`scripts/suspect_research.py`). Whole fields and whole words
+  or the generated customer files (`research/scripts/suspect_research.py`). Whole fields and whole words
   only: "beaner-young", "na'shota", Scunthorpe and cocktail@ are not flagged.
 - *disposable email*: a throwaway-mail domain (mailinator, guerrillamail, 10minutemail...).
 - *random-looking email*: a part of the user name of 8 or more characters mixing letters and
@@ -605,7 +605,7 @@ learn that evidence ages: a shared mobile years apart may be a reissued number, 
 address or surname years later may be a move or a marriage. The same date drives
 `most_recent` survivorship.
 
-Measured on a dated build of the sparse Australian file (`scripts/record_dates_research.py`):
+Measured on a dated build of the sparse Australian file (`research/scripts/record_dates_research.py`):
 1,850 people move, 836 change surname and 1,459 mobiles are reissued to a stranger;
 mean of three label draws, 1,000 labels each:
 
@@ -653,7 +653,7 @@ partners - and back. The field calls this order dependence: the result depends o
 records arrive in. The goal is what Senzing calls sequence neutrality (the same result whatever order records arrive
 in), and Senzing holds a record that fits two people equally as "ambiguous" rather than choose.
 
-`scripts/order_dependence.py` streams a slice of the sparse Australian file (1,200 households,
+`research/scripts/order_dependence.py` streams a slice of the sparse Australian file (1,200 households,
 couples sharing surnames, addresses and family emails) into custmatch in 20 batches, and after
 each batch compares every record's partners among the records already there. Mean of two
 arrival orders:
@@ -732,7 +732,7 @@ and one more:
 Stitched links join records whatever the model says, like trusted IDs; a steward's
 `different` still wins.
 
-Measured on the sparse Australian file with generated events (`scripts/cookie_research.py`):
+Measured on the sparse Australian file with generated events (`research/scripts/cookie_research.py`):
 14,544 cookies - each person on one or two devices, logging in with an email or mobile
 from their own records - plus 466 family laptops two people log into, 10 call-centre
 agents who each served 40 customers and 100 who each served two (one by email, one by
@@ -876,8 +876,8 @@ estimate keeps creeping up, so "the best estimate, ties to the stricter" drifted
 end and lost real recall: on 200,000 NCVR voters with 8 random matches it chose 0.85 -
 85.4 clustered F1 - where 0.6 gave 95.6. Since 0.1.0 every threshold within half a match's
 worth of recall of the best (50 / random matches, in F1 points) counts as tied, and the middle of
-them is chosen; `"threshold_rule": "strictest"` restores the old rule. `scripts/threshold_capture.py`
-recorded custmatch's estimates and the truth at every threshold, and `scripts/threshold_rules.py`
+them is chosen; `"threshold_rule": "strictest"` restores the old rule. `research/scripts/threshold_capture.py`
+recorded custmatch's estimates and the truth at every threshold, and `research/scripts/threshold_rules.py`
 scored rules against the best threshold in hindsight:
 
 | Cases | Rule | Mean F1 lost | Worst case | Better / worse than before |

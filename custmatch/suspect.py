@@ -8,7 +8,7 @@ Matching is not affected - a flag is a reason to look, listed in suspect_records
               cocktail@ or scunthorpe@); and no word that is a real name is flagged - REAL_NAMES,
               the 36 listed words that are a first name or surname of any of 5 million North
               Carolina voters (Hooker, Dick, Cumming, Felch, Negro...;
-              scripts/suspect_research.py). "xx" and "xxx" are placeholders, handled as junk.
+              research/scripts/suspect_research.py). "xx" and "xxx" are placeholders, handled as junk.
   disposable  an email at a throwaway-mail domain
   random      an email whose user part looks generated: a part of it (between dots, dashes,
               underscores or +) of 8 or more characters mixing letters and digits, whose letters
@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 
 PROFANITY_FILE = "profanity_en.txt"
-# listed words that are a first name or surname of any NCVR voter (scripts/suspect_research.py)
+# listed words that are a first name or surname of any NCVR voter (research/scripts/suspect_research.py)
 REAL_NAMES = frozenset({
     "anal", "ass", "bastardo", "boner", "boob", "butt", "cock", "cocks", "coon", "coons", "cum", "cumming",
     "dick", "escort", "fag", "felch", "feltch", "guro", "hooker", "horny", "juggs", "lolita", "mong",

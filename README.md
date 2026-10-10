@@ -114,7 +114,7 @@ The [report](https://github.com/andrewgoodchild/custmatch/tree/main/docs/report)
 comparison - against Splink, dedupe and a CDP's exact matching, on these files and on each tool's
 own datasets - with every caveat: the synthetic and Australian files were generated for this
 project, so their errors are ones the tool was designed around, and it needs good labels. The
-test suite checks every number against `results/*.json`.
+test suite checks every number against `research/results/*.json`.
 
 ## Quick start
 
@@ -251,7 +251,7 @@ pip install -e '.[test]' && pytest tests/
 pip install -e ./server httpx              # the service's tests too
 ```
 
-The suite includes a check that every number quoted in the docs still matches `results/*.json`.
+The suite includes a check that every number quoted in the docs still matches `research/results/*.json`.
 
 ## License
 

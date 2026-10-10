@@ -6,13 +6,13 @@ default and the one every result in the docs used unless it says otherwise.
                     averaged. +0.41 clustered F1 on average over six datasets and two label kinds,
                     three draws each, never more than 0.03 behind on a dataset's mean; +1.3 on the
                     dense historical_50k and +1.8 on a sparse file with random labels; about 30%
-                    longer runs on files of up to 50,000 records (scripts/modal_models.py,
-                    results/ensemble.json; docs/report/03-which-matcher.md "Which classifier")
+                    longer runs on files of up to 50,000 records (research/scripts/modal_models.py,
+                    research/results/ensemble.json; docs/report/03-which-matcher.md "Which classifier")
 
 hgb (histogram gradient boosting), CatBoost, TabPFN and "auto" (pick the best cross-fitted
 model) were removed in 0.1.0: on six datasets, three label draws, none beat the forest by enough
 to justify keeping it - hgb -2.34 on average, CatBoost -0.09, TabPFN +0.52 but a GPU, torch and
-7 to 12 times the run time (scripts/modal_models.py, results/model_review.json; docs/guide.md
+7 to 12 times the run time (research/scripts/modal_models.py, research/results/model_review.json; docs/guide.md
 "Which classifier"). CatBoost came back averaged with the forest: bagging and boosting err
 differently, and the pair beat either alone (rerun on the current code, CatBoost alone scored
 +0.10 on average against the forest, the average +0.41).

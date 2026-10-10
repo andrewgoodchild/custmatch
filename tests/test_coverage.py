@@ -236,7 +236,7 @@ def test_lsh_blocking_joins_names_with_typos_in_both_and_respects_with():
 
 
 # ------------------------------------------------------------------ inputs real users produce
-# (scripts/robustness.py runs the CLI over the same cases end to end)
+# (research/scripts/robustness.py runs the CLI over the same cases end to end)
 def _demo(tmp_path):
     import shutil
     d = tmp_path / "demo"

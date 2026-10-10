@@ -11,7 +11,7 @@ and measure how much that matters on person and customer data.
 
 ## RF vs Ditto on person records, and what clustering does to both
 
-`scripts/person_em_build.py`, `scripts/person_ditto.py`, `scripts/person_head_to_head.py`.
+`research/scripts/person_em_build.py`, `research/scripts/person_ditto.py`, `research/scripts/person_head_to_head.py`.
 
 The person baselines ([chapter 3](03-which-matcher.md)) and the reproductions ([chapter 10](10-reproductions.md)) left two gaps: no transformer had been run on person data, and every number was
 pairwise, while a customer file needs *clusters* (golden records). This closes both.
@@ -125,7 +125,7 @@ For a real customer file with millions of candidate pairs that is not viable wit
 
 ### The cascade, measured
 
-`scripts/cascade.py`. The obvious production shape is a cascade: score every pair with the
+`research/scripts/cascade.py`. The obvious production shape is a cascade: score every pair with the
 forest, and spend Ditto only where the forest is unsure. Every pair with forest score `rf`
 is **rejected** if `rf <= lo`, **accepted** if `rf > hi`, and otherwise sent to Ditto; the
 resulting edges are clustered exactly as above. It needs no new training or inference — both
@@ -172,7 +172,7 @@ Three conclusions:
 
 ### Can a zero-shot model replace Ditto in the band? No
 
-`scripts/jev_cascade.py`. [Chapter 10](10-reproductions.md) found Jev — TypeSafe's decision model, with written
+`research/scripts/jev_cascade.py`. [Chapter 10](10-reproductions.md) found Jev — TypeSafe's decision model, with written
 criteria and structured fields — at 87.1 F1 on 660 hard historical_50k pairs, ahead of Luna and
 the forest. The obvious next step is a pipeline with no deep-learning training at all: the forest
 vetoes as above, and Jev judges the 67,630-pair band instead of Ditto. Jev scored the whole band
@@ -208,7 +208,7 @@ on this data is. That is the section's opening lesson again — precision first 
 
 ## The match graph in Kuzu, and structure-aware clustering
 
-`scripts/kuzu_graph.py`. The person-record graph — 12,880 records, 152,772 candidate edges —
+`research/scripts/kuzu_graph.py`. The person-record graph — 12,880 records, 152,772 candidate edges —
 loaded into an embedded Kuzu database, each edge carrying its RF and Ditto probability, all 12
 similarity features, and the ground-truth label for audit.
 
@@ -255,7 +255,7 @@ wrong link merges two whole groups. That is precisely the percolation mechanism.
 graph at a permissive threshold, but require any *bridge* to clear a much higher bar, and
 iterate (removing bridges creates new ones).
 
-Both rules tuned on the same fine grid (`scripts/cascade.py`):
+Both rules tuned on the same fine grid (`research/scripts/cascade.py`):
 
 | Model | Best plain connected components | Best bridge-aware | Δ |
 |---|---|---|---|

@@ -1,7 +1,7 @@
 # Contributing
 
 Thanks for looking. custmatch is small and measured: every option in it was benchmarked, and
-`tests/test_reported_results.py` checks that the numbers in the docs still match `results/*.json`.
+`tests/test_reported_results.py` checks that the numbers in the docs still match `research/results/*.json`.
 
 ## Set up
 
@@ -29,7 +29,7 @@ The research scripts need more (see `docs/reproducing.md`).
   on the code they guard against - please keep it that way.
 - **Changes that move a measured number need the measurement rerun.** If your change affects
   results, rerun the script that produced them (the table in `docs/reproducing.md` says which),
-  commit the updated `results/*.json`, and update the docs; the claims tests will tell you
+  commit the updated `research/results/*.json`, and update the docs; the claims tests will tell you
   which sentences are stale.
 - **Say what a result does not show.** Single label draws, datasets the design was tuned on,
   and synthetic data written by the same author as the fix are all worth a sentence.

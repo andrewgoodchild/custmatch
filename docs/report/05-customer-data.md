@@ -6,7 +6,7 @@ into a scorecard.
 
 ## Are shared and fake contact values detectable without labels?
 
-`scripts/shared_value_detection.py`. Two failure modes that look identical at first glance —
+`research/scripts/shared_value_detection.py`. Two failure modes that look identical at first glance —
 one value carried by many records — but which need opposite treatment.
 
 ### Householding
@@ -55,7 +55,7 @@ values and 96.9% recall on genuinely shared household contacts.
 
 ## A customer-matching process that handles fake contacts and households
 
-`scripts/customer_data.py`, `scripts/customer_pipeline.py`.
+`research/scripts/customer_data.py`, `research/scripts/customer_pipeline.py`.
 
 Built on **pseudopeople**, because it is the only public option with both `simulant_id`
 (identity truth) and `household_id` (household truth) — you cannot otherwise tell an
@@ -143,7 +143,7 @@ would then be fairly safe; a file with years of interaction history would not.
 
 ### Ditto on these records
 
-`scripts/customer_ditto.py`. Ditto had only been run on historical_50k, where it beats the forest
+`research/scripts/customer_ditto.py`. Ditto had only been run on historical_50k, where it beats the forest
 by 11 clustered F1. Here it is trained on the pipeline's own training people (85%, with 15% held
 back to pick the epoch; 12,108 pairs, 3 of 5 epochs, ~45 minutes on the laptop) and scores the
 pipeline's own 14,997 test pairs. It sees the fields the forest's features use, with contacts the
@@ -169,7 +169,7 @@ worth.
 ## Households, fake contacts and placeholders
 
 What the published practice suggests, each idea scored against the synthetic file's true
-households and contact classes (`scripts/household_research.py`, 1,000 random labels):
+households and contact classes (`research/scripts/household_research.py`, 1,000 random labels):
 
 - **Contacts profiled over customers.** Before matching, a shared email or phone is called a
   household contact when records with different first names carry it - but one person with a
@@ -199,7 +199,7 @@ plan (the generator ignores it), and an invalid number carried by one person sti
 them. What makes a contact useless as evidence is being shared by unrelated people, which the
 profiler already measures.
 
-**Placeholder names and addresses** (`"placeholders": true`, `scripts/placeholder_research.py`).
+**Placeholder names and addresses** (`"placeholders": true`, `research/scripts/placeholder_research.py`).
 Pattern rules (known fake full names, placeholder words, keyboard runs, a character repeated four
 or more times, house number 0, "main / test / fake / any street") plus the diversity rule used
 for junk contacts: a full name on 5 or more records with mostly different dates of birth and
@@ -224,7 +224,7 @@ filled in by staff or web forms with mandatory fields.
 Outside the US there is usually no SSN, and retail channels capture different fields: a web
 sign-up gives a first name and an email, a loyalty app a first name and a mobile, a store a full
 name and an address. No public benchmark has that shape with ground truth, so
-`scripts/au_customer_data.py` generates one for Australia: 18,478 records of 9,721 people in
+`research/scripts/au_customer_data.py` generates one for Australia: 18,478 records of 9,721 people in
 5,200 households across web, app and store; 37% of records have no surname. Names follow real
 frequencies (US Census surnames, Social Security given names by birth year, and Chinese,
 Indian, Italian, Vietnamese, Greek, Filipino and Lebanese names in roughly Census proportions),
@@ -235,7 +235,7 @@ ACMA's fictional 0491 570 xxx, test@test.com), unit addresses written 3/12, Unit
 day-first dates. It is a stress test of our own assumptions, not a substitute for your data:
 check on a few hundred labelled pairs from your own file.
 
-`scripts/au_validate.py` runs custmatch on it as a user would, over three label draws (mean
+`research/scripts/au_validate.py` runs custmatch on it as a user would, over three label draws (mean
 +- spread):
 
 | Setup | Clustered F1 | No-surname records | Households |
@@ -297,14 +297,14 @@ as sharing one when merging households on a shared contact.
 ## Scenarios: a scorecard of hard cases
 
 `examples/scenarios/` is a US customer file built to test, case by case, the things that go
-wrong in customer matching (`scripts/scenarios.py build`). It holds 1,000 ordinary people
+wrong in customer matching (`research/scripts/scenarios.py build`). It holds 1,000 ordinary people
 in households - couples sharing addresses, phones and family emails, grown children at home,
 with typos, nicknames, missing fields and mistyped birth dates - and 26 scenarios, each
 repeated 10 times with different people. `expected.csv` gives the right answer for every
 scenario pair. custmatch is trained on labels from the ordinary records only. It is a development set, not
 a held-out test: building it found two gaps that were then fixed (below), so its scores flatter
 the tool. A repeat passes when every pair in it comes out right; the table
-gives the share passed, mean of three label draws (`scripts/scenarios.py score`):
+gives the share passed, mean of three label draws (`research/scripts/scenarios.py score`):
 
 | Scenario | Answer | 1,500 random labels | + `"twin_guard"` | 500 random + 1,000 active labels | active + `"twin_guard"` |
 | --- | --- | --- | --- | --- | --- |

@@ -7,7 +7,7 @@ are in [chapter 10](10-reproductions.md).
 
 ## Person matching: FEBRL4 and historical_50k
 
-`scripts/febrl_person_matching.py`, `scripts/historical50k_dedupe.py`. No published F1 exists
+`research/scripts/febrl_person_matching.py`, `research/scripts/historical50k_dedupe.py`. No published F1 exists
 for these two under a common protocol (the survey found no 2023–26 paper reporting
 transformer or LLM F1 on FEBRL or NCVR), so these are new baselines rather than reproductions.
 Scoring is pairwise P/R/F1 against **all** true pairs, so blocking misses count against recall.
@@ -63,8 +63,8 @@ one alternative is the forest averaged with CatBoost (below). Until 0.1.0
 tabular foundation model that needs torch and a GPU) and `"auto"` (fit several, keep the best
 cross-fitted estimate). A review on six datasets removed them: each model trained on the same
 label files - per dataset three draws of 1,000 random labels and of 300 random + 700 active ones
-- with the forest as the reference, run in parallel on Modal (`scripts/modal_models.py`,
-`results/model_review.json`). Lighter alternatives were tried in the same run: ExtraTrees,
+- with the forest as the reference, run in parallel on Modal (`research/scripts/modal_models.py`,
+`research/results/model_review.json`). Lighter alternatives were tried in the same run: ExtraTrees,
 LightGBM and XGBoost, and TabICL, an open tabular foundation model like TabPFN. The review ran
 while the match weight was on by default (since made opt-in), with the current threshold rule;
 TabPFN with its default four ensemble members. Clustered F1, random / active labels:
@@ -87,14 +87,14 @@ only consistent gains - TabPFN +0.52 on average and never more than 0.15 behind,
 random labels (fake_1000 +2.42, historical_50k +1.44) - but half a point on average does not pay for
 torch, a GPU and runs 7 to 12 times as long; TabICL gains a little more on average and loses
 1.60 on the sparse file with active labels. An earlier bake-off on a laptop
-(`scripts/matcher_bakeoff.py`, the threshold rule before 0.1.0, TabPFN with one ensemble member)
+(`research/scripts/matcher_bakeoff.py`, the threshold rule before 0.1.0, TabPFN with one ensemble member)
 reached the same picture: no model won everywhere. The forest stays the default; a config naming
 a removed model is refused with a message saying so.
 
 **The forest and CatBoost, averaged** (`"matcher_model": "forest_catboost"`, opt-in). Bagged
 trees and boosted trees make different mistakes, so their average can beat both. The same review
 setup - six datasets, the same label files, three draws of each kind, on Modal
-(`scripts/modal_models.py --models forest,catboost,forest_catboost --out results/ensemble.json`)
+(`research/scripts/modal_models.py --models forest,catboost,forest_catboost --out research/results/ensemble.json`)
 - with the forest and CatBoost rerun alongside, on the current code. Clustered F1, random /
 active labels:
 

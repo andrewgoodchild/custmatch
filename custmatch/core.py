@@ -2,7 +2,7 @@
 
 profile contacts -> block (hub suppression, junk never a key) -> features (contact agreement
 weighted by rarity, junk treated as missing) -> [a supervised matcher] -> connected components
--> households. `scripts/customer_pipeline.py` (the experiment) and `custmatch.pipeline` (the
+-> households. `research/scripts/customer_pipeline.py` (the experiment) and `custmatch.pipeline` (the
 tool) both use these functions, so the tool runs exactly the code the report measured.
 
 Records use the canonical columns in `custmatch.io.CANONICAL`; missing values are "".
@@ -547,7 +547,7 @@ def _standard_features(df, pairs, profiles, aware=True):
     of a blank the model could not use it, and it made sparse records worse.)
 
     Column by column with numpy and rapidfuzz's cpdist: the first version built each pair's row
-    in a Python loop - identical values, 2.8x slower at a million records (poc/vectorised_features.py)."""
+    in a Python loop - identical values, 2.8x slower at a million records (research/poc/vectorised_features.py)."""
     from rapidfuzz.process import cpdist
     i, j = pairs[:, 0], pairs[:, 1]
     col = lambda c: _object_column(df, c)  # noqa: E731

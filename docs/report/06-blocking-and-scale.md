@@ -8,7 +8,7 @@ one machine goes - from a laptop to ten million records.
 
 The leading open-source matchers ([chapter 9](09-against-other-tools.md)) each do something custmatch's first
 blocker did not. These are now options - each measured on all five benchmark datasets with rich
-features (`scripts/beat_splink.py`), clustered F1 with 1,000 random labels and, in brackets,
+features (`research/scripts/beat_splink.py`), clustered F1 with 1,000 random labels and, in brackets,
 300 random + 700 active:
 
 | Dataset | Old blocking: pairs / F1 random (active) | `"blocking": "fixed"` (split) | `"blocking": "learned"`, 99% | Re-cut over 30 (`max_cluster`) | Learned + disagreement, active |
@@ -52,7 +52,7 @@ features (`scripts/beat_splink.py`), clustered F1 with 1,000 random labels and, 
 - **Speed** (dedupe, Splink): the new blocker builds integer keys and pairs the records of each
   block in vectorised numpy steps (until 0.1.0 a DuckDB self-join, about 2 s faster at a million
   records, dropped to save the dependency). At 1M records blocking takes 7.3 s and a whole run
-  with `"fixed"` 94 s, against 101 s with the default blocker (`results/custmatch_scale*.json`).
+  with `"fixed"` 94 s, against 101 s with the default blocker (`research/results/custmatch_scale*.json`).
 
 None of these is the default: each wins somewhere and loses somewhere. The default blocking is
 the one the report measured.
@@ -77,7 +77,7 @@ and "married name" scenarios failed in up to all of their draws. And a bare init
 evidence rather than as a rare name, which had merged sisters recorded as "L. Jones".
 
 Forest alone against forest with the weight, on the same labels - three draws, random / active
-labels (`scripts/modal_models.py --models forest,forest_match_weight`, `results/match_weight.json`):
+labels (`research/scripts/modal_models.py --models forest,forest_match_weight`, `research/results/match_weight.json`):
 
 | Dataset | Forest | + match weight |
 | --- | --- | --- |
@@ -90,7 +90,7 @@ labels (`scripts/modal_models.py --models forest,forest_match_weight`, `results/
 
 It gains most where labels are thin: +3.83 on the sparse Australian file and +1.06 on
 historical_50k with random labels, and is at most 0.02 behind anywhere. But it costs a
-behaviour the forest alone gets right in nearly every repeat (`scripts/scenarios.py`, three draws,
+behaviour the forest alone gets right in nearly every repeat (`research/scripts/scenarios.py`, three draws,
 share of each scenario's 10 cases handled correctly):
 
 | Scenario | Forest | + weight | Forest, active | + weight, active |
@@ -110,7 +110,7 @@ an email are common.
 
 historical_50k is the hardest benchmark here: about ten records per person, half of them without
 a surname or a birth date, names such as "tom baron chudleigh" or just "sir", and corrupted
-dates. Two limits add up (`scripts/historical_blocking.py`, `scripts/historical_labels.py`):
+dates. Two limits add up (`research/scripts/historical_blocking.py`, `research/scripts/historical_labels.py`):
 
 - **Blocking.** With exact keys alone, a perfect matcher could reach only 93.34
   clustered F1: many people's records share no key at all (a blank surname, Tom against Thomas,
@@ -118,7 +118,7 @@ dates. Two limits add up (`scripts/historical_blocking.py`, `scripts/historical_
   (`"lsh_blocking": {"fields": ["first_name", "last_name"], "with": "birth_place"}`) lifts that
   ceiling to 96.81 for 13% more candidate pairs. The historical_50k benchmark
   config has used it since 0.1.0: over three label draws the forest scores 86.60 with
-  1,000 random labels and 87.99 with active ones (`scripts/matcher_bakeoff.py`),
+  1,000 random labels and 87.99 with active ones (`research/scripts/matcher_bakeoff.py`),
   against 85.68 and 87.02 with the exact keys alone under the same threshold rule.
 - **The matcher.** More labels help only a little. With 1,000 / 3,000 / 6,000 random labels the
   forest scored 86.08 / 86.24 / 87.44 with the exact keys and
@@ -139,14 +139,14 @@ misses: they are drawn from the candidate pairs.
 **Speed.** On a million records - the synthetic file copied 50 times with copy-specific names
 and contacts, so blocks do not grow as a real file's would: a throughput test on partitioned
 data - custmatch took 111 seconds with default settings and 100 with `"blocking": "fixed"`
-(`results/custmatch_scale*.json`). In an earlier run, not saved to `results/`, Splink took about
+(`research/results/custmatch_scale*.json`). In an earlier run, not saved to `research/results/`, Splink took about
 28.5 minutes on the same file. Most of that gap is candidate pairs (about 24.7 million for
 Splink against 2.4 million): the junk contact values are shared across all 50 copies, and
 custmatch drops those hub blocks while Splink, as configured, did not - an unequal setup, so
 compare per-pair speed, where the two were within about 1.5x. A faster language would not change this picture: the forest and clustering
 already run in compiled code, and the time goes on how many pairs are compared.
 
-**Larger files** (`scripts/modal_scale.py`, `results/scale_large.json`): the same copies, on a
+**Larger files** (`research/scripts/modal_scale.py`, `research/results/scale_large.json`): the same copies, on a
 cloud machine with 16 cores and 128 GiB, with 1,000 random labels, run before and after the memory
 redesign (numpy blocking, chunked features and predictions). The same code ran up to 40% slower on
 one cloud run than the other, in stages the redesign did not touch, so the times are a range:
@@ -160,7 +160,7 @@ one cloud run than the other, in stages the redesign did not touch, so the times
 Ten million records fit on one machine, with the same accuracy. On these copies - about 2.4
 candidate pairs per record - memory is dominated by the records and the working tables around them,
 so the redesign, which cut the cost per candidate pair from 288 to 155 bytes on 7 million NCVR pairs
-(14 pairs per record; `scripts/memory_profile.py`), left it about where it was: roughly 3.3 GB per
+(14 pairs per record; `research/scripts/memory_profile.py`), left it about where it was: roughly 3.3 GB per
 million records, so a 16 GB laptop tops out near four million. (The record table itself is about
 200 MB per million: pandas 3 stores text as Arrow strings.) The last stage - households, golden
 records and writing the outputs - is over half the run at ten million and grows faster than the
@@ -184,7 +184,7 @@ evidence column by column. Ten million records then took 31 minutes, the last st
 1612 s originally), with the same clustered F1 and peak memory back to 34.0 GB: releasing the
 scoring caches before the last stage removed the rise.
 
-**One real file of millions: the full NCVR benchmark** (`scripts/modal_ncvr_full.py`): all five
+**One real file of millions: the full NCVR benchmark** (`research/scripts/modal_ncvr_full.py`): all five
 sources, 5,000,000 records of 3,500,840 people with real name and postcode frequencies,
 labelled as a user would (300 random, then 700 by active learning). It ran on the same machine
 and took 3.2 hours, most of it the seven active-learning rounds (21 to 22 minutes

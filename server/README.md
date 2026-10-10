@@ -171,7 +171,7 @@ exiting 0 (ok), 1 (warnings) or 2 (failed).
 
 **Stewards' decisions train the model.** Each "same" or "different" a steward records overrides
 that pair at once, and the next batch run also trains on it. Measured on the demo
-(`server/learning_test.py`, `results/server_learning.json`): starting from 200 random labels,
+(`server/learning_test.py`, `research/results/server_learning.json`): starting from 200 random labels,
 three rounds of answering the review queue lifted clustered F1 from 79.5 to 88.8 when decisions
 train the model, against 84.1 when they only override their own pairs.
 
@@ -241,7 +241,7 @@ Migrations do not run backwards automatically; to go back, restore the backup an
 
 ## Sizing
 
-Measured with Postgres on a laptop (`server/scale_test.py`, `results/server_scale.json`), per
+Measured with Postgres on a laptop (`server/scale_test.py`, `research/results/server_scale.json`), per
 million records: loads about 1 minute, a batch run about 2.5 minutes (2-3 GB of memory), the
 real-time matcher starts in 6 seconds and holds about 0.5 GB, a real-time match takes 24 ms
 (median) and a lookup 7 ms; the database grows by about 1.8 GB. The batch library has run 10

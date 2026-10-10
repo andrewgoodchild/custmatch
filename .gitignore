@@ -13,14 +13,14 @@ __pycache__/
 # upstream clones (see patches/ for our modifications, docs/reproducing.md for clone commands)
 external/
 
-# generated datasets and databases (rebuild with scripts/*_build.py, customer_data.py)
+# generated datasets and databases (rebuild with research/scripts/*_build.py, customer_data.py)
 /data/
 
 # large binary score dumps (regenerate by rerunning the scorers)
-results/*.npz
-results/llm/answers_*.jsonl
-results/llm/openrouter_spend.jsonl
-results/llm/smoketest/
+research/results/*.npz
+research/results/llm/answers_*.jsonl
+research/results/llm/openrouter_spend.jsonl
+research/results/llm/smoketest/
 
 # secrets
 .env
@@ -33,7 +33,7 @@ catboost_info/
 # ~/.cache/custmatch on first use (custmatch/country.py data_file); outputs keyed on others' data
 custmatch/data/nicknames.csv
 custmatch/data/name_variants.csv
-results/*.parquet
+research/results/*.parquet
 
 # the scheduler inbox holds customer records: never commit them
 server/inbox/*

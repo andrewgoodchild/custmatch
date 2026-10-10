@@ -7,7 +7,7 @@ decisions only override their own pairs, or they also train the next run's model
 the true people, and the queue's size.
 
     python server/learning_test.py [--labels 200] [--rounds 3] [--seeds 3]
-Writes results/server_learning.json.
+Writes research/results/server_learning.json.
 """
 import argparse
 import json
@@ -90,7 +90,7 @@ def main():
         rs = [r["rounds"] for r in out["runs"] if r["decisions_train_the_model"] == learn]
         out[f"mean_f1_by_round_{'learn' if learn else 'override_only'}"] = [
             round(float(np.mean([h[k]["f1"] for h in rs])), 2) for k in range(a.rounds + 1)]
-    (ROOT / "results/server_learning.json").write_text(json.dumps(out, indent=1))
+    (ROOT / "research/results/server_learning.json").write_text(json.dumps(out, indent=1))
     print({k: v for k, v in out.items() if k.startswith("mean")})
 
 

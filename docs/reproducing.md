@@ -43,122 +43,122 @@ Grouped by the report chapter whose numbers they produce.
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/customer_data.py` | Builds the two-source customer dataset from pseudopeople with labelled contact pathologies | ~3 min |
-| `scripts/au_customer_data.py` | Builds the sparse Australian customer file: web / app / store channels, partial names, mobiles and emails in many formats, nicknames, anglicised names, junk and fictional numbers, known people and households; `--scripts` writes a copy with some names in Chinese or Arabic script | ~1 min |
-| `scripts/person_em_build.py` | Builds the person-record EM dataset: cluster-disjoint splits, Ditto format + RF features on identical pairs | ~2 min |
-| `scripts/make_demo.py` | Builds `examples/demo/` from the Australian file: 500 households, emails moved to the reserved `.example` domain, 600 labels (300 random, 300 by active learning) | ~2 min |
-| `scripts/make_person_llm_task.py` | Builds a hard person-matching task in MatchGPT's format | seconds |
-| `scripts/customer_person_llm_task.py` | Hard person-matching task from the synthetic customer file (no model can know the people), plus a random forest on the same pairs | ~1 min |
+| `research/scripts/customer_data.py` | Builds the two-source customer dataset from pseudopeople with labelled contact pathologies | ~3 min |
+| `research/scripts/au_customer_data.py` | Builds the sparse Australian customer file: web / app / store channels, partial names, mobiles and emails in many formats, nicknames, anglicised names, junk and fictional numbers, known people and households; `--scripts` writes a copy with some names in Chinese or Arabic script | ~1 min |
+| `research/scripts/person_em_build.py` | Builds the person-record EM dataset: cluster-disjoint splits, Ditto format + RF features on identical pairs | ~2 min |
+| `research/scripts/make_demo.py` | Builds `examples/demo/` from the Australian file: 500 households, emails moved to the reserved `.example` domain, 600 labels (300 random, 300 by active learning) | ~2 min |
+| `research/scripts/make_person_llm_task.py` | Builds a hard person-matching task in MatchGPT's format | seconds |
+| `research/scripts/customer_person_llm_task.py` | Hard person-matching task from the synthetic customer file (no model can know the people), plus a random forest on the same pairs | ~1 min |
 
 ### Whole customers, not pairs (chapter 2)
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/person_ditto.py` | Trains Ditto/RoBERTa on person records and scores the full candidate graph | ~30 min train, ~100 min inference |
-| `scripts/person_head_to_head.py` | RF vs Ditto, pairwise and after the clustering pass, over a threshold sweep | ~3 min |
-| `scripts/cascade.py` | RF → Ditto cascade over the saved scores: routing budget vs clustered F1, split-half tuning, bridge-aware vs plain on one grid | ~1.5 min |
-| `scripts/kuzu_graph.py` | Loads the match graph into Kuzu with edge provenance; clustering as a graph query; bridge-aware clustering | ~4 min |
-| `scripts/threshold_capture.py` | Saves what custmatch sees when it chooses its threshold, with the truth, so rules can be compared offline | ~1 h |
-| `scripts/threshold_rules.py` | Compares threshold rules on those captures (the middle-of-ties rule) | seconds |
+| `research/scripts/person_ditto.py` | Trains Ditto/RoBERTa on person records and scores the full candidate graph | ~30 min train, ~100 min inference |
+| `research/scripts/person_head_to_head.py` | RF vs Ditto, pairwise and after the clustering pass, over a threshold sweep | ~3 min |
+| `research/scripts/cascade.py` | RF → Ditto cascade over the saved scores: routing budget vs clustered F1, split-half tuning, bridge-aware vs plain on one grid | ~1.5 min |
+| `research/scripts/kuzu_graph.py` | Loads the match graph into Kuzu with edge provenance; clustering as a graph query; bridge-aware clustering | ~4 min |
+| `research/scripts/threshold_capture.py` | Saves what custmatch sees when it chooses its threshold, with the truth, so rules can be compared offline | ~1 h |
+| `research/scripts/threshold_rules.py` | Compares threshold rules on those captures (the middle-of-ties rule) | seconds |
 
 ### Which matcher (chapter 3)
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/febrl_person_matching.py` | FEBRL4: rules, recordlinkage ECM, Splink, supervised RF | ~5 min |
-| `scripts/historical50k_dedupe.py` | historical_50k dedupe: rules, Splink, supervised RF, with the blocking ceiling reported | ~15 min |
-| `scripts/person_task_baselines.py` | Scores those same pairs with a rule and an RF, for a like-for-like LLM comparison | ~2 min |
-| `scripts/matcher_bakeoff.py` | The forest on all six datasets, same label files for every model, three draws; `--tag NAME --override JSON` runs a config variant (the other models it once compared - hgb, CatBoost, TabPFN, `auto` - were removed in 0.1.0; `scripts/modal_models.py` reruns them) | ~1 h |
-| `scripts/modal_models.py` | On Modal, in parallel: the forest against hgb, ExtraTrees, LightGBM, XGBoost, CatBoost (CPU) and TabPFN v2, TabICL (L4 GPU) on all six datasets, same labels for every model, three draws; `--models forest,forest_match_weight --out results/match_weight.json` compares the match weight | ~1 h, ~$5-8 |
+| `research/scripts/febrl_person_matching.py` | FEBRL4: rules, recordlinkage ECM, Splink, supervised RF | ~5 min |
+| `research/scripts/historical50k_dedupe.py` | historical_50k dedupe: rules, Splink, supervised RF, with the blocking ceiling reported | ~15 min |
+| `research/scripts/person_task_baselines.py` | Scores those same pairs with a rule and an RF, for a like-for-like LLM comparison | ~2 min |
+| `research/scripts/matcher_bakeoff.py` | The forest on all six datasets, same label files for every model, three draws; `--tag NAME --override JSON` runs a config variant (the other models it once compared - hgb, CatBoost, TabPFN, `auto` - were removed in 0.1.0; `research/scripts/modal_models.py` reruns them) | ~1 h |
+| `research/scripts/modal_models.py` | On Modal, in parallel: the forest against hgb, ExtraTrees, LightGBM, XGBoost, CatBoost (CPU) and TabPFN v2, TabICL (L4 GPU) on all six datasets, same labels for every model, three draws; `--models forest,forest_match_weight --out research/results/match_weight.json` compares the match weight | ~1 h, ~$5-8 |
 
 ### Labels (chapter 4)
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/jev_labels.py` | Forest trained on Jev's labels instead of the truth, on both person datasets: hard, soft, and cut-off from 300 hand labels | ~10 min, ~$0.70 |
-| `scripts/historical_labels.py` | historical_50k: the forest with 1,000 / 3,000 / 6,000 random labels, chosen and best-in-hindsight thresholds | ~5 min |
+| `research/scripts/jev_labels.py` | Forest trained on Jev's labels instead of the truth, on both person datasets: hard, soft, and cut-off from 300 hand labels | ~10 min, ~$0.70 |
+| `research/scripts/historical_labels.py` | historical_50k: the forest with 1,000 / 3,000 / 6,000 random labels, chosen and best-in-hindsight thresholds | ~5 min |
 
 ### Customer data (chapter 5)
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/shared_value_detection.py` | Detects household-shared and junk/placeholder values without labels | ~2 min |
-| `scripts/customer_pipeline.py` | **The end-to-end customer-matching process**: contact profiling → blocking → matching → clustering → households (`--both` runs the naive ablation) | ~5 min |
-| `scripts/customer_ditto.py` | Ditto on the customer pipeline's own pairs and split: `build`, then `person_ditto.py --data-dir data/customer_em --out customer --max-len 160`, then `evaluate` and `golden` | ~45 min training, ~2 min scoring |
-| `scripts/household_research.py` | Household and shared-contact ideas from the literature (customer-level profiling, fuzzy addresses, contact + surname merge) against true households | ~1 min |
-| `scripts/placeholder_research.py` | Fake-name and fake-address detection: false positives on four clean datasets, precision / recall on injected placeholders, matching with and without | ~3 min |
-| `scripts/au_validate.py` | custmatch on that file, each normalisation step and labelling strategy over three label draws (`country_au_active` is the recommended setup); `--data au_customer_script` runs the native-script copy; `ceilings` the blocking and household limits | ~3 min per variant |
-| `scripts/scenarios.py` | `build` writes `examples/scenarios/` (named hard cases with known answers); `score [variant ...]` trains custmatch and scores each scenario, three draws | ~5 min per variant |
-| `scripts/cookie_research.py` | Cookie and device-ID stitching on the Australian file: the gain, and what the shared-device guards protect | ~10 min |
-| `scripts/record_dates_research.py` | Record dates: moves, name changes and reissued mobiles over time, with and without `"record_dates"` | ~10 min |
-| `scripts/suspect_research.py` | Which profanity-list words are real names (NCVR), and the suspect flag's false flags on held-out files; time at a million records | ~5 min |
+| `research/scripts/shared_value_detection.py` | Detects household-shared and junk/placeholder values without labels | ~2 min |
+| `research/scripts/customer_pipeline.py` | **The end-to-end customer-matching process**: contact profiling → blocking → matching → clustering → households (`--both` runs the naive ablation) | ~5 min |
+| `research/scripts/customer_ditto.py` | Ditto on the customer pipeline's own pairs and split: `build`, then `person_ditto.py --data-dir data/customer_em --out customer --max-len 160`, then `evaluate` and `golden` | ~45 min training, ~2 min scoring |
+| `research/scripts/household_research.py` | Household and shared-contact ideas from the literature (customer-level profiling, fuzzy addresses, contact + surname merge) against true households | ~1 min |
+| `research/scripts/placeholder_research.py` | Fake-name and fake-address detection: false positives on four clean datasets, precision / recall on injected placeholders, matching with and without | ~3 min |
+| `research/scripts/au_validate.py` | custmatch on that file, each normalisation step and labelling strategy over three label draws (`country_au_active` is the recommended setup); `--data au_customer_script` runs the native-script copy; `ceilings` the blocking and household limits | ~3 min per variant |
+| `research/scripts/scenarios.py` | `build` writes `examples/scenarios/` (named hard cases with known answers); `score [variant ...]` trains custmatch and scores each scenario, three draws | ~5 min per variant |
+| `research/scripts/cookie_research.py` | Cookie and device-ID stitching on the Australian file: the gain, and what the shared-device guards protect | ~10 min |
+| `research/scripts/record_dates_research.py` | Record dates: moves, name changes and reissued mobiles over time, with and without `"record_dates"` | ~10 min |
+| `research/scripts/suspect_research.py` | Which profanity-list words are real names (NCVR), and the suspect flag's false flags on held-out files; time at a million records | ~5 min |
 
 ### Blocking and scale (chapter 6)
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/historical_blocking.py` | historical_50k: the blocking ceiling with exact keys, similarity blocking and the GB profile; `--run V1,V2` also runs custmatch (1,000 random, and 300 + 700 active; three draws) | ~1 min, ~6 min per variant run |
-| `scripts/custmatch_scale.py` | Times each stage on disjoint copies of the synthetic file, up to 1M records; optional blocking mode (`fixed`, `learned`) | ~5 min |
-| `scripts/modal_scale.py` | On Modal (16 cores, 128 GiB): the scale test at 2, 5 and 10 million records and the full 5-million-record NCVR file, with peak memory | ~1-2 h |
-| `scripts/modal_ncvr_full.py` | On Modal: all 5 million NCVR records, labelled as a user would (300 random + 700 active), resumable | ~3 h |
-| `scripts/memory_profile.py` | Peak memory per pipeline stage on an NCVR sample | ~5 min |
-| `scripts/large_block_check.py` | The large-block check on and off: six person benchmarks and dedupe's patent applicants | ~10 min |
+| `research/scripts/historical_blocking.py` | historical_50k: the blocking ceiling with exact keys, similarity blocking and the GB profile; `--run V1,V2` also runs custmatch (1,000 random, and 300 + 700 active; three draws) | ~1 min, ~6 min per variant run |
+| `research/scripts/custmatch_scale.py` | Times each stage on disjoint copies of the synthetic file, up to 1M records; optional blocking mode (`fixed`, `learned`) | ~5 min |
+| `research/scripts/modal_scale.py` | On Modal (16 cores, 128 GiB): the scale test at 2, 5 and 10 million records and the full 5-million-record NCVR file, with peak memory | ~1-2 h |
+| `research/scripts/modal_ncvr_full.py` | On Modal: all 5 million NCVR records, labelled as a user would (300 random + 700 active), resumable | ~3 h |
+| `research/scripts/memory_profile.py` | Peak memory per pipeline stage on an NCVR sample | ~5 min |
+| `research/scripts/large_block_check.py` | The large-block check on and off: six person benchmarks and dedupe's patent applicants | ~10 min |
 
 ### Golden records (chapter 7)
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/golden_record.py` | Golden-record test set: scores survivorship rules against noise-free truth, with predicted vs oracle clusters | ~3 min |
+| `research/scripts/golden_record.py` | Golden-record test set: scores survivorship rules against noise-free truth, with predicted vs oracle clusters | ~3 min |
 
 ### Against a CDP (chapter 8)
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/cdp_comparison.py` | Segment-style deterministic resolution against custmatch on the generated customer populations | ~40 min |
-| `scripts/cdp_reassess.py` | The CDP comparison as a marketer would judge it: precision-weighted scores, wrong-person contacts, `"min_precision"`, three populations | ~1 h |
-| `scripts/separation_research.py` | Couples who separate: how often the leaver's new records are merged with the ex | ~10 min |
-| `scripts/order_dependence.py` | Records arriving in batches: how often they swap partners, with and without hysteresis | ~20 min |
+| `research/scripts/cdp_comparison.py` | Segment-style deterministic resolution against custmatch on the generated customer populations | ~40 min |
+| `research/scripts/cdp_reassess.py` | The CDP comparison as a marketer would judge it: precision-weighted scores, wrong-person contacts, `"min_precision"`, three populations | ~1 h |
+| `research/scripts/separation_research.py` | Couples who separate: how often the leaver's new records are merged with the ex | ~10 min |
+| `research/scripts/order_dependence.py` | Records arriving in batches: how often they swap partners, with and without hysteresis | ~20 min |
 
 ### Against other tools (chapter 9)
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/splink_vs_custmatch.py` | Splink vs custmatch on the synthetic file, scored identically; also Splink-seeded labels | ~1 min |
-| `scripts/splink_datasets_benchmark.py` | custmatch vs Splink on Splink's bundled datasets, Splink running its official example settings | ~15 min |
-| `scripts/beat_splink.py` | Each custmatch option (rich features, the since-removed Splink feature, active mix, Jev labels) on all five datasets against Splink | ~15 min per variant |
-| `scripts/head_to_head.py` | custmatch against Splink 5 (and, with `--dedupe`, dedupe) on the synthetic file copied to a million records: time, peak memory, clustered F1 (`.venv-splink5`, `.venv-dedupe`) | ~30 min |
-| `scripts/home_data_benchmark.py` | Each tool on every tool's own datasets: Splink's four and dedupe's two (`data/dedupe/`) | ~40 min per dedupe pass |
-| `scripts/ncvr_leipzig.py` | custmatch and Splink on the Leipzig NCVR benchmark, by sample size and blocking keys, three draws | ~15 min |
+| `research/scripts/splink_vs_custmatch.py` | Splink vs custmatch on the synthetic file, scored identically; also Splink-seeded labels | ~1 min |
+| `research/scripts/splink_datasets_benchmark.py` | custmatch vs Splink on Splink's bundled datasets, Splink running its official example settings | ~15 min |
+| `research/scripts/beat_splink.py` | Each custmatch option (rich features, the since-removed Splink feature, active mix, Jev labels) on all five datasets against Splink | ~15 min per variant |
+| `research/scripts/head_to_head.py` | custmatch against Splink 5 (and, with `--dedupe`, dedupe) on the synthetic file copied to a million records: time, peak memory, clustered F1 (`.venv-splink5`, `.venv-dedupe`) | ~30 min |
+| `research/scripts/home_data_benchmark.py` | Each tool on every tool's own datasets: Splink's four and dedupe's two (`data/dedupe/`) | ~40 min per dedupe pass |
+| `research/scripts/ncvr_leipzig.py` | custmatch and Splink on the Leipzig NCVR benchmark, by sample size and blocking keys, three draws | ~15 min |
 
 ### Reproductions of published results (chapter 10)
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/magellan_baseline.py` | Reproduces the Magellan column of Mudgal et al. (SIGMOD'18) — per-attribute similarity features, best of DT/RF/LR/NB/SVM on validation | ~8 min, CPU |
-| `scripts/run_ditto_all.sh`, `scripts/run_ditto_remaining.sh` | Ditto fine-tuning sequences | 10 min–3 h per dataset |
-| `scripts/llm_zeroshot_mlx.py` | Zero-shot LLM matching with MatchGPT's exact prompts and parsing, local model via MLX | ~16 min per test set |
-| `scripts/llm_zeroshot_openrouter.py` | The same protocol against hosted models via OpenRouter, with a spend ledger, a hard `--budget` stop, and the answering model logged per pair (for routers). Use `--no-temperature --max-tokens 2000`+ for reasoning models | ~2–6 min per test set, $0.01–0.65 each |
-| `scripts/run_llm_all.sh` | All four LLM test sets | ~1 h |
-| `scripts/jev_decisions.py` | Jev decision model as the matcher, via OpenRouter's Decisions API: P(match) per pair, same budget ledger | ~45 s per test set, ~$0.02 each |
-| `scripts/jev_variants.py` | Jev's API options one at a time on the two person tasks: criteria, structured fields, three-way choice, several questions per call | ~5 min, $0.12 |
-| `scripts/jev_bootstrap.py` | Paired bootstrap intervals for the Jev variant comparisons (no API calls) | seconds |
-| `scripts/jev_cascade.py` | Forest veto → Jev on the uncertain band of the full 152k-pair test split, clustered and scored against Ditto with split-half tuning (`--pilot N` first) | ~17 min, ~$1.60 |
+| `research/scripts/magellan_baseline.py` | Reproduces the Magellan column of Mudgal et al. (SIGMOD'18) — per-attribute similarity features, best of DT/RF/LR/NB/SVM on validation | ~8 min, CPU |
+| `research/scripts/run_ditto_all.sh`, `research/scripts/run_ditto_remaining.sh` | Ditto fine-tuning sequences | 10 min–3 h per dataset |
+| `research/scripts/llm_zeroshot_mlx.py` | Zero-shot LLM matching with MatchGPT's exact prompts and parsing, local model via MLX | ~16 min per test set |
+| `research/scripts/llm_zeroshot_openrouter.py` | The same protocol against hosted models via OpenRouter, with a spend ledger, a hard `--budget` stop, and the answering model logged per pair (for routers). Use `--no-temperature --max-tokens 2000`+ for reasoning models | ~2–6 min per test set, $0.01–0.65 each |
+| `research/scripts/run_llm_all.sh` | All four LLM test sets | ~1 h |
+| `research/scripts/jev_decisions.py` | Jev decision model as the matcher, via OpenRouter's Decisions API: P(match) per pair, same budget ledger | ~45 s per test set, ~$0.02 each |
+| `research/scripts/jev_variants.py` | Jev's API options one at a time on the two person tasks: criteria, structured fields, three-way choice, several questions per call | ~5 min, $0.12 |
+| `research/scripts/jev_bootstrap.py` | Paired bootstrap intervals for the Jev variant comparisons (no API calls) | seconds |
+| `research/scripts/jev_cascade.py` | Forest veto → Jev on the uncertain band of the full 152k-pair test split, clustered and scored against Ditto with split-half tuning (`--pilot N` first) | ~17 min, ~$1.60 |
 
 ### The tool and the service
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
-| `scripts/custmatch_validate.py` | Runs the `custmatch` tool end to end on the synthetic file at 500 / 1,000 / 3,000 labels; `--active` and `--active-seeds` (active learning), `--jev` (~$0.06) | ~1 to 40 min |
-| `scripts/custmatch_incremental_validate.py` | `custmatch add` on 10% held-out records vs a full rerun | ~20 s |
-| `scripts/robustness.py` | Feeds the CLI broken inputs (missing files, misspelt columns, empty sources, other encodings, bad labels, one giant block) and checks each ends in a clear message, never a crash or a silent run | ~3 min |
-| `scripts/modal_rerun.py` | On Modal, one container per experiment command, results merged back into `results/`: the published experiments that set a country profile (CDP, couples, cookies, record dates, scenarios, order dependence, NCVR) | ~2 h on the longest job, ~$5 |
-| `scripts/modal_name_list_ab.py` | On Modal: the code before the Wikidata name list was removed, with and without the list, on the CDP populations and the Australian file, three draws | ~30 min, ~$2 |
+| `research/scripts/custmatch_validate.py` | Runs the `custmatch` tool end to end on the synthetic file at 500 / 1,000 / 3,000 labels; `--active` and `--active-seeds` (active learning), `--jev` (~$0.06) | ~1 to 40 min |
+| `research/scripts/custmatch_incremental_validate.py` | `custmatch add` on 10% held-out records vs a full rerun | ~20 s |
+| `research/scripts/robustness.py` | Feeds the CLI broken inputs (missing files, misspelt columns, empty sources, other encodings, bad labels, one giant block) and checks each ends in a clear message, never a crash or a silent run | ~3 min |
+| `research/scripts/modal_rerun.py` | On Modal, one container per experiment command, results merged back into `research/results/`: the published experiments that set a country profile (CDP, couples, cookies, record dates, scenarios, order dependence, NCVR) | ~2 h on the longest job, ~$5 |
+| `research/scripts/modal_name_list_ab.py` | On Modal: the code before the Wikidata name list was removed, with and without the list, on the CDP populations and the Australian file, three draws | ~30 min, ~$2 |
 | `server/replay_test.py` | Real-time matching one record at a time against batch runs; `--all` writes every merge policy and the coherence check over five seeds | ~25 min with `--all` |
 | `server/learning_test.py` | Steward decisions as labels: three review rounds, decisions training the model or only overriding | ~10 min |
 | `server/scale_test.py` | The service at scale: loads, the batch, the real-time matcher's start and lookups | ~10 min at a million |
-| `scripts/collect_results.py` | Gathers everything into `results/summary.json` | seconds |
+| `research/scripts/collect_results.py` | Gathers everything into `research/results/summary.json` | seconds |
 
-Results land in `results/` as JSON plus the raw training logs.
+Results land in `research/results/` as JSON plus the raw training logs.
 
 ## Tests
 
@@ -175,7 +175,7 @@ They cover the mistakes this project actually made, not just happy paths:
 | `test_clustering.py` | Isolated records survive as singletons; bridge-aware cuts weak links only; households never chain across addresses |
 | `test_data_integrity.py` | Splits are cluster-disjoint, labels match ground truth, injected junk really is shared |
 | `test_custmatch.py` | The tool end to end on generated data: config errors, the threshold chosen after clustering, the LLM labelling gate, `custmatch add`, blocking modes, the match weight (fitted without labels, reloaded by `add` and `explain`), households and placeholders |
-| `test_reported_results.py` | **Every headline number in the docs still matches `results/*.json`**, and no section reference points at a section that does not exist |
+| `test_reported_results.py` | **Every headline number in the docs still matches `research/results/*.json`**, and no section reference points at a section that does not exist |
 
 The last one exists because a claim about a section that had never been written survived in
 this repo until it was checked. Data-dependent tests skip cleanly when `data/` has not been
@@ -189,18 +189,18 @@ built.
 | MatchGPT test sets + WDC Products 80% cc | product, bibliographic | ~1,250 pairs each | `external/MatchGPT/LLMForEM/tasks` |
 | FEBRL 3 / 4 | synthetic person records | 5,000 + 5,000 records | `recordlinkage` |
 | historical_50k | real people with injected errors | 50,578 records, 5,156 people | `splink` |
-| person_em (derived) | person-record EM splits, cluster-disjoint | 12k train / 3k valid / 152,772 test pairs | `scripts/person_em_build.py` |
+| person_em (derived) | person-record EM splits, cluster-disjoint | 12k train / 3k valid / 152,772 test pairs | `research/scripts/person_em_build.py` |
 
 **FEBRL is saturated** — rules score 97.7 and three matchers all score ≈99.9. Use it as a
 smoke test, not a benchmark. historical_50k separates methods properly (33 → 61 → 80).
 
 NCVR (Leipzig benchmark, 5 × 1M records, CC BY 4.0): download
 `https://dbs.uni-leipzig.de/files/datasets/saeedi/5Party-ocp20.tar.gz` into `data/ncvr_leipzig/`,
-unpack it there, and run `scripts/ncvr_leipzig.py --people 20000,200000` (about 15 minutes; `--splink` adds Splink, which needs about 7 GB at 200,000 people). It holds
+unpack it there, and run `research/scripts/ncvr_leipzig.py --people 20000,200000` (about 15 minutes; `--splink` adds Splink, which needs about 7 GB at 200,000 people). It holds
 real names: keep it in the gitignored `data/`. The raw North Carolina snapshots, linkable by NCID,
 remain the realistic version ([report](report/README.md) §13).
 
-`scripts/cdp_comparison.py` (about 40 minutes) compares Segment-style deterministic resolution with custmatch at high and low sign-up rates on the Australian file; `scripts/scenarios.py build` then `score` regenerates and scores the scenario file; `scripts/cookie_research.py` and `scripts/record_dates_research.py` measure cookie stitching and record dates.
+`research/scripts/cdp_comparison.py` (about 40 minutes) compares Segment-style deterministic resolution with custmatch at high and low sign-up rates on the Australian file; `research/scripts/scenarios.py build` then `score` regenerates and scores the scenario file; `research/scripts/cookie_research.py` and `research/scripts/record_dates_research.py` measure cookie stitching and record dates.
 
 Surveyed but not run: pseudopeople, OpenSanctions Pairs (755k labelled pairs, CC BY-NC),
 WDC Products full benchmark, Machamp, ICE-ID. [report](report/README.md) §1 has the access details.
@@ -226,7 +226,7 @@ Found the hard way; the first three cost real time.
 6. **F1 is not portable across test sets.** The same 8B model scores 12–17 points "better" than
    its published numbers purely because these test sets have a denser positive rate.
 
-`patches/ditto-mps-and-fixes.patch` (applied in Setup) holds every change made to the upstream code: MPS device, apex
+`research/patches/ditto-mps-and-fixes.patch` (applied in Setup) holds every change made to the upstream code: MPS device, apex
 removed, allocator cache, the `[SEP]` fallback, the `.dk` cache check, and an optional
 `DITTO_WARMUP_FRAC`.
 
