@@ -7,7 +7,7 @@
 Find the records that are the same customer - across your CRM, billing and web sign-ups -
 group them into households, and write one golden record per customer.
 
-![One customer in the steward dashboard: the golden record, and the links between four records from three sources](docs/images/dashboard-customer.png)
+![One customer in the steward dashboard: the golden record, and the links between four records from three sources](https://raw.githubusercontent.com/andrewgoodchild/custmatch/main/docs/images/dashboard-customer.png)
 
 *One customer, John Citizen, found in four records from a web sign-up, the app and a store.
 The golden record at the top takes the best value of each field; "2 value(s)" marks where the
@@ -133,7 +133,7 @@ your data - one Docker image, one database (Postgres, or SQLite for a trial):
 docker compose -f server/docker-compose.yml up -d --build db api   # then see server/README.md
 ```
 
-![The review queue: two records side by side, and why the model scored them 53%](docs/images/dashboard-review.png)
+![The review queue: two records side by side, and why the model scored them 53%](https://raw.githubusercontent.com/andrewgoodchild/custmatch/main/docs/images/dashboard-review.png)
 
 *The review queue shows the pairs the model was least sure of, closest calls first. Both records
 here say Jane, but the web sign-up has only an email and a postcode, the app record a
@@ -143,7 +143,7 @@ unshared contacts pull it back below the threshold (the yellow line), where the 
 apart. A steward answers* Same person *or* Different
 people*; the answer applies at once and teaches the next run.*
 
-![The model's accuracy against the threshold, and how its scores are spread](docs/images/dashboard-model.png)
+![The model's accuracy against the threshold, and how its scores are spread](https://raw.githubusercontent.com/andrewgoodchild/custmatch/main/docs/images/dashboard-model.png)
 
 *How well the model is doing, and where its line is drawn. Each pair of records gets a score from
 0 to 1, and the* threshold *is the score above which two records count as one person. The left
