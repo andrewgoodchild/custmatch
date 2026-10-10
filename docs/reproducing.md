@@ -75,6 +75,7 @@ Grouped by the report chapter whose numbers they produce.
 
 | Script | What it does | Runtime |
 | --- | --- | --- |
+| `research/scripts/label_curve.py` | custmatch trained on 50 to 1,000 labels, random or active, three seeds, on six datasets; and with no labels, the match weight at label-free cut-offs | ~30 min |
 | `research/scripts/jev_labels.py` | Forest trained on Jev's labels instead of the truth, on both person datasets: hard, soft, and cut-off from 300 hand labels | ~10 min, ~$0.70 |
 | `research/scripts/historical_labels.py` | historical_50k: the forest with 1,000 / 3,000 / 6,000 random labels, chosen and best-in-hindsight thresholds | ~5 min |
 

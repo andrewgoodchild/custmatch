@@ -104,7 +104,9 @@ the cloud machine. On one machine, time per million records rose by about a quar
   and +1.8 on sparse sign-ups, never more than 0.03 behind on any dataset, for runs about 30%
   longer.
 
-**Where others win.** Splink needs no labels and is faster once its large blocks are skipped
+**Where others win.** Splink needs no labels; custmatch needs about 300, most of them picked for
+you by active learning (within 1.6 points of 1,000 on five of six datasets; with none, no
+cut-off held across datasets - [chapter 4](docs/report/04-labels.md)). Splink is also faster once its large blocks are skipped
 (21.6 seconds at a million records), and it can run on Spark across a cluster: its developers
 matched a billion records that way. custmatch runs on one machine - about 3.4 GB per million
 records, so tens of millions, not hundreds. On clean records with names and places only, the tools

@@ -979,7 +979,8 @@ def test_head_to_head_and_home_data_claims():
     for ds in ("fake_1000", "febrl3", "febrl4", "historical_50k", "dedupe_csv_example", "dedupe_patent_example"):
         runs = [r[ds][k]["f1"] for k in ("dedupe", "dedupe_run2", "dedupe_run3")]
         cell = f"{np.mean(runs):.2f}" + (f" ({min(runs):.2f}-{max(runs):.2f})" if len(set(runs)) > 1 else "")
-        row = next(line for line in GUIDE.splitlines() if line.startswith(f"| {ds.removeprefix('dedupe_')} ("))
+        chapter9 = (DOCS / "report" / "09-against-other-tools.md").read_text()
+        row = next(line for line in chapter9.splitlines() if line.startswith(f"| {ds.removeprefix('dedupe_')} ("))
         assert f"{r[ds]['custmatch_1000']['f1']:.2f}" in row and cell in row.replace("**", ""), (ds, row)
         for key, v in r[ds].items():
             if key.startswith("custmatch_1000_max_block"):        # the config the run's warning advised
@@ -1121,3 +1122,25 @@ def test_readme_public_benchmarks():
             assert number in chapter, (number, row)
     assert "within a quarter of a point of what its blocking allows" in readme
     assert 99.46 - 99.22 <= 0.25
+
+
+def test_label_curve_claims():
+    """docs/report/04-labels.md "How many labels": the tables and their conclusions, from label_curve.json."""
+    r = load("label_curve.json")
+    text = _flat((DOCS / "report" / "04-labels.md").read_text())
+    sets = ("fake_1000", "febrl3", "febrl4", "historical_50k", "ncvr_20k", "au_customer")
+    for d in sets:
+        for c in ("random_100", "random_300", "random_1000", "active_200", "active_300", "active_1000"):
+            assert f"{r[d][c]['mean']:.2f}" in text, (d, c)
+        z = r[d]["zero_label"]
+        for k in ("top_lambda", "weight_10", "weight_20", "best_in_hindsight"):
+            assert f"{z[k]['f1']:.2f}" in text, (d, k)
+    gap = {d: r[d]["active_1000"]["mean"] - r[d]["active_300"]["mean"] for d in sets}
+    assert sum(g <= 1.6 for g in gap.values()) == 5 and gap["au_customer"] > 1.6
+    beat = [d for d in sets if r[d]["active_300"]["mean"] > r[d]["random_1000"]["mean"]]
+    assert len(beat) == 4 and set(sets) - set(beat) == {"febrl4", "historical_50k"}
+    assert 0 < r["febrl4"]["random_1000"]["mean"] - r["febrl4"]["active_300"]["mean"] < 0.1
+    assert 14.07 in r["ncvr_20k"]["random_100"]["f1_by_seed"] and 7.54 in r["febrl4"]["random_50"]["f1_by_seed"]
+    assert None in r["au_customer"]["random_50"]["f1_by_seed"]
+    assert round(r["ncvr_20k"]["active_300"]["mean"] - r["ncvr_20k"]["zero_label"]["best_in_hindsight"]["f1"]) == 21
+    assert "trails 300 labels by 21 points on NCVR" in text
