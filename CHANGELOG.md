@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-10-10)
 
 First public release: the library, and **custmatch-server**, the self-hosted service
 (server/README.md; its measurements in docs/report/12-the-service.md, "The service"). The service keeps source records and their loads in
