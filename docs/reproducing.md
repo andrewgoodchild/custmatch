@@ -78,6 +78,7 @@ Grouped by the report chapter whose numbers they produce.
 | `research/scripts/label_curve.py` | custmatch trained on 50 to 1,000 labels, random or active, three seeds, on six datasets; and with no labels, the match weight at label-free cut-offs | ~30 min |
 | `research/scripts/jev_labels.py` | Forest trained on Jev's labels instead of the truth, on both person datasets: hard, soft, and cut-off from 300 hand labels | ~10 min, ~$0.70 |
 | `research/scripts/historical_labels.py` | historical_50k: the forest with 1,000 / 3,000 / 6,000 random labels, chosen and best-in-hindsight thresholds | ~5 min |
+| `research/scripts/local_llm_labels.py` | Qwen3 8B or 14B through a local Ollama (`--model=`) answering 500 random and 500 hard training pairs per person dataset, against the forest out of fold; needs Ollama and the model pulled, nothing leaves the machine | ~2 h per model |
 
 ### Customer data (chapter 5)
 
@@ -102,6 +103,8 @@ Grouped by the report chapter whose numbers they produce.
 | `research/scripts/custmatch_scale.py` | Times each stage on disjoint copies of the synthetic file, up to 1M records; optional blocking mode (`fixed`, `learned`) | ~5 min |
 | `research/scripts/modal_scale.py` | On Modal (16 cores, 128 GiB): the scale test at 2, 5 and 10 million records and the full 5-million-record NCVR file, with peak memory | ~1-2 h |
 | `research/scripts/modal_ncvr_full.py` | On Modal: all 5 million NCVR records, labelled as a user would (300 random + 700 active), resumable | ~3 h |
+| `research/scripts/embedding_blocking.py` | historical_50k and NCVR (20,000 people): the blocking ceiling with each record's 5, 10 or 20 nearest neighbours by character n-gram vectors (`--neural` for a sentence model, a ~90 MB download), against the keys and LSH | ~10 min |
+| `research/scripts/embedding_pipeline.py` | The same two datasets through the whole pipeline with keys, keys + LSH and keys + 5 or 10 neighbours; 100 random + 900 active labels, three seeds, with stage times | ~35 min |
 | `research/scripts/memory_profile.py` | Peak memory per pipeline stage on an NCVR sample | ~5 min |
 | `research/scripts/large_block_check.py` | The large-block check on and off: six person benchmarks and dedupe's patent applicants | ~10 min |
 

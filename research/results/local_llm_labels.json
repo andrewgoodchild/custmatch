@@ -1,0 +1,218 @@
+{
+ "qwen3:8b": {
+  "customer": {
+   "seconds_per_pair": 3.68,
+   "random": {
+    "llm": {
+     "pairs": 500,
+     "matches": 216,
+     "accuracy": 99.0,
+     "precision": 98.62,
+     "recall": 99.07
+    },
+    "forest": {
+     "pairs": 500,
+     "matches": 216,
+     "accuracy": 99.0,
+     "precision": 98.62,
+     "recall": 99.07
+    },
+    "unanswered": 0,
+    "llm_confident": {
+     "pairs": 495,
+     "matches": 212,
+     "accuracy": 99.19,
+     "precision": 99.06,
+     "recall": 99.06,
+     "share": 99.0
+    }
+   },
+   "hard": {
+    "llm": {
+     "pairs": 500,
+     "matches": 212,
+     "accuracy": 82.8,
+     "precision": 76.92,
+     "recall": 84.91
+    },
+    "forest": {
+     "pairs": 500,
+     "matches": 212,
+     "accuracy": 75.0,
+     "precision": 70.42,
+     "recall": 70.75
+    },
+    "unanswered": 0,
+    "llm_confident": {
+     "pairs": 435,
+     "matches": 179,
+     "accuracy": 87.36,
+     "precision": 86.47,
+     "recall": 82.12,
+     "share": 87.0
+    }
+   }
+  },
+  "historical": {
+   "seconds_per_pair": 3.95,
+   "random": {
+    "llm": {
+     "pairs": 500,
+     "matches": 148,
+     "accuracy": 90.4,
+     "precision": 83.33,
+     "recall": 84.46
+    },
+    "forest": {
+     "pairs": 500,
+     "matches": 148,
+     "accuracy": 96.8,
+     "precision": 95.21,
+     "recall": 93.92
+    },
+    "unanswered": 0,
+    "llm_confident": {
+     "pairs": 423,
+     "matches": 96,
+     "accuracy": 94.56,
+     "precision": 100.0,
+     "recall": 76.04,
+     "share": 84.6
+    }
+   },
+   "hard": {
+    "llm": {
+     "pairs": 500,
+     "matches": 256,
+     "accuracy": 72.8,
+     "precision": 71.28,
+     "recall": 78.52
+    },
+    "forest": {
+     "pairs": 500,
+     "matches": 256,
+     "accuracy": 59.2,
+     "precision": 61.21,
+     "recall": 55.47
+    },
+    "unanswered": 0,
+    "llm_confident": {
+     "pairs": 285,
+     "matches": 120,
+     "accuracy": 80.0,
+     "precision": 97.01,
+     "recall": 54.17,
+     "share": 57.0
+    }
+   }
+  }
+ },
+ "qwen3:14b": {
+  "customer": {
+   "seconds_per_pair": 4.32,
+   "random": {
+    "llm": {
+     "pairs": 500,
+     "matches": 216,
+     "accuracy": 95.6,
+     "precision": 100.0,
+     "recall": 89.81
+    },
+    "forest": {
+     "pairs": 500,
+     "matches": 216,
+     "accuracy": 99.0,
+     "precision": 98.62,
+     "recall": 99.07
+    },
+    "unanswered": 0,
+    "llm_confident": {
+     "pairs": 405,
+     "matches": 191,
+     "accuracy": 100.0,
+     "precision": 100.0,
+     "recall": 100.0,
+     "share": 81.0
+    }
+   },
+   "hard": {
+    "llm": {
+     "pairs": 500,
+     "matches": 212,
+     "accuracy": 70.2,
+     "precision": 89.87,
+     "recall": 33.49
+    },
+    "forest": {
+     "pairs": 500,
+     "matches": 212,
+     "accuracy": 75.0,
+     "precision": 70.42,
+     "recall": 70.75
+    },
+    "unanswered": 0,
+    "llm_confident": {
+     "pairs": 241,
+     "matches": 68,
+     "accuracy": 93.36,
+     "precision": 98.15,
+     "recall": 77.94,
+     "share": 48.2
+    }
+   }
+  },
+  "historical": {
+   "seconds_per_pair": 4.8,
+   "random": {
+    "llm": {
+     "pairs": 500,
+     "matches": 148,
+     "accuracy": 82.0,
+     "precision": 100.0,
+     "recall": 39.19
+    },
+    "forest": {
+     "pairs": 500,
+     "matches": 148,
+     "accuracy": 96.8,
+     "precision": 95.21,
+     "recall": 93.92
+    },
+    "unanswered": 0,
+    "llm_confident": {
+     "pairs": 97,
+     "matches": 50,
+     "accuracy": 96.91,
+     "precision": 100.0,
+     "recall": 94.0,
+     "share": 19.4
+    }
+   },
+   "hard": {
+    "llm": {
+     "pairs": 500,
+     "matches": 256,
+     "accuracy": 59.8,
+     "precision": 91.04,
+     "recall": 23.83
+    },
+    "forest": {
+     "pairs": 500,
+     "matches": 256,
+     "accuracy": 59.2,
+     "precision": 61.21,
+     "recall": 55.47
+    },
+    "unanswered": 0,
+    "llm_confident": {
+     "pairs": 59,
+     "matches": 36,
+     "accuracy": 91.53,
+     "precision": 91.89,
+     "recall": 94.44,
+     "share": 11.8
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,430 @@
+{
+ "historical_50k": {
+  "keys": {
+   "runs": [
+    {
+     "seed": 1,
+     "f1": 81.47,
+     "precision": 83.54,
+     "recall": 79.49,
+     "candidate_pairs": 547050,
+     "stage_seconds": {
+      "load and profile": 0.34,
+      "blocking (547,050 candidate pairs)": 0.29,
+      "forest: cross-fitted clustered F1 89.4": 14.24,
+      "threshold (clustered, in-cluster precision check)": 0.0,
+      "large blocks checked: 0 of 1 kept, 0 pairs added": 0.03,
+      "households, golden records, outputs": 3.21
+     },
+     "seconds": 50.2
+    },
+    {
+     "seed": 2,
+     "f1": 86.74,
+     "precision": 91.9,
+     "recall": 82.14,
+     "candidate_pairs": 547050,
+     "stage_seconds": {
+      "load and profile": 0.28,
+      "blocking (547,050 candidate pairs)": 0.29,
+      "forest: cross-fitted clustered F1 93.27": 12.94,
+      "threshold (clustered, in-cluster precision check)": 0.0,
+      "large blocks checked: 0 of 1 kept, 0 pairs added": 0.02,
+      "households, golden records, outputs": 3.0
+     },
+     "seconds": 47.0
+    },
+    {
+     "seed": 3,
+     "f1": 86.23,
+     "precision": 93.04,
+     "recall": 80.34,
+     "candidate_pairs": 547050,
+     "stage_seconds": {
+      "load and profile": 0.28,
+      "blocking (547,050 candidate pairs)": 0.3,
+      "forest: cross-fitted clustered F1 91.97": 12.77,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 1 kept, 0 pairs added": 0.01,
+      "households, golden records, outputs": 2.99
+     },
+     "seconds": 47.0
+    }
+   ],
+   "mean_f1": 84.81
+  },
+  "keys_lsh": {
+   "runs": [
+    {
+     "seed": 1,
+     "f1": 86.47,
+     "precision": 88.17,
+     "recall": 84.84,
+     "candidate_pairs": 619385,
+     "stage_seconds": {
+      "load and profile": 0.24,
+      "blocking (619,385 candidate pairs)": 1.51,
+      "forest: cross-fitted clustered F1 88.16": 13.53,
+      "threshold (clustered, in-cluster precision check)": 0.0,
+      "large blocks checked: 0 of 5 kept, 0 pairs added": 0.02,
+      "households, golden records, outputs": 3.2
+     },
+     "seconds": 61.9
+    },
+    {
+     "seed": 2,
+     "f1": 88.03,
+     "precision": 94.32,
+     "recall": 82.52,
+     "candidate_pairs": 619385,
+     "stage_seconds": {
+      "load and profile": 0.26,
+      "blocking (619,385 candidate pairs)": 1.33,
+      "forest: cross-fitted clustered F1 90.29": 13.63,
+      "threshold (clustered, in-cluster precision check)": 0.0,
+      "large blocks checked: 0 of 5 kept, 0 pairs added": 0.03,
+      "households, golden records, outputs": 3.25
+     },
+     "seconds": 61.9
+    },
+    {
+     "seed": 3,
+     "f1": 85.26,
+     "precision": 96.99,
+     "recall": 76.06,
+     "candidate_pairs": 619385,
+     "stage_seconds": {
+      "load and profile": 0.25,
+      "blocking (619,385 candidate pairs)": 1.37,
+      "forest: cross-fitted clustered F1 91.59": 13.67,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 5 kept, 0 pairs added": 0.03,
+      "households, golden records, outputs": 3.11
+     },
+     "seconds": 62.7
+    }
+   ],
+   "mean_f1": 86.59
+  },
+  "keys_emb5": {
+   "runs": [
+    {
+     "seed": 1,
+     "f1": 89.79,
+     "precision": 94.55,
+     "recall": 85.48,
+     "candidate_pairs": 595164,
+     "stage_seconds": {
+      "load and profile": 0.25,
+      "blocking (595,164 candidate pairs)": 0.31,
+      "forest: cross-fitted clustered F1 89.96": 13.7,
+      "threshold (clustered, in-cluster precision check)": 0.0,
+      "large blocks checked: 0 of 1 kept, 0 pairs added": 0.03,
+      "households, golden records, outputs": 3.2
+     },
+     "seconds": 105.8
+    },
+    {
+     "seed": 2,
+     "f1": 87.3,
+     "precision": 87.86,
+     "recall": 86.75,
+     "candidate_pairs": 595164,
+     "stage_seconds": {
+      "load and profile": 0.26,
+      "blocking (595,164 candidate pairs)": 0.32,
+      "forest: cross-fitted clustered F1 87.33": 13.78,
+      "threshold (clustered, in-cluster precision check)": 0.0,
+      "large blocks checked: 0 of 1 kept, 0 pairs added": 0.02,
+      "households, golden records, outputs": 3.22
+     },
+     "seconds": 51.0
+    },
+    {
+     "seed": 3,
+     "f1": 83.04,
+     "precision": 87.88,
+     "recall": 78.71,
+     "candidate_pairs": 595164,
+     "stage_seconds": {
+      "load and profile": 0.27,
+      "blocking (595,164 candidate pairs)": 0.33,
+      "forest: cross-fitted clustered F1 87.42": 14.06,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 1 kept, 0 pairs added": 0.02,
+      "households, golden records, outputs": 3.25
+     },
+     "seconds": 50.2
+    }
+   ],
+   "mean_f1": 86.71
+  },
+  "keys_emb10": {
+   "runs": [
+    {
+     "seed": 1,
+     "f1": 87.28,
+     "precision": 94.23,
+     "recall": 81.28,
+     "candidate_pairs": 689521,
+     "stage_seconds": {
+      "load and profile": 0.26,
+      "blocking (689,521 candidate pairs)": 0.34,
+      "forest: cross-fitted clustered F1 86.94": 14.69,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 1 kept, 0 pairs added": 0.03,
+      "households, golden records, outputs": 3.59
+     },
+     "seconds": 108.8
+    },
+    {
+     "seed": 2,
+     "f1": 87.59,
+     "precision": 96.24,
+     "recall": 80.36,
+     "candidate_pairs": 689521,
+     "stage_seconds": {
+      "load and profile": 0.25,
+      "blocking (689,521 candidate pairs)": 0.33,
+      "forest: cross-fitted clustered F1 91.13": 14.92,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 1 kept, 0 pairs added": 0.01,
+      "households, golden records, outputs": 3.39
+     },
+     "seconds": 53.6
+    },
+    {
+     "seed": 3,
+     "f1": 87.98,
+     "precision": 90.47,
+     "recall": 85.63,
+     "candidate_pairs": 689521,
+     "stage_seconds": {
+      "load and profile": 0.26,
+      "blocking (689,521 candidate pairs)": 0.36,
+      "forest: cross-fitted clustered F1 87.94": 15.38,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 1 kept, 0 pairs added": 0.03,
+      "households, golden records, outputs": 3.34
+     },
+     "seconds": 54.5
+    }
+   ],
+   "mean_f1": 87.62
+  }
+ },
+ "ncvr_20k": {
+  "keys": {
+   "runs": [
+    {
+     "seed": 1,
+     "f1": 95.67,
+     "precision": 99.85,
+     "recall": 91.82,
+     "candidate_pairs": 423539,
+     "stage_seconds": {
+      "load and profile": 0.23,
+      "blocking (423,539 candidate pairs)": 0.26,
+      "forest: cross-fitted clustered F1 99.95": 8.79,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.12,
+      "households, golden records, outputs": 0.66
+     },
+     "seconds": 35.6
+    },
+    {
+     "seed": 2,
+     "f1": 95.65,
+     "precision": 99.84,
+     "recall": 91.8,
+     "candidate_pairs": 423539,
+     "stage_seconds": {
+      "load and profile": 0.23,
+      "blocking (423,539 candidate pairs)": 0.26,
+      "forest: cross-fitted clustered F1 99.97": 8.23,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.07,
+      "households, golden records, outputs": 0.64
+     },
+     "seconds": 31.4
+    },
+    {
+     "seed": 3,
+     "f1": 95.64,
+     "precision": 99.83,
+     "recall": 91.79,
+     "candidate_pairs": 423539,
+     "stage_seconds": {
+      "load and profile": 0.26,
+      "blocking (423,539 candidate pairs)": 0.28,
+      "forest: cross-fitted clustered F1 99.95": 8.73,
+      "threshold (clustered, in-cluster precision check)": 0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.11,
+      "households, golden records, outputs": 0.6
+     },
+     "seconds": 34.3
+    }
+   ],
+   "mean_f1": 95.65
+  },
+  "keys_lsh": {
+   "runs": [
+    {
+     "seed": 1,
+     "f1": 98.71,
+     "precision": 99.74,
+     "recall": 97.69,
+     "candidate_pairs": 467112,
+     "stage_seconds": {
+      "load and profile": 0.26,
+      "blocking (467,112 candidate pairs)": 1.19,
+      "forest: cross-fitted clustered F1 99.85": 9.0,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.1,
+      "households, golden records, outputs": 0.52
+     },
+     "seconds": 44.6
+    },
+    {
+     "seed": 2,
+     "f1": 98.69,
+     "precision": 99.73,
+     "recall": 97.68,
+     "candidate_pairs": 467112,
+     "stage_seconds": {
+      "load and profile": 0.25,
+      "blocking (467,112 candidate pairs)": 1.14,
+      "forest: cross-fitted clustered F1 99.9": 9.13,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.08,
+      "households, golden records, outputs": 0.53
+     },
+     "seconds": 44.6
+    },
+    {
+     "seed": 3,
+     "f1": 98.72,
+     "precision": 99.75,
+     "recall": 97.72,
+     "candidate_pairs": 467112,
+     "stage_seconds": {
+      "load and profile": 0.27,
+      "blocking (467,112 candidate pairs)": 1.12,
+      "forest: cross-fitted clustered F1 99.9": 8.94,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.1,
+      "households, golden records, outputs": 0.66
+     },
+     "seconds": 44.7
+    }
+   ],
+   "mean_f1": 98.71
+  },
+  "keys_emb5": {
+   "runs": [
+    {
+     "seed": 1,
+     "f1": 99.87,
+     "precision": 99.8,
+     "recall": 99.94,
+     "candidate_pairs": 472323,
+     "stage_seconds": {
+      "load and profile": 0.25,
+      "blocking (472,323 candidate pairs)": 0.3,
+      "forest: cross-fitted clustered F1 100.0": 9.23,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.08,
+      "households, golden records, outputs": 0.7
+     },
+     "seconds": 64.1
+    },
+    {
+     "seed": 2,
+     "f1": 99.83,
+     "precision": 99.7,
+     "recall": 99.97,
+     "candidate_pairs": 472323,
+     "stage_seconds": {
+      "load and profile": 0.27,
+      "blocking (472,323 candidate pairs)": 0.29,
+      "forest: cross-fitted clustered F1 99.95": 9.05,
+      "threshold (clustered, in-cluster precision check)": 0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.1,
+      "households, golden records, outputs": 0.68
+     },
+     "seconds": 36.1
+    },
+    {
+     "seed": 3,
+     "f1": 99.86,
+     "precision": 99.77,
+     "recall": 99.94,
+     "candidate_pairs": 472323,
+     "stage_seconds": {
+      "load and profile": 0.29,
+      "blocking (472,323 candidate pairs)": 0.3,
+      "forest: cross-fitted clustered F1 99.97": 9.36,
+      "threshold (clustered, in-cluster precision check)": 0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.13,
+      "households, golden records, outputs": 0.64
+     },
+     "seconds": 37.3
+    }
+   ],
+   "mean_f1": 99.85
+  },
+  "keys_emb10": {
+   "runs": [
+    {
+     "seed": 1,
+     "f1": 99.84,
+     "precision": 99.72,
+     "recall": 99.96,
+     "candidate_pairs": 541994,
+     "stage_seconds": {
+      "load and profile": 0.3,
+      "blocking (541,994 candidate pairs)": 0.29,
+      "forest: cross-fitted clustered F1 99.9": 10.73,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.09,
+      "households, golden records, outputs": 0.67
+     },
+     "seconds": 67.6
+    },
+    {
+     "seed": 2,
+     "f1": 99.74,
+     "precision": 99.5,
+     "recall": 99.98,
+     "candidate_pairs": 541994,
+     "stage_seconds": {
+      "load and profile": 0.21,
+      "blocking (541,994 candidate pairs)": 0.31,
+      "forest: cross-fitted clustered F1 99.77": 10.53,
+      "threshold (clustered, in-cluster precision check)": -0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.11,
+      "households, golden records, outputs": 0.66
+     },
+     "seconds": 40.7
+    },
+    {
+     "seed": 3,
+     "f1": 99.85,
+     "precision": 99.75,
+     "recall": 99.95,
+     "candidate_pairs": 541994,
+     "stage_seconds": {
+      "load and profile": 0.25,
+      "blocking (541,994 candidate pairs)": 0.28,
+      "forest: cross-fitted clustered F1 99.9": 10.38,
+      "threshold (clustered, in-cluster precision check)": 0.0,
+      "large blocks checked: 0 of 167 kept, 0 pairs added": 0.09,
+      "households, golden records, outputs": 0.65
+     },
+     "seconds": 40.7
+    }
+   ],
+   "mean_f1": 99.81
+  }
+ }
+}

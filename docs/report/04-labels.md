@@ -3,7 +3,9 @@
 Labels are the most important input, and the price of entry: Splink can start with none,
 custmatch cannot. This chapter measures how many it needs - about 300, most of them chosen by
 active learning - whether it could start with none (not reliably), and whether a language model
-could supply them (only where its labels are near-perfect; custmatch tried it and dropped it).
+could supply them (only where its labels are near-perfect; custmatch tried it and dropped it). A
+model running on the laptop labels no better, but is right more often than the forest on the
+pairs the forest is least sure of.
 
 ## How many labels, and can it start with none?
 
@@ -97,6 +99,43 @@ people outside the labelled pairs - no better than active learning with hand lab
 the data in house. Sending customer records to a third party is a security risk, so the command was
 removed; the code lives on in `research/scripts/jev_labelling.py` for the scripts that produced these
 numbers.
+
+## A local LLM: no labeller, but a second opinion on hard pairs
+
+`research/scripts/local_llm_labels.py`, `research/results/local_llm_labels.json`. A model that
+runs on the laptop keeps the records in house, which removes the reason the `label` command was
+dropped; what is left is accuracy. Two open-weight models, Qwen3 8B and 14B, ran through Ollama on
+a 16 GB Apple-silicon laptop (temperature 0, no reasoning trace), with Jev's question and written
+criteria, on the two datasets above. Each answered same person or not, with a confidence. Two
+samples of 500 training pairs per dataset: at random (what labelling from scratch asks), and the
+500 the forest is least sure of, out of fold (what active learning and the stewards' review queue
+show). The forest's own out-of-fold accuracy on the same pairs is the comparison:
+
+| Accuracy | qwen3:8b | qwen3:14b | Forest |
+| --- | ---: | ---: | ---: |
+| Customer pipeline, random pairs | 99.0% | 95.6% | 99.0% |
+| Customer pipeline, hard pairs | **82.8%** | 70.2% | 75.0% |
+| historical_50k, random pairs | 90.4% | 82.0% | **96.8%** |
+| historical_50k, hard pairs | **72.8%** | 59.8% | 59.2% |
+| Seconds a pair | 3.68 to 3.95 | 4.32 to 4.80 | - |
+
+- **As a labeller it adds nothing.** On random pairs the 8B model ties the forest on customer
+  records and is 6.4 points behind on historical_50k - about where Jev was, and the section above
+  shows what labels that inaccurate do to the forest.
+- **On the hard pairs it is right more often than the forest:** 7.8 points on the customer
+  pipeline and 13.6 on historical_50k. These pairs are by construction where the forest is close
+  to a coin toss, so it is a low bar, and the model is still wrong on about one in five. It could
+  show a steward a suggestion and a confidence beside each pair in the review queue; the steward
+  still decides. Where it was at least 90% sure (87% and 57% of the hard pairs) it was right
+  87.36% and 80.00% of the time.
+- **The bigger model is worse.** qwen3:14b rarely says "same person": on historical_50k it finds
+  39% of true matches among random pairs and 24% among hard ones, though over 90% of its "same"
+  answers are right. It was also slower and needs the laptop's memory nearly to itself.
+
+So a local model is not a way to start without labels, and nothing in custmatch uses one. It is a
+candidate for the review queue, where it would have to be computed ahead of time (about four
+seconds a pair), and whether it speeds stewards up - or a confident wrong suggestion leads them
+astray - has not been tested with people.
 
 ---
 

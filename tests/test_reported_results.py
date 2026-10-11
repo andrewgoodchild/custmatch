@@ -6,6 +6,7 @@ about a section that did not exist survive in this repo.
 """
 import json
 from pathlib import Path
+from statistics import fmean
 
 import pytest
 
@@ -1144,3 +1145,54 @@ def test_label_curve_claims():
     assert None in r["au_customer"]["random_50"]["f1_by_seed"]
     assert round(r["ncvr_20k"]["active_300"]["mean"] - r["ncvr_20k"]["zero_label"]["best_in_hindsight"]["f1"]) == 21
     assert "trails 300 labels by 21 points on NCVR" in text
+
+
+def test_local_llm_claims():
+    """docs/report/04-labels.md "A local LLM": the table and its conclusions, from local_llm_labels.json."""
+    r = load("local_llm_labels.json")
+    text = _flat((DOCS / "report" / "04-labels.md").read_text())
+    for m in ("qwen3:8b", "qwen3:14b"):
+        for d in ("customer", "historical"):
+            for k in ("random", "hard"):
+                assert f"{r[m][d][k]['llm']['accuracy']:.1f}%" in text, (m, d, k)
+                assert r[m][d][k]["unanswered"] == 0
+    for d in ("customer", "historical"):
+        for k in ("random", "hard"):
+            assert f"{r['qwen3:8b'][d][k]['forest']['accuracy']:.1f}%" in text, (d, k)
+    s, f = r["qwen3:8b"], lambda d, k: s[d][k]["llm"]["accuracy"] - s[d][k]["forest"]["accuracy"]
+    assert f("customer", "random") == 0 and round(-f("historical", "random"), 1) == 6.4
+    assert round(f("customer", "hard"), 1) == 7.8 and round(f("historical", "hard"), 1) == 13.6
+    for d in ("customer", "historical"):
+        c = s[d]["hard"]["llm_confident"]
+        assert f"{c['accuracy']:.2f}%" in text and f"{c['share']:.0f}%" in text
+        for k in ("random", "hard"):
+            assert r["qwen3:14b"][d][k]["llm"]["accuracy"] < s[d][k]["llm"]["accuracy"]
+    big = r["qwen3:14b"]["historical"]
+    assert (round(big["random"]["llm"]["recall"]), round(big["hard"]["llm"]["recall"])) == (39, 24)
+    assert min(big[k]["llm"]["precision"] for k in ("random", "hard")) > 90
+
+
+def test_embedding_blocking_claims():
+    """docs/report/06-blocking-and-scale.md "Nearest neighbours by spelling": both tables, from the results."""
+    c, p = load("embedding_blocking.json"), load("embedding_pipeline.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    rows = ("keys", "keys_lsh", "keys+char_names_k5", "keys+char_names_place_k5", "keys+char_names_place_k10")
+    for d in ("historical_50k", "ncvr_20k"):
+        for k in rows:
+            assert f"{c[d][k]['ceiling']:.2f}" in text and f"{c[d][k]['pairs']:,}" in text, (d, k)
+        for k, v in p[d].items():
+            assert f"{v['mean_f1']:.2f}" in text, (d, k)
+            run = fmean([sum(r["stage_seconds"].values()) for r in v["runs"]])
+            assert f"{run:.1f} s" in text, (d, k)
+        lead = p[d]["keys_emb10"]["mean_f1"] - p[d]["keys_lsh"]["mean_f1"]
+        assert 0.9 < lead < 1.2, (d, lead)
+        secs = c[d]["keys+char_names_place_k10"]["embedding_seconds"]
+        assert f"{secs:.0f} s on {'historical_50k' if d.startswith('hist') else 'NCVR'}" in text
+    assert f"{c['historical_50k']['keys_lsh+char_names_place_k5']['ceiling']:.2f}" in text
+    h = [round(r["f1"], 2) for r in p["historical_50k"]["keys_emb10"]["runs"]]
+    assert f"({min(h):.2f} to {max(h):.2f})" in text
+    h5 = [r["f1"] for r in p["historical_50k"]["keys_emb5"]["runs"]]
+    assert f"{min(h5):.2f} to {max(h5):.2f}" in text
+    blk = lambda k: fmean([next(s for n, s in r["stage_seconds"].items() if n.startswith("blocking"))  # noqa: E731
+                             for r in p["historical_50k"][k]["runs"]])
+    assert f"blocking takes {blk('keys_lsh'):.2f} s instead of {blk('keys'):.2f} s" in text

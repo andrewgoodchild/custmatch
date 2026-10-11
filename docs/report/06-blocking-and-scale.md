@@ -134,6 +134,55 @@ often end up as several customers, try similarity blocking on the names, with a 
 blocks small, and compare the cross-fitted F1 in `summary.json`. Labels cannot show what blocking
 misses: they are drawn from the candidate pairs.
 
+## Nearest neighbours by spelling: better than LSH, not yet at scale
+
+Similarity blocking finds pairs by chance agreement on hashed letter pairs. A direct alternative
+is to give each record its nearest neighbours by spelling: character 2-4-gram TF-IDF vectors of
+the names, alone or with the place (birth place, town), and each record's k most similar records
+by cosine added to the exact keys' pairs. No model is downloaded. Two steps, on historical_50k
+and the Leipzig NCVR file (20,000 people, default keys):
+
+**The ceiling** (`research/scripts/embedding_blocking.py`, `research/results/embedding_blocking.json`):
+clustered F1 if every true candidate pair were accepted and joined up.
+
+| Blocking | historical_50k | Pairs | NCVR | Pairs |
+| --- | ---: | ---: | ---: | ---: |
+| Keys alone | 93.34 | 547,050 | 95.74 | 423,539 |
+| Keys + LSH on the names within the place | 96.81 | 619,385 | 98.85 | 467,112 |
+| Keys + 5 neighbours, names | 96.75 | 591,019 | 99.82 | 465,686 |
+| Keys + 5 neighbours, names and place | 98.61 | 595,164 | 99.99 | 472,323 |
+| Keys + 10 neighbours, names and place | 98.92 | 689,521 | 100.00 | 541,994 |
+
+Names with the place do better than names alone, and on top of LSH the neighbours add little
+(98.67 with 5 on historical_50k), so they would replace LSH rather than join it.
+
+**The score** (`research/scripts/embedding_pipeline.py`, `research/results/embedding_pipeline.json`):
+the whole pipeline, labels drawn and the forest trained over the same candidate pairs - 100
+random and 900 active labels, answered from the truth, three seeds. Mean clustered F1, and the
+pipeline's time for one run (labels in hand):
+
+| Blocking | historical_50k | Run | NCVR | Run |
+| --- | ---: | ---: | ---: | ---: |
+| Keys alone | 84.81 | 17.0 s | 95.65 | 9.8 s |
+| Keys + LSH | 86.59 | 18.5 s | 98.71 | 11.1 s |
+| Keys + 5 neighbours, names and place | 86.71 | 17.7 s | **99.85** | 10.6 s |
+| Keys + 10 neighbours, names and place | **87.62** | 19.1 s | 99.81 | 11.8 s |
+
+With 10 neighbours, the higher ceiling becomes a higher score on both: 1.0 point above LSH on
+historical_50k, where its three seeds (87.28 to 87.98) also vary least, and 1.1 on NCVR. With 5,
+historical_50k swings from 83.04 to 89.79 between seeds.
+
+**What it costs.** LSH itself is cheap: blocking takes 1.40 s instead of 0.29 s on historical_50k,
+and the run grows by about a tenth, mostly from scoring the extra pairs. The neighbour search is
+the expensive part: as measured it compares every record with every other, 58 s on historical_50k
+and 26 s on NCVR before the run starts, and that grows with the square of the records - hours at
+a million. It needs an approximate nearest-neighbour index before it can be offered, and it is
+not in custmatch. On a clean file the exact keys already reach the ceiling, so it would be an
+option, like `lsh_blocking`, for name-only or messy files. Two datasets and three seeds are
+little to go on: the historical_50k gain is within how much its seeds vary, and two of its runs
+(one LSH, one 5-neighbour) scored differently on a second identical run (88.49 and 88.03;
+86.02 and 87.30): something in those runs is not fully deterministic.
+
 ## Larger files
 
 **Speed.** On a million records - the synthetic file copied 50 times with copy-specific names
