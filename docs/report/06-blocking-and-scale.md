@@ -134,7 +134,7 @@ often end up as several customers, try similarity blocking on the names, with a 
 blocks small, and compare the cross-fitted F1 in `summary.json`. Labels cannot show what blocking
 misses: they are drawn from the candidate pairs.
 
-## Nearest neighbours by spelling: better than LSH, not yet at scale
+## Nearest neighbours by spelling: better than LSH on name-only data, at a cost
 
 Similarity blocking finds pairs by chance agreement on hashed letter pairs. A direct alternative
 is to give each record its nearest neighbours by spelling: character 2-4-gram TF-IDF vectors of
@@ -167,11 +167,15 @@ over seeds, and how many seeds beat LSH:
 | Keys + LSH | 86.62 | 84.07-88.49 | - | 98.70 | 98.67-98.72 | - |
 | Keys + 5 neighbours, names and place | 86.69 | 83.04-89.79 | 4 of 10 | **99.85** | 99.83-99.87 | 10 of 10 |
 | Keys + 10 neighbours, names and place | **87.95** | 85.97-90.36 | 8 of 10 | 99.80 | 99.74-99.85 | 10 of 10 |
+| The same 10 neighbours, found approximately | 86.59 | 84.69-88.91 | 6 of 10 | 99.81 | 99.75-99.85 | 10 of 10 |
 
 On NCVR the higher ceiling becomes a higher score with no doubt: over a point above LSH on every
 seed, 1.15 on average with 5 neighbours and 1.11 with 10. On historical_50k, 10 neighbours lead LSH by 1.32 points
-on average and on 8 of 10 seeds, but seeds there move the score by several points, so the lead
-is about two standard errors (0.70): likely, not certain. 5 neighbours tie LSH there.
+on average and on 8 of 10 seeds, but that lead did not survive finding the neighbours
+approximately, as a product must (below): the approximate search ties LSH there, 86.59 against
+86.62. Many of historical_50k's records are equally close to many others, and which of them
+become neighbours decided the lead. So the gain is shown on name-only data (NCVR), not on dense
+data.
 
 These runs found a bug: the same seed did not always give the same score. scikit-learn's
 predict_proba adds the trees' votes from several threads in the order they finish, so a
@@ -179,14 +183,29 @@ probability could differ in its last bit between runs - enough to reorder tied p
 learning, so different pairs were asked. custmatch now adds the trees in a fixed order
 (`custmatch/models.py`, `p_match`), and the numbers above are reproducible.
 
-**What it costs.** LSH's own blocking is cheap: 1.04 s instead of 0.26 s on NCVR, and the run
-(labels in hand) takes 10.1 s instead of 8.7 s, mostly from scoring the extra pairs; 10
-neighbours, 10.2 s. The neighbour search is the expensive part: as measured it compares every
-record with every other, 58 s on historical_50k and 26 s on NCVR before the run starts, and that
-grows with the square of the records - hours at a million. It needs an approximate
-nearest-neighbour index before it can be offered, and it is not in custmatch. On a clean file the
-exact keys already reach the ceiling, so it would be an option, like `lsh_blocking`, for
-name-only or messy files.
+**What it costs.** On these small files, little: LSH's own blocking takes 1.04 s instead of
+0.26 s on NCVR, and the run (labels in hand) 10.1 s instead of 8.7 s, mostly from scoring the
+extra pairs; with 10 neighbours, 10.2 s. Finding the neighbours is the expensive part. Comparing
+every record with every other took 52 s on historical_50k and 26 s on NCVR, and grows with the
+square of the records. An approximate search (pynndescent's NN-descent, a graph of 16 neighbours
+with the nearest 10 kept) keeps almost all of the ceiling - 98.66 against 98.92 on historical_50k,
+100.00 on NCVR - and grows in a straight line. On the Leipzig NCVR file
+(`research/scripts/embedding_scale.py`, `research/results/embedding_scale.json`; a 10-core laptop):
+
+| Records | Vectors | Approximate neighbours | Pairs they add | Peak memory | Keys | Keys + LSH | LSH's pairs against the keys' |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 100,000 | 2.0 s | 20.3 s | 819,651 | 1.07 GB | 0.8 s | 4.7 s | 1.6 times |
+| 1,000,000 | 18.3 s | 270.2 s | 8,163,687 | 2.44 GB | 9.0 s | 71.4 s | 4.4 times |
+| 5,000,000 | 113.9 s | 1357.9 s | 40,393,085 | 7.58 GB | - | - | - |
+
+So the neighbours cost about four and a half minutes a million records, where the keys take
+seconds - more than the rest of a run (see below) - but add at most ten pairs a record. LSH is
+quicker to find, but on the real file its blocks grow with the file: at a million records it
+more than quadruples the candidate pairs, and those pairs are what the forest spends its time
+scoring. Neither is in custmatch's defaults. Embedding blocking is not in custmatch at all: its
+gain is shown only on name-only data, it would add pynndescent (and numba) as a dependency, and
+it would make a large run several minutes longer. Worth adding as an option for name-only files
+if users with such files ask; until then, `lsh_blocking` is the option for messy names.
 
 ## Larger files
 

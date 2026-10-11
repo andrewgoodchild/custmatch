@@ -9,9 +9,10 @@ only `pip install -e .` - see [guide.md](guide.md).
 uv venv --python 3.11 .venv
 uv pip install --python .venv/bin/python -e '.[test]'
 # the research scripts, not custmatch, need these: Splink (the comparisons), torch and
-# transformers (Ditto), CatBoost and TabPFN (the classifier bake-off), Kuzu (the graph study), Modal
+# transformers (Ditto), CatBoost and TabPFN (the classifier bake-off), Kuzu (the graph study), Modal,
+# pynndescent (approximate neighbours for embedding blocking)
 uv pip install --python .venv/bin/python "splink==4.0.17" torch transformers catboost tabpfn kuzu modal \
-    "jellyfish<1.0" recordlinkage openai tqdm tensorboardX spacy mlx-lm pypdf openpyxl pseudopeople
+    "jellyfish<1.0" recordlinkage openai tqdm tensorboardX spacy mlx-lm pypdf openpyxl pseudopeople pynndescent
 .venv/bin/python -m spacy download en_core_web_lg     # Ditto's --dk general
 .venv/bin/python -c "import nltk; nltk.download('stopwords')"
 
@@ -104,7 +105,8 @@ Grouped by the report chapter whose numbers they produce.
 | `research/scripts/modal_scale.py` | On Modal (16 cores, 128 GiB): the scale test at 2, 5 and 10 million records and the full 5-million-record NCVR file, with peak memory | ~1-2 h |
 | `research/scripts/modal_ncvr_full.py` | On Modal: all 5 million NCVR records, labelled as a user would (300 random + 700 active), resumable | ~3 h |
 | `research/scripts/embedding_blocking.py` | historical_50k and NCVR (20,000 people): the blocking ceiling with each record's 5, 10 or 20 nearest neighbours by character n-gram vectors (`--neural` for a sentence model, a ~90 MB download), against the keys and LSH | ~10 min |
-| `research/scripts/embedding_pipeline.py` | The same two datasets through the whole pipeline with keys, keys + LSH and keys + 5 or 10 neighbours; 100 random + 900 active labels, ten seeds, with stage times; `--timing` times each blocking alone | ~70 min for ten seeds |
+| `research/scripts/embedding_pipeline.py` | The same two datasets through the whole pipeline with keys, keys + LSH and keys + 5 or 10 neighbours, exact or approximate; 100 random + 900 active labels, ten seeds, with stage times; `--timing` times each blocking alone | ~70 min for ten seeds |
+| `research/scripts/embedding_scale.py` | The Leipzig NCVR file from 100,000 to 5 million records: vectors and approximate neighbours (pynndescent), against keys and LSH blocking up to a million, with peak memory | ~40 min |
 | `research/scripts/memory_profile.py` | Peak memory per pipeline stage on an NCVR sample | ~5 min |
 | `research/scripts/large_block_check.py` | The large-block check on and off: six person benchmarks and dedupe's patent applicants | ~10 min |
 

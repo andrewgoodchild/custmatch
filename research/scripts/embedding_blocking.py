@@ -15,7 +15,9 @@ Embeddings, built from the names alone or the names with a place (town, birth pl
 
 Baselines: the dataset's default keys; the keys plus LSH on the names. Datasets: historical_50k
 (Splink's, dense genealogy records) and the Leipzig NCVR file, 20,000 people with the default
-keys (name-only, corrupted values). Each embedding is tried at k = 5, 10 and 20 neighbours.
+keys (name-only, corrupted values). Each embedding is tried at k = 5, 10 and 20 neighbours, and the names with the
+place at 10 found approximately (ann_pairs; the first call compiles pynndescent, so its time is
+an overestimate).
 
     python research/scripts/embedding_blocking.py [historical_50k] [ncvr_20k] [--neural]
 
@@ -82,6 +84,17 @@ def knn_pairs(vectors, k, chunk=1000):
     return np.vstack(out)
 
 
+def ann_pairs(vectors, k, graph=16, seed=0):
+    """Each record's k nearest neighbours by cosine, approximately: an NN-descent graph of `graph`
+    neighbours (pynndescent), its k nearest kept. Seconds where knn_pairs takes minutes."""
+    from pynndescent import NNDescent
+    nb, _ = NNDescent(vectors, metric="cosine", n_neighbors=graph, random_state=seed, n_jobs=-1,
+                      low_memory=True).neighbor_graph
+    nb = nb[:, :k + 1]                          # the record itself is usually first
+    p = np.c_[np.repeat(np.arange(len(nb)), nb.shape[1]), nb.ravel()]
+    return p[(p[:, 0] != p[:, 1]) & (p[:, 1] >= 0)]
+
+
 def texts(df, place):
     name = (df.first_name.fillna("") + " " + df.last_name.fillna("")).str.strip()
     return {"names": name.tolist(),
@@ -143,6 +156,15 @@ def main():
                                       "ceiling": ceiling(n, from_set(union), t), "embedding_seconds": round(secs, 1)}
                             print(name, key, r[key], flush=True)
                     OUT.write_text(json.dumps(res, indent=1, default=float))
+            # the same 10 neighbours of names and place, found approximately (as a product would)
+            t0 = time.time()
+            emb = as_set(ann_pairs(char_vectors(texts(df, place)["names_place"]), 10))
+            secs = time.time() - t0
+            for b in ("keys", "keys_lsh"):
+                union = np.union1d(base[b], emb)
+                r[f"{b}+ann_names_place_k10"] = {"pairs": int(len(union)), "ceiling": ceiling(n, from_set(union), t),
+                                                 "embedding_seconds": round(secs, 1)}
+                print(name, f"{b}+ann_names_place_k10", r[f"{b}+ann_names_place_k10"], flush=True)
             OUT.write_text(json.dumps(res, indent=1, default=float))
 
 

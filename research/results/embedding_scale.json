@@ -1,0 +1,52 @@
+{
+ "100000": {
+  "records": 100000,
+  "vectors_seconds": 2.0,
+  "ann_seconds": 20.3,
+  "ann_pairs": 819651,
+  "peak_gb_after_ann": 1.07,
+  "keys_seconds": 0.8,
+  "keys_pairs": 921678,
+  "keys_lsh_seconds": 4.7,
+  "keys_lsh_pairs": 1434877,
+  "peak_gb": 1.46
+ },
+ "500000": {
+  "records": 500000,
+  "vectors_seconds": 9.1,
+  "ann_seconds": 128.6,
+  "ann_pairs": 4089017,
+  "peak_gb_after_ann": 1.55,
+  "keys_seconds": 3.9,
+  "keys_pairs": 3269316,
+  "keys_lsh_seconds": 31.7,
+  "keys_lsh_pairs": 10963653,
+  "peak_gb": 2.32
+ },
+ "1000000": {
+  "records": 1000000,
+  "vectors_seconds": 18.3,
+  "ann_seconds": 270.2,
+  "ann_pairs": 8163687,
+  "peak_gb_after_ann": 2.44,
+  "keys_seconds": 9.0,
+  "keys_pairs": 6422762,
+  "keys_lsh_seconds": 71.4,
+  "keys_lsh_pairs": 28026482,
+  "peak_gb": 3.02
+ },
+ "2000000": {
+  "records": 2000000,
+  "vectors_seconds": 40.1,
+  "ann_seconds": 549.8,
+  "ann_pairs": 16318977,
+  "peak_gb_after_ann": 4.22
+ },
+ "5000000": {
+  "records": 5000000,
+  "vectors_seconds": 113.9,
+  "ann_seconds": 1357.9,
+  "ann_pairs": 40393085,
+  "peak_gb_after_ann": 7.58
+ }
+}

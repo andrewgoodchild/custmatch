@@ -4,96 +4,106 @@
   "keys": {
    "pairs": 547050,
    "ceiling": 93.34,
-   "seconds": 0.5
+   "seconds": 0.3
   },
   "keys_lsh": {
    "pairs": 619385,
    "ceiling": 96.81,
-   "seconds": 2.2
+   "seconds": 1.5
   },
   "keys+char_names_k5": {
    "pairs": 591019,
    "added_pairs": 43969,
    "added_true_pairs": 10397,
    "ceiling": 96.75,
-   "embedding_seconds": 75.9
+   "embedding_seconds": 33.4
   },
   "keys_lsh+char_names_k5": {
    "pairs": 658787,
    "added_pairs": 39402,
    "added_true_pairs": 5967,
    "ceiling": 97.95,
-   "embedding_seconds": 75.9
+   "embedding_seconds": 33.4
   },
   "keys+char_names_k10": {
    "pairs": 672318,
    "added_pairs": 125268,
    "added_true_pairs": 20360,
    "ceiling": 97.19,
-   "embedding_seconds": 70.9
+   "embedding_seconds": 32.9
   },
   "keys_lsh+char_names_k10": {
    "pairs": 735690,
    "added_pairs": 116305,
    "added_true_pairs": 11794,
    "ceiling": 98.15,
-   "embedding_seconds": 70.9
+   "embedding_seconds": 32.9
   },
   "keys+char_names_k20": {
    "pairs": 936122,
    "added_pairs": 389072,
    "added_true_pairs": 32247,
    "ceiling": 97.72,
-   "embedding_seconds": 73.0
+   "embedding_seconds": 30.5
   },
   "keys_lsh+char_names_k20": {
    "pairs": 994695,
    "added_pairs": 375310,
    "added_true_pairs": 19552,
    "ceiling": 98.4,
-   "embedding_seconds": 73.0
+   "embedding_seconds": 30.5
   },
   "keys+char_names_place_k5": {
    "pairs": 595164,
    "added_pairs": 48114,
    "added_true_pairs": 17580,
    "ceiling": 98.61,
-   "embedding_seconds": 65.6
+   "embedding_seconds": 51.5
   },
   "keys_lsh+char_names_place_k5": {
    "pairs": 654313,
    "added_pairs": 34928,
    "added_true_pairs": 7167,
    "ceiling": 98.67,
-   "embedding_seconds": 65.6
+   "embedding_seconds": 51.5
   },
   "keys+char_names_place_k10": {
    "pairs": 689521,
    "added_pairs": 142471,
    "added_true_pairs": 33382,
    "ceiling": 98.92,
-   "embedding_seconds": 58.3
+   "embedding_seconds": 52.5
   },
   "keys_lsh+char_names_place_k10": {
    "pairs": 736048,
    "added_pairs": 116663,
    "added_true_pairs": 15547,
    "ceiling": 98.94,
-   "embedding_seconds": 58.3
+   "embedding_seconds": 52.5
   },
   "keys+char_names_place_k20": {
    "pairs": 989314,
    "added_pairs": 442264,
    "added_true_pairs": 48608,
    "ceiling": 99.24,
-   "embedding_seconds": 56.5
+   "embedding_seconds": 52.6
   },
   "keys_lsh+char_names_place_k20": {
    "pairs": 1021379,
    "added_pairs": 401994,
    "added_true_pairs": 27521,
    "ceiling": 99.24,
-   "embedding_seconds": 56.5
+   "embedding_seconds": 52.6
+  },
+  "keys+ann_names_place_k10": {
+   "pairs": 704766,
+   "ceiling": 98.66,
+   "embedding_seconds": 20.7
+  },
+  "keys_lsh+ann_names_place_k10": {
+   "pairs": 750945,
+   "ceiling": 98.71,
+   "embedding_seconds": 20.7
   }
  },
  "ncvr_20k": {
@@ -101,96 +111,106 @@
   "keys": {
    "pairs": 423539,
    "ceiling": 95.74,
-   "seconds": 0.5
+   "seconds": 0.3
   },
   "keys_lsh": {
    "pairs": 467112,
    "ceiling": 98.85,
-   "seconds": 1.5
+   "seconds": 1.2
   },
   "keys+char_names_k5": {
    "pairs": 465686,
    "added_pairs": 42147,
    "added_true_pairs": 1519,
    "ceiling": 99.82,
-   "embedding_seconds": 20.2
+   "embedding_seconds": 16.9
   },
   "keys_lsh+char_names_k5": {
    "pairs": 507888,
    "added_pairs": 40776,
    "added_true_pairs": 548,
    "ceiling": 99.95,
-   "embedding_seconds": 20.2
+   "embedding_seconds": 16.9
   },
   "keys+char_names_k10": {
    "pairs": 531792,
    "added_pairs": 108253,
    "added_true_pairs": 1604,
    "ceiling": 99.9,
-   "embedding_seconds": 20.1
+   "embedding_seconds": 17.8
   },
   "keys_lsh+char_names_k10": {
    "pairs": 573436,
    "added_pairs": 106324,
    "added_true_pairs": 599,
    "ceiling": 99.99,
-   "embedding_seconds": 20.1
+   "embedding_seconds": 17.8
   },
   "keys+char_names_k20": {
    "pairs": 687086,
    "added_pairs": 263547,
    "added_true_pairs": 1642,
    "ceiling": 99.96,
-   "embedding_seconds": 16.7
+   "embedding_seconds": 16.9
   },
   "keys_lsh+char_names_k20": {
    "pairs": 727746,
    "added_pairs": 260634,
    "added_true_pairs": 614,
    "ceiling": 99.99,
-   "embedding_seconds": 16.7
+   "embedding_seconds": 16.9
   },
   "keys+char_names_place_k5": {
    "pairs": 472323,
    "added_pairs": 48784,
    "added_true_pairs": 1643,
    "ceiling": 99.99,
-   "embedding_seconds": 30.5
+   "embedding_seconds": 25.5
   },
   "keys_lsh+char_names_place_k5": {
    "pairs": 507335,
    "added_pairs": 40223,
    "added_true_pairs": 597,
    "ceiling": 100.0,
-   "embedding_seconds": 30.5
+   "embedding_seconds": 25.5
   },
   "keys+char_names_place_k10": {
    "pairs": 541994,
    "added_pairs": 118455,
    "added_true_pairs": 1669,
    "ceiling": 100.0,
-   "embedding_seconds": 26.4
+   "embedding_seconds": 25.5
   },
   "keys_lsh+char_names_place_k10": {
    "pairs": 572139,
    "added_pairs": 105027,
    "added_true_pairs": 620,
    "ceiling": 100.0,
-   "embedding_seconds": 26.4
+   "embedding_seconds": 25.5
   },
   "keys+char_names_place_k20": {
    "pairs": 695942,
    "added_pairs": 272403,
    "added_true_pairs": 1686,
    "ceiling": 100.0,
-   "embedding_seconds": 28.5
+   "embedding_seconds": 26.1
   },
   "keys_lsh+char_names_place_k20": {
    "pairs": 721275,
    "added_pairs": 254163,
    "added_true_pairs": 636,
    "ceiling": 100.0,
-   "embedding_seconds": 28.5
+   "embedding_seconds": 26.1
+  },
+  "keys+ann_names_place_k10": {
+   "pairs": 560029,
+   "ceiling": 100.0,
+   "embedding_seconds": 5.0
+  },
+  "keys_lsh+ann_names_place_k10": {
+   "pairs": 589605,
+   "ceiling": 100.0,
+   "embedding_seconds": 5.0
   }
  }
 }

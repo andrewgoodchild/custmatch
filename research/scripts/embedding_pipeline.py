@@ -10,12 +10,14 @@ forest trained over the same candidate pairs - with four blockings:
   keys_lsh      the keys plus LSH on the names within the place (lsh_blocking)
   keys_emb5     the keys plus the embedding pass, 5 neighbours
   keys_emb10    the keys plus the embedding pass, 10 neighbours
+  keys_ann10    the same 10 neighbours found approximately (pynndescent), as a product would
 
 The embedding pass wraps blocking.candidates_for, so label sampling, active learning and the
 pipeline all see the same pairs. Labels: 100 at random then 900 by active learning, answered
 from the truth, seeds 1-10. Datasets as in embedding_blocking.py. Scored as clustered F1.
 
-    python research/scripts/embedding_pipeline.py [historical_50k] [ncvr_20k] [--seeds=1,2,3]   # default 1-10
+    python research/scripts/embedding_pipeline.py [historical_50k] [ncvr_20k] [--seeds=1,2,3] [--variants=keys,keys_ann10]
+                                                 # default: seeds 1-10, every variant
     python research/scripts/embedding_pipeline.py --timing     # each blocking timed alone
 
 --timing: the run times above come from a long batch, where other load on the machine shows; this
@@ -47,15 +49,15 @@ OUT = ROOT / "research/results/embedding_pipeline.json"
 LABELS = 1000
 _original = blocking.candidates_for
 _cache = {}
-EMB = {"k": None, "place": None}
+EMB = {"k": None, "place": None, "method": "exact"}
 
 
 def knn_for(df):
     sig = hashlib.sha1("\n".join(io.key(df)).encode()).hexdigest()
-    key = (sig, EMB["k"], EMB["place"])
+    key = (sig, EMB["k"], EMB["place"], EMB["method"])
     if key not in _cache:
         vec = E.char_vectors(E.texts(df, EMB["place"])["names_place"])
-        p = E.knn_pairs(vec, EMB["k"])
+        p = (E.ann_pairs if EMB["method"] == "ann" else E.knn_pairs)(vec, EMB["k"])
         p = p[p[:, 0] != p[:, 1]]
         _cache[key] = E.from_set(np.unique(E.as_set(p))).astype(np.int32)
     return _cache[key]
@@ -73,15 +75,22 @@ def with_embeddings(df, profiles, cfg, labelled_pos=None, rules=None):
 blocking.candidates_for = with_embeddings
 
 
+def embedding(k):
+    """A variant's embedding pass: None, a number of neighbours, or (neighbours, "ann")."""
+    k, method = k if isinstance(k, tuple) else (k, "exact")
+    return {"k": k, "method": method}
+
+
 def variants(name):
     lsh = {"lsh_blocking": {"fields": ["first_name", "last_name"], "with": E.PLACE[name]}}
-    return {"keys": ({}, None), "keys_lsh": (lsh, None), "keys_emb5": ({}, 5), "keys_emb10": ({}, 10)}
+    return {"keys": ({}, None), "keys_lsh": (lsh, None), "keys_emb5": ({}, 5), "keys_emb10": ({}, 10),
+            "keys_ann10": ({}, (10, "ann"))}
 
 
 def timing(name, loader):
     out = {}
     for variant, (extra, k) in variants(name).items():
-        EMB.update(k=k, place=E.PLACE[name])
+        EMB.update(embedding(k), place=E.PLACE[name])
         with tempfile.TemporaryDirectory() as d:
             tmp = Path(d)
             cp, truth = loader(tmp)
@@ -97,6 +106,7 @@ def timing(name, loader):
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    only = [v for a in sys.argv[1:] if a.startswith("--variants=") for v in a[11:].split(",")]
     seeds = [int(s) for a in sys.argv[1:] if a.startswith("--seeds=") for s in a[8:].split(",")] or list(range(1, 11))
     loaders = {"historical_50k": lambda tmp: LC.splink_dataset("historical_50k", S.datasets()["historical_50k"], tmp),
                "ncvr_20k": E.ncvr_default}
@@ -109,7 +119,9 @@ def main():
     for name in args or list(loaders):
         r = res.setdefault(name, {})
         for variant, (extra, k) in variants(name).items():
-            EMB.update(k=k, place=E.PLACE[name])
+            if only and variant not in only:
+                continue
+            EMB.update(embedding(k), place=E.PLACE[name])
             runs = []
             for seed in seeds:
                 with tempfile.TemporaryDirectory() as d:

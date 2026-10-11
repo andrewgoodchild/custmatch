@@ -1174,7 +1174,7 @@ def test_local_llm_claims():
 
 def test_embedding_blocking_claims():
     """docs/report/06-blocking-and-scale.md "Nearest neighbours by spelling": both tables, from the results."""
-    from statistics import median, stdev
+    from statistics import median
     c, p = load("embedding_blocking.json"), load("embedding_pipeline.json")
     text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
     rows = ("keys", "keys_lsh", "keys+char_names_k5", "keys+char_names_place_k5", "keys+char_names_place_k10")
@@ -1192,13 +1192,31 @@ def test_embedding_blocking_claims():
         assert f"{secs:.0f} s on {'historical_50k' if d.startswith('hist') else 'NCVR'}" in text
     assert f"{c['historical_50k']['keys_lsh+char_names_place_k5']['ceiling']:.2f}" in text
     gap = [a["f1"] - b["f1"] for a, b in zip(p["historical_50k"]["keys_emb10"]["runs"], p["historical_50k"]["keys_lsh"]["runs"])]
-    assert f"by {fmean(gap):.2f} points on average" in text and f"({stdev(gap) / len(gap) ** 0.5:.2f})" in text
+    assert f"by {fmean(gap):.2f} points on average" in text
     for k in ("keys_emb5", "keys_emb10"):
         n = [a["f1"] - b["f1"] for a, b in zip(p["ncvr_20k"][k]["runs"], p["ncvr_20k"]["keys_lsh"]["runs"])]
         assert min(n) > 1.0 and f"{fmean(n):.2f} {'on average with 5' if k == 'keys_emb5' else 'with 10'}" in text
+    for d, want in (("historical_50k", "98.66 against 98.92 on historical_50k"), ("ncvr_20k", "100.00 on NCVR")):
+        a, e = c[d]["keys+ann_names_place_k10"]["ceiling"], c[d]["keys+char_names_place_k10"]["ceiling"]
+        assert e - a < 0.3 and f"{a:.2f}" in want and want in text
+    h = p["historical_50k"]
+    assert f"ties LSH there, {h['keys_ann10']['mean_f1']:.2f} against {h['keys_lsh']['mean_f1']:.2f}" in text
+    assert abs(h["keys_ann10"]["mean_f1"] - h["keys_lsh"]["mean_f1"]) < 0.1
+    sc = load("embedding_scale.json")
+    for n in ("100000", "1000000", "5000000"):
+        r = sc[n]
+        row = (f"| {int(n):,} | {r['vectors_seconds']:.1f} s | {r['ann_seconds']:.1f} s | {r['ann_pairs']:,} | "
+               f"{r['peak_gb_after_ann']:.2f} GB |")
+        assert row in text, n
+        if "keys_seconds" in r:
+            assert f"| {r['keys_seconds']:.1f} s | {r['keys_lsh_seconds']:.1f} s | {r['keys_lsh_pairs'] / r['keys_pairs']:.1f} times |" in text
+    per_m = [sc[n]["ann_seconds"] / int(n) * 1e6 / 60 for n in ("1000000", "2000000", "5000000")]
+    assert all(4.3 < x < 4.8 for x in per_m)                      # "about four and a half minutes a million"
+    million = max(load("custmatch_scale.json"), key=lambda r: r["records"])
+    assert sc["1000000"]["ann_seconds"] > million["full_run_seconds"]   # "more than the rest of a run"
     stage = lambda k, f: median(f(r["stage_seconds"]) for r in p["ncvr_20k"][k]["runs"])  # noqa: E731
     blk = lambda r: next(v for n, v in r.items() if n.startswith("blocking"))  # noqa: E731
     run = lambda r: sum(r.values())  # noqa: E731
     assert f"{stage('keys_lsh', blk):.2f} s instead of {stage('keys', blk):.2f} s on NCVR" in text
-    assert f"takes {stage('keys_lsh', run):.1f} s instead of {stage('keys', run):.1f} s" in text
+    assert f"(labels in hand) {stage('keys_lsh', run):.1f} s instead of {stage('keys', run):.1f} s" in text
     assert f"neighbours, {stage('keys_emb10', run):.1f} s" in text
