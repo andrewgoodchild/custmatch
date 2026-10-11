@@ -145,6 +145,20 @@ def test_forest_catboost_runs_end_to_end_and_reuses_its_saved_model(world):
     assert added["new_records"] == 0 and len(after) == len(c)
 
 
+def test_forest_probabilities_are_the_same_every_time():
+    """sklearn's predict_proba sums the trees from threads in finishing order, so its last bit
+    varied between runs and active learning asked different pairs. p_match must not."""
+    from custmatch import models
+    rng = np.random.default_rng(0)
+    X = rng.random((2000, 6)).astype(np.float32)
+    m = models.factory({})().fit(X, (X[:, 0] + rng.random(2000) / 2 > 0.8).astype(int))
+    Z = rng.random((3 * models.PREDICT_CHUNK_THREAD + 7, 6)).astype(np.float32)
+    first = models.p_match(m, Z)
+    assert all((models.p_match(m, Z) == first).all() for _ in range(3))
+    assert np.abs(first - m.predict_proba(Z)[:, 1]).max() < 1e-12
+    assert (models.p_match(m, Z[:500]) == first[:500]).all()        # the small-batch path agrees
+
+
 def test_forest_catboost_single_class_fold_predicts_that_class():
     pytest.importorskip("catboost")
     from custmatch.models import factory, p_match

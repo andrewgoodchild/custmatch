@@ -158,30 +158,35 @@ Names with the place do better than names alone, and on top of LSH the neighbour
 
 **The score** (`research/scripts/embedding_pipeline.py`, `research/results/embedding_pipeline.json`):
 the whole pipeline, labels drawn and the forest trained over the same candidate pairs - 100
-random and 900 active labels, answered from the truth, three seeds. Mean clustered F1, and the
-pipeline's time for one run (labels in hand):
+random and 900 active labels, answered from the truth, ten seeds. Mean clustered F1, the range
+over seeds, and how many seeds beat LSH:
 
-| Blocking | historical_50k | Run | NCVR | Run |
-| --- | ---: | ---: | ---: | ---: |
-| Keys alone | 84.81 | 17.0 s | 95.65 | 9.8 s |
-| Keys + LSH | 86.59 | 18.5 s | 98.71 | 11.1 s |
-| Keys + 5 neighbours, names and place | 86.71 | 17.7 s | **99.85** | 10.6 s |
-| Keys + 10 neighbours, names and place | **87.62** | 19.1 s | 99.81 | 11.8 s |
+| Blocking | historical_50k | Range | Beats LSH | NCVR | Range | Beats LSH |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Keys alone | 86.01 | 81.47-87.23 | - | 95.66 | 95.64-95.67 | - |
+| Keys + LSH | 86.62 | 84.07-88.49 | - | 98.70 | 98.67-98.72 | - |
+| Keys + 5 neighbours, names and place | 86.69 | 83.04-89.79 | 4 of 10 | **99.85** | 99.83-99.87 | 10 of 10 |
+| Keys + 10 neighbours, names and place | **87.95** | 85.97-90.36 | 8 of 10 | 99.80 | 99.74-99.85 | 10 of 10 |
 
-With 10 neighbours, the higher ceiling becomes a higher score on both: 1.0 point above LSH on
-historical_50k, where its three seeds (87.28 to 87.98) also vary least, and 1.1 on NCVR. With 5,
-historical_50k swings from 83.04 to 89.79 between seeds.
+On NCVR the higher ceiling becomes a higher score with no doubt: over a point above LSH on every
+seed, 1.15 on average with 5 neighbours and 1.11 with 10. On historical_50k, 10 neighbours lead LSH by 1.32 points
+on average and on 8 of 10 seeds, but seeds there move the score by several points, so the lead
+is about two standard errors (0.70): likely, not certain. 5 neighbours tie LSH there.
 
-**What it costs.** LSH itself is cheap: blocking takes 1.40 s instead of 0.29 s on historical_50k,
-and the run grows by about a tenth, mostly from scoring the extra pairs. The neighbour search is
-the expensive part: as measured it compares every record with every other, 58 s on historical_50k
-and 26 s on NCVR before the run starts, and that grows with the square of the records - hours at
-a million. It needs an approximate nearest-neighbour index before it can be offered, and it is
-not in custmatch. On a clean file the exact keys already reach the ceiling, so it would be an
-option, like `lsh_blocking`, for name-only or messy files. Two datasets and three seeds are
-little to go on: the historical_50k gain is within how much its seeds vary, and two of its runs
-(one LSH, one 5-neighbour) scored differently on a second identical run (88.49 and 88.03;
-86.02 and 87.30): something in those runs is not fully deterministic.
+These runs found a bug: the same seed did not always give the same score. scikit-learn's
+predict_proba adds the trees' votes from several threads in the order they finish, so a
+probability could differ in its last bit between runs - enough to reorder tied pairs in active
+learning, so different pairs were asked. custmatch now adds the trees in a fixed order
+(`custmatch/models.py`, `p_match`), and the numbers above are reproducible.
+
+**What it costs.** LSH's own blocking is cheap: 1.04 s instead of 0.26 s on NCVR, and the run
+(labels in hand) takes 10.1 s instead of 8.7 s, mostly from scoring the extra pairs; 10
+neighbours, 10.2 s. The neighbour search is the expensive part: as measured it compares every
+record with every other, 58 s on historical_50k and 26 s on NCVR before the run starts, and that
+grows with the square of the records - hours at a million. It needs an approximate
+nearest-neighbour index before it can be offered, and it is not in custmatch. On a clean file the
+exact keys already reach the ceiling, so it would be an option, like `lsh_blocking`, for
+name-only or messy files.
 
 ## Larger files
 

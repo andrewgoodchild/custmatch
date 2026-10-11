@@ -1174,25 +1174,31 @@ def test_local_llm_claims():
 
 def test_embedding_blocking_claims():
     """docs/report/06-blocking-and-scale.md "Nearest neighbours by spelling": both tables, from the results."""
+    from statistics import median, stdev
     c, p = load("embedding_blocking.json"), load("embedding_pipeline.json")
     text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
     rows = ("keys", "keys_lsh", "keys+char_names_k5", "keys+char_names_place_k5", "keys+char_names_place_k10")
     for d in ("historical_50k", "ncvr_20k"):
         for k in rows:
             assert f"{c[d][k]['ceiling']:.2f}" in text and f"{c[d][k]['pairs']:,}" in text, (d, k)
+        lsh = [r["f1"] for r in p[d]["keys_lsh"]["runs"]]
         for k, v in p[d].items():
-            assert f"{v['mean_f1']:.2f}" in text, (d, k)
-            run = fmean([sum(r["stage_seconds"].values()) for r in v["runs"]])
-            assert f"{run:.1f} s" in text, (d, k)
-        lead = p[d]["keys_emb10"]["mean_f1"] - p[d]["keys_lsh"]["mean_f1"]
-        assert 0.9 < lead < 1.2, (d, lead)
+            f1 = [r["f1"] for r in v["runs"]]
+            assert len(f1) == 10 and f"{v['mean_f1']:.2f} | {min(f1):.2f}-{max(f1):.2f}" in text, (d, k)
+            if k.startswith("keys_emb"):
+                wins = sum(a > b for a, b in zip(f1, lsh))
+                assert f"{max(f1):.2f} | {wins} of 10" in text, (d, k)
         secs = c[d]["keys+char_names_place_k10"]["embedding_seconds"]
         assert f"{secs:.0f} s on {'historical_50k' if d.startswith('hist') else 'NCVR'}" in text
     assert f"{c['historical_50k']['keys_lsh+char_names_place_k5']['ceiling']:.2f}" in text
-    h = [round(r["f1"], 2) for r in p["historical_50k"]["keys_emb10"]["runs"]]
-    assert f"({min(h):.2f} to {max(h):.2f})" in text
-    h5 = [r["f1"] for r in p["historical_50k"]["keys_emb5"]["runs"]]
-    assert f"{min(h5):.2f} to {max(h5):.2f}" in text
-    blk = lambda k: fmean([next(s for n, s in r["stage_seconds"].items() if n.startswith("blocking"))  # noqa: E731
-                             for r in p["historical_50k"][k]["runs"]])
-    assert f"blocking takes {blk('keys_lsh'):.2f} s instead of {blk('keys'):.2f} s" in text
+    gap = [a["f1"] - b["f1"] for a, b in zip(p["historical_50k"]["keys_emb10"]["runs"], p["historical_50k"]["keys_lsh"]["runs"])]
+    assert f"by {fmean(gap):.2f} points on average" in text and f"({stdev(gap) / len(gap) ** 0.5:.2f})" in text
+    for k in ("keys_emb5", "keys_emb10"):
+        n = [a["f1"] - b["f1"] for a, b in zip(p["ncvr_20k"][k]["runs"], p["ncvr_20k"]["keys_lsh"]["runs"])]
+        assert min(n) > 1.0 and f"{fmean(n):.2f} {'on average with 5' if k == 'keys_emb5' else 'with 10'}" in text
+    stage = lambda k, f: median(f(r["stage_seconds"]) for r in p["ncvr_20k"][k]["runs"])  # noqa: E731
+    blk = lambda r: next(v for n, v in r.items() if n.startswith("blocking"))  # noqa: E731
+    run = lambda r: sum(r.values())  # noqa: E731
+    assert f"{stage('keys_lsh', blk):.2f} s instead of {stage('keys', blk):.2f} s on NCVR" in text
+    assert f"takes {stage('keys_lsh', run):.1f} s instead of {stage('keys', run):.1f} s" in text
+    assert f"neighbours, {stage('keys_emb10', run):.1f} s" in text

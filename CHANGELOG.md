@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+**Fixed:** the same input, labels and seed now give the same result every time. The forest's
+probabilities on large batches came from scikit-learn's predict_proba, which adds the trees'
+votes from several threads in the order they finish, so the last bit could differ between runs.
+That was enough to reorder tied pairs in active learning, so `custmatch sample --active` and the
+dashboard could ask for different pairs, and a run could score differently. The trees are now
+added in a fixed order, at the same speed.
+
 ## 0.1.0 (2026-10-10)
 
 First public release: the library, and **custmatch-server**, the self-hosted service

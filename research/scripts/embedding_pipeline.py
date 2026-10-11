@@ -13,9 +13,14 @@ forest trained over the same candidate pairs - with four blockings:
 
 The embedding pass wraps blocking.candidates_for, so label sampling, active learning and the
 pipeline all see the same pairs. Labels: 100 at random then 900 by active learning, answered
-from the truth, seeds 1-3. Datasets as in embedding_blocking.py. Scored as clustered F1.
+from the truth, seeds 1-10. Datasets as in embedding_blocking.py. Scored as clustered F1.
 
-    python research/scripts/embedding_pipeline.py [historical_50k] [ncvr_20k] [--seeds=1,2,3]
+    python research/scripts/embedding_pipeline.py [historical_50k] [ncvr_20k] [--seeds=1,2,3]   # default 1-10
+    python research/scripts/embedding_pipeline.py --timing     # each blocking timed alone
+
+--timing: the run times above come from a long batch, where other load on the machine shows; this
+draws seed 1's labels once per blocking and times the pipeline three times on them, keeping the
+median, into "timing" in the same file.
 
 Writes research/results/embedding_pipeline.json, with the pipeline's own stage times per run (the
 embedding pass is built once per dataset, while the first labels are drawn, and cached: its build
@@ -73,12 +78,34 @@ def variants(name):
     return {"keys": ({}, None), "keys_lsh": (lsh, None), "keys_emb5": ({}, 5), "keys_emb10": ({}, 10)}
 
 
+def timing(name, loader):
+    out = {}
+    for variant, (extra, k) in variants(name).items():
+        EMB.update(k=k, place=E.PLACE[name])
+        with tempfile.TemporaryDirectory() as d:
+            tmp = Path(d)
+            cp, truth = loader(tmp)
+            cp.write_text(json.dumps(json.loads(cp.read_text()) | extra))
+            lp, _ = LC.draw(cp, truth, LABELS, "active", 1, tmp)
+            runs = [pipeline.run(cp, lp, tmp / "out", seed=1, log=lambda *_: None)["stage_seconds"] for _ in range(3)]
+        total = sorted(sum(r.values()) for r in runs)[1]
+        blk = sorted(next(v for n, v in r.items() if n.startswith("blocking")) for r in runs)[1]
+        out[variant] = {"run_seconds": round(total, 1), "blocking_seconds": round(blk, 2)}
+        print(name, variant, out[variant], flush=True)
+    return out
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    seeds = [int(s) for a in sys.argv[1:] if a.startswith("--seeds=") for s in a[8:].split(",")] or [1, 2, 3]
+    seeds = [int(s) for a in sys.argv[1:] if a.startswith("--seeds=") for s in a[8:].split(",")] or list(range(1, 11))
     loaders = {"historical_50k": lambda tmp: LC.splink_dataset("historical_50k", S.datasets()["historical_50k"], tmp),
                "ncvr_20k": E.ncvr_default}
     res = json.loads(OUT.read_text()) if OUT.exists() else {}
+    if "--timing" in sys.argv:
+        for name in args or list(loaders):
+            res.setdefault("timing", {})[name] = timing(name, loaders[name])
+            OUT.write_text(json.dumps(res, indent=1, default=float))
+        return
     for name in args or list(loaders):
         r = res.setdefault(name, {})
         for variant, (extra, k) in variants(name).items():

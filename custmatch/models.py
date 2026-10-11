@@ -93,21 +93,36 @@ PREDICT_CHUNK = 500_000
 
 
 SMALL_BATCH = 20_000
+PREDICT_CHUNK_THREAD = 100_000   # rows per thread in p_match's forest path
 
 
-def _forest_proba(model, X):
-    """A random forest's P(match) for a small batch, tree by tree: predict_proba's thread pool
-    costs more than the work below about 20,000 rows - it was 11.5 s of sleeping in a
-    million-record run, from hundreds of small calls in cross-fitting and the threshold search.
-    The same per-tree class fractions, averaged (the service's real-time matcher does the same)."""
+def _leaf_p(model):
+    """Each tree with its leaves' P(match): a node's class fractions, as predict_proba uses them."""
+    out = []
+    for t in model.estimators_:
+        v = t.tree_.value[:, 0, :]
+        out.append((t.tree_, v[:, 1] / v.sum(axis=1)))
+    return out
+
+
+def _forest_proba(model, X, leaves=None):
+    """A random forest's P(match), tree by tree in a fixed order: each row's leaf looked up in
+    every tree and the leaves' fractions averaged - what predict_proba computes, without its
+    thread pool, which costs more than the work below about 20,000 rows (11.5 s of sleeping in a
+    million-record run, from hundreds of small calls in cross-fitting and the threshold search).
+    The service's real-time matcher does the same."""
     import numpy as np
+    leaves = leaves or _leaf_p(model)
     X = np.ascontiguousarray(X, dtype=np.float32)
     total = np.zeros(len(X))
-    for tree in model.estimators_:
-        v = tree.tree_.predict(X)
-        v = v[:, 0, :] if v.ndim == 3 else v
-        total += v[:, 1] / v.sum(axis=1)
-    return total / len(model.estimators_)
+    for tree, p in leaves:
+        total += p[tree.apply(X)]
+    return total / len(leaves)
+
+
+def _is_forest(model):
+    from sklearn.ensemble import RandomForestClassifier
+    return isinstance(model, RandomForestClassifier) and list(model.classes_) == [0, 1]
 
 
 def p_match(model, X):
@@ -121,8 +136,21 @@ def p_match(model, X):
         return np.zeros(0)
     if list(model.classes_) != [0, 1] and len(model.classes_) == 1:
         return np.full(len(X), float(list(model.classes_)[0] == 1))
-    if len(X) <= SMALL_BATCH and hasattr(model, "estimators_") and list(model.classes_) == [0, 1]:
-        return _forest_proba(model, X)
+    if _is_forest(model):
+        if len(X) <= SMALL_BATCH:
+            return _forest_proba(model, X)
+        # sklearn's predict_proba adds the trees' votes from several threads in whatever order
+        # they finish, so a probability can differ in its last bit between runs - enough to
+        # reorder tied pairs in active learning and change which pairs are asked. Threads over
+        # rows instead, each adding its trees in order: the same answer every time.
+        import os
+        from concurrent.futures import ThreadPoolExecutor
+        leaves = _leaf_p(model)
+        workers = (os.cpu_count() or 1) if (model.n_jobs or 1) < 0 else (model.n_jobs or 1)
+        with ThreadPoolExecutor(workers) as pool:
+            parts = list(pool.map(lambda s: _forest_proba(model, X[s:s + PREDICT_CHUNK_THREAD], leaves),
+                                  range(0, len(X), PREDICT_CHUNK_THREAD)))
+        return np.concatenate(parts)
     out = np.empty(len(X))
     for s in range(0, len(X), PREDICT_CHUNK):
         proba = model.predict_proba(X[s:s + PREDICT_CHUNK])
