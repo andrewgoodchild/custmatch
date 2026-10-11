@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 (2026-10-12)
 
 **Fixed:** the same input, labels and seed now give the same result every time. The forest's
 probabilities on large batches came from scikit-learn's predict_proba, which adds the trees'

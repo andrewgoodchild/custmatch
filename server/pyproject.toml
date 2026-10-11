@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "custmatch-server"
-version = "0.1.0"
+version = "0.1.1"
 description = "custmatch as a self-hosted service: scheduled batch runs, real-time matching, a steward dashboard"
 readme = "README.md"
 license = "Apache-2.0"
@@ -14,7 +14,7 @@ keywords = ["entity resolution", "record linkage", "customer matching", "master 
 classifiers = ["Development Status :: 3 - Alpha", "Programming Language :: Python :: 3",
                "Framework :: FastAPI", "Operating System :: OS Independent", "Topic :: Database"]
 requires-python = ">=3.10"
-dependencies = ["custmatch>=0.1.0", "sqlalchemy>=2", "alembic", "fastapi", "uvicorn", "psycopg[binary]"]
+dependencies = ["custmatch>=0.1.1", "sqlalchemy>=2", "alembic", "fastapi", "uvicorn", "psycopg[binary]"]
 
 [project.optional-dependencies]
 test = ["pytest", "httpx"]
