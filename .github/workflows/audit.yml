@@ -1,0 +1,27 @@
+# Known vulnerabilities in what `pip install custmatch custmatch-server` pulls in today
+# (PyPA advisory database and OSV). Weekly as well as on changes: an advisory can appear for
+# a dependency without any change here.
+name: audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install the library, the service and pip-audit
+        run: python -m venv /tmp/env && /tmp/env/bin/pip install . ./server pip-audit==2.10.1
+      - name: Audit the installed dependencies
+        run: /tmp/env/bin/pip-audit --local

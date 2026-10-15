@@ -1,0 +1,17 @@
+# Keeps the SHA-pinned actions, the service image's base and the declared Python dependencies
+# current: one grouped pull request per ecosystem a week, which CI then tests.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly}
+    groups:
+      actions: {patterns: ["*"]}
+  - package-ecosystem: pip
+    directories: [/, /server]
+    schedule: {interval: weekly}
+    groups:
+      python: {patterns: ["*"]}
+  - package-ecosystem: docker
+    directory: /server
+    schedule: {interval: weekly}
