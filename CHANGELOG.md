@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 (2026-10-16)
 
 Six ideas from three other matching projects - zer (ZAL-Analytics/zer), jlink (keltokhy/jlink)
 and sriracha (ccuetoh/sriracha) - each checked against custmatch first.
@@ -33,6 +33,7 @@ always gives what cleaning once gave.
   run saves the pool it draws from (state/audit_pool.parquet).
 - CI: Dependabot keeps the pinned actions, the image's base and the Python dependencies current;
   pip-audit checks the dependencies for known vulnerabilities, weekly and on every change.
+- The service image (ghcr.io/andrewgoodchild/custmatch-server) is built on Python 3.14.
 
 ## 0.1.1 (2026-10-12)
 
