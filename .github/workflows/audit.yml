@@ -22,6 +22,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install the library, the service and pip-audit
-        run: python -m venv /tmp/env && /tmp/env/bin/pip install . ./server pip-audit==2.10.1
+        # pip itself is upgraded first: the venv's bundled pip is the runner's, not ours, and an old
+        # one carries advisories of its own
+        run: |
+          python -m venv /tmp/env
+          /tmp/env/bin/pip install --upgrade pip
+          /tmp/env/bin/pip install . ./server pip-audit==2.10.1
       - name: Audit the installed dependencies
         run: /tmp/env/bin/pip-audit --local
