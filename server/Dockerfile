@@ -1,7 +1,7 @@
 # custmatch-server: the library plus the service, one image for every process
 # (API, scheduler, one-off jobs; server/README.md is the operator guide). Build from the repository root:
 #   docker build -f server/Dockerfile -t custmatch-server .
-FROM python:3.12-slim
+FROM python:3.14-slim
 WORKDIR /app
 COPY pyproject.toml README.md LICENSE NOTICE ./
 COPY custmatch ./custmatch
