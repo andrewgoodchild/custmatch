@@ -203,6 +203,64 @@ def test_threshold_is_chosen_after_clustering(world):
     assert s["cross_fitted_closure_aware"]["folds"] == pipeline.FOLDS
 
 
+def test_a_run_records_what_produced_it_and_reruns_to_the_same_manifest(world, tmp_path):
+    from custmatch import cli, manifest
+    tmp, truth, _ = world
+    all_candidate_labels(tmp, truth, tmp / "labels.csv")
+    for d in ("m1", "m2"):
+        pipeline.run(tmp / "config.json", tmp / "labels.csv", tmp_path / d, log=lambda *_: None)
+    m = manifest.read(tmp_path / "m1")
+    df, _ = io.load(tmp / "config.json")
+    assert [(s["name"], s["records"]) for s in m["sources"]] == [(k, int((df.source == k).sum())) for k in ("crm", "billing")]
+    assert m["labels"]["sha256"] == manifest.file_sha256(tmp / "labels.csv")
+    assert {"clusters.csv", "golden_records.csv", "history.csv", "summary.json"} <= set(m["outputs"])
+    assert "scikit-learn" in m["versions"] and m["command"] == "run"
+    assert manifest.compare(tmp_path / "m1", tmp_path / "m2") == []          # same inputs, same outputs
+    assert manifest.check(tmp_path / "m1") == []
+    # a changed output, and a run on other labels, are both found
+    with open(tmp_path / "m2" / "clusters.csv", "a") as f:
+        f.write("x\n")
+    assert manifest.check(tmp_path / "m2") == ["output clusters.csv changed since the run"]
+    assert cli.main(["verify", str(tmp_path / "m2")]) == 3
+    pd.read_csv(tmp / "labels.csv").iloc[::-1].to_csv(tmp_path / "reversed.csv", index=False)
+    pipeline.run(tmp / "config.json", tmp_path / "reversed.csv", tmp_path / "m3", log=lambda *_: None)
+    assert "labels differ" in manifest.compare(tmp_path / "m1", tmp_path / "m3")
+    # add and forget write one too, naming the state they started from
+    incremental.add(tmp_path / "m1", tmp / "config.json", tmp_path / "m4")
+    m4 = manifest.read(tmp_path / "m4")
+    assert m4["command"] == "add" and m4["other_inputs"]["state"]["sha256"] == manifest.file_sha256(
+        tmp_path / "m1" / "manifest.json")
+
+
+def test_an_audit_sample_estimates_the_runs_precision_and_recall(world, tmp_path):
+    from custmatch import audit, cli
+    tmp, truth, _ = world
+    all_candidate_labels(tmp, truth, tmp / "labels.csv")
+    pipeline.run(tmp / "config.json", tmp / "labels.csv", tmp_path / "out", log=lambda *_: None)
+    k = audit.sample(tmp_path / "out", 120, tmp_path / "audit.csv")
+    a = pd.read_csv(tmp_path / "audit.csv", dtype=str, keep_default_na=False)
+    assert k == len(a) <= 120 and a.by.str.startswith("audit:").all() and (a.label == "").all()
+    assert a.by.nunique() >= 3                                      # drawn from every band there is
+    a["label"] = [int(truth[x] == truth[y]) for x, y in zip(a.a, a.b)]
+    a.to_csv(tmp_path / "audit.csv", index=False)
+    est = audit.estimate(tmp_path / "out", tmp_path / "audit.csv")
+    # the truth over every candidate pair, to compare with
+    df, _ = io.load(tmp / "config.json")
+    keys = io.key(df)
+    pairs = labels.candidates(df)
+    c = pd.read_csv(tmp_path / "out" / "clusters.csv", dtype=str)
+    cust = dict(zip(c.source + ":" + c.record_id, c.customer_id))
+    match = np.array([truth[keys[i]] == truth[keys[j]] for i, j in pairs])
+    linked = np.array([cust[keys[i]] == cust[keys[j]] for i, j in pairs])
+    true_p, true_r = 100 * (match & linked).sum() / linked.sum(), 100 * (match & linked).sum() / match.sum()
+    for name, value in (("precision", true_p), ("recall", true_r)):
+        lo, hi = est[name]["interval_95"]
+        assert lo - 1 <= value <= hi + 1, (name, value, est[name])
+    assert est["labelled_pairs"] == len(a)
+    a.assign(label="maybe").to_csv(tmp_path / "bad.csv", index=False)
+    assert cli.main(["audit", "estimate", "--state", str(tmp_path / "out"), str(tmp_path / "bad.csv")]) == 2
+
+
 def test_too_few_labels_is_refused(world):
     tmp, truth, _ = world
     all_candidate_labels(tmp, truth, tmp / "labels.csv")
@@ -270,6 +328,108 @@ def _split(tmp, frac=0.2):
         so["path"], sn["path"] = f"old_{so['path']}", f"new_{sn['path']}"
     (tmp / "old.json").write_text(json.dumps(old))
     (tmp / "new.json").write_text(json.dumps(new))
+
+
+def _alias_config(tmp, rows, aliases):
+    pd.DataFrame(rows).to_csv(tmp / "al.csv", index=False)
+    cols = {"record_id": "id", "first_name": "fn", "last_name": "ln", "date_of_birth": "dob", "email": "em",
+            **{name: name for names in aliases.values() for name in names}}
+    (tmp / "al.json").write_text(json.dumps({"sources": [{"name": "s", "path": "al.csv", "columns": cols}],
+                                             "aliases": aliases}))
+    return io.load(tmp / "al.json")
+
+
+def test_alias_values_are_compared_through_the_best_pair_of_values(tmp_path):
+    from custmatch.core import STANDARD_FEATURES, alias_views, features, profile_contacts
+    df, cfg = _alias_config(tmp_path, [
+        {"id": "1", "fn": "mary", "ln": "smith", "maiden_name": "jones", "dob": "1980-03-04", "em": "ms@x.com",
+         "email_2": "mj80@y.com"},
+        {"id": "2", "fn": "mary", "ln": "jones", "maiden_name": "", "dob": "1980-03-04", "em": "mj80@y.com",
+         "email_2": ""},
+        {"id": "3", "fn": "tom", "ln": "brown", "maiden_name": "", "dob": "1970-01-02", "em": "tb@z.com",
+         "email_2": "tb@z.com"}],                                   # a second email that repeats the first
+        {"last_name": ["maiden_name"], "email": ["email_2"]})
+    views, owner = alias_views(df)
+    assert owner.tolist() == [0, 1, 2, 0, 0, 0]                    # maiden name, second email, both
+    profiles = {f: profile_contacts(df, f) for f in ("email", "phone")}
+    assert set(profiles["email"]) == {"ms@x.com", "mj80@y.com", "tb@z.com"}
+    x = dict(zip(STANDARD_FEATURES, features(df, np.array([[0, 1]]), profiles)[0]))
+    assert x["surname similarity"] == 1.0 and x["email agrees"] == 1.0   # both alias values at once
+    plain = df.drop(columns=[c for c in df.columns if "@" in c])
+    assert dict(zip(STANDARD_FEATURES, features(plain, np.array([[0, 1]]), profiles)[0]))["surname similarity"] < 0.5
+
+
+def test_alias_views_count_once_in_a_block(tmp_path):
+    from custmatch import blocking
+    from custmatch.core import profile_contacts
+    rows = [{"id": str(k), "fn": "anna", "ln": "berg", "dob": "", "em": f"a{k}@x.com",
+             **{f"email_{m}": (f"other{k}{m}@x.com" if k == 0 else "") for m in range(5)}} for k in range(3)]
+    df, cfg = _alias_config(tmp_path, rows, {"email": [f"email_{m}" for m in range(5)]})
+    profiles = {f: profile_contacts(df, f) for f in ("email", "phone")}
+    pairs, *_ = blocking.candidates_for(df, profiles, cfg | {"max_block": 3})
+    assert pairs.tolist() == [[0, 1], [0, 2], [1, 2]]               # three records, not eight views
+    with pytest.raises(io.ConfigError, match="default blocking only"):
+        blocking.candidates_for(df, profiles, cfg | {"blocking": "learned"})
+
+
+def test_alias_config_is_checked(tmp_path):
+    with pytest.raises(io.ConfigError, match="cannot have aliases"):
+        _alias_config(tmp_path, [{"id": "1", "fn": "a", "ln": "b", "dob": "", "em": "", "nick": "x"}],
+                      {"first_name": ["nick"]})
+    with pytest.raises(io.ConfigError, match="standard columns"):
+        _alias_config(tmp_path, [{"id": "1", "fn": "a", "ln": "b", "dob": "", "em": "", "phone": "1"}],
+                      {"last_name": ["phone"]})
+
+
+def test_previous_surnames_find_people_who_changed_their_name(world, tmp_path):
+    """A quarter of the billing records are people who married and moved: a new surname (the old one
+    as previous_surname), a new address, email and phone. Only the alias still connects them."""
+    tmp, truth, _ = world
+    rng = random.Random(1)
+    billing = pd.read_csv(tmp / "billing.csv", dtype=str)
+    moved = np.array([rng.random() < 0.25 for _ in range(len(billing))])
+    billing["previous_surname"] = np.where(moved, billing["last"], "")
+    billing["last"] = np.where(moved, [rng.choice(["okafor", "lindqvist", "moreau", "tanaka"]) for _ in moved],
+                               billing["last"])
+    k = np.arange(len(billing))
+    billing["street_address"] = np.where(moved, [f"{900 + i} new rd" for i in k], billing["street_address"])
+    billing["mail"] = np.where(moved, [f"new{i}@mail.com" for i in k], billing["mail"])
+    billing["tel"] = np.where(moved, [f"(425) 555-{1000 + i}" for i in k], billing["tel"])
+    billing.to_csv(tmp_path / "billing.csv", index=False)
+    cfg = json.loads((tmp / "config.json").read_text())
+    for s in cfg["sources"]:
+        s["path"] = str((tmp / s["path"]).resolve()) if s["name"] == "crm" else "billing.csv"
+    cfg["sources"][1]["columns"]["previous_surname"] = "previous_surname"
+    scores = {}
+    for tag, extra in (("plain", {}), ("alias", {"aliases": {"last_name": ["previous_surname"]}})):
+        c = tmp_path / f"{tag}.json"
+        c.write_text(json.dumps(cfg | extra))
+        df, _ = io.load(c)
+        keys = io.key(df)
+        pairs = labels.candidates(df, cfg | extra)
+        pd.DataFrame([{"a": keys[i], "b": keys[j], "label": int(truth[keys[i]] == truth[keys[j]])}
+                      for i, j in pairs]).to_csv(tmp_path / f"{tag}_labels.csv", index=False)
+        pipeline.run(c, tmp_path / f"{tag}_labels.csv", tmp_path / tag, log=lambda *_: None)
+        out = pd.read_csv(tmp_path / tag / "clusters.csv", dtype=str)
+        pid = np.array([truth[f"{a}:{b}"] for a, b in zip(out.source, out.record_id)])
+        _, sizes = np.unique(pid, return_counts=True)
+        scores[tag] = partition_scores(out.customer_id.to_numpy(), pid, float(np.sum(sizes * (sizes - 1) / 2)))
+    assert scores["alias"]["recall"] > scores["plain"]["recall"] + 15, scores
+    assert scores["alias"]["f1"] > scores["plain"]["f1"] + 3, scores
+    guide = " ".join((Path(__file__).parents[1] / "docs" / "guide.md").read_text().split())
+    p, a = scores["plain"], scores["alias"]                 # the guide quotes this test
+    assert (f"clustered recall rose from {p['recall']:.2f} to {a['recall']:.2f} and F1 from {p['f1']:.2f} to "
+            f"{a['f1']:.2f}. Precision fell from {p['precision']:.0f} to {a['precision']:.2f}") in guide
+    # what it costs: a moved person keeps only a first name and the old surname, and this file
+    # gives the same first name and surname to people in different households - namesakes the
+    # alias cannot tell apart. Every false merge is between such namesakes.
+    out = pd.read_csv(tmp_path / "alias" / "clusters.csv", dtype=str)
+    crm = pd.read_csv(tmp / "crm.csv", dtype=str)
+    true_name = dict(zip(crm.pid, crm.fname + " " + crm.lname))       # each person's name, without typos
+    for _, g in out.groupby("customer_id"):
+        people = {truth[f"{a}:{b}"] for a, b in zip(g.source, g.record_id)}
+        if len(people) > 1:
+            assert len({true_name[p] for p in people}) == 1, people
 
 
 def test_incremental_add_keeps_ids_and_matches_new_records(world):
@@ -573,6 +733,39 @@ def test_a_full_name_on_many_unrelated_records_is_a_placeholder():
     family = [("jo", "banks", "7", "elm st", "", "", "", f"19{60 + i}-02-02", "") for i in range(6)]
     fake_name, _ = placeholders.detect(_people(shared + family))
     assert fake_name[:6].all() and not fake_name[6:].any()
+
+
+def test_placeholder_dates_of_birth_are_blanked():
+    from custmatch import placeholders
+    rng = np.random.default_rng(0)
+    real = [f"19{rng.integers(40, 99)}-{rng.integers(1, 13):02d}-{rng.integers(2, 28):02d}" for _ in range(400)]
+    rows = [(f"first{i}", f"last{i}", "", "", "", "", "", d, "") for i, d in enumerate(real)]
+    rows += [(f"typed{i}", f"default{i}", "", "", "", "", "", "12/04/2018", "") for i in range(25)]   # a form default
+    rows += [("ann", "lee", "", "", "", "", "", "1900-01-01", ""), ("bo", "kim", "", "", "", "", "", "9999-12-31", ""),
+             ("cy", "ng", "", "", "", "", "", "12/31/1899", "")]
+    rows += [("di", "may", "", "", "", "", "", "2099-03-04", "")]          # a typo of 1999: still evidence
+    rows += [("sam", "oduya", "", "", "", "", "", "1985-06-15", "")] * 25                  # one person, 25 records
+    rows += [(f"twin{i}", "okafor", "", "", "", "", "", "1990-02-02", "") for i in range(2)]
+    df = _people(rows)
+    fake = placeholders.detect_dates(df)
+    assert fake[400:428].all() and not fake[:400].any() and not fake[428:].any()
+    out, _, _ = placeholders.blank(df)
+    assert (out.date_of_birth[400:428] == "").all() and (out.date_of_birth[:400] != "").all()
+
+
+def test_year_only_dates_are_not_placeholders():
+    # historical_50k writes a known year as 1 January (37% of its dates): 1862-01-01 is 596
+    # different people, 1800-01-01 people born in 1800 - the year is evidence and is kept
+    from custmatch import placeholders
+    rows = [(f"f{i}", f"l{i}", "", "", "", "", "", f"18{50 + i % 20}-01-01", "") for i in range(300)]
+    rows += [(f"g{i}", f"m{i}", "", "", "", "", "", f"18{50 + i % 20}-{1 + i % 12:02d}-{2 + i % 26:02d}", "")
+             for i in range(300)]
+    rows += [(f"h{i}", f"n{i}", "", "", "", "", "", d, "") for i, d in enumerate(["1800-01-01", "1900-01-01"])]
+    assert not placeholders.detect_dates(_people(rows)).any()
+    # without the convention a crowded 1 January is a default like any other
+    modern = [(f"g{i}", f"m{i}", "", "", "", "", "", f"19{50 + i % 40}-{1 + i % 12:02d}-{2 + i % 26:02d}", "")
+              for i in range(600)] + [(f"x{i}", f"y{i}", "", "", "", "", "", "2000-01-01", "") for i in range(30)]
+    assert placeholders.detect_dates(_people(modern))[600:].all()
 
 
 def test_reserved_fictional_phone_numbers_are_blanked_only_with_placeholders_on():
@@ -987,6 +1180,45 @@ def test_typed_parquet_columns_are_read_as_text(tmp_path):
         "record_id": "id", "first_name": "fname", "phone": "phone", "date_of_birth": "dob"}}]}))
     df, _ = io.load(tmp_path / "c.json")
     assert df.phone.tolist() == ["412345678", ""] and df.date_of_birth.tolist() == ["1990-05-01", ""]
+
+
+UNICODE_GOLDEN = [   # written as escapes: most of these characters are invisible
+    ("Mu\u0308ller", "m\u00fcller"),             # decomposed (macOS) = precomposed
+    ("M\u00fcller", "m\u00fcller"),
+    ("Jo\u200bse", "jose"),                      # zero-width space pasted from a web page
+    ("\ufeffAnn", "ann"),                        # byte-order mark at the start of a field
+    ("Ann\u00adMarie", "annmarie"),              # soft hyphen
+    ("\u200fSara\u200e", "sara"),                # direction marks
+    ("\uff2a\uff2f\uff33\uff25", "jose"),        # full-width letters
+    ("O\u2019Brien", "o'brien"),
+    ("Smith\u2010Jones", "smith-jones"),
+    ("Smith \u2013 Jones", "smith - jones"),
+    ("Jos\u00e9", "jos\u00e9"),                  # accents are kept
+    ("Anne\u00a0 Marie", "anne marie"),          # no-break space
+    ("\u738b\u4f1f", "\u738b\u4f1f"),            # other scripts are untouched here (country.py transliterates)
+    ("\u0645\u062d\u0645\u062f", "\u0645\u062d\u0645\u062f"),
+    ("\u0e2a\u0e21\u0e0a\u0e32\u0e22", "\u0e2a\u0e21\u0e0a\u0e32\u0e22"),   # Thai vowel marks survive
+]
+
+
+def test_text_is_read_in_one_unicode_form():
+    got = io._clean(pd.Series([raw for raw, _ in UNICODE_GOLDEN] + [None])).tolist()
+    assert got == [want for _, want in UNICODE_GOLDEN] + [""]
+
+
+def test_unicode_cleaning_is_idempotent_on_random_text():
+    # fuzzing by hand: random strings mixing ASCII, Latin-1, combining marks, format characters,
+    # full-width forms, compatibility letters and other scripts; cleaning twice must give what
+    # cleaning once gave (it found two orders that did not: a format character between a letter
+    # and its accent, and lower-casing after NFKC - \u0130 becomes i + a combining dot)
+    rng = random.Random(0)
+    pools = ["abc XYZ-'", "\u00e0\u00e9\u00f1\u00fc\u00df\u0130\u00c9", "\u0300\u0301\u0307\u0308\u0327",
+             "\u200b\u200c\u200d\u00ad\ufeff\u202e\u2066", "\uff21\uff42\uff10", "\u2019\u2013\u00a0\u3000",
+             "\u738b\u0645\u0e2a\u0915\u094d\u0937\uac00\u1100\u1161", "\ufb01\u2163\u00bd\u1e9e\u210c\u2126"]
+    texts = ["".join(rng.choice(rng.choice(pools)) for _ in range(rng.randint(0, 16))) for _ in range(20000)]
+    once = io._clean(pd.Series(texts))
+    assert once.tolist() == io._clean(once).tolist()
+    assert not once.str.contains("[\u200b\u200c\u200d\u00ad\ufeff\u202e\u2066]").any()
 
 
 def test_australian_address_forms_are_split():

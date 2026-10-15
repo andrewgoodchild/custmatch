@@ -336,6 +336,24 @@ def country_pairs(df, profiles, max_block):
 def candidates_for(df, profiles, cfg, labelled_pos=None, rules=None):
     """The tool's candidate pairs. Returns (pairs, hubs_dropped, report, rules_used).
 
+    With alias fields ("aliases", core.alias_views) the views are blocked - a record's previous
+    surname or second email is a key like its own - and pairs of views become pairs of records."""
+    from .core import alias_views
+    views, owner = alias_views(df)
+    if owner is None:
+        return _candidates_for(df, profiles, cfg, labelled_pos, rules)
+    if cfg.get("blocking") or rules is not None:
+        from .io import ConfigError
+        raise ConfigError('"aliases" works with the default blocking only; remove "blocking": '
+                          f'"{cfg.get("blocking") or "saved rules"}" or "aliases"')
+    pairs, hubs, report, used = _candidates_for(views, profiles, cfg, labelled_pos, rules, owner=owner)
+    report["alias_rows"] = int(len(views) - len(df))
+    return pairs, hubs, report, used
+
+
+def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None):
+    """candidates_for over records (or alias views).
+
     cfg "blocking": absent -> the fixed keys the report measured (core.block, blocks over
     max_block dropped); "fixed" -> the same kind of keys as rules, oversized blocks split;
     "learned" -> rules learned from labelled_pos (falls back to fixed without labels).
@@ -347,7 +365,7 @@ def candidates_for(df, profiles, cfg, labelled_pos=None, rules=None):
     if rules is None and not mode:
         skipped, by_key = [], []
         pairs, hubs = block(df, profiles, extra_keys=extra_keys(cfg), max_block=cfg_max_block(cfg),
-                            lsh=cfg.get("lsh_blocking"), skipped=skipped, by_key=by_key)
+                            lsh=cfg.get("lsh_blocking"), skipped=skipped, by_key=by_key, owner=owner)
         # records never compared with anyone because their only blocks were skipped - a record
         # whose broad block (postcode alone) was skipped but whose narrow one was used is fine
         compared = np.zeros(len(df), bool)

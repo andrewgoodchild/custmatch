@@ -31,7 +31,7 @@ STATE = "state"
 
 # settings the trained model and its blocking depend on: an add must use the saved run's
 MODEL_KEYS = ("country", "normalise", "extra_fields", "record_dates", "rich_features", "match_weight_feature",
-              "blocking", "extra_blocking", "max_block", "hash_fields", "hash_salt_env", "placeholders")
+              "blocking", "extra_blocking", "max_block", "hash_fields", "hash_salt_env", "placeholders", "aliases")
 # settings an add's config may change: how links are accepted and what is written
 ADD_OPTIONS = ("twin_guard", "unique_sources", "contact_confidence", "cookie_max_identities", "cookie_max_records", "cookie_name_check", "max_cluster", "minimal_outputs", "survivorship", "golden_fields",
                "source_priority", "household_postcode_join", "trusted_ids", "trusted_max")
@@ -75,7 +75,8 @@ def add(state_dir, new_config, out_dir, delete=None):
     to remove. Customers that lose records are re-split on their saved links, so a deletion or
     a change can divide a customer. IDs follow stewardship.carry_ids; every change goes to
     history.csv."""
-    from . import stewardship
+    from . import manifest, stewardship
+    started = datetime.now(timezone.utc).isoformat(timespec="seconds")
     state = Path(state_dir) / STATE
     if not state.exists():
         raise io.ConfigError(f"no saved state in {state_dir}: run `custmatch run` there first")
@@ -302,4 +303,7 @@ def add(state_dir, new_config, out_dir, delete=None):
                             if io.unknown_keys(new_cfg) else [])}
     (out / "summary.json").write_text(json.dumps(summary, indent=1))
     monitor.write(out, monitor.snapshot(df, customer, score, th))
+    manifest.write(out, manifest.build("add" if new_config is not None else "forget",
+                                       new_config, new_cfg, new, 0, None, started, out,
+                                       state=state_dir, delete=delete))
     return summary

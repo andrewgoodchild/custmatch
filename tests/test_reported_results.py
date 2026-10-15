@@ -415,16 +415,55 @@ def test_placeholder_claims():
     flat = " ".join(GUIDE.replace("**", "").split())
     fp = p["false_positives_clean"]
     for ds in ("febrl3", "historical_50k", "fake_1000"):
-        assert fp[ds]["names_flagged"] == 0 and fp[ds]["addresses_flagged"] == 0, ds
-    assert f"{fp['synthetic']['names_flagged']} on the synthetic file" in flat
+        assert fp[ds]["names_flagged"] == fp[ds]["addresses_flagged"] == fp[ds]["dates_flagged"] == 0, ds
+    assert f"{fp['synthetic']['names_flagged']} names on the synthetic file" in flat
+    assert fp["synthetic"]["dates"] == {"12/04/2018": fp["synthetic"]["dates_flagged"]}
+    assert f"and {fp['synthetic']['dates_flagged']} dates there, all one form default (12/04/2018" in flat
     d = p["detection_injected"]
     assert f"names P {d['names']['precision']:.2f} / R {d['names']['recall']:.0f}" in flat
+    assert f"dates P {d['dates']['precision']:.0f} / R {d['dates']['recall']:.0f}" in flat
     for pre in ("", "clean_"):
         off, on = p[f"{pre}placeholders_off"], p[f"{pre}placeholders_on"]
         assert (f"clustered F1 {off['all_records']['f1']:.2f} -> {on['all_records']['f1']:.2f}; households "
                 f"{off['households']['f1']:.2f} -> {on['households']['f1']:.2f}") in flat
     assert p["placeholders_on"]["all_records"]["f1"] > p["placeholders_off"]["all_records"]["f1"]
     assert p["clean_placeholders_off"]["all_records"]["f1"] - p["clean_placeholders_on"]["all_records"]["f1"] < 0.1
+
+
+def test_unicode_form_claims():
+    u = load("unicode_form.json")
+    flat = " ".join(GUIDE.split())
+    changelog = " ".join((ROOT / "CHANGELOG.md").read_text().split())
+    changed = {k: v["values"] for k, v in u["changed_values"].items() if v["values"]}
+    assert set(changed) == {"historical_50k", "synthetic"}, changed     # the only datasets it touches
+    h, s = u["runs"]["historical_50k"], u["runs"]["synthetic"]
+    for name, r in u["runs"].items():
+        assert r["before"]["random_1000"] == r["after"]["random_1000"], name
+    assert (f"only historical_50k ({changed['historical_50k']} values, mostly d’Urban-style apostrophes) and the "
+            f"synthetic file ({changed['synthetic']}) change, and clustered F1 with 1,000 random labels did not move on "
+            f"either ({h['before']['random_1000']:.2f}, {s['before']['random_1000']:.2f};") in flat
+    assert (f"historical_50k went from {h['before']['active_300_700']:.2f} to {h['after']['active_300_700']:.2f} "
+            f"on one draw") in changelog
+    assert f"changes {changed['historical_50k']} values in historical_50k" in changelog
+
+
+def test_audit_claims():
+    a = load("audit_check.json")
+    flat = " ".join(GUIDE.split())
+    t = a["truth"]
+    assert f"true precision {t['precision']:.2f}, recall {t['recall']:.2f}, F1 {t['f1']:.2f}" in flat
+    k = ("precision", "recall", "f1")
+    assert ("estimates averaged " + ", ".join(f"{a[x]['mean_estimate']:.2f}" for x in k[:2]) +
+            f" and {a['f1']['mean_estimate']:.2f}") in flat
+    for x in k:                                      # unbiased: within a point of the truth on average
+        assert abs(a[x]["mean_estimate"] - t[x]) < 1, x
+        used, plain = a[x]["intervals_holding_the_truth"], a[x]["not_used"]["plain_bootstrap"]["holding_the_truth"]
+        assert used >= plain and used >= a[x]["not_used"]["beta"]["holding_the_truth"], x
+    held = [a[x]["intervals_holding_the_truth"] for x in k]
+    assert f"held the truth {held[0]}, {held[1]} and {held[2]} times in 100" in flat
+    for name, words in (("plain_bootstrap", "resampling the labels alone held it"), ("beta", "a Beta interval per stratum")):
+        v = [a[x]["not_used"][name]["holding_the_truth"] for x in k]
+        assert f"{words} {v[0]}, {v[1]} and {v[2]} times" in flat, name
 
 
 def test_sparse_australian_claims():

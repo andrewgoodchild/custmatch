@@ -24,6 +24,9 @@ def record(r, fields=None):
     addr = " ".join(x for x in (r["addr_number"], r["addr_street"], r["addr_unit"]) if x)
     if addr:
         out["address"] = addr
+    for c in r.keys():                 # alias values ("aliases"): "last_name@maiden_name"
+        if "@" in c and r[c]:
+            out[c.replace("@", " (") + ")"] = r[c]
     return out if fields is None else {k: v for k, v in out.items() if k in fields}
 
 

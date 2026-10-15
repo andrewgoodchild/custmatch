@@ -1,0 +1,52 @@
+{
+ "changed_values": {
+  "febrl3": {
+   "values": 0,
+   "example": null
+  },
+  "febrl4": {
+   "values": 0,
+   "example": null
+  },
+  "historical_50k": {
+   "values": 30,
+   "example": [
+    "d\u2019urban",
+    "d'urban"
+   ]
+  },
+  "fake_1000": {
+   "values": 0,
+   "example": null
+  },
+  "synthetic": {
+   "values": 11,
+   "example": [
+    "p.\u00ba salamoner",
+    "p.o salamoner"
+   ]
+  }
+ },
+ "runs": {
+  "historical_50k": {
+   "before": {
+    "random_1000": 85.53,
+    "active_300_700": 85.72
+   },
+   "after": {
+    "random_1000": 85.53,
+    "active_300_700": 86.64
+   }
+  },
+  "synthetic": {
+   "before": {
+    "random_1000": 97.28,
+    "active_300_700": 98.61
+   },
+   "after": {
+    "random_1000": 97.28,
+    "active_300_700": 98.61
+   }
+  }
+ }
+}

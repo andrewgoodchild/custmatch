@@ -199,7 +199,7 @@ plan (the generator ignores it), and an invalid number carried by one person sti
 them. What makes a contact useless as evidence is being shared by unrelated people, which the
 profiler already measures.
 
-**Placeholder names and addresses** (`"placeholders": true`, `research/scripts/placeholder_research.py`).
+**Placeholder names, addresses and dates of birth** (`"placeholders": true`, `research/scripts/placeholder_research.py`).
 Pattern rules (known fake full names, placeholder words, keyboard runs, a character repeated four
 or more times, house number 0, "main / test / fake / any street") plus the diversity rule used
 for junk contacts: a full name on 5 or more records with mostly different dates of birth and
@@ -208,12 +208,21 @@ birth. Deliberately *not* flagged, because each hit real people in the benchmark
 names (typos - 2,230 historical_50k records), single letters (initials), honorifics and
 suffixes ("sir", "iii"), surnames such as Tester and Guest, and house numbers 1234 or 9999.
 
+Dates of birth (added after zer, ZAL-Analytics/zer, which treats 1 January as an estimate): a
+known placeholder (1900-01-01, 1899-12-31 - day zero in spreadsheets - 1111-11-11, any 9999
+date), or a date on at least 20 records and 10 times the median, whose records share neither
+first names nor surnames - a form's default. Two things the first version flagged turned out to
+be evidence and are left alone. 1 January where it means "year only": 37% of historical_50k's
+dates, where 1862-01-01 is 596 people and 1800-01-01 246 people born in 1800. And dates in the
+future: typos of real dates in fake_1000 and the synthetic file (7985 for 1985), one edit from the
+truth, which the date features use.
+
 | | Result |
 | --- | --- |
-| Flags on clean data | 0 on febrl3, historical_50k and fake_1000; 23 on the synthetic file, all genuine (surnames "none", "occupant", "xxx" - the same person's other records carry a real one) |
-| Detection, 3% of records given a fake name and 3% a fake address | names P 96.42 / R 100 (the misses in precision are those 23 genuine ones); addresses P 100 / R 100 |
-| Matching on that file | clustered F1 93.90 -> 94.86; households 87.79 -> 90.32 |
-| Matching on the clean synthetic file | clustered F1 97.28 -> 97.29; households 90.94 -> 90.94 |
+| Flags on clean data | 0 on febrl3, historical_50k and fake_1000; 23 names on the synthetic file, all genuine (surnames "none", "occupant", "xxx" - the same person's other records carry a real one), and 45 dates there, all one form default (12/04/2018 on 45 adults) |
+| Detection, 3% of records given a fake name, 3% a fake address and 3% a fake date of birth | names P 96.48 / R 100 (the misses in precision are those 23 genuine ones); addresses P 100 / R 100; dates P 100 / R 100 |
+| Matching on that file | clustered F1 95.09 -> 95.62; households 87.94 -> 90.33 |
+| Matching on the clean synthetic file | clustered F1 97.28 -> 97.30; households 90.94 -> 90.94 |
 
 It helps where placeholders exist and costs nothing measurable where they do not. It stays
 opt-in only because no benchmark here has real-world placeholder data; turn it on for any file

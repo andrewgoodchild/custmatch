@@ -27,6 +27,15 @@
       match rates, field fill and score drift across outputs, oldest first; exits 3 on drift
       with --fail-on-drift
 
+  custmatch audit sample --state results/ --n 300 --out audit.csv
+  custmatch audit estimate --state results/ audit.csv
+      how good is the run on your records: label a sample drawn from every score band, then get
+      precision, recall and F1 of the run's links with 95% intervals
+
+  custmatch verify results/ [--against results_rerun/]
+      has anything changed since the run - its output files, its input files? With --against: do
+      two runs differ in inputs, versions or outputs (manifest.json)? Exits 3 if so
+
 CONFIG maps your files and columns onto the pipeline's (see custmatch/io.py and docs/guide.md).
 """
 import argparse
@@ -76,6 +85,19 @@ def main(argv=None):
     mo.add_argument("outputs", nargs="+", help="output folders of runs or adds, in time order")
     mo.add_argument("--out", help="also write the table to this CSV")
     mo.add_argument("--fail-on-drift", action="store_true", help="exit 3 when any drift alert fires")
+    au = sub.add_parser("audit", help="estimate the run's precision and recall from a labelled sample")
+    au_sub = au.add_subparsers(dest="audit_cmd", required=True)
+    aus = au_sub.add_parser("sample", help="pairs to label, drawn from every score band")
+    aus.add_argument("--state", required=True, help="output folder of a run")
+    aus.add_argument("--n", type=int, default=300)
+    aus.add_argument("--out", required=True)
+    aus.add_argument("--seed", type=int, default=0)
+    aue = au_sub.add_parser("estimate", help="precision, recall and F1 with 95%% intervals")
+    aue.add_argument("labels", help="the audit sample with its label column filled")
+    aue.add_argument("--state", required=True, help="output folder of the run it audits")
+    ve = sub.add_parser("verify", help="check an output folder against its manifest.json")
+    ve.add_argument("output", help="output folder of a run or add")
+    ve.add_argument("--against", metavar="DIR", help="another output folder: compare the two runs")
     a = ap.parse_args(argv)
     try:
         if a.cmd == "sample":
@@ -105,6 +127,22 @@ def main(argv=None):
             if a.out:
                 table.to_csv(a.out, index=False)
             if alerts and a.fail_on_drift:
+                return 3
+        elif a.cmd == "audit":
+            from . import audit
+            if a.audit_cmd == "sample":
+                k = audit.sample(a.state, a.n, a.out, a.seed)
+                print(f"wrote {k} pairs to {a.out}: fill the label column with 1 (same person) or 0, then "
+                      f"custmatch audit estimate --state {a.state} {a.out}")
+            else:
+                print(json.dumps(audit.estimate(a.state, a.labels), indent=1))
+        elif a.cmd == "verify":
+            from . import manifest
+            found = manifest.compare(a.output, a.against) if a.against else manifest.check(a.output)
+            print("\n".join(found) if found else
+                  ("the two runs had the same inputs, versions and outputs" if a.against else
+                   "outputs and inputs are as the run left them"))
+            if found:
                 return 3
         elif a.cmd == "explain":
             from . import explain

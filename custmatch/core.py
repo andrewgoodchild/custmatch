@@ -88,7 +88,11 @@ def profile_contacts(df, field, aware=True):
 
     weight is the evidential weight of agreeing on this value: rare -> 1.0, common -> ~0.
     Vectorised: one group-by over all values (a per-value loop took 7 s of an 8 s run).
+    Alias values ("aliases": a second email) are profiled with the rest, as views of their record.
     """
+    if any(c.startswith(field + "@") for c in alias_columns(df)):
+        views, owner = alias_views(df)            # each of a record's values once, not once per view
+        df = views.assign(_owner=owner).drop_duplicates(["_owner", field])
     sub = df[df[field] != ""]
     if not len(sub):
         return {}
@@ -158,7 +162,7 @@ def name_and_address_diversity(n, first_names, surnames, with_surname, addrs, wi
 
 
 # ------------------------------------------------------------------------- stage 2: blocking
-def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, skipped=None, by_key=None):
+def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, skipped=None, by_key=None, owner=None):
     """Candidate pairs: records sharing any blocking key. Returns (pairs int32 (m, 2), i < j,
     sorted; number of blocks skipped as hubs).
 
@@ -177,8 +181,12 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
     Everything is integer codes and numpy: each key family is factorised to codes, a block is a
     (family, code), and pairs are generated block by block in vectorised steps and de-duplicated
     as int64 codes. The first version built a Python dict of key lists and a Python set of pair
-    tuples - about 160 bytes per candidate pair, and most of a full-size run's memory."""
-    n = len(df)
+    tuples - about 160 bytes per candidate pair, and most of a full-size run's memory.
+
+    owner: df holds alias views (alias_views) and owner[k] is the record of row k - keys are
+    computed per view and entered once per record, so a block's size counts records and the pairs
+    are pairs of records."""
+    n = len(df) if owner is None else int(owner.max()) + 1
     limit = (max_block or MAX_BLOCK) if aware else 400   # even the naive run needs some ceiling
     fams = []                                           # (codes per entry, record per entry, key of a code)
     labels = []
@@ -187,11 +195,13 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
         if fam[0] == "tuples":
             keys, idx = fam[1], fam[2]
             codes, uniq = pd.factorize(pd.Series(list(keys), dtype=object))
-            fams.append((codes.astype(np.int64), np.asarray(idx, dtype=np.int64), lambda c, u=uniq: u[c]))
+            idx = np.asarray(idx, dtype=np.int64)
+            fams.append((codes.astype(np.int64), idx if owner is None else owner[idx], lambda c, u=uniq: u[c]))
         else:
             _, tag, arrays, idx = fam
             codes, uniq = _factorize_columns(arrays)
-            fams.append((codes.astype(np.int64), idx.astype(np.int64),
+            idx = idx.astype(np.int64)
+            fams.append((codes.astype(np.int64), idx if owner is None else owner[idx],
                          lambda c, u=uniq, t=tag: tuple(t) + tuple(u[c])))
     if not fams:
         return np.zeros((0, 2), np.int32), 0
@@ -440,7 +450,13 @@ def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, recor
 
     Computed FEATURE_CHUNK pairs at a time into one float32 array: each pair's row depends only
     on its two records, and the per-chunk temporaries (string lists for the similarity scorers)
-    stay bounded however many pairs there are."""
+    stay bounded however many pairs there are.
+
+    With alias fields ("aliases") each pair is compared through its best-agreeing views (best_views)."""
+    if alias_views(df)[1] is not None:
+        pairs = best_views(df, pairs)
+        records = _view_records(df) if rich else None
+        df = alias_views(df)[0]
     if len(pairs) <= FEATURE_CHUNK:
         return _features(df, pairs, profiles, aware, extra_fields, rich, records)
     if rich and records is None:
@@ -504,14 +520,120 @@ def feature_names(columns, extra_fields=(), rich=False, match_weight=False):
     return names + (["match weight (Fellegi-Sunter)"] if match_weight else [])
 
 
-_WEIGHTS, _COLUMNS = {}, {}
+_WEIGHTS, _COLUMNS, _VIEWS = {}, {}, {}
 
 
 def clear_caches():
-    """Drop the feature caches (object columns, contact weights). The pipeline calls it once
-    scoring is done: at ten million records the cached columns are several gigabytes."""
+    """Drop the feature caches (object columns, contact weights, alias views). The pipeline calls
+    it once scoring is done: at ten million records the cached columns are several gigabytes."""
     _COLUMNS.clear()
     _WEIGHTS.clear()
+    _VIEWS.clear()
+
+
+# ------------------------------------------------------------------- alias fields ("aliases")
+# A record may carry other values of a field: a previous or maiden surname, a second email, a
+# work phone (io.load_config reads them into columns named "field@alias"). Each alias value
+# makes another VIEW of its record - the record with that value in place of the field - and
+# views are blocked, profiled and compared like records: two records are candidates when any
+# views share a key, and a pair is compared through its two views that agree best on the alias
+# fields, so the best-matching value counts (zer, ZAL-Analytics/zer: AliasPhoneticKey and
+# AliasTokenOverlapSimilarity). Customers, golden records and every output stay one row per record.
+ALIAS_FIELDS = ("last_name", "email", "phone")
+
+
+def alias_columns(df):
+    return [c for c in df.columns if "@" in c and c.split("@", 1)[0] in ALIAS_FIELDS]
+
+
+def alias_views(df):
+    """(views, owner): the records, followed by one row per combination of their alias values - a
+    record with a maiden name and a second email has three more: maiden name, second email, both
+    - and the record each row belongs to; (df, None) when df has no alias columns. Comparing two
+    records through their best pair of views is then comparing each field through its best pair
+    of values. Cached per frame, like the feature columns."""
+    cols = alias_columns(df)
+    if not cols:
+        return df, None
+    hit = _VIEWS.get(id(df))
+    if hit is not None and hit[0] is df:
+        return hit[1]
+    if len(_VIEWS) > 2:
+        _VIEWS.clear()
+    fields = sorted({c.split("@", 1)[0] for c in cols})
+    cur = pd.DataFrame({"owner": np.arange(len(df))} | {f: df[f].fillna("").to_numpy(dtype=object) for f in fields})
+    for f in fields:
+        own = df[f].fillna("").to_numpy(dtype=object)
+        alts = pd.concat([pd.DataFrame({"owner": np.arange(len(df)), "alt": df[c].fillna("").to_numpy(dtype=object)})
+                          for c in cols if c.split("@", 1)[0] == f], ignore_index=True)
+        alts = alts[(alts.alt != "") & (alts.alt.to_numpy() != own[alts.owner.to_numpy()])].drop_duplicates()
+        if len(alts):
+            more = cur.merge(alts, on="owner").assign(**{f: lambda t: t.alt}).drop(columns="alt")
+            cur = pd.concat([cur, more], ignore_index=True)
+    if len(cur) == len(df):
+        views = (df, None)
+    else:
+        extra = cur.iloc[len(df):]
+        v = df.iloc[extra.owner.to_numpy()].copy()
+        for f in fields:
+            v[f] = extra[f].to_numpy()
+        if "email" in fields and "email_user" in v.columns:
+            v["email_user"] = [e.split("@")[0] if "@" in e else "" for e in v.email]
+        views = (pd.concat([df, v], ignore_index=True), cur.owner.to_numpy())
+    _VIEWS[id(df)] = (df, views, {})
+    return views
+
+
+def _view_records(df):
+    """record_arrays over df's views, once per frame (rich features read them)."""
+    views, _ = alias_views(df)
+    extra = _VIEWS[id(df)][2]
+    if "records" not in extra:
+        extra["records"] = record_arrays(views)
+    return extra["records"]
+
+
+def best_views(df, pairs):
+    """Pairs of records as pairs of views: for each pair, the two views (a record or one of its
+    alias rows) that agree best on the alias fields - surname by Jaro-Winkler, email and phone
+    exactly - the records themselves on a tie. Pairs whose records have no aliases are unchanged."""
+    from rapidfuzz.process import cpdist
+    views, owner = alias_views(df)
+    pairs = np.asarray(pairs)
+    if owner is None or not len(pairs):
+        return pairs
+    n = len(df)
+    v_own = owner[n:]
+    order = np.argsort(v_own, kind="stable")
+    v_idx, v_own = np.arange(n, len(views))[order], v_own[order]
+    start = np.searchsorted(v_own, np.arange(n))
+    count = 1 + np.searchsorted(v_own, np.arange(n), side="right") - start
+    need = np.flatnonzero((count[pairs[:, 0]] > 1) | (count[pairs[:, 1]] > 1))
+    if not len(need):
+        return pairs
+    i, j = pairs[need, 0].astype(np.int64), pairs[need, 1].astype(np.int64)
+    combos = count[i] * count[j]
+    pid = np.repeat(np.arange(len(need)), combos)
+    k = np.arange(combos.sum()) - np.repeat(np.cumsum(combos) - combos, combos)
+    a, b = k // count[j][pid], k % count[j][pid]          # 0 = the record itself
+
+    def view(rec, m):
+        return np.where(m == 0, rec, v_idx[np.clip(start[rec] + m - 1, 0, max(len(v_idx) - 1, 0))])
+    vi, vj = view(i[pid], a), view(j[pid], b)
+    score = np.zeros(len(pid))
+    for field in sorted({c.split("@", 1)[0] for c in alias_columns(df)}):
+        col = views[field].fillna("").to_numpy(dtype=object)
+        x, y = col[vi], col[vj]
+        both = (x != "") & (y != "")
+        if field == "last_name":
+            score += np.where(both, cpdist(list(x), list(y), scorer=JaroWinkler.similarity, workers=-1), 0.0)
+        else:
+            score += both & (x == y)
+    o = np.lexsort((k, -score, pid))                       # best score first, the records themselves on a tie
+    best = o[np.r_[True, pid[o][1:] != pid[o][:-1]]]
+    out = pairs.astype(np.int64).copy()
+    out[need, 0], out[need, 1] = vi[best], vj[best]
+    return out
 
 
 def _object_column(df, c):

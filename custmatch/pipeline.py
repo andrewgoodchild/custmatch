@@ -195,7 +195,9 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     that run (a service's real-time matches), kept like the run's own; issued: the highest
     customer ID given out anywhere else, so new customers start above it."""
     import time
+    from datetime import datetime, timezone
     t_start, stages = time.time(), {}
+    started = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
     def stage(name):
         now = time.time()
@@ -220,10 +222,12 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             words = suspect.profanity_words()
             profanity_list = words is not None
             suspect_flags = suspect.flag(df, words)
-    fake_name = fake_addr = np.zeros(n, bool)
+    fake_name = fake_addr = fake_dob = np.zeros(n, bool)
     if cfg.get("placeholders"):
-        # placeholder names / addresses ("test test", "123 main st") are not evidence: blank them
+        # placeholder names / addresses / dates ("test test", "123 main st", 1900-01-01) are not
+        # evidence: blank them
         from . import placeholders
+        fake_dob = placeholders.detect_dates(df)
         df, fake_name, fake_addr = placeholders.blank(df)
     profiles = {f: profile_contacts(df, f) for f in ("email", "phone")}
     fopts = schema.feature_options_for(df, cfg)
@@ -432,16 +436,20 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     incremental.save_state(out, df, cust_id, final_forest, th, cfg, rules,
                            match_weight_model=weight_scorer.model_json if weight_scorer is not None else None,
                            matcher_model=model_choice, links=state_links[same_customer])
+    from . import audit                           # pairs a person can label to audit this run (custmatch audit)
+    audit.save_pool(out / incremental.STATE, keys, pairs, score, cust_id, seed)
     if cfg.get("minimal_outputs") or cfg.get("hash_fields"):
         block_report = _redact_keys(block_report)  # the largest blocks' keys are names and contacts
     (out / "blocking_report.json").write_text(json.dumps(block_report, indent=1, default=str))
-    if (fake_name.any() or fake_addr.any()) and not minimal:
+    if (fake_name.any() or fake_addr.any() or fake_dob.any()) and not minimal:
         raw, _ = io.load(config_path)
-        flagged = fake_name | fake_addr
+        flagged = fake_name | fake_addr | fake_dob
         pd.DataFrame({"source": raw.source[flagged], "record_id": raw.record_id[flagged],
                       "fake_name": fake_name[flagged], "fake_address": fake_addr[flagged],
+                      "fake_date_of_birth": fake_dob[flagged],
                       "name": (raw.first_name + " " + raw.last_name)[flagged],
-                      "address": (raw.addr_number + " " + raw.addr_street)[flagged]}
+                      "address": (raw.addr_number + " " + raw.addr_street)[flagged],
+                      "date_of_birth": raw.date_of_birth[flagged]}
                      ).to_csv(out / "placeholders.csv", index=False)
     if cfg.get("suspect_records", True) and not minimal:
         from . import suspect
@@ -476,6 +484,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         "links": int(len(link_table)), "bridge_links": int(link_table.is_bridge.sum()),
         "customers_recut": recut,
         "placeholder_names": int(fake_name.sum()), "placeholder_addresses": int(fake_addr.sum()),
+        "placeholder_dates_of_birth": int(fake_dob.sum()),
         "stage_seconds": stages,
         "junk_contact_values": sum(c == "junk" for p in profiles.values() for c, _ in p.values()),
         "shared_contact_values": sum(c == "household" for p in profiles.values() for c, _ in p.values()),
@@ -524,4 +533,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     stages["households, golden records, outputs"] = round(time.time() - t_start - sum(stages.values()), 2)
     (out / "summary.json").write_text(json.dumps(summary, indent=1))
     monitor.write(out, monitor.snapshot(df, cust_id, score, th))
+    from . import manifest                        # last: it fingerprints every file written above
+    manifest.write(out, manifest.build("run", config_path, json.loads(Path(config_path).read_text()), df, seed,
+                                       labels_path, started, out, model=model_dir, previous=previous_dir))
     return summary

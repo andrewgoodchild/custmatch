@@ -1,5 +1,39 @@
 # Changelog
 
+## Unreleased
+
+Six ideas from three other matching projects - zer (ZAL-Analytics/zer), jlink (keltokhy/jlink)
+and sriracha (ccuetoh/sriracha) - each checked against custmatch first.
+
+**Fixed:** text is read in one Unicode form (NFKC, invisible format characters removed,
+typographic apostrophes and hyphens made ASCII). A name typed on a Mac arrives decomposed -
+"Müller" as u plus a combining diaeresis - and differed from the same name typed elsewhere in
+every exact key and agreement feature; so did a name with a zero-width space pasted from a web
+page, full-width letters, and O’Brien against O'Brien. Accents are kept. Of the benchmark
+datasets it changes 30 values in historical_50k (mostly d’Urban-style apostrophes) and 11 in the
+synthetic file: with 1,000 random labels clustered F1 is unchanged on both (85.53, 97.28); with
+300 random and 700 active labels historical_50k went from 85.72 to 86.64 on one draw - active
+learning follows another path once a few values change - and the synthetic file is unchanged
+(98.61) (research/scripts/unicode_form.py). Found by fuzzing: cleaning twice now
+always gives what cleaning once gave.
+
+**Added:**
+- `"aliases"`: other values of a field - a maiden or previous surname, a second email, a work
+  phone - blocked like the field's own and compared through the best-agreeing values
+  (docs/guide.md "Previous names and second contacts").
+- Placeholder dates of birth (with `"placeholders": true`): 1900-01-01, 1899-12-31, any 9999 date,
+  and a date on many records that share no names (a form default). Where 1 January means "year
+  only" (historical_50k) it is kept, and so are dates in the future, which are typos of real ones.
+  placeholders.csv and summary.json report them.
+- `manifest.json` in every output: the SHA-256 of the config, each source file and the labels, the
+  seed, the library versions and every output file. `custmatch verify DIR [--against DIR2]`
+  checks a folder against it, or two runs against each other.
+- `custmatch audit sample` / `custmatch audit estimate`: label a sample drawn from every score
+  band and get the run's precision, recall and F1 on your own records with 95% intervals. Each
+  run saves the pool it draws from (state/audit_pool.parquet).
+- CI: Dependabot keeps the pinned actions, the image's base and the Python dependencies current;
+  pip-audit checks the dependencies for known vulnerabilities, weekly and on every change.
+
 ## 0.1.1 (2026-10-12)
 
 **Fixed:** the same input, labels and seed now give the same result every time. The forest's

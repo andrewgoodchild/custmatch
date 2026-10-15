@@ -163,11 +163,14 @@ class Matcher:
         # pending real-time IDs raise it further as they are replayed (_add, _set_customer)
         self.next_customer = max(int(self.cust.max()) if n else -1, stewardship.highest_issued(result)) + 1
         self.seen = self._watermark()                    # what this process has seen of others' writes
-        self.fake_names, self.fake_addrs = set(), set()  # values the batch run blanked as placeholders
+        # values the batch run blanked as placeholders
+        self.fake_names, self.fake_addrs, self.fake_dobs = set(), set(), set()
         if self.cfg.get("placeholders") and (result / "placeholders.csv").exists():
             ph = pd.read_csv(result / "placeholders.csv", dtype=str, keep_default_na=False)
             self.fake_names = set(ph.name[ph.fake_name == "True"].str.strip())
             self.fake_addrs = set(ph.address[ph.fake_address == "True"].str.strip())
+            if "fake_date_of_birth" in ph.columns:       # older runs did not check dates
+                self.fake_dobs = set(ph.date_of_birth[ph.fake_date_of_birth == "True"].str.strip())
         self.merge, self.merge_score = MERGE, MERGE_SCORE
         self.coherence = COHERENCE
         self.lease_until = 0.0                           # renew the lease only when half its time is left
@@ -261,6 +264,8 @@ class Matcher:
                 df = refresh_names(df)
             if f"{r.addr_number} {r.addr_street}".strip() in self.fake_addrs:
                 df.loc[:, ["addr_number", "addr_street", "addr_unit"]] = ""
+            if r.date_of_birth and r.date_of_birth in self.fake_dobs:
+                df.loc[:, "date_of_birth"] = ""
         return {c: (df.iloc[0][c] if c in df.columns else "") for c in self.cols}
 
     def _hashes(self, row):

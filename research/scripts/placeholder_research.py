@@ -1,8 +1,11 @@
-"""Can fake names and addresses be spotted, and does blanking them help matching?
+"""Can fake names, addresses and dates of birth be spotted, and does blanking them help matching?
 
 pseudopeople does not generate placeholder names or addresses, so they are injected: a copy of
 the synthetic customer file where 3% of records get a placeholder name ("test test", "john doe",
-"unknown", ...) and 3% a placeholder address ("123 main st", "1 test st", ...), identities kept.
+"unknown", ...), 3% a placeholder address ("123 main st", "1 test st", ...) and 3% a placeholder
+date of birth (01/01/1900, 12/31/1899, a form default 01/01/2000, ...), identities kept. The
+synthetic file already holds one default date - 12/04/2018 on 45 adults - which counts as a
+placeholder in the truth.
 
   1. false positives: detector run on clean data - the synthetic file and Splink's febrl3,
      historical_50k and fake_1000 (real-looking names, including initials)
@@ -30,6 +33,8 @@ FAKE_NAMES = [("test", "test"), ("john", "doe"), ("jane", "doe"), ("unknown", "u
               ("asdf", "asdf"), ("customer", "customer"), ("mickey", "mouse"), ("first", "last"), ("xxx", "xxx")]
 FAKE_ADDRS = [("123", "main st"), ("1", "test st"), ("0", "unknown"), ("123", "fake st"), ("", "none"),
               ("9999", "no fixed address"), ("12345", "any street")]
+FAKE_DATES = ["01/01/1900", "12/31/1899", "01/01/2000", "11/11/1111", "01/01/1901"]   # this file is month first
+DEFAULT_IN_FILE = "12/04/2018"
 
 
 def injected(tmp, rate=0.03, seed=0):
@@ -41,6 +46,7 @@ def injected(tmp, rate=0.03, seed=0):
         n = len(d)
         name_rows = rng.random(n) < rate
         addr_rows = rng.random(n) < rate
+        date_rows = rng.random(n) < rate
         picks = rng.integers(0, len(FAKE_NAMES), n)
         d.loc[name_rows, "first_name"] = [FAKE_NAMES[k][0] for k in picks[name_rows]]
         d.loc[name_rows, "last_name"] = [FAKE_NAMES[k][1] for k in picks[name_rows]]
@@ -49,8 +55,9 @@ def injected(tmp, rate=0.03, seed=0):
         d.loc[addr_rows, "addr_number"] = [FAKE_ADDRS[k][0] for k in apicks[addr_rows]]
         d.loc[addr_rows, "addr_street"] = [FAKE_ADDRS[k][1] for k in apicks[addr_rows]]
         d.loc[addr_rows, "addr_unit"] = ""
-        for rid, fn_, fa in zip(d.record_id, name_rows, addr_rows):
-            truth[f"{s['name']}:{rid}"] = (bool(fn_), bool(fa))
+        d.loc[date_rows, "date_of_birth"] = [FAKE_DATES[k] for k in rng.integers(0, len(FAKE_DATES), int(date_rows.sum()))]
+        for rid, fn_, fa, fd, dob in zip(d.record_id, name_rows, addr_rows, date_rows, d.date_of_birth):
+            truth[f"{s['name']}:{rid}"] = (bool(fn_), bool(fa), bool(fd) or dob == DEFAULT_IN_FILE)
         path = tmp / f"inj_{s['name']}.parquet"
         d.to_parquet(path, index=False)
         s["path"] = str(path)
@@ -72,8 +79,11 @@ def main():
             config, _ = BS.setup(name, tmp)
             df, _ = io.load(config)
             fn_, fa = placeholders.detect(df)
+            fd = placeholders.detect_dates(df)
             out["false_positives_clean"][name] = {"records": len(df), "names_flagged": int(fn_.sum()),
                                                   "addresses_flagged": int(fa.sum()),
+                                                  "dates_flagged": int(fd.sum()),
+                                                  "dates": df.date_of_birth[fd].value_counts().head(5).to_dict(),
                                                   "examples": sorted(set(
                                                       (df.first_name + " " + df.last_name)[fn_]))[:5] +
                                                   sorted(set((df.addr_number + " " + df.addr_street)[fa]))[:5]}
@@ -84,8 +94,11 @@ def main():
         keys = io.key(df)
         true_name = np.array([fakes[k][0] for k in keys])
         true_addr = np.array([fakes[k][1] for k in keys])
+        # a source that maps no date of birth loads none, injected or not: nothing there to find
+        true_date = np.array([fakes[k][2] for k in keys]) & (df.date_of_birth != "").to_numpy()
         fn_, fa = placeholders.detect(df)
-        out["detection_injected"] = {"names": pr(fn_, true_name), "addresses": pr(fa, true_addr)}
+        out["detection_injected"] = {"names": pr(fn_, true_name), "addresses": pr(fa, true_addr),
+                                     "dates": pr(placeholders.detect_dates(df), true_date)}
         print("detection:", out["detection_injected"], flush=True)
 
         gold = V.truth()

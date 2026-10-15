@@ -4,6 +4,10 @@
    "records": 20134,
    "names_flagged": 23,
    "addresses_flagged": 0,
+   "dates_flagged": 45,
+   "dates": {
+    "12/04/2018": 45
+   },
    "examples": [
     "adam none",
     "audrey anon",
@@ -16,57 +20,68 @@
    "records": 5000,
    "names_flagged": 0,
    "addresses_flagged": 0,
+   "dates_flagged": 0,
+   "dates": {},
    "examples": []
   },
   "historical_50k": {
    "records": 50578,
    "names_flagged": 0,
    "addresses_flagged": 0,
+   "dates_flagged": 0,
+   "dates": {},
    "examples": []
   },
   "fake_1000": {
    "records": 1000,
    "names_flagged": 0,
    "addresses_flagged": 0,
+   "dates_flagged": 0,
+   "dates": {},
    "examples": []
   }
  },
  "detection_injected": {
   "names": {
-   "precision": 96.42,
+   "precision": 96.48,
    "recall": 100.0,
-   "flagged": 615
+   "flagged": 625
   },
   "addresses": {
    "precision": 100.0,
    "recall": 100.0,
-   "flagged": 608
+   "flagged": 586
+  },
+  "dates": {
+   "precision": 100.0,
+   "recall": 100.0,
+   "flagged": 346
   }
  },
  "placeholders_off": {
   "all_records": {
-   "precision": 98.69,
-   "recall": 89.55,
-   "f1": 93.9,
-   "clusters": 11552,
+   "precision": 98.24,
+   "recall": 92.14,
+   "f1": 95.09,
+   "clusters": 11382,
    "largest_cluster": 7,
-   "adjusted_rand": 0.939
+   "adjusted_rand": 0.9509
   },
   "unlabelled_people_only": {
-   "precision": 98.86,
-   "recall": 91.16,
-   "f1": 94.85,
-   "clusters": 9912,
-   "largest_cluster": 7,
-   "adjusted_rand": 0.9485
+   "precision": 98.46,
+   "recall": 92.78,
+   "f1": 95.53,
+   "clusters": 9767,
+   "largest_cluster": 6,
+   "adjusted_rand": 0.9553
   },
   "households": {
-   "precision": 88.84,
-   "recall": 86.76,
-   "f1": 87.79,
+   "precision": 89.05,
+   "recall": 86.86,
+   "f1": 87.94,
    "clusters": 4749,
-   "largest_cluster": 322,
-   "adjusted_rand": 0.8777
+   "largest_cluster": 326,
+   "adjusted_rand": 0.8792
   },
   "summary": {
    "records": 20134,
@@ -74,14 +89,13 @@
     "billing",
     "crm"
    ],
-   "candidate_pairs": 56919,
-   "hub_blocks_skipped": 23,
+   "candidate_pairs": 52369,
+   "hub_blocks_skipped": 26,
    "labelled_pairs": {
     "total": 1000,
-    "matches": 223,
+    "matches": 225,
     "active": 0
    },
-   "matcher": "forest",
    "matcher_model": "forest",
    "model_reused_from": null,
    "overrides": {
@@ -90,66 +104,178 @@
     "trusted_id_links": 0,
     "links_cut_to_keep_cannot_links_apart": 0
    },
-   "review_pairs": 561,
-   "ambiguous_records_held": 0,
+   "review_pairs": 499,
    "twin_pairs_kept_apart": 0,
-   "threshold": 0.55,
+   "threshold": 0.5,
    "cross_fitted_closure_aware": {
-    "precision": 98.75,
-    "recall": 91.48,
-    "f1": 94.98,
-    "labelled_pair_precision": 98.55,
+    "precision": 98.35,
+    "recall": 94.22,
+    "f1": 96.24,
+    "labelled_pair_precision": 97.7,
     "pairs": 1000,
     "folds": 4
    },
-   "ditto": null,
-   "customers": 11552,
+   "threshold_sweep": {
+    "0.05": {
+     "precision": 33.85,
+     "recall": 98.22,
+     "f1": 50.35
+    },
+    "0.1": {
+     "precision": 50.65,
+     "recall": 97.78,
+     "f1": 66.73
+    },
+    "0.15": {
+     "precision": 58.7,
+     "recall": 97.33,
+     "f1": 73.23
+    },
+    "0.2": {
+     "precision": 71.35,
+     "recall": 96.44,
+     "f1": 82.02
+    },
+    "0.25": {
+     "precision": 84.85,
+     "recall": 96.44,
+     "f1": 90.27
+    },
+    "0.3": {
+     "precision": 89.95,
+     "recall": 96.44,
+     "f1": 93.08
+    },
+    "0.35": {
+     "precision": 93.35,
+     "recall": 95.56,
+     "f1": 94.44
+    },
+    "0.4": {
+     "precision": 94.05,
+     "recall": 94.67,
+     "f1": 94.36
+    },
+    "0.45": {
+     "precision": 96.8,
+     "recall": 94.67,
+     "f1": 95.72
+    },
+    "0.5": {
+     "precision": 98.35,
+     "recall": 94.22,
+     "f1": 96.24
+    },
+    "0.55": {
+     "precision": 98.2,
+     "recall": 92.0,
+     "f1": 95.0
+    },
+    "0.6": {
+     "precision": 98.7,
+     "recall": 90.67,
+     "f1": 94.51
+    },
+    "0.65": {
+     "precision": 98.85,
+     "recall": 90.22,
+     "f1": 94.34
+    },
+    "0.7": {
+     "precision": 99.65,
+     "recall": 89.33,
+     "f1": 94.21
+    },
+    "0.75": {
+     "precision": 99.4,
+     "recall": 88.0,
+     "f1": 93.35
+    },
+    "0.8": {
+     "precision": 99.75,
+     "recall": 87.11,
+     "f1": 93.0
+    },
+    "0.85": {
+     "precision": 99.85,
+     "recall": 83.56,
+     "f1": 90.98
+    },
+    "0.9": {
+     "precision": 100.0,
+     "recall": 80.89,
+     "f1": 89.44
+    },
+    "0.95": {
+     "precision": 100.0,
+     "recall": 75.11,
+     "f1": 85.79
+    },
+    "0.97": {
+     "precision": 100.0,
+     "recall": 72.0,
+     "f1": 83.72
+    },
+    "0.98": {
+     "precision": 100.0,
+     "recall": 67.56,
+     "f1": 80.64
+    },
+    "0.99": {
+     "precision": 100.0,
+     "recall": 59.11,
+     "f1": 74.3
+    }
+   },
+   "customers": 11382,
    "largest_customer": 7,
    "households": 4749,
-   "links": 10926,
-   "bridge_links": 4827,
+   "links": 11204,
+   "bridge_links": 4882,
    "customers_recut": 0,
    "placeholder_names": 0,
    "placeholder_addresses": 0,
+   "placeholder_dates_of_birth": 0,
    "stage_seconds": {
-    "load and profile": 0.15,
-    "blocking (56,919 candidate pairs)": 0.21,
-    "forest: cross-fitted clustered F1 94.98": 4.39,
-    "threshold (clustered, in-cluster precision check)": -0.0,
-    "matcher chosen": -0.0,
-    "households, golden records, outputs": 0.8
+    "load and profile": 0.43,
+    "blocking (52,369 candidate pairs)": 0.12,
+    "forest: cross-fitted clustered F1 96.24": 6.94,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "large blocks checked: 0 of 24 kept, 0 pairs added": 0.04,
+    "households, golden records, outputs": 1.72
    },
    "junk_contact_values": 15,
-   "shared_contact_values": 1482,
+   "shared_contact_values": 1212,
    "warnings": [
-    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
-   ]
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/report/08-against-a-cdp.md \"Reassessed for marketing\")"
+   ],
+   "suspect_records": 2
   }
  },
  "placeholders_on": {
   "all_records": {
-   "precision": 97.48,
-   "recall": 92.38,
-   "f1": 94.86,
-   "clusters": 11289,
+   "precision": 98.14,
+   "recall": 93.23,
+   "f1": 95.62,
+   "clusters": 11302,
    "largest_cluster": 7,
-   "adjusted_rand": 0.9486
+   "adjusted_rand": 0.9562
   },
   "unlabelled_people_only": {
-   "precision": 98.26,
-   "recall": 92.78,
-   "f1": 95.44,
-   "clusters": 9790,
-   "largest_cluster": 7,
-   "adjusted_rand": 0.9544
+   "precision": 98.82,
+   "recall": 93.61,
+   "f1": 96.15,
+   "clusters": 9724,
+   "largest_cluster": 6,
+   "adjusted_rand": 0.9615
   },
   "households": {
-   "precision": 92.41,
-   "recall": 88.31,
-   "f1": 90.32,
-   "clusters": 4853,
-   "largest_cluster": 328,
-   "adjusted_rand": 0.903
+   "precision": 92.49,
+   "recall": 88.27,
+   "f1": 90.33,
+   "clusters": 4876,
+   "largest_cluster": 330,
+   "adjusted_rand": 0.9031
   },
   "summary": {
    "records": 20134,
@@ -157,14 +283,13 @@
     "billing",
     "crm"
    ],
-   "candidate_pairs": 49862,
+   "candidate_pairs": 50041,
    "hub_blocks_skipped": 14,
    "labelled_pairs": {
     "total": 1000,
-    "matches": 223,
+    "matches": 225,
     "active": 0
    },
-   "matcher": "forest",
    "matcher_model": "forest",
    "model_reused_from": null,
    "overrides": {
@@ -173,40 +298,152 @@
     "trusted_id_links": 0,
     "links_cut_to_keep_cannot_links_apart": 0
    },
-   "review_pairs": 430,
-   "ambiguous_records_held": 0,
+   "review_pairs": 810,
    "twin_pairs_kept_apart": 0,
    "threshold": 0.55,
    "cross_fitted_closure_aware": {
-    "precision": 98.15,
-    "recall": 95.52,
-    "f1": 96.82,
-    "labelled_pair_precision": 98.61,
+    "precision": 97.6,
+    "recall": 92.89,
+    "f1": 95.19,
+    "labelled_pair_precision": 94.57,
     "pairs": 1000,
     "folds": 4
    },
-   "ditto": null,
-   "customers": 11289,
+   "threshold_sweep": {
+    "0.05": {
+     "precision": 21.3,
+     "recall": 99.56,
+     "f1": 35.09
+    },
+    "0.1": {
+     "precision": 42.55,
+     "recall": 99.56,
+     "f1": 59.62
+    },
+    "0.15": {
+     "precision": 55.15,
+     "recall": 99.11,
+     "f1": 70.87
+    },
+    "0.2": {
+     "precision": 64.3,
+     "recall": 98.67,
+     "f1": 77.86
+    },
+    "0.25": {
+     "precision": 65.0,
+     "recall": 98.67,
+     "f1": 78.37
+    },
+    "0.3": {
+     "precision": 68.45,
+     "recall": 98.67,
+     "f1": 80.83
+    },
+    "0.35": {
+     "precision": 69.8,
+     "recall": 98.22,
+     "f1": 81.61
+    },
+    "0.4": {
+     "precision": 72.0,
+     "recall": 97.33,
+     "f1": 82.77
+    },
+    "0.45": {
+     "precision": 84.8,
+     "recall": 95.56,
+     "f1": 89.86
+    },
+    "0.5": {
+     "precision": 86.6,
+     "recall": 93.33,
+     "f1": 89.84
+    },
+    "0.55": {
+     "precision": 97.6,
+     "recall": 92.89,
+     "f1": 95.19
+    },
+    "0.6": {
+     "precision": 98.3,
+     "recall": 91.56,
+     "f1": 94.81
+    },
+    "0.65": {
+     "precision": 98.1,
+     "recall": 91.11,
+     "f1": 94.48
+    },
+    "0.7": {
+     "precision": 98.45,
+     "recall": 90.67,
+     "f1": 94.4
+    },
+    "0.75": {
+     "precision": 98.7,
+     "recall": 89.33,
+     "f1": 93.78
+    },
+    "0.8": {
+     "precision": 99.0,
+     "recall": 86.67,
+     "f1": 92.43
+    },
+    "0.85": {
+     "precision": 99.45,
+     "recall": 83.56,
+     "f1": 90.82
+    },
+    "0.9": {
+     "precision": 99.95,
+     "recall": 82.67,
+     "f1": 90.49
+    },
+    "0.95": {
+     "precision": 99.9,
+     "recall": 76.0,
+     "f1": 86.33
+    },
+    "0.97": {
+     "precision": 100.0,
+     "recall": 72.44,
+     "f1": 84.02
+    },
+    "0.98": {
+     "precision": 100.0,
+     "recall": 69.33,
+     "f1": 81.89
+    },
+    "0.99": {
+     "precision": 100.0,
+     "recall": 64.44,
+     "f1": 78.38
+    }
+   },
+   "customers": 11302,
    "largest_customer": 7,
-   "households": 4853,
-   "links": 11291,
-   "bridge_links": 4933,
+   "households": 4876,
+   "links": 11281,
+   "bridge_links": 4952,
    "customers_recut": 0,
-   "placeholder_names": 615,
-   "placeholder_addresses": 608,
+   "placeholder_names": 625,
+   "placeholder_addresses": 586,
+   "placeholder_dates_of_birth": 346,
    "stage_seconds": {
-    "load and profile": 0.26,
-    "blocking (49,862 candidate pairs)": 0.21,
-    "forest: cross-fitted clustered F1 96.82": 4.07,
+    "load and profile": 0.46,
+    "blocking (50,041 candidate pairs)": 0.09,
+    "forest: cross-fitted clustered F1 95.19": 6.05,
     "threshold (clustered, in-cluster precision check)": 0.0,
-    "matcher chosen": 0.0,
-    "households, golden records, outputs": 0.84
+    "large blocks checked: 0 of 12 kept, 0 pairs added": 0.03,
+    "households, golden records, outputs": 1.67
    },
    "junk_contact_values": 15,
-   "shared_contact_values": 1147,
+   "shared_contact_values": 1094,
    "warnings": [
-    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
-   ]
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/report/08-against-a-cdp.md \"Reassessed for marketing\")"
+   ],
+   "suspect_records": 2
   }
  },
  "clean_placeholders_off": {
@@ -247,7 +484,6 @@
     "matches": 257,
     "active": 0
    },
-   "matcher": "forest",
    "matcher_model": "forest",
    "model_reused_from": null,
    "overrides": {
@@ -257,7 +493,6 @@
     "links_cut_to_keep_cannot_links_apart": 0
    },
    "review_pairs": 438,
-   "ambiguous_records_held": 0,
    "twin_pairs_kept_apart": 0,
    "threshold": 0.55,
    "cross_fitted_closure_aware": {
@@ -268,7 +503,118 @@
     "pairs": 1000,
     "folds": 4
    },
-   "ditto": null,
+   "threshold_sweep": {
+    "0.05": {
+     "precision": 39.1,
+     "recall": 100.0,
+     "f1": 56.22
+    },
+    "0.1": {
+     "precision": 62.2,
+     "recall": 99.61,
+     "f1": 76.58
+    },
+    "0.15": {
+     "precision": 86.2,
+     "recall": 99.22,
+     "f1": 92.25
+    },
+    "0.2": {
+     "precision": 89.2,
+     "recall": 98.83,
+     "f1": 93.77
+    },
+    "0.25": {
+     "precision": 91.35,
+     "recall": 98.83,
+     "f1": 94.94
+    },
+    "0.3": {
+     "precision": 92.3,
+     "recall": 98.05,
+     "f1": 95.09
+    },
+    "0.35": {
+     "precision": 94.35,
+     "recall": 98.05,
+     "f1": 96.16
+    },
+    "0.4": {
+     "precision": 95.85,
+     "recall": 97.67,
+     "f1": 96.75
+    },
+    "0.45": {
+     "precision": 97.55,
+     "recall": 97.28,
+     "f1": 97.41
+    },
+    "0.5": {
+     "precision": 99.1,
+     "recall": 96.89,
+     "f1": 97.98
+    },
+    "0.55": {
+     "precision": 98.7,
+     "recall": 96.89,
+     "f1": 97.79
+    },
+    "0.6": {
+     "precision": 99.5,
+     "recall": 95.72,
+     "f1": 97.57
+    },
+    "0.65": {
+     "precision": 99.35,
+     "recall": 95.33,
+     "f1": 97.3
+    },
+    "0.7": {
+     "precision": 99.8,
+     "recall": 94.94,
+     "f1": 97.31
+    },
+    "0.75": {
+     "precision": 99.7,
+     "recall": 94.16,
+     "f1": 96.85
+    },
+    "0.8": {
+     "precision": 99.5,
+     "recall": 93.39,
+     "f1": 96.35
+    },
+    "0.85": {
+     "precision": 99.75,
+     "recall": 91.05,
+     "f1": 95.2
+    },
+    "0.9": {
+     "precision": 99.9,
+     "recall": 89.49,
+     "f1": 94.41
+    },
+    "0.95": {
+     "precision": 99.9,
+     "recall": 87.16,
+     "f1": 93.1
+    },
+    "0.97": {
+     "precision": 100.0,
+     "recall": 83.66,
+     "f1": 91.1
+    },
+    "0.98": {
+     "precision": 99.95,
+     "recall": 80.16,
+     "f1": 88.97
+    },
+    "0.99": {
+     "precision": 99.9,
+     "recall": 75.1,
+     "f1": 85.74
+    }
+   },
    "customers": 11038,
    "largest_customer": 7,
    "households": 4702,
@@ -277,43 +623,45 @@
    "customers_recut": 0,
    "placeholder_names": 0,
    "placeholder_addresses": 0,
+   "placeholder_dates_of_birth": 0,
    "stage_seconds": {
-    "load and profile": 0.16,
-    "blocking (48,759 candidate pairs)": 0.27,
-    "forest: cross-fitted clustered F1 97.79": 4.31,
+    "load and profile": 0.6,
+    "blocking (48,759 candidate pairs)": 0.08,
+    "forest: cross-fitted clustered F1 97.79": 5.58,
     "threshold (clustered, in-cluster precision check)": 0.0,
-    "matcher chosen": 0.0,
-    "households, golden records, outputs": 0.78
+    "large blocks checked: 0 of 12 kept, 0 pairs added": 0.03,
+    "households, golden records, outputs": 2.15
    },
    "junk_contact_values": 15,
    "shared_contact_values": 1032,
    "warnings": [
-    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
-   ]
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/report/08-against-a-cdp.md \"Reassessed for marketing\")"
+   ],
+   "suspect_records": 0
   }
  },
  "clean_placeholders_on": {
   "all_records": {
-   "precision": 98.6,
-   "recall": 96.0,
-   "f1": 97.29,
-   "clusters": 11032,
+   "precision": 98.66,
+   "recall": 95.97,
+   "f1": 97.3,
+   "clusters": 11037,
    "largest_cluster": 7,
-   "adjusted_rand": 0.9729
+   "adjusted_rand": 0.973
   },
   "unlabelled_people_only": {
-   "precision": 99.0,
-   "recall": 95.74,
-   "f1": 97.34,
-   "clusters": 9520,
+   "precision": 99.06,
+   "recall": 95.7,
+   "f1": 97.35,
+   "clusters": 9525,
    "largest_cluster": 6,
-   "adjusted_rand": 0.9734
+   "adjusted_rand": 0.9735
   },
   "households": {
    "precision": 92.51,
    "recall": 89.42,
    "f1": 90.94,
-   "clusters": 4702,
+   "clusters": 4700,
    "largest_cluster": 332,
    "adjusted_rand": 0.9093
   },
@@ -330,7 +678,6 @@
     "matches": 257,
     "active": 0
    },
-   "matcher": "forest",
    "matcher_model": "forest",
    "model_reused_from": null,
    "overrides": {
@@ -339,40 +686,152 @@
     "trusted_id_links": 0,
     "links_cut_to_keep_cannot_links_apart": 0
    },
-   "review_pairs": 440,
-   "ambiguous_records_held": 0,
+   "review_pairs": 457,
    "twin_pairs_kept_apart": 0,
    "threshold": 0.55,
    "cross_fitted_closure_aware": {
-    "precision": 99.2,
+    "precision": 98.9,
     "recall": 96.89,
-    "f1": 98.03,
+    "f1": 97.88,
     "labelled_pair_precision": 99.6,
     "pairs": 1000,
     "folds": 4
    },
-   "ditto": null,
-   "customers": 11032,
+   "threshold_sweep": {
+    "0.05": {
+     "precision": 42.6,
+     "recall": 100.0,
+     "f1": 59.75
+    },
+    "0.1": {
+     "precision": 61.95,
+     "recall": 99.61,
+     "f1": 76.39
+    },
+    "0.15": {
+     "precision": 84.9,
+     "recall": 99.22,
+     "f1": 91.5
+    },
+    "0.2": {
+     "precision": 88.6,
+     "recall": 98.83,
+     "f1": 93.44
+    },
+    "0.25": {
+     "precision": 90.9,
+     "recall": 98.83,
+     "f1": 94.7
+    },
+    "0.3": {
+     "precision": 92.9,
+     "recall": 98.44,
+     "f1": 95.59
+    },
+    "0.35": {
+     "precision": 94.55,
+     "recall": 98.05,
+     "f1": 96.27
+    },
+    "0.4": {
+     "precision": 96.4,
+     "recall": 97.28,
+     "f1": 96.84
+    },
+    "0.45": {
+     "precision": 97.4,
+     "recall": 97.28,
+     "f1": 97.34
+    },
+    "0.5": {
+     "precision": 98.3,
+     "recall": 96.89,
+     "f1": 97.59
+    },
+    "0.55": {
+     "precision": 98.9,
+     "recall": 96.89,
+     "f1": 97.88
+    },
+    "0.6": {
+     "precision": 99.15,
+     "recall": 96.11,
+     "f1": 97.61
+    },
+    "0.65": {
+     "precision": 99.6,
+     "recall": 95.33,
+     "f1": 97.42
+    },
+    "0.7": {
+     "precision": 99.6,
+     "recall": 94.94,
+     "f1": 97.21
+    },
+    "0.75": {
+     "precision": 99.6,
+     "recall": 94.55,
+     "f1": 97.01
+    },
+    "0.8": {
+     "precision": 99.9,
+     "recall": 93.0,
+     "f1": 96.33
+    },
+    "0.85": {
+     "precision": 99.7,
+     "recall": 91.05,
+     "f1": 95.18
+    },
+    "0.9": {
+     "precision": 99.9,
+     "recall": 90.66,
+     "f1": 95.06
+    },
+    "0.95": {
+     "precision": 99.85,
+     "recall": 87.16,
+     "f1": 93.07
+    },
+    "0.97": {
+     "precision": 100.0,
+     "recall": 84.05,
+     "f1": 91.33
+    },
+    "0.98": {
+     "precision": 100.0,
+     "recall": 81.32,
+     "f1": 89.7
+    },
+    "0.99": {
+     "precision": 100.0,
+     "recall": 75.49,
+     "f1": 86.03
+    }
+   },
+   "customers": 11037,
    "largest_customer": 7,
-   "households": 4702,
-   "links": 11738,
+   "households": 4700,
+   "links": 11731,
    "bridge_links": 4952,
    "customers_recut": 0,
    "placeholder_names": 23,
    "placeholder_addresses": 0,
+   "placeholder_dates_of_birth": 45,
    "stage_seconds": {
-    "load and profile": 0.26,
-    "blocking (48,790 candidate pairs)": 0.23,
-    "forest: cross-fitted clustered F1 98.03": 4.22,
-    "threshold (clustered, in-cluster precision check)": -0.0,
-    "matcher chosen": -0.0,
-    "households, golden records, outputs": 0.84
+    "load and profile": 0.64,
+    "blocking (48,790 candidate pairs)": 0.07,
+    "forest: cross-fitted clustered F1 97.88": 5.74,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "large blocks checked: 0 of 12 kept, 0 pairs added": 0.05,
+    "households, golden records, outputs": 2.03
    },
    "junk_contact_values": 15,
-   "shared_contact_values": 1026,
+   "shared_contact_values": 1044,
    "warnings": [
-    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/guide.md \"Reassessed for marketing\")"
-   ]
+    "every label was drawn at random: add actively chosen pairs (custmatch sample --active). With 300 random labels and none chosen actively, custmatch was less precise than well-configured exact-identifier matching (docs/report/08-against-a-cdp.md \"Reassessed for marketing\")"
+   ],
+   "suspect_records": 0
   }
  }
 }

@@ -45,6 +45,13 @@ can be matched together. Fields custmatch does not know can be compared too, as
 
 Before anything is compared, values are put in one form: lower case, spaces trimmed, an address
 split into house number, street and unit (`unit 4, 12 main st` and `4/12 main st` are the same).
+Text is put in one Unicode form too: a name typed on a Mac arrives with its accents as separate
+characters and differed from the same name typed elsewhere; invisible characters pasted from web
+pages, full-width letters and curly apostrophes (O’Brien) differed the same way. Accents are
+kept - José and Jose are compared by similarity. Of the benchmark datasets, only historical_50k
+(30 values, mostly d’Urban-style apostrophes) and the synthetic file (11) change, and
+clustered F1 with 1,000 random labels did not move on either (85.53, 97.28;
+`research/scripts/unicode_form.py`).
 A **country profile** (`"country": "AU"`, also US, NZ, GB, CA) adds the local rules:
 
 - **Phones** parsed with the country's numbering plan, so `0412 345 678` and `+61 412 345 678`
@@ -296,6 +303,33 @@ See "Privacy" below.
   where chaining shows - and the figure the docs quote.
 - **The ceiling**: the clustered F1 a perfect model would reach given the blocking (step 4).
 
+**Auditing a run on your own records.** The benchmark figures in these docs were measured on
+other people's data. To know how a run did on yours, label a sample and let custmatch estimate:
+
+```bash
+custmatch audit sample --state results/ --n 300 --out audit.csv     # fill label: 1 same person, 0 not
+custmatch audit estimate --state results/ audit.csv
+```
+
+The sample is drawn about equally from twelve strata - six score bands, each split into the
+pairs the run linked (put in one customer) and the pairs it did not - because most candidate
+pairs score near 0 and would fill a plain random sample. The estimate starts from the run's own
+scores summed over every candidate pair and corrects them by how far the labels differ from the
+scores in each stratum (the difference estimator of survey sampling), so it is unbiased however
+well the scores are calibrated. You get precision, recall and F1 of the run's links, each with a
+95% interval. Recall is among candidate pairs: a true match blocking never proposed is not
+counted (`custmatch blocking` reports what blocking misses).
+
+Checked against the truth on the synthetic file (`research/scripts/audit_check.py`): one run,
+true precision 98.87, recall 96.31, F1 97.57; over 100 audit samples of 300
+pairs the estimates averaged 98.83, 96.09 and 97.44, with 95% intervals
+1.47, 3.06 and 1.91 points wide that held the truth 91, 91 and 95 times in 100 - a little
+narrow for 95%, so read them as approximate. Two simpler intervals did worse and are not used:
+resampling the labels alone held it 85, 85 and 92 times (a stratum whose labels all
+agree looks certain), and a Beta interval per stratum 87, 85 and 71 times.
+The run saves what the sample is drawn from in `state/audit_pool.parquet`; `custmatch add`
+does not, so audit the batch run.
+
 Every number in the docs is checked against `research/results/*.json` by the test suite.
 
 ## Install
@@ -420,6 +454,29 @@ true matches differ in date of birth. Each extra field must also be mapped in `c
 large block is a legitimately common value such as a city, not a junk contact. A skipped block
 whose records the model judges to be one entity is compared anyway ("How it decides").
 
+**Previous names and second contacts (`aliases`).** A record may carry other values of a
+field - a maiden or previous surname, a second email, a work phone. Map each as a column of its
+own and list it under its field:
+
+```json
+"aliases": {"last_name": ["maiden_name", "previous_surname"], "email": ["email_2"], "phone": ["mobile", "work_phone"]}
+```
+
+Surnames, emails and phones can have aliases. Each alias value is blocked like the field's own
+value - a woman's maiden name meets the surname on her records from before she married - and a
+pair is compared through its best-agreeing values: surname by similarity, email and phone
+exactly, each field on its own, so a record's maiden name and its second email can both count
+for one pair. Alias values are normalised as their field is, hashed with it under
+`"hash_fields"`, profiled with it (a junk second email is still junk), and shown to labellers
+("last_name (maiden_name)"). Outputs stay one row per record. Works with the default blocking
+only (not `"blocking": "fixed"` or `"learned"`). The service's real-time matcher compares alias
+values but finds a new record's candidates by its own values only; the batch run blocks on both.
+On a test file where a quarter of one source's people had married and moved (new surname,
+address, email and phone; the old surname kept as `previous_surname`), clustered recall rose
+from 75.83 to 96.67 and F1 from 86.26 to 91.34. Precision fell from 100 to 86.57: every false
+merge joined two different people with the same first name and surname, whom nothing else told
+apart (`tests/test_custmatch.py`, test_previous_surnames_find_people_who_changed_their_name).
+
 **Three matcher options.**
 
 - `"rich_features"` (on by default): nine more comparisons for names and dates that drift -
@@ -440,12 +497,15 @@ whose records the model judges to be one entity is compared anyway ("How it deci
   model; feature importances are. The server image includes it only when built with
   `CUSTMATCH_EXTRAS=catboost` (server/README.md). See [report/03-which-matcher.md](report/03-which-matcher.md) "Which classifier".
 
-**Placeholder names and addresses.** `"placeholders": true` blanks values typed to get past a
-mandatory field - "john doe", "test test", "unknown", "123 main st", "1 test st", house number 0 -
-and any full name or address carried by many records that agree on nothing else. Only the
-flagged part is blanked ("maria unknown" keeps "maria"), and `placeholders.csv` lists every
-record touched. Phones in the reserved fictional range (xxx-555-0100 to 0199) are blanked with
-them. Off by default (see [report/05-customer-data.md](report/05-customer-data.md) "Households, fake contacts and placeholders").
+**Placeholder names, addresses and dates of birth.** `"placeholders": true` blanks values typed
+to get past a mandatory field - "john doe", "test test", "unknown", "123 main st", "1 test st",
+house number 0, 1900-01-01, 1899-12-31 (day zero in spreadsheets), any 9999 date - and any full
+name, address or date of birth carried by many records that agree on nothing else (a form's
+default date on 45 different adults). Where 1 January stands for "year only" (a tenth or more of
+the file's dates) 1 January dates are kept: the year is evidence. Dates in the future are kept
+too: they are typos of real dates. Only the flagged part is blanked ("maria unknown" keeps
+"maria"), and `placeholders.csv` lists every record touched. Phones in the reserved fictional
+range (xxx-555-0100 to 0199) are blanked with them. Off by default (see [report/05-customer-data.md](report/05-customer-data.md) "Households, fake contacts and placeholders").
 
 **Suspect records.** `suspect_records.csv` lists records that look entered in bad faith or by a
 bot, for a person to review; matching is not changed. Three reasons:
@@ -511,12 +571,24 @@ custmatch run config.json --labels labels.csv --out results/
 | `links.csv` | every accepted link: score, the evidence in words, and whether it is a bridge - weakest first |
 | `suspect_records.csv` | records that look entered in bad faith or by a bot - profanity, a disposable or random-looking email - for review; matching ignores it |
 | `summary.json` | counts, the chosen threshold, its cross-fitted quality, and warnings |
+| `manifest.json` | what produced the run: the SHA-256 of the config's settings, every source file and the labels, the seed, the versions of custmatch, Python and the libraries that decide the numbers, and the SHA-256 of every output file (below) |
 | `state/` | the records, trained forest and threshold, for `custmatch add` |
 
 **Review `links.csv` from the top.** In one check on the synthetic file (not saved to
 `results/`), the weakest 10% of links held most of the false merges (160 of 187), so review
 there first. Ordering by bridges instead found 44: with about two records per customer most
 links are bridges.
+
+**Showing a run is what it claims.** The same records, labels, config and seed give the same
+customers, and `manifest.json` records each of them by SHA-256. `custmatch verify results/`
+checks that no output file - and no input file still at its path - has changed since the run;
+`custmatch verify results/ --against rerun/` compares two runs and lists any difference in
+inputs, settings, library versions or outputs (exit code 3 if there is one). For an auditor:
+rerun from the inputs the manifest names, then verify the two folders against each other. Run
+times are recorded but not compared (`summary.json` is fingerprinted without its stage timings,
+`history.csv` without its event times). `custmatch add` and `forget` write a manifest too, naming
+the manifest of the state they started from, so a chain of batches can be followed back. No
+secret is written: the `hash_fields` key stays in its environment variable.
 
 ## Adding new records: `custmatch add`
 

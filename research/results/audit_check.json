@@ -1,0 +1,58 @@
+{
+ "candidate_pairs": 48759,
+ "truth": {
+  "precision": 98.87,
+  "recall": 96.31,
+  "f1": 97.57
+ },
+ "samples": 100,
+ "pairs_per_sample": 300,
+ "precision": {
+  "mean_estimate": 98.83,
+  "sd_estimate": 0.62,
+  "mean_interval_width": 1.47,
+  "intervals_holding_the_truth": 91,
+  "not_used": {
+   "plain_bootstrap": {
+    "holding_the_truth": 85,
+    "mean_width": 1.46
+   },
+   "beta": {
+    "holding_the_truth": 87,
+    "mean_width": 6.68
+   }
+  }
+ },
+ "recall": {
+  "mean_estimate": 96.09,
+  "sd_estimate": 1.29,
+  "mean_interval_width": 3.06,
+  "intervals_holding_the_truth": 91,
+  "not_used": {
+   "plain_bootstrap": {
+    "holding_the_truth": 85,
+    "mean_width": 3.1
+   },
+   "beta": {
+    "holding_the_truth": 85,
+    "mean_width": 16.32
+   }
+  }
+ },
+ "f1": {
+  "mean_estimate": 97.44,
+  "sd_estimate": 0.7,
+  "mean_interval_width": 1.91,
+  "intervals_holding_the_truth": 95,
+  "not_used": {
+   "plain_bootstrap": {
+    "holding_the_truth": 92,
+    "mean_width": 1.93
+   },
+   "beta": {
+    "holding_the_truth": 71,
+    "mean_width": 9.72
+   }
+  }
+ }
+}

@@ -20,6 +20,7 @@ number and the rest. Paths are relative to the config file.
 """
 import json
 import re
+import unicodedata
 from pathlib import Path
 
 import pandas as pd
@@ -68,18 +69,50 @@ def _read(path, encoding=None):
         raise ConfigError(f'unknown "encoding" {encoding!r} for {path.name}') from None
 
 
+_TYPOGRAPHIC = str.maketrans({c: "'" for c in "\u2018\u2019\u201b\u02bc\u2032\u00b4"} |
+                             {c: "-" for c in "\u2010\u2011\u2012\u2013\u2014\u2015\u2212"})
+
+
+def unicode_form(s):
+    """One spelling per text: Unicode NFKC, with invisible format characters (category Cf: zero-width
+    space and joiners, soft hyphen, byte-order mark, direction marks) removed. A name typed on a Mac
+    or exported by some systems arrives decomposed - "Müller" as u + combining diaeresis - and
+    differed from the same name typed elsewhere in every exact key and agreement feature; so did a
+    name with a zero-width space pasted in from a web page, and full-width letters (ＪＯＳＥ).
+    Typographic apostrophes and hyphens become ASCII ones (O’Brien, Smith‐Jones). Lower-cased.
+    Accents are kept: José and Jose stay different strings, compared by similarity."""
+    if s.isascii():
+        return s.lower()
+    # format characters out first: one between a letter and its accent would otherwise keep
+    # them from composing, and a second cleaning would compose them. Lower-casing and NFKC each
+    # can undo the other (İ lower-cases to i + a combining dot; NFKC turns ℌ into H), so both
+    # are repeated until the text stops changing - cleaning twice gives what cleaning once gave
+    s = "".join(c for c in s if unicodedata.category(c) != "Cf")
+    for _ in range(4):
+        t = unicodedata.normalize("NFKC", s.lower()).translate(_TYPOGRAPHIC)
+        if t == s:
+            break
+        s = t
+    return s
+
+
 def _clean(series):
-    """Strings, lower-cased and trimmed, "" for missing. Typed Parquet columns are turned into the
-    text a CSV would have held: a date column as YYYY-MM-DD, a whole-number float column (a numeric
-    phone column with gaps is float64) without its ".0" - which otherwise became a trailing digit."""
+    """Strings, lower-cased and trimmed, "" for missing, in one Unicode form (unicode_form). Typed
+    Parquet columns are turned into the text a CSV would have held: a date column as YYYY-MM-DD, a
+    whole-number float column (a numeric phone column with gaps is float64) without its ".0" -
+    which otherwise became a trailing digit."""
     if pd.api.types.is_datetime64_any_dtype(series):
         series = series.dt.strftime("%Y-%m-%d")
     elif pd.api.types.is_float_dtype(series):
         whole = series.dropna()
         if len(whole) and (whole == whole.round()).all():
             series = series.astype("Int64")
-    out = series.astype(object).where(series.notna(), "")
-    return pd.Series(out, index=series.index).astype(str).str.lower().str.strip().str.replace(r"\s+", " ", regex=True)
+    out = pd.Series(series.astype(object).where(series.notna(), ""), index=series.index).astype(str)
+    wide = out.str.contains(r"[^\x00-\x7f]", regex=True)
+    if wide.any():                                 # only non-ASCII values can change: each distinct one once
+        out = out.copy()
+        out[wide] = out[wide].map({v: unicode_form(v) for v in out[wide].unique()})
+    return out.str.lower().str.strip().str.replace(r"\s+", " ", regex=True)   # ASCII values lower-cased here
 
 
 def load(config_path):
@@ -100,7 +133,7 @@ KNOWN_KEYS = {
     "unique_sources", "stability_margin", "identity_events",
     "cookie_max_identities", "cookie_max_records", "cookie_name_check", "household_postcode_join", "placeholders", "suspect_records",
     "survivorship", "golden_fields", "source_priority", "contact_confidence", "hash_fields", "hash_salt_env",
-    "minimal_outputs", "_name_skeleton", "threshold_rule"}
+    "minimal_outputs", "_name_skeleton", "threshold_rule", "aliases"}
 
 
 # options removed in 0.1.0 because measurement showed they did not earn their place
@@ -127,7 +160,8 @@ def unknown_keys(cfg):
         out.append(f'"{k}"' + (f' (did you mean "{near[0]}"?)' if near else ""))
     # a mapped column custmatch neither knows nor was told to compare is read and then ignored
     used = set(CANONICAL) | {"address"} | {f.get("name") for f in cfg.get("extra_fields", [])} | \
-        set(cfg.get("golden_fields", [])) | set(cfg.get("trusted_ids", [])) | set(cfg.get("hash_fields", []))
+        set(cfg.get("golden_fields", [])) | set(cfg.get("trusted_ids", [])) | set(cfg.get("hash_fields", [])) | \
+        {a for names in (cfg.get("aliases") or {}).values() if isinstance(names, list) for a in names}
     for src in cfg.get("sources", []):
         for c in src.get("columns", {}):
             if c not in used:
@@ -153,6 +187,7 @@ def load_config(cfg, base_dir, data=None, whole_config=True):
         problems = check(cfg["survivorship"], fields)
         if problems:
             raise ConfigError("; ".join(problems))
+    aliases = check_aliases(cfg, whole_config)
     frames = []
     for src in cfg["sources"]:
         name, cols = src.get("name"), src.get("columns", {})
@@ -182,6 +217,10 @@ def load_config(cfg, base_dir, data=None, whole_config=True):
         for name in [*cfg.get("trusted_ids", []), *cfg.get("golden_fields", [])]:
             if name not in out.columns:
                 out[name] = _clean(raw[cols[name]]) if name in cols else ""
+        for field, name in aliases:            # other values of a field: "last_name@maiden_name"
+            out[f"{field}@{name}"] = _clean(raw[cols[name]]) if name in cols else ""
+            if field == "phone":
+                out[f"{field}@{name}"] = out[f"{field}@{name}"].str.replace(r"\D", "", regex=True)
         out["phone"] = out.phone.str.replace(r"\D", "", regex=True)
         out["middle_initial"] = out.middle_initial.str[:1]
         frames.append(out)
@@ -205,7 +244,7 @@ def load_config(cfg, base_dir, data=None, whole_config=True):
                            and "US" not in ([cfg["country"]] if isinstance(cfg["country"], str) else cfg["country"]))
         df["updated_at"] = t.dt.strftime("%Y-%m-%dT%H:%M:%S").fillna("")
     from . import country
-    df = country.normalise(df, cfg)
+    df = _normalise_aliases(df, country.normalise(df, cfg), aliases, cfg)
     if cfg.get("hash_fields") and cfg.get("suspect_records", True) and whole_config:
         from . import suspect                     # in plain text: once hashed a word is not a word
         df.attrs["suspect"] = suspect.flag(df, suspect.profanity_words())
@@ -232,6 +271,47 @@ def load_config(cfg, base_dir, data=None, whole_config=True):
         raise ConfigError(f"{int(dup.sum())} duplicate record_id(s) within a source, e.g. "
                           f"{df[dup].iloc[0][['source', 'record_id']].tolist()}")
     return df, cfg
+
+
+def check_aliases(cfg, whole_config=True):
+    """[(field, column name)] from "aliases": {"last_name": ["maiden_name"], "email": ["email_2"]}.
+    Each name is a column mapped in a source's "columns" (a source without it has no alias)."""
+    from .core import ALIAS_FIELDS
+    spec = cfg.get("aliases") or {}
+    if not isinstance(spec, dict):
+        raise ConfigError('"aliases" maps a field to a list of column names, e.g. {"last_name": ["maiden_name"]}')
+    out = []
+    for field, names in spec.items():
+        if field not in ALIAS_FIELDS:
+            raise ConfigError(f'"aliases": {field!r} cannot have aliases; use one of {list(ALIAS_FIELDS)}')
+        if not isinstance(names, list) or not all(isinstance(n, str) and n for n in names):
+            raise ConfigError(f'"aliases": {field!r} needs a list of column names')
+        clash = [n for n in names if n in CANONICAL or "@" in n]
+        if clash:
+            raise ConfigError(f'"aliases": {clash} name standard columns; give each alias its own name')
+        out += [(field, n) for n in names]
+    if out and whole_config:
+        mapped = {c for src in cfg.get("sources", []) for c in src.get("columns", {})}
+        if not any(n in mapped for _, n in out):
+            raise ConfigError(f'"aliases": none of {[n for _, n in out]} is mapped in a source\'s "columns"')
+    return out
+
+
+def _normalise_aliases(raw, df, aliases, cfg):
+    """Alias columns normalised as their field is (country.normalise): a second phone to E.164,
+    a second email's dots and +tags removed, a maiden name transliterated. raw: the records before
+    normalisation; df: after it."""
+    from . import country
+    if not aliases or not country.enabled(cfg):
+        return df
+    df = df.copy()
+    for field, name in aliases:
+        col = f"{field}@{name}"
+        rows = (raw[col] != "").to_numpy()
+        if rows.any():
+            tmp = raw.loc[rows].assign(**{field: raw.loc[rows, col]})
+            df.loc[rows, col] = country.normalise(tmp, cfg)[field].to_numpy()
+    return df
 
 
 def key(df):
@@ -261,10 +341,14 @@ def hash_fields(df, cfg):
     for f in fields:
         if f not in df.columns:
             raise ConfigError(f'"hash_fields": {f} is not a column of the records')
+    # alias columns are hashed as their field is, with its key: a maiden name still meets a surname
+    columns = [(f, f) for f in fields] + [(c, c.split("@", 1)[0]) for c in df.columns
+                                          if "@" in c and c.split("@", 1)[0] in fields]
+    for c, f in columns:
         uniq = {v: ("" if not v or (f in ("email", "phone") and syntactic_junk(v))
                     else hmac.new(key, f"{f}:{v}".encode(), hashlib.sha256).hexdigest()[:32])
-                for v in df[f].unique()}
-        df[f] = df[f].map(uniq)
+                for v in df[c].unique()}
+        df[c] = df[c].map(uniq)
     if ({"first_name", "last_name"} & set(fields)) and "name_skeleton" in df.columns:
         # the consonant skeleton of a transliterated name is the name: hashed whole, compared equal
         df["name_skeleton"] = df.name_skeleton.map(
