@@ -10,12 +10,25 @@ public benchmark of personal identities: pairwise F1 on its 10,000 labelled pair
 to 74.45 with 8,000 labels, and its blocking recall from 70.18% to 71.89%. No date in any other
 dataset in this repository reads differently (docs/report/09-against-other-tools.md "BPID").
 
-**Added:** `"blocking": "adaptive"`, opt-in. A block too big for `max_block` is split on up to
-three refinements on different fields, the file's extra fields included, and every piece is kept,
-so a typo in one refining field no longer loses the pair. On the 5M-record NCVR benchmark it lifts
-the most F1 blocking allows from 97.13 (`"fixed"`) to 99.05, with 192M candidate pairs against
-126M, and the full run's clustered F1 from 87.19 to 88.45 (recall 86.7 to 90.2). On small files it is mixed, so it is not the default
-(docs/report/06-blocking-and-scale.md "Where the rest of the gap is").
+**Added:** `"blocking": "adaptive"`. A block too big for `max_block` is split on up to three
+refinements on different fields, the file's extra fields included, and every piece is kept, so a
+typo in one refining field no longer loses the pair. On the 5M-record NCVR benchmark it lifts the
+most F1 blocking allows from 97.13 (`"fixed"`) to 99.05, with 192M candidate pairs against 126M,
+and the full run's clustered F1 from 87.19 to 88.45 (recall 86.7 to 90.2).
+
+**Changed:** with no `"blocking"` set, blocking switches to `"adaptive"` by itself when the
+default keys would leave more than 1% of the records only in blocks too big to compare, and
+`summary.json` says so; the large-block check still runs, and `add` and runs reusing the model
+block the same way. `"blocking": "core"` keeps the old behaviour. None of the five small
+benchmarks or BPID switches (0.45% at most); NCVR does from 200,000 people, and so do dedupe's
+two organisation files, which gain (childcare sites 86.95 to 89.08, patents 75.88 to 77.37).
+
+**Changed:** from 2 million candidate pairs up, `custmatch sample` draws half the random labels
+spread over the pairs' agreement patterns and writes each one's `weight`; `run` weighs the
+threshold's estimates by it, so they stay unbiased. Plain draws there held a handful of matches:
+on 1,000,000 NCVR people with 300 random + 700 active labels clustered F1 rose from 80.84 (2
+random matches) to 94.85. `--stratified` / `--no-stratified` choose; labels without weights count
+equally, as before (docs/report/06-blocking-and-scale.md "Random labels that still hold matches").
 
 **Faster:** oversized blocks are split with one sort, not a scan apiece, and pairs are
 deduplicated with an integer sort: `"fixed"` blocking at 200,000 people takes 6.3 s, from 9.7 s.

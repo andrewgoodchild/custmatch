@@ -60,6 +60,9 @@ def main(argv=None):
                    help="with --active: disagreement also offers pairs blocking missed that the forest calls matches")
     s.add_argument("--mix", type=float, default=0.0,
                    help="with --active: share of each batch drawn at random instead (e.g. 0.5)")
+    s.add_argument("--stratified", action=argparse.BooleanOptionalAction, default=None,
+                   help="draw half the random pairs towards ones agreeing on more fields, weighted "
+                        "(default: from 2 million candidate pairs up)")
     r = sub.add_parser("run", help="match, cluster, households, golden records")
     r.add_argument("config")
     r.add_argument("--labels", help="labelled pairs; optional with --model")
@@ -102,7 +105,7 @@ def main(argv=None):
     try:
         if a.cmd == "sample":
             k = (labels.sample_active(a.config, a.active, a.n, a.out, a.seed, a.mix, a.strategy) if a.active
-                 else labels.sample(a.config, a.n, a.out, a.seed))
+                 else labels.sample(a.config, a.n, a.out, a.seed, stratified=a.stratified))
             print(f"wrote {k} pairs to {a.out}: fill the label column with 1 (same person) or 0")
         elif a.cmd == "blocking":
             from .blocking import candidates_for

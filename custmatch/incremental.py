@@ -45,7 +45,9 @@ def save_state(out_dir, df, customers, forest, threshold, cfg, rules=None, match
     d.mkdir(parents=True, exist_ok=True)
     df.assign(_customer=customers).to_parquet(d / "records.parquet", index=False)
     with open(d / "model.pkl", "wb") as f:
-        pickle.dump({"forest": forest, "threshold": float(threshold), "rules": rules, "match_weight_model": match_weight_model, "matcher_model": matcher_model}, f)
+        pickle.dump({"forest": forest, "threshold": float(threshold), "rules": rules, "match_weight_model": match_weight_model,
+                     "matcher_model": matcher_model, "blocking": cfg.get("blocking"),
+                     "_blocking_switched": bool(cfg.get("_blocking_switched"))}, f)
     (d / "config.json").write_text(json.dumps(cfg))
     if links is not None:
         links.to_parquet(d / "links.parquet", index=False)

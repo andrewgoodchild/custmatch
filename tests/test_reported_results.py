@@ -1298,3 +1298,29 @@ def test_embedding_blocking_claims():
     assert f"{stage('keys_lsh', blk):.2f} s instead of {stage('keys', blk):.2f} s on NCVR" in text
     assert f"(labels in hand) {stage('keys_lsh', run):.1f} s instead of {stage('keys', run):.1f} s" in text
     assert f"neighbours, {stage('keys_emb10', run):.1f} s" in text
+
+
+def test_auto_adaptive_and_stratified_label_claims():
+    """docs/report/06-blocking-and-scale.md "Splitting when it is needed" and "Random labels that
+    still hold matches", from ncvr_leipzig.json, beat_splink.json and home_data_benchmark.json."""
+    r = load("ncvr_leipzig.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    ad = "postcode_initial_keys_adaptive"
+    plain, strat = r[f"{ad}/people_200000"], r[f"{ad}/people_200000/stratified"]
+    one, one_s = r[f"{ad}/people_1000000"]["runs"][0], r[f"{ad}/people_1000000/stratified"]["runs"][0]
+    k, k_s = r[f"{ad}/people_1000000/random_1000"]["runs"][0], r[f"{ad}/people_1000000/random_1000/stratified"]["runs"][0]
+    assert f"| 200,000 (3 draws) | {plain['mean_f1']:.2f} | {strat['mean_f1']:.2f} |" in text
+    assert (f"| 1,000,000, 300 random labels | {one['clustered']['f1']:.2f} (2 random matches) | "
+            f"{one_s['clustered']['f1']:.2f} ({one_s['random_matches']}) |") in text
+    assert (f"| 1,000,000, 1,000 random labels | {k['clustered']['f1']:.2f} ({k['random_matches']}) | "
+            f"{k_s['clustered']['f1']:.2f} ({k_s['random_matches']}) |") in text
+    assert strat["mean_f1"] > plain["mean_f1"] and one_s["clustered"]["f1"] > one["clustered"]["f1"] + 10
+    assert k_s["clustered"]["f1"] >= k["clustered"]["f1"], "stratified labels now cost at a million people"
+    # the true default switches to both by itself, and lands where the explicit settings do
+    assert r["current_default/people_200000"]["mean_f1"] == strat["mean_f1"]
+    b = load("beat_splink.json")
+    for ds, x in b["rich_stratified"].items():
+        assert f"{b['rich_rerun'][ds]['random_1000']:.2f} to {x['random_1000']:.2f}" in text, ds
+    h = load("home_data_benchmark.json")
+    assert (f"the childcare sites from 86.95 to {h['dedupe_csv_example']['custmatch_1000']['f1']:.2f}, the patent "
+            f"applicants from 75.88 to {h['dedupe_patent_example']['custmatch_1000']['f1']:.2f}") in text

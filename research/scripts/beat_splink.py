@@ -39,6 +39,10 @@ VARIANTS = {                         # config overrides; "_mix" / "_jev" change 
     # and rich_split again on the same code, since its saved figures predate 0.1.2
     "rich_adaptive": {"blocking": "adaptive", "max_block": 60},
     "rich_split_0_1_2": {"blocking": "fixed", "max_block": 60},
+    # random labels drawn stratified by fields agreeing, weighted back (labels.stratified_pick)
+    "rich_stratified": {"rich_features": True, "_stratified": True},
+    "rich_rerun": {"rich_features": True},       # rich on current code: rich_stratified's baseline
+    "rich_adaptive_stratified": {"blocking": "adaptive", "max_block": 60, "_stratified": True},
     "rich_learned": {"blocking": "learned", "max_block": 60},
     "rich_learned99": {"blocking": "learned", "max_block": 60, "blocking_recall": 0.99},
     # active learning that also looks where blocking missed (dedupe), feeding learned blocking
@@ -101,7 +105,7 @@ def with_overrides(config, overrides, tmp, tag):
     return out
 
 
-def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"):
+def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty", stratified=False):
     def fill(path):
         lab = pd.read_csv(path, dtype=str, keep_default_na=False)
         lab["label"] = [int(truth[a] == truth[b]) for a, b in zip(lab.a, lab.b)]
@@ -128,7 +132,7 @@ def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"
         return {"jev_900_plus_100_hand": score(tmp / f"{tag}_j"), "gate": gate}
     n = min(1000, len(labels.candidates(df, cfg)))
     lp = tmp / f"{tag}_r.csv"
-    labels.sample(config, n, lp, seed=1)
+    labels.sample(config, n, lp, seed=1, stratified=stratified)
     fill(lp)
     import time
     t0 = time.time()
@@ -137,7 +141,7 @@ def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"
     res["candidate_pairs"] = summ["candidate_pairs"]
     res["seconds"] = round(time.time() - t0, 1)
     ap = tmp / f"{tag}_a.csv"
-    labels.sample(config, 300, ap, seed=1)
+    labels.sample(config, 300, ap, seed=1, stratified=stratified)
     al = fill(ap)
     while len(al) < 1000:
         labels.sample_active(config, ap, 100, tmp / "next.csv", mix=mix, strategy=strategy)
@@ -161,7 +165,7 @@ def main():
             config = with_overrides(config, VARIANTS[variant], tmp, f"{name}_{variant}")
             ov = VARIANTS[variant]
             r = evaluate(config, truth, tmp, f"{name}_{variant}", mix=ov.get("_mix", 0.0), jev=ov.get("_jev", False),
-                         strategy=ov.get("_strategy", "uncertainty"))
+                         strategy=ov.get("_strategy", "uncertainty"), stratified=ov.get("_stratified", False))
             out.setdefault(variant, {})[name] = r
             shown = "  ".join(f"{k} {v:6.2f}" for k, v in r.items() if isinstance(v, float))
             print(f"{variant:16s} {name:15s} {shown}   | Splink {out['splink_reference'][name]:6.2f}", flush=True)

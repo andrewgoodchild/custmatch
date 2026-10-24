@@ -63,13 +63,13 @@ Splink its documented settings. Clustered F1; the best in each row is bold
 | Dataset | custmatch | Splink | dedupe |
 | --- | :---: | :---: | :---: |
 | NCVR (Leipzig): real voter names, generated errors, 20,000 people | **99.22**, against a blocking ceiling of 99.46 | 98.01 | not run |
-| NCVR (Leipzig), 200,000 people | **95.63** | 93.94 | not run |
-| historical_50k (Splink's): dense genealogy records | **87.02** | 76.82; 82.79 at its documented threshold | 80.02 |
+| NCVR (Leipzig), 200,000 people | **97.98** | 93.94 | not run |
+| historical_50k (Splink's): dense genealogy records | **87.01** | 76.82; 82.79 at its documented threshold | 80.02 |
 | febrl4 (Splink's) | **99.84** | 99.83 | 99.11 |
 | febrl3 (Splink's) | 99.42 | **99.63** | 98.11 |
 | fake_1000 (Splink's) | 87.11 | **92.52** with its tutorial's looser blocking | 70.26 |
-| csv_example (dedupe's): childcare sites | 86.95 | 64.59 | **91.37** |
-| patent_example (dedupe's): patent applicants | 87.26 with `"max_block": 300`; 75.88 by default | 80.19 | 49.66 |
+| csv_example (dedupe's): childcare sites | 89.08 | 64.59 | **91.37** |
+| patent_example (dedupe's): patent applicants | 87.26 with `"max_block": 300`; 77.37 by default | 80.19 | 49.66 |
 
 On real names custmatch comes within a quarter of a point of what its blocking allows; on clean
 records the tools tie; on organisations, which it is not built for, dedupe or its own settings

@@ -963,6 +963,14 @@ def test_a_large_organisation_is_one_customer_in_run_explain_and_add(world, tmp_
     incremental.add(tmp_path / "out", tmp_path / "config.json", tmp_path / "out2")   # every record again
     c2 = pd.read_csv(tmp_path / "out2" / "clusters.csv", dtype=str)
     assert c2[c2.record_id.str.startswith("acme")].customer_id.nunique() == 1
+    # 70 of 310 records only in skipped blocks: blocking switched to splitting them, and the
+    # large-block check still ran on the default keys' skipped blocks - in the run, in `add`, and
+    # in a run reusing the model
+    assert rep["mode"] == "adaptive" and any(w.startswith("blocking switched") for w in s["warnings"])
+    pipeline.run(tmp_path / "config.json", None, tmp_path / "out_m", model_dir=tmp_path / "out", log=lambda *_: None)
+    cm = pd.read_csv(tmp_path / "out_m" / "clusters.csv", dtype=str)
+    assert cm[cm.record_id.str.startswith("acme")].customer_id.nunique() == 1
+    assert json.loads((tmp_path / "out_m" / "blocking_report.json").read_text())["mode"] == "adaptive"
     off = json.loads((tmp_path / "config.json").read_text()) | {"check_large_blocks": False}
     (tmp_path / "off.json").write_text(json.dumps(off))
     pipeline.run(tmp_path / "off.json", tmp_path / "labels.csv", tmp_path / "out_off", log=lambda *_: None)
@@ -1308,6 +1316,40 @@ def test_choose_threshold_lets_the_in_cluster_check_overrule_labelled_pairs():
     th, metrics = pipeline.choose_threshold(n, pairs, pairs, ly, folds, pipeline.THRESHOLDS,
                                             coherence=lambda t: 0.3 if t < 0.5 else 1.0)
     assert loose < 0.4 <= th and "labelled_pair_precision" in metrics
+
+
+def test_choose_threshold_weighs_labels_and_equal_weights_change_nothing():
+    n, pairs = 6, np.array([[0, 1], [2, 3], [4, 5]], dtype=np.int32)
+    ly = np.array([True, True, False])
+    folds = [(np.array([0.4, 0.9, 0.1]), np.ones(3, bool))]
+    plain = pipeline.choose_threshold(n, pairs, pairs, ly, folds, pipeline.THRESHOLDS)
+    assert pipeline.choose_threshold(n, pairs, pairs, ly, folds, pipeline.THRESHOLDS, weight=np.full(3, 7.0)) == plain
+    # the match scored 0.4 standing for nine others: thresholds above 0.4 lose most of the recall
+    _, m = pipeline.choose_threshold(n, pairs, pairs, ly, folds, pipeline.THRESHOLDS, weight=np.array([9.0, 1, 1]))
+    assert m["sweep"]["0.5"]["recall"] == 10.0
+
+
+def test_stratified_random_labels_find_more_matches_and_weigh_back_to_the_whole(world, tmp_path):
+    tmp, truth, _ = world
+    df, cfg = io.load(tmp / "config.json")
+    pairs = labels.candidates(df, cfg)
+    score = labels.agreement(df, pairs, cfg)
+    rng = np.random.default_rng(0)
+    # the weights are the inverse chances of being drawn: summed over many draws, they count
+    # every stratum's pairs
+    totals = np.zeros(score.max() + 1)
+    for _ in range(200):
+        pick, w = labels.stratified_pick(score, 60, rng)
+        totals += np.bincount(score[pick], weights=w, minlength=len(totals))
+    assert np.allclose(totals / 200, np.bincount(score), rtol=0.15, atol=3)
+    key = lambda p: int((p.a.map(truth) == p.b.map(truth)).sum())  # noqa: E731
+    found = {}
+    for strat in (False, True):
+        labels.sample(tmp / "config.json", 60, tmp_path / f"s{strat}.csv", seed=1, stratified=strat)
+        got = pd.read_csv(tmp_path / f"s{strat}.csv", dtype=str)
+        assert (got.by == "random").all() and pd.to_numeric(got.weight).gt(0).all()
+        found[strat] = key(got)
+    assert found[True] > found[False]
 
 
 def test_placeholders_on_in_run_keeps_two_john_does_apart(world, tmp_path):

@@ -30,7 +30,7 @@ from custmatch.core import partition_scores, profile_contacts  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "research/results/ncvr_blocking_scale.json"
-MODES = {"core": {}, "fixed": {"blocking": "fixed"}, "adaptive": {"blocking": "adaptive"}}
+MODES = {"core": {"blocking": "core"}, "fixed": {"blocking": "fixed"}, "adaptive": {"blocking": "adaptive"}}
 
 
 def frame(sub):

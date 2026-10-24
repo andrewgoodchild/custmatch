@@ -133,7 +133,7 @@ KNOWN_KEYS = {
     "unique_sources", "stability_margin", "identity_events",
     "cookie_max_identities", "cookie_max_records", "cookie_name_check", "household_postcode_join", "placeholders", "suspect_records",
     "survivorship", "golden_fields", "source_priority", "contact_confidence", "hash_fields", "hash_salt_env",
-    "minimal_outputs", "_name_skeleton", "threshold_rule", "aliases"}
+    "minimal_outputs", "_name_skeleton", "_blocking_switched", "threshold_rule", "aliases"}
 
 
 # options removed in 0.1.0 because measurement showed they did not earn their place

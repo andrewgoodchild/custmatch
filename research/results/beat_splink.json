@@ -551,5 +551,101 @@
    "seconds": 4.4,
    "active_300_700": 98.74
   }
+ },
+ "rich_rerun": {
+  "febrl3": {
+   "random_1000": 99.42,
+   "candidate_pairs": 65001,
+   "seconds": 3.2,
+   "active_300_700": 99.99
+  },
+  "febrl4": {
+   "random_1000": 99.84,
+   "candidate_pairs": 61269,
+   "seconds": 2.9,
+   "active_300_700": 99.99
+  },
+  "historical_50k": {
+   "random_1000": 85.53,
+   "candidate_pairs": 619385,
+   "seconds": 9.3,
+   "active_300_700": 86.64
+  },
+  "fake_1000": {
+   "random_1000": 92.46,
+   "candidate_pairs": 50129,
+   "seconds": 2.5,
+   "active_300_700": 99.08
+  },
+  "synthetic": {
+   "random_1000": 97.28,
+   "candidate_pairs": 48759,
+   "seconds": 3.8,
+   "active_300_700": 98.61
+  }
+ },
+ "rich_stratified": {
+  "febrl3": {
+   "random_1000": 99.92,
+   "candidate_pairs": 65001,
+   "seconds": 2.8,
+   "active_300_700": 99.99
+  },
+  "febrl4": {
+   "random_1000": 99.94,
+   "candidate_pairs": 61269,
+   "seconds": 2.8,
+   "active_300_700": 99.99
+  },
+  "historical_50k": {
+   "random_1000": 88.04,
+   "candidate_pairs": 619385,
+   "seconds": 8.9,
+   "active_300_700": 86.13
+  },
+  "fake_1000": {
+   "random_1000": 93.6,
+   "candidate_pairs": 50129,
+   "seconds": 2.4,
+   "active_300_700": 99.03
+  },
+  "synthetic": {
+   "random_1000": 97.78,
+   "candidate_pairs": 48759,
+   "seconds": 3.6,
+   "active_300_700": 99.11
+  }
+ },
+ "rich_adaptive_stratified": {
+  "febrl3": {
+   "random_1000": 99.54,
+   "candidate_pairs": 65150,
+   "seconds": 2.9,
+   "active_300_700": 99.99
+  },
+  "febrl4": {
+   "random_1000": 99.68,
+   "candidate_pairs": 59949,
+   "seconds": 3.0,
+   "active_300_700": 99.99
+  },
+  "historical_50k": {
+   "random_1000": 86.87,
+   "candidate_pairs": 817217,
+   "seconds": 8.6,
+   "active_300_700": 85.16
+  },
+  "fake_1000": {
+   "random_1000": 94.68,
+   "candidate_pairs": 7995,
+   "seconds": 2.2,
+   "active_300_700": 98.37
+  },
+  "synthetic": {
+   "random_1000": 97.33,
+   "candidate_pairs": 53238,
+   "seconds": 3.8,
+   "active_300_700": 99.01
+  }
  }
 }

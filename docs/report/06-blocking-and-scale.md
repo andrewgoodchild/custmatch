@@ -19,13 +19,17 @@ features (`research/scripts/beat_splink.py`), clustered F1 with 1,000 random lab
 | historical_50k | 547,050 / 87.02 (86.20) | 672,502 / 84.85 (86.20) | 315,711 / 83.76 (86.19) | 87.79 (86.69) | 87.69 |
 | synthetic | 48,759 / 97.28 (98.61) | 48,884 / 97.36 (98.74) | 24,032 / 97.66 (97.64) | 97.28 (98.61) | 98.89 |
 
+These ran before 0.1.2. Rerun on 0.1.2's code, historical_50k scores 85.53 (86.64) with the old
+blocking and 84.95 (87.13) with `"fixed"` (`rich_rerun`, `rich_split_0_1_2`); the other four
+datasets give the same figures as above.
+
 - **`"blocking": "fixed"`** (Zingg): the same kind of keys as rules, but a block larger than
   `max_block` is split with the next key (first letters of the first name, birth year, street...)
   instead of dropped; records without that key (a two-letter first name) stay together as their
   own piece. It fixed fake_1000's 173-record London block without any hand tuning
   (95.54 against 92.46 with random labels; with active learning 98.17 against 99.08). It is
   level on the synthetic file and the febrl sets, and costs 2.17 on the dense historical_50k with random
-  labels, where splitting keeps more pairs than dropping. Use it when large blocks are ordinary
+  labels (0.58 on 0.1.2's code), where splitting keeps more pairs than dropping. Use it when large blocks are ordinary
   common values (a city), not shared contacts.
 - **`"blocking": "learned"`** (dedupe): a greedy set cover picks the cheapest rules from a library
   (exact, first three letters, Soundex, year and year-month of birth, and pairs of these) that
@@ -329,6 +333,43 @@ blocks outgrow `max_block`. Both rule blockers also got faster with identical ou
 in place of a scan per oversized block, and an integer sort in place of a pandas groupby.
 `"fixed"` blocking at 200,000 people went from 9.7 to 6.3 seconds, and `"adaptive"` on the full
 file from 555 to 274 seconds at a 26 GB peak.
+
+**Splitting when it is needed, by default.** The default blocker now switches to `"adaptive"`
+by itself when its keys would leave more than 1% of the records only in skipped blocks
+(`blocking.AUTO_ADAPTIVE_SHARE`), and `summary.json` says so. Measured with the default keys:
+at most 0.45% on the five small benchmarks (synthetic; febrl3 0.06%, historical_50k 0.02%,
+febrl4 and fake_1000 none) and 0.13% on BPID, so none of them changes; 1.1% on NCVR at 200,000
+people, 4.2% at a million and 8% at five million. dedupe's two organisation files switch too,
+and gain: the childcare sites from 86.95 to 89.08, the patent applicants from 75.88 to 77.37.
+After a switch the large-block check still runs on the blocks the default keys skipped, so a
+large organisation stays one customer; `add` and a run reusing the model block the same way.
+`"blocking": "core"` keeps the old behaviour.
+
+**Random labels that still hold matches** (`labels.stratified_pick`). With every split block
+compared, matches are rarer among the candidate pairs, and a plain random draw holds a handful:
+2 of 300 at a million people, 11 of 1,000 on the full file. The threshold's recall is judged on
+those. From 2 million candidate pairs up (`labels.STRATIFY_FROM`), `custmatch sample` now draws
+half the random labels uniformly and half spread over the pairs' agreement patterns - which of
+the fields agree exactly - each pattern's share the square root of its size, and writes each
+label's weight, the candidate pairs it stands for. The threshold's estimates are weighted by
+it, so they stay unbiased. A first version stratified on how many fields agree, leaning towards
+more; it cost 2.4 points at a million people with 1,000 random labels, because there pairs
+agreeing on three of four fields were 0.01% matches (relatives sharing surname, town and
+postcode) and pairs agreeing on two 1.25%. With `"adaptive"` blocking and 300 random + 700
+active labels:
+
+| NCVR people | Plain random draw | Stratified by agreement pattern |
+| --- | --- | --- |
+| 200,000 (3 draws) | 97.63 | 97.98 |
+| 1,000,000, 300 random labels | 80.84 (2 random matches) | 94.85 (8) |
+| 1,000,000, 1,000 random labels | 94.04 (21) | 94.91 (40) |
+
+On the five small benchmarks it helped with 1,000 random labels on one draw each (febrl3 99.42
+to 99.92, febrl4 99.84 to 99.94, historical_50k 85.53 to 88.04, fake_1000 92.46 to 93.60,
+synthetic 97.28 to 97.78; `rich_stratified` against `rich_rerun`) and was level with active
+labels (historical_50k 86.64 to 86.13, synthetic 98.61 to 99.11, the rest within 0.05). Those
+files have under a million candidate pairs, so by default they still draw plainly until more
+draws confirm it; `custmatch sample --stratified` draws this way at any size.
 
 ## What had to change to run this on a laptop, and what it costs
 

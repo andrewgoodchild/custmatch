@@ -52,16 +52,20 @@ comparisons on dedupe's, which document none. custmatch uses its defaults. Clust
 | fake_1000 (Splink's) | 1,000 | 87.11 | 58.36; **92.52** with its tutorial's looser blocking | 70.26 (70.12-70.53) |
 | febrl3 (Splink's) | 5,000 | 99.42 | **99.63** | 98.11 |
 | febrl4 (Splink's) | 10,000 | **99.84** | 99.83 | 99.11 |
-| historical_50k (Splink's) | 50,578 | **87.02** | 76.82; 82.79 at its documented threshold | 80.02 (77.51-81.43) |
-| csv_example (dedupe's: childcare sites) | 3,337 | 86.95 | 64.59 | **91.37** (86.72-93.70) |
-| patent_example (dedupe's: patent applicants) | 2,379 | 75.88 (6.93 without the large-block check); **87.26** with `"max_block": 300` | 80.19 | 49.66 |
+| historical_50k (Splink's) | 50,578 | **87.01** | 76.82; 82.79 at its documented threshold | 80.02 (77.51-81.43) |
+| csv_example (dedupe's: childcare sites) | 3,337 | 89.08 | 64.59 | **91.37** (86.72-93.70) |
+| patent_example (dedupe's: patent applicants) | 2,379 | 77.37; with `"blocking": "core"` 75.88 (6.93 without the large-block check); **87.26** with `"max_block": 300` | 80.19 | 49.66 |
 
 dedupe's two examples hold organisations, not people: custmatch reads the organisation's name as
 a surname, with no first name. On the patent file one applicant has 676 records, and custmatch
 skips any block of more than 60 records (`max_block`) as a likely hub: before the large-block
 check ("How it decides") only 3.3% of the true pairs were ever compared and it scored 6.93. The
 check, on by default, sees that the oversized company-name blocks are one entity each and
-compares them: 75.88. Its run also warned about the blocks it still skipped ("... raise
+compares them: 75.88. The default now also splits oversized blocks when the default keys leave
+over 1% of the records compared with no one ([chapter 6](06-blocking-and-scale.md), "Where the
+rest of the gap is"), which both of dedupe's files do: the patent file scores 77.37 and the
+childcare sites 89.08, against 75.88 and 86.95 skipping them (`research/scripts/home_data_benchmark.py`,
+rerun on the current code; historical_50k there gives 87.01, against 87.02 before). Its run also warned about the blocks it still skipped ("... raise
 "max_block" if these values are legitimately common"); following that, `"max_block": 300`
 scored 87.26, ahead of Splink and dedupe. Splitting the oversized blocks instead (`"blocking": "fixed"`) reached only 14.12: this
 file has no second key to split them by. Splink compares every pair in its blocks, whatever
@@ -144,8 +148,8 @@ before 0.1.0) the forest averaged
 99.50 / 99.83 / 93.36 / 97.54 / 86.29 on febrl3 / febrl4 / fake_1000 / synthetic /
 historical_50k: ahead of Splink on four, 0.29 behind on febrl3. Two caveats: Splink here uses
 no labels and custmatch 1,000, and the rich features were developed on these same datasets, so
-none of them is a held-out test of the design. Rich features alone (the default) score 99.42 / 99.84 / 87.02 / 92.46 / 97.28 on
-the same five. Two ideas did not work: drawing half of each active batch at random did not fix
+none of them is a held-out test of the design. Rich features alone (the default) score 99.42 / 99.84 / 85.53 / 92.46 / 97.28 on
+the same five, rerun on 0.1.2's code (`rich_rerun`); the first runs gave historical_50k 87.02, and the other four are unchanged. Two ideas did not work: drawing half of each active batch at random did not fix
 dense files, and a near-zero-label route (100 hand labels gating 900 LLM labels from Jev) scored
 97.21 / 75.26 / 68.15 / 96.93 on febrl4 / historical_50k / fake_1000 / synthetic (before the
 sparse-junk fix; not rerun, as it costs LLM calls) - behind Splink on
@@ -170,8 +174,8 @@ Gaps still open:
   (33 GB at peak); beyond what fits in one machine's memory - roughly 30
   million records at that rate - a distributed backend would be needed.
 - **Active learning on dense files** is inconsistent: on historical_50k it lost to random labels
-  with rich features alone (86.20 against 87.02) and won with the Splink feature on (87.19
-  against 86.57). One draw each. Over three draws with similarity blocking it won on average
+  with rich features alone in the first runs (86.20 against 87.02), won on 0.1.2's code (86.64
+  against 85.53), and won with the Splink feature on (87.19 against 86.57). One draw each. Over three draws with similarity blocking it won on average
   (87.99 against 86.60), and with the match weight it won narrowly (88.71 against
   88.51). On dense files, compare both on your own data.
 
@@ -195,14 +199,19 @@ the ceiling accepts every true pair blocking proposes.
 | 200,000 people, + postcode and initial keys | 3 | 285,713 | 95.63 | 98.13 | 93.27 | 97.42 | 7.2M | 121 s |
 | 200,000 people, the same, oversized blocks split (`"blocking": "fixed"`) | 3 | 285,713 | 97.30 | 96.92 | 97.70 | 99.25 | 7.9M | 44 s |
 | 200,000 people, the same, split on three fields (`"blocking": "adaptive"`) | 3 | 285,713 | 97.63 | 96.99 | 98.28 | 99.86 | 8.9M | 46 s |
+| 200,000 people, `"adaptive"`, random labels stratified (`--stratified`) | 3 | 285,713 | 97.98 | 97.75 | 98.22 | 99.86 | 8.9M | 44 s |
+| 200,000 people, + postcode and initial keys, nothing else set: the defaults switch to both | 3 | 285,713 | 97.98 | 97.75 | 98.22 | 99.86 | 8.9M | 48 s |
 | 1,000,000 people, + postcode and initial keys | 1 | 1,428,005 | 90.29 | 94.71 | 86.27 | 93.13 | 22.4M | 162 s |
 | 1,000,000 people, `"fixed"` | 1 | 1,428,005 | 92.70 | 91.61 | 93.80 | 98.13 | 34.8M | 224 s |
 | 1,000,000 people, `"adaptive"` (2 matches among the 300 random labels) | 1 | 1,428,005 | 80.84 | 96.92 | 69.34 | 99.56 | 46.9M | 253 s |
 | 1,000,000 people, `"fixed"`, 1,000 random + 700 active labels | 1 | 1,428,005 | 93.64 | 94.36 | 92.94 | 98.13 | 34.8M | 234 s |
 | 1,000,000 people, `"adaptive"`, 1,000 random + 700 active labels | 1 | 1,428,005 | 94.04 | 91.78 | 96.41 | 99.56 | 46.9M | 302 s |
+| 1,000,000 people, `"adaptive"`, random labels stratified (8 matches among the 300) | 1 | 1,428,005 | 94.85 | 93.58 | 96.15 | 99.56 | 46.9M | 386 s |
+| 1,000,000 people, `"adaptive"`, 1,000 random labels stratified + 700 active | 1 | 1,428,005 | 94.91 | 92.89 | 97.02 | 99.56 | 46.9M | 382 s |
 
 <sub>The 200,000-people rows without a blocking mode ran on an earlier version; later rows' times
-are on the current code, whose blocking and features are faster. Times are the final run only.</sub>
+are on the current code, whose blocking and features are faster. Times are the final run only; the
+two stratified million-people runs ran side by side, so their times are high.</sub>
 
 - **The matcher is not the limit; blocking is.** custmatch scores within about half a point of
   the ceiling - the best any matcher could do with the pairs blocking proposed - at 99.7%

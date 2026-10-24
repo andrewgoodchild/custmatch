@@ -107,6 +107,19 @@ produce a huge block whose pairs are mostly strangers. Blocks over `"max_block"`
 default) are skipped. Blank keys (no address at all) are always skipped; a summary warning names
 common values that were, so you can raise the limit if they are legitimate.
 
+**Big files: oversized blocks are split, not skipped.** Blocks grow with the file: keys that make
+blocks of a few dozen at 200,000 people make blocks of thousands at millions, and skipping them
+leaves records compared with no one. When the default keys would leave more than 1% of the
+records only in skipped blocks, custmatch instead splits each oversized block on up to three
+other fields at once, keeping the pieces of all of them (`"blocking": "adaptive"`), and
+`summary.json` says it did. On the NCVR voter file that lifted clustered F1 from 90.29 to 94.85 at
+a million people (300 random + 700 active labels, the random ones stratified as below), and on
+all five million records from 87.19 to 88.45 against splitting on one field (`"fixed"`). The five small benchmarks
+and BPID stay under 1% (0.45% at most), so they block as before; dedupe's two organisation
+files switch, and score 89.08 and 77.37 against 86.95 and 75.88. `add` and runs reusing the model
+block the way the run did. Set `"blocking": "core"` to always skip instead; `"adaptive"` to always
+split.
+
 **Similarity blocking** (`"lsh_blocking"`) finds pairs no exact key would: it hashes the names'
 letter pairs (MinHash, locality-sensitive hashing) so that names with typos in both records still
 land in a shared bucket.
@@ -551,12 +564,23 @@ custmatch sample config.json --active labels.csv --n 100 --out next.csv  # label
 With 1,000 labels in total this scored **98.61** clustered F1 against 97.28 for 1,000 random ones,
 and it won on every one of three further label draws (98.85 / 98.81 / 98.90 against 97.58 /
 97.74 / 97.78) - more than 3,000 random labels achieved (97.80). Stop at 500 and it does not
-help yet (96.45 against 97.37). **On dense files it can hurt:** on historical_50k, with about ten
-records per person, it scored 86.20 against 87.02 for random labels, and drawing half of each
-batch at random (`--mix 0.5`) did not fix that (87.13 against 87.55, with the Splink feature on). Where one person has many
-records, label randomly. Actively chosen pairs are marked `by = active`: `run` trains on
+help yet (96.45 against 97.37). **On dense files it is inconsistent:** on historical_50k, with
+about ten records per person, it scored 86.64 against 85.53 for random labels, but 86.20 against
+87.02 on the code before 0.1.2, and drawing half of each batch at random (`--mix 0.5`) did not
+settle it (87.13 against 87.55, with the Splink feature on). Where one person has many records,
+compare both on your own data. Actively chosen pairs are marked `by = active`: `run` trains on
 them but chooses its threshold only on the random ones, because a threshold judged on hard
 pairs alone misjudges the clusters.
+
+**Big files: random pairs are drawn where the matches are.** With millions of candidate pairs,
+matches are a fraction of a percent of them, and 300 random pairs can hold two - too few to judge
+the threshold on. From 2 million candidate pairs up, `custmatch sample` draws half of them
+uniformly and half spread over the pairs' agreement patterns (which fields agree exactly), and
+writes a `weight` column: the candidate pairs each label stands for. Keep that column - `run`
+weighs each random label by it when it judges the threshold, so the estimate stays unbiased. On
+1,000,000 NCVR people with 300 random + 700 active labels it lifted clustered F1 from 80.84 to
+94.85 (8 random matches instead of 2). `--stratified` draws this way on any file and
+`--no-stratified` never does; labels without weights count equally, as before.
 
 ## 3. Run
 
@@ -968,6 +992,9 @@ warns below 30.
 
 - **A large `largest_customer`** (over about 20 records): look at that cluster. It usually
   means one bad link is chaining different people together.
+- **"blocking switched to adaptive"**: the default keys would have left over 1% of the records
+  compared with no one, so their oversized blocks were split instead ("Big files" under
+  Blocking). Expect more candidate pairs and a longer run; `"blocking": "core"` turns it off.
 - **Fewer than 500 labels**: below 500 was not measured. Single draws at 500, 1,000 and 3,000
   labels scored 97.37, 97.28 and 97.80 on the synthetic file - within the spread between draws -
   and sparse files needed active learning far more than more random labels.

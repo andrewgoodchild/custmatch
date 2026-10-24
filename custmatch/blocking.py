@@ -229,6 +229,12 @@ def learn_rules(df, keys, pos_pairs, cfg=None, target=0.95, max_block=60, max_ru
 
 
 ADAPTIVE_WAYS = 3      # "blocking": "adaptive": refinements an oversized block is split on, together
+# with no "blocking" set, the default keys give way to "adaptive" when more than this share of the
+# records are only in blocks too big to compare: 0.45% at most on the five small benchmarks and
+# 0.13% on BPID, 1.1% on NCVR at 200,000 people, 4.2% at a million and 8% at all five million,
+# where adaptive scored 97.63 against 95.63, 94.04 against 90.29 and 88.45 against 84.33; dedupe's
+# organisation files switch too, and gain (csv_example 86.95 to 89.08, patents 75.88 to 77.37)
+AUTO_ADAPTIVE_SHARE = 0.01
 
 
 def refinements(cfg=None):
@@ -392,7 +398,7 @@ def candidates_for(df, profiles, cfg, labelled_pos=None, rules=None):
     views, owner = alias_views(df)
     if owner is None:
         return _candidates_for(df, profiles, cfg, labelled_pos, rules)
-    if cfg.get("blocking") or rules is not None:
+    if cfg.get("blocking") not in (None, "", "core") or rules is not None:
         from .io import ConfigError
         raise ConfigError('"aliases" works with the default blocking only; remove "blocking": '
                           f'"{cfg.get("blocking") or "saved rules"}" or "aliases"')
@@ -401,33 +407,49 @@ def candidates_for(df, profiles, cfg, labelled_pos=None, rules=None):
     return pairs, hubs, report, used
 
 
+def _core_candidates(df, profiles, cfg, owner=None):
+    """core.block's pairs and report: the default keys, blocks over max_block skipped."""
+    from .core import block
+    from .schema import extra_keys, max_block as cfg_max_block
+    skipped, by_key = [], []
+    pairs, hubs = block(df, profiles, extra_keys=extra_keys(cfg), max_block=cfg_max_block(cfg),
+                        lsh=cfg.get("lsh_blocking"), skipped=skipped, by_key=by_key, owner=owner)
+    # records never compared with anyone because their only blocks were skipped - a record
+    # whose broad block (postcode alone) was skipped but whose narrow one was used is fine
+    compared = np.zeros(len(df), bool)
+    compared[pairs.ravel()] = True
+    records = len({i for _, idx in skipped for i in idx if not compared[i]})
+    top = sorted(skipped, key=lambda s: -len(s[1]))[:5]
+    return pairs, hubs, {"mode": "core", "candidate_pairs": int(len(pairs)), "hubs_dropped": int(hubs),
+                         "skipped_blocks_with_values": len(skipped), "records_only_in_skipped_blocks": records,
+                         "largest_skipped_blocks": [{"key": " / ".join(str(v) for v in k), "records": len(idx)}
+                                                    for k, idx in top],
+                         "pairs_by_key": by_key, "_skipped": skipped}
+
+
 def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None):
     """candidates_for over records (or alias views).
 
     cfg "blocking": absent -> the fixed keys the report measured (core.block, blocks over
-    max_block dropped); "fixed" -> the same kind of keys as rules, oversized blocks split;
+    max_block dropped), switching to "adaptive" when that would leave more than
+    AUTO_ADAPTIVE_SHARE of the records compared with no one; "core" -> core.block, never
+    switching; "fixed" -> the same kind of keys as rules, oversized blocks split;
     "adaptive" -> the fixed rules, each oversized block split on several fields at once;
     "learned" -> rules learned from labelled_pos (falls back to fixed without labels).
     rules: reuse a saved rule set (incremental matching)."""
-    from .core import block
-    from .schema import extra_keys, max_block as cfg_max_block
+    from .schema import max_block as cfg_max_block
     mode = cfg.get("blocking")
     mb = cfg_max_block(cfg) or 60
-    if rules is None and not mode:
-        skipped, by_key = [], []
-        pairs, hubs = block(df, profiles, extra_keys=extra_keys(cfg), max_block=cfg_max_block(cfg),
-                            lsh=cfg.get("lsh_blocking"), skipped=skipped, by_key=by_key, owner=owner)
-        # records never compared with anyone because their only blocks were skipped - a record
-        # whose broad block (postcode alone) was skipped but whose narrow one was used is fine
-        compared = np.zeros(len(df), bool)
-        compared[pairs.ravel()] = True
-        records = len({i for _, idx in skipped for i in idx if not compared[i]})
-        top = sorted(skipped, key=lambda s: -len(s[1]))[:5]
-        return pairs, hubs, {"mode": "core", "candidate_pairs": int(len(pairs)), "hubs_dropped": int(hubs),
-                             "skipped_blocks_with_values": len(skipped), "records_only_in_skipped_blocks": records,
-                             "largest_skipped_blocks": [{"key": " / ".join(str(v) for v in k), "records": len(idx)}
-                                                        for k, idx in top],
-                             "pairs_by_key": by_key, "_skipped": skipped}, None
+    if rules is None and mode in (None, "", "core"):
+        pairs, hubs, report = _core_candidates(df, profiles, cfg, owner)
+        records = report["records_only_in_skipped_blocks"]
+        if not mode and owner is None and not cfg.get("lsh_blocking") and records > AUTO_ADAPTIVE_SHARE * len(df):
+            pairs, hubs, switched, used = _candidates_for(df, profiles, cfg | {"blocking": "adaptive"}, labelled_pos)
+            switched["switched_from_core"] = {"records_only_in_skipped_blocks": records, "records": len(df),
+                                              "share": round(records / len(df), 4)}
+            switched["_skipped"] = report["_skipped"]     # for the large-block check, as with the default keys
+            return pairs, hubs, switched, used
+        return pairs, hubs, report, None
     if cfg.get("lsh_blocking"):
         from .io import ConfigError
         raise ConfigError('"lsh_blocking" works with the default blocking only; remove "blocking": '
@@ -449,6 +471,10 @@ def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None
         allp = np.vstack([pairs, extra]) if len(pairs) else extra
         pairs = np.unique(allp, axis=0)
     report.update(mode=mode or "saved", learned=learn, country_key_pairs=int(len(extra)))
+    if cfg.get("_blocking_switched"):
+        # a run that switched (a saved state's config): the default keys' skipped blocks, so the
+        # large-block check sees what it saw in the run
+        report["_skipped"] = _core_candidates(df, profiles, cfg, owner)[2]["_skipped"]
     hubs = sum(r["blocks_dropped_as_hubs"] for r in report["rules"])
     return pairs, hubs, report, [list(r) for r in rules]
 
@@ -503,7 +529,8 @@ LARGE_BLOCK_MAX = 5000          # records: larger blocks are not checked (12.5 m
 def large_block_check_on(cfg):
     """On unless "check_large_blocks": false - it found no large entity, and changed nothing, on
     six person benchmarks, and lifted dedupe's patent-applicant file from 6.93 to 75.88."""
-    return cfg.get("check_large_blocks", True) and not cfg.get("blocking")
+    return cfg.get("check_large_blocks", True) and (cfg.get("blocking") in (None, "", "core")
+                                                    or bool(cfg.get("_blocking_switched")))
 
 
 def saved_run_large_blocks(cfg, report, predict, th, pairs):

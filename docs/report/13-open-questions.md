@@ -15,10 +15,12 @@ taught" and "Larger files"). What remains:
    labels won back 2.9 points ([chapter 6](06-blocking-and-scale.md), "Larger files"). Splitting
    on several fields at once (`"blocking": "adaptive"`) now lifts the full file's blocking
    ceiling to 99.05 ("Where the rest of the gap is"), so blocking is no longer the main limit:
-   the full five-million run with it scored 88.45, its recall 90.2. Open: the ten points between
-   that and the ceiling, mostly precision, and random labels that still hold enough matches when
-   candidate pairs multiply (1,000 random labels held 21 at a million people and 11 at five
-   million).
+   the full five-million run with it scored 88.45, its recall 90.2. It is now the default where
+   the default keys would leave over 1% of the records out, and random labels are drawn stratified
+   from 2 million candidate pairs, which lifted a million people with 300 random labels from 80.84
+   to 94.85. Open: the ten points between the full run and its ceiling, mostly precision; the
+   full run again with stratified labels; and whether small files should stratify too (they
+   gained on one draw each).
 3. **Real drift: NCVR from the raw snapshots.** The Leipzig benchmark has real names but synthetic
    errors in four fields. Pairing two of the State Board of Elections' snapshots by NCID would give
    real moves, name changes and typos - the contact-poor case where [chapter 2](02-whole-customers.md) found a transformer

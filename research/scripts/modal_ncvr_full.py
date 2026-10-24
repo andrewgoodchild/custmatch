@@ -38,7 +38,10 @@ VARIANTS = {"default": ({}, 300),
             "fixed_blocking": ({"blocking": "fixed"}, 1000),
             # oversized blocks split on three fields at once, not one: blocking alone lifts pair
             # completeness from 93.4% to 96.7% here (research/results/ncvr_blocking_scale.json)
-            "adaptive_blocking": ({"blocking": "adaptive"}, 1000)}
+            "adaptive_blocking": ({"blocking": "adaptive"}, 1000),
+            # nothing set (None drops the key): blocking switches to adaptive by itself and the
+            # random labels are drawn stratified, as on any file of over 2 million candidate pairs
+            "current_default": ({"blocking": None}, 300)}
 
 app = modal.App("custmatch-ncvr-full")
 vol = modal.Volume.from_name("custmatch-ncvr-full", create_if_missing=True)
@@ -112,6 +115,7 @@ def _run(variant, fresh, work):
     def prepare():                      # the records and config, as ncvr_leipzig.run builds them
         allrec = N.load()
         cfg = dict(N.VARIANTS["postcode_initial_keys"], sources=[], **overrides)
+        cfg = {k: v for k, v in cfg.items() if v is not None}
         for s, g in allrec.groupby("source"):
             g = g.reset_index(drop=True).assign(rid=lambda d: d.recid + "_" + d.index.astype(str))
             g.to_parquet(WORK / f"{s}.parquet", index=False)
