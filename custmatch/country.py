@@ -193,20 +193,43 @@ def phone(v, region):
     return v
 
 
-_DMY = re.compile(r"^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$")
-_ISO = re.compile(r"^(\d{4})[/.-](\d{1,2})[/.-](\d{1,2})$")
+_DMY = re.compile(r"^(\d{1,2})[/. -](\d{1,2})[/. -](\d{4})$")
+_ISO = re.compile(r"^(\d{4})[/. -](\d{1,2})[/. -](\d{1,2})$")
+_COMPACT = re.compile(r"^(1[89]\d\d|20\d\d)(\d\d)(\d\d)$")                     # 19910424
+_MONTHS = ("january", "february", "march", "april", "may", "june", "july", "august", "september",
+           "october", "november", "december")
+_WEEKDAY = re.compile(r"(?<=\d)(?:mon|tue|wed|thu|fri|sat|sun)[a-z]*\b")   # "18sat" -> "18"
+
+
+def _text_date(v):
+    """(year, month, day) from a date with its month in words - "09 nov 1953", "november 9, 1953",
+    "jul 18sat 1953" - or None. One month word, a four-digit year and a day, in any order."""
+    tokens = _WEEKDAY.sub("", v.lower()).replace(",", " ").split()
+    months = [i + 1 for t in tokens if len(t) >= 3 for i, name in enumerate(_MONTHS) if name.startswith(t)]
+    numbers = [t for t in tokens if t.isdigit()]
+    if len(months) != 1 or len(numbers) != 2 or len(tokens) != 3:
+        return None
+    years = [t for t in numbers if len(t) == 4]
+    days = [t for t in numbers if len(t) <= 2]
+    if len(years) != 1 or len(days) != 1:
+        return None
+    return int(years[0]), months[0], int(days[0])
 
 
 def iso_date(v, order):
-    m = _ISO.match(v)
+    """A date of birth as YYYY-MM-DD: ISO (or 19910424), day-month-year or month-day-year
+    (`order`) with /, ., - or a space between, or with the month in words. Anything else - a
+    partial date, a typo - is kept as written."""
+    m = _ISO.match(v) or _COMPACT.match(v)
     if m:
         y, mo, d = (int(x) for x in m.groups())
-    else:
-        m = _DMY.match(v)
-        if not m:
-            return v
+    elif (m := _DMY.match(v)):
         a, b, y = (int(x) for x in m.groups())
         d, mo = (a, b) if order == "dmy" else (b, a)
+    elif (t := _text_date(v)):
+        y, mo, d = t
+    else:
+        return v
     if not (1 <= mo <= 12 and 1 <= d <= 31):
         return v
     return f"{y:04d}-{mo:02d}-{d:02d}"

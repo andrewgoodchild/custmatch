@@ -193,6 +193,16 @@ the ceiling accepts every true pair blocking proposes.
 | 20,000 people, + postcode and initial keys | 3 | 28,534 | 99.22 | 99.57 | 98.88 | 99.46 | 0.5M | 12 s |
 | 200,000 people, default keys | 1 | 285,812 | 89.77 | 99.00 | 82.11 | 90.36 | 2.2M | 51 s |
 | 200,000 people, + postcode and initial keys | 3 | 285,713 | 95.63 | 98.13 | 93.27 | 97.42 | 7.2M | 121 s |
+| 200,000 people, the same, oversized blocks split (`"blocking": "fixed"`) | 3 | 285,713 | 97.30 | 96.92 | 97.70 | 99.25 | 7.9M | 44 s |
+| 200,000 people, the same, split on three fields (`"blocking": "adaptive"`) | 3 | 285,713 | 97.63 | 96.99 | 98.28 | 99.86 | 8.9M | 46 s |
+| 1,000,000 people, + postcode and initial keys | 1 | 1,428,005 | 90.29 | 94.71 | 86.27 | 93.13 | 22.4M | 162 s |
+| 1,000,000 people, `"fixed"` | 1 | 1,428,005 | 92.70 | 91.61 | 93.80 | 98.13 | 34.8M | 224 s |
+| 1,000,000 people, `"adaptive"` (2 matches among the 300 random labels) | 1 | 1,428,005 | 80.84 | 96.92 | 69.34 | 99.56 | 46.9M | 253 s |
+| 1,000,000 people, `"fixed"`, 1,000 random + 700 active labels | 1 | 1,428,005 | 93.64 | 94.36 | 92.94 | 98.13 | 34.8M | 234 s |
+| 1,000,000 people, `"adaptive"`, 1,000 random + 700 active labels | 1 | 1,428,005 | 94.04 | 91.78 | 96.41 | 99.56 | 46.9M | 302 s |
+
+<sub>The 200,000-people rows without a blocking mode ran on an earlier version; later rows' times
+are on the current code, whose blocking and features are faster. Times are the final run only.</sub>
 
 - **The matcher is not the limit; blocking is.** custmatch scores within about half a point of
   the ceiling - the best any matcher could do with the pairs blocking proposed - at 99.7%
@@ -272,6 +282,55 @@ dozen or so, and the recall estimate cannot tell a wide range of thresholds apar
 the strictest of them was taken, which cost real recall on some draws; now the middle one is
 (guide "How it decides"), which fixed those draws. With few random matches, label more random
 pairs: `summary.json` warns below 30.
+
+## A public benchmark of personal identities: BPID
+
+BPID (Wang et al., AWS, EMNLP 2024 Industry Track; Apache 2.0) is the closest public stand-in for
+a customer file found so far: synthetic people - SSA first names, Census surnames, USDOT
+addresses - each with a full name, lists of emails, phones and addresses, and a date of birth in
+dozens of forms ("1953 11 09", "09 nov 1953", "jul 18sat 1953", "may 2008"). Trained annotators
+wrote the variations, and three of them agreed on every label. Unlike the files generated for
+this project, someone else wrote its errors. It has two parts, and the paper's measures are used
+for each: 10,000 labelled pairs (4,333 matches) scored by pairwise F1, and a million unlabelled
+profiles holding all 20,000 of the pairs' records, scored by how many of the 4,333 matches
+blocking proposes and at how many candidates. The million have no ground truth, so there is no
+clustered F1. `research/scripts/bpid_benchmark.py` reshapes each profile into custmatch's columns
+(first word of the name the first name, last word the surname; second and third emails and
+phones as aliases; addresses after the first dropped) and computes the pairs' features with
+contacts profiled over all million profiles. The paper gives no train/test split; here five
+stratified folds, the threshold chosen on the training folds, three draws.
+
+| | Pairwise F1 | Precision | Recall |
+| --- | --- | --- | --- |
+| custmatch 0.1.2, 8,000 labels | 67.48 | 57.88 | 80.91 |
+| custmatch with dates read in more forms, 300 labels | 69.18 | 56.40 | 89.56 |
+| custmatch with dates read in more forms, 1,000 labels | 72.01 | 62.92 | 84.23 |
+| custmatch with dates read in more forms, 8,000 labels | 74.45 | 65.78 | 85.78 |
+| Paper: random forest | 62.9 | 65.3 | 60.9 |
+| Paper: Ditto | 75.2 | 74.6 | 80.4 |
+| Paper: Sudowoodo | 78.8 | 77.4 | 80.2 |
+| Paper: Claude 3 Sonnet / Llama 3 70B / GPT-4 Turbo | 65.8 / 72.9 / 68.7 | | |
+
+- **It found a gap.** Until now custmatch read a date of birth only with `/`, `.` or `-` between
+  its parts; "1953 11 09", "09 nov 1953" and "19531109" stayed as written and disagreed with
+  "1953-11-09". Dates with a space, the month in words (a weekday stuck to the day is dropped) or
+  no separators now read as ISO dates. That added 7.0 points of F1 here and changed no value
+  in any other dataset in this repository. Partial dates ("may 2008", "22 november") are still
+  kept as written.
+- **Between the forest and the transformers.** With the fix custmatch scores 74.45: 11.6 points
+  above the paper's random forest and above every LLM it tried, 0.75 below Ditto and 4.35 below
+  Sudowoodo, on a laptop CPU with no pretraining. Comparing the date also by edit distance
+  (`"extra_fields"`) added 0.15.
+- **Its weakness is precision.** Of one draw's 1,976 false matches, 49.5% share an email or
+  phone - 31.4% while their names differ, which the annotators were told means two people - and
+  27.5% have no name on one side. Names come in either order ("weinstein journey"), so the first
+  word is not always the first name. Of the 597 missed matches, 29.8% share a phone only once a
+  stray prefix is dropped ("80 579 443 4394" against "5794434394"), 21.3% share an address that
+  is not each record's first (the adapter keeps only the first; aliases do not cover addresses),
+  and 39.9% have no name on one side.
+- **Blocking ties the paper's best.** custmatch's default keys proposed 71.89% of the matches at
+  13.1 million candidates in about 15 seconds. The paper's best, Contriever, proposed 71.1% at 10
+  million in 33 minutes on a GPU instance; with 0.1.2's date reading the keys found 70.18%.
 
 ---
 

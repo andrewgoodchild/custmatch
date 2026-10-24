@@ -35,6 +35,10 @@ VARIANTS = {                         # config overrides; "_mix" / "_jev" change 
     # blocking lessons: fixed rules with oversized blocks split (Zingg), and rules learned from
     # the labelled matches (dedupe); max_block left at its default 60 on purpose
     "rich_split": {"blocking": "fixed", "max_block": 60},
+    # oversized blocks split on three fields at once (research/scripts/ncvr_blocking_scale.py),
+    # and rich_split again on the same code, since its saved figures predate 0.1.2
+    "rich_adaptive": {"blocking": "adaptive", "max_block": 60},
+    "rich_split_0_1_2": {"blocking": "fixed", "max_block": 60},
     "rich_learned": {"blocking": "learned", "max_block": 60},
     "rich_learned99": {"blocking": "learned", "max_block": 60, "blocking_recall": 0.99},
     # active learning that also looks where blocking missed (dedupe), feeding learned blocking

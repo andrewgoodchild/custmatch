@@ -447,6 +447,41 @@ def test_unicode_form_claims():
     assert f"changes {changed['historical_50k']} values in historical_50k" in changelog
 
 
+def test_bpid_claims():
+    b = load("bpid.json")
+    flat = " ".join(REPORT.split())
+    changelog = " ".join((ROOT / "CHANGELOG.md").read_text().split())
+    old, new, paper = b["shipped_0.1.2"], b["shipped"], b["paper"]
+    pct = lambda v: f"{100 * v:.2f}"  # noqa: E731
+    pct1 = lambda v: f"{100 * v:.1f}"  # noqa: E731
+    assert f"| custmatch 0.1.2, 8,000 labels | {pct(old['matching_8000']['f1'])} |" in flat
+    for n in (300, 1000, 8000):
+        m = new[f"matching_{n}"]
+        assert (f"| custmatch with dates read in more forms, {n:,} labels | {pct(m['f1'])} | {pct(m['precision'])} | "
+                f"{pct(m['recall'])} |") in flat
+    f1 = 100 * new["matching_8000"]["f1"]
+    assert f"That added {f1 - 100 * old['matching_8000']['f1']:.1f} points of F1" in flat
+    assert f"custmatch scores {f1:.2f}: {f1 - 100 * paper['random_forest']:.1f} points" in flat
+    assert f"{100 * paper['ditto'] - f1:.2f} below Ditto and {100 * paper['sudowoodo'] - f1:.2f} below" in flat
+    assert f1 > 100 * max(paper[k] for k in ("claude3_sonnet", "llama3_70b", "mistral_large", "gpt4_turbo"))
+    assert f"added {100 * (b['dob_edit']['matching_8000']['f1'] - new['matching_8000']['f1']):.2f}" in flat
+    fm, mm = new["errors"]["false_matches"], new["errors"]["missed_matches"]
+    assert (f"Of one draw's {fm['count']:,} false matches, {pct1(fm['shared_email_or_phone'])}% share an email or "
+            f"phone - {pct1(fm['shared_contact_names_differ'])}% while") in flat
+    assert f"{pct1(fm['a_name_blank'])}% have no name on one side" in flat
+    assert (f"Of the {mm['count']} missed matches, {pct1(mm['phone_agrees_only_in_last_10_digits'])}% share a phone "
+            f"only") in flat
+    assert f"{pct1(mm['shared_address_not_both_first'])}% share an address" in flat
+    assert f"and {pct1(mm['a_name_blank'])}% have no name on one side" in flat
+    bl, bl_old = new["blocking"], old["blocking"]
+    assert (f"proposed {pct(bl['recall'])}% of the matches at {bl['candidate_pairs'] / 1e6:.1f} million candidates "
+            f"in about {round(bl['seconds'])} seconds") in flat
+    assert f"with 0.1.2's date reading the keys found {pct(bl_old['recall'])}%" in flat
+    assert bl["recall"] > paper["blocking_best_recall"]
+    assert (f"from {pct(old['matching_8000']['f1'])} to {pct(new['matching_8000']['f1'])} with 8,000 labels, and its "
+            f"blocking recall from {pct(bl_old['recall'])}% to {pct(bl['recall'])}%") in changelog
+
+
 def test_audit_claims():
     a = load("audit_check.json")
     flat = " ".join(GUIDE.split())
@@ -948,12 +983,16 @@ def test_full_ncvr_reruns_claims():
     flat = _flat(GUIDE)
     peak = lambda x: max(v["peak_memory_gb_so_far"] for v in x["progress"].values())  # noqa: E731
     old, new, fx = r["ncvr_all"], r["ncvr_all_default_memory_redesign"], r["ncvr_all_fixed_blocking"]
-    for x in (old, new, fx):
+    ad = r["ncvr_all_adaptive_blocking"]
+    for x in (old, new, fx, ad):
         assert f"| {x['result']['clustered']['f1']:.2f} | {x['result']['clustered']['precision']:.1f} / {x['result']['clustered']['recall']:.1f} |" in flat
         assert f"{peak(x):.1f} GB |" in flat
     assert peak(new) < 0.5 * peak(old), "the memory redesign no longer halves full-scale memory"
     assert abs(new["result"]["clustered"]["f1"] - old["result"]["clustered"]["f1"]) < 1, "the redesign changed accuracy"
     assert fx["result"]["clustered"]["f1"] > new["result"]["clustered"]["f1"]
+    assert ad["result"]["clustered"]["f1"] > fx["result"]["clustered"]["f1"], "adaptive blocking no longer beats fixed at full size"
+    assert f"it scored {ad['result']['clustered']['f1']:.2f}, the best full-file result" in flat
+    assert f"Only {ad['result']['random_matches']} of its 1,000 random labels were matches" in flat
     assert f"cut peak memory by {100 * (1 - peak(new) / peak(old)):.0f}%" in flat
 
 

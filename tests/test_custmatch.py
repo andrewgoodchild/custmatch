@@ -1144,6 +1144,23 @@ def test_splitting_a_big_block_keeps_records_without_the_refining_key():
     assert any(a in al and b in al for a, b in pairs), "the 'al' records lost every pair"
 
 
+def test_adaptive_splitting_keeps_a_pair_misspelt_in_the_first_refinement():
+    from custmatch.blocking import REFINEMENTS, Keys, generate
+    # 80 Smiths: too many for one block, so it is split. The first refinement is the first three
+    # letters of the first name, where "katherine" and "catherine" disagree; their birth date agrees
+    rows = [(f"name{k:02d}", "smith", "", "", "", "", "", f"19{k:02d}-01-01", "") for k in range(78)]
+    rows += [("katherine", "smith", "", "", "", "", "", "1985-06-02", ""),
+             ("catherine", "smith", "", "", "", "", "", "1985-06-02", "")]
+    df = _people(rows).assign(source="s", record_id=[str(k) for k in range(80)], ssn="")
+    rule = [("last_name:exact",)]
+    one, _ = generate(df, Keys(df), rule, max_block=60)
+    ways, _ = generate(df, Keys(df), rule, max_block=60, ways=3, refine=REFINEMENTS)
+    assert [78, 79] not in one.tolist() and [78, 79] in ways.tolist()
+    assert set(map(tuple, one.tolist())) <= set(map(tuple, ways.tolist()))
+    ln = df.last_name.to_numpy()
+    assert (ln[ways[:, 0]] == ln[ways[:, 1]]).all()
+
+
 def test_fixed_and_learned_blocking_keep_the_country_keys():
     from custmatch import country
     from custmatch.blocking import candidates_for
@@ -1153,7 +1170,7 @@ def test_fixed_and_learned_blocking_keep_the_country_keys():
         source="s", record_id=["1", "2"], ssn="")
     df = country.normalise(df, {"country": "AU"})
     prof = {f: profile_contacts(df, f) for f in ("email", "phone")}
-    for mode in (None, "fixed", "learned"):
+    for mode in (None, "fixed", "learned", "adaptive"):
         cfg = {"country": "AU"} | ({"blocking": mode} if mode else {})
         pairs = candidates_for(df, prof, cfg)[0]
         assert [0, 1] in pairs.tolist(), mode
@@ -1388,6 +1405,14 @@ def test_date_order_can_be_set_for_a_country_that_uses_both():
     df = _country_df([("a", "b", "", "05/06/1994", "", "", "")])
     assert country.normalise(df, {"country": "CA"}).date_of_birth[0] == "1994-06-05"
     assert country.normalise(df, {"country": "CA", "date_order": "mdy"}).date_of_birth[0] == "1994-05-06"
+
+
+def test_dates_with_spaces_month_words_and_no_separators_agree():
+    from custmatch.country import iso_date
+    for v in ("1953 11 09", "11 09 1953", "09 nov 1953", "November 9, 1953", "nov 09sat 1953", "19531109"):
+        assert iso_date(v, "mdy") == "1953-11-09", v
+    for v in ("1953 11", "22 november", "marsh 9 1953", "09111953", "1"):   # partial or unclear: as written
+        assert iso_date(v, "mdy") == v, v
 
 
 def test_a_country_column_is_read_from_the_source(tmp_path):

@@ -12,8 +12,13 @@ taught" and "Larger files"). What remains:
 2. **Blocking at millions of records.** On all 5 million NCVR records the keys chosen on a
    200,000-person sample stopped working - blocks outgrow the size limit and true pairs are never
    compared - and clustered F1 fell from 95.6 to 84.5; splitting oversized blocks and more random
-   labels won back 2.9 points ([chapter 6](06-blocking-and-scale.md), "Larger files"). Keys and limits that adapt to the file's
-   size are the open problem.
+   labels won back 2.9 points ([chapter 6](06-blocking-and-scale.md), "Larger files"). Splitting
+   on several fields at once (`"blocking": "adaptive"`) now lifts the full file's blocking
+   ceiling to 99.05 ("Where the rest of the gap is"), so blocking is no longer the main limit:
+   the full five-million run with it scored 88.45, its recall 90.2. Open: the ten points between
+   that and the ceiling, mostly precision, and random labels that still hold enough matches when
+   candidate pairs multiply (1,000 random labels held 21 at a million people and 11 at five
+   million).
 3. **Real drift: NCVR from the raw snapshots.** The Leipzig benchmark has real names but synthetic
    errors in four fields. Pairing two of the State Board of Elections' snapshots by NCID would give
    real moves, name changes and typos - the contact-poor case where [chapter 2](02-whole-customers.md) found a transformer

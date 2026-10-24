@@ -1295,5 +1295,324 @@
   ],
   "mean_f1": 95.42,
   "mean_ceiling_f1": 96.48
+ },
+ "postcode_initial_keys_fixed/people_200000": {
+  "runs": [
+   {
+    "records": 285812,
+    "people": 200000,
+    "true_pairs": 190823,
+    "clustered": {
+     "precision": 96.78,
+     "recall": 97.79,
+     "f1": 97.28,
+     "clusters": 198918,
+     "largest_cluster": 14,
+     "adjusted_rand": 0.9728
+    },
+    "threshold": 0.45,
+    "candidate_pairs": 7855569,
+    "seconds": 43.9,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 98.42,
+     "f1": 99.2,
+     "clusters": 200947,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.992
+    },
+    "seed": 1
+   },
+   {
+    "records": 285614,
+    "people": 200000,
+    "true_pairs": 190333,
+    "clustered": {
+     "precision": 97.44,
+     "recall": 97.27,
+     "f1": 97.35,
+     "clusters": 199651,
+     "largest_cluster": 12,
+     "adjusted_rand": 0.9735
+    },
+    "threshold": 0.55,
+    "candidate_pairs": 7926036,
+    "seconds": 44.8,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 98.56,
+     "f1": 99.28,
+     "clusters": 200882,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.9928
+    },
+    "seed": 2
+   },
+   {
+    "records": 285712,
+    "people": 200000,
+    "true_pairs": 190660,
+    "clustered": {
+     "precision": 96.53,
+     "recall": 98.04,
+     "f1": 97.28,
+     "clusters": 198582,
+     "largest_cluster": 15,
+     "adjusted_rand": 0.9728
+    },
+    "threshold": 0.5,
+    "candidate_pairs": 7883381,
+    "seconds": 42.5,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 98.56,
+     "f1": 99.27,
+     "clusters": 200875,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.9927
+    },
+    "seed": 3
+   }
+  ],
+  "mean_f1": 97.3,
+  "mean_ceiling_f1": 99.25
+ },
+ "postcode_initial_keys_adaptive/people_200000": {
+  "runs": [
+   {
+    "records": 285812,
+    "people": 200000,
+    "true_pairs": 190823,
+    "clustered": {
+     "precision": 97.8,
+     "recall": 97.18,
+     "f1": 97.49,
+     "clusters": 200074,
+     "largest_cluster": 11,
+     "adjusted_rand": 0.9749
+    },
+    "threshold": 0.5,
+    "candidate_pairs": 8850480,
+    "seconds": 45.4,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 99.7,
+     "f1": 99.85,
+     "clusters": 200227,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.9985
+    },
+    "seed": 1
+   },
+   {
+    "records": 285614,
+    "people": 200000,
+    "true_pairs": 190333,
+    "clustered": {
+     "precision": 96.15,
+     "recall": 98.8,
+     "f1": 97.46,
+     "clusters": 198195,
+     "largest_cluster": 14,
+     "adjusted_rand": 0.9746
+    },
+    "threshold": 0.5,
+    "candidate_pairs": 8924439,
+    "seconds": 43.5,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 99.73,
+     "f1": 99.87,
+     "clusters": 200204,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.9987
+    },
+    "seed": 2
+   },
+   {
+    "records": 285712,
+    "people": 200000,
+    "true_pairs": 190660,
+    "clustered": {
+     "precision": 97.03,
+     "recall": 98.87,
+     "f1": 97.94,
+     "clusters": 198555,
+     "largest_cluster": 15,
+     "adjusted_rand": 0.9794
+    },
+    "threshold": 0.45,
+    "candidate_pairs": 8873288,
+    "seconds": 48.7,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 99.72,
+     "f1": 99.86,
+     "clusters": 200205,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.9986
+    },
+    "seed": 3
+   }
+  ],
+  "mean_f1": 97.63,
+  "mean_ceiling_f1": 99.86
+ },
+ "postcode_initial_keys/people_1000000": {
+  "runs": [
+   {
+    "records": 1428005,
+    "people": 1000000,
+    "true_pairs": 951086,
+    "clustered": {
+     "precision": 94.71,
+     "recall": 86.27,
+     "f1": 90.29,
+     "clusters": 1020825,
+     "largest_cluster": 16,
+     "adjusted_rand": 0.9029
+    },
+    "threshold": 0.55,
+    "candidate_pairs": 22427214,
+    "seconds": 162.0,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 87.14,
+     "f1": 93.13,
+     "clusters": 1039092,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.9313
+    },
+    "seed": 1
+   }
+  ],
+  "mean_f1": 90.29,
+  "mean_ceiling_f1": 93.13
+ },
+ "postcode_initial_keys_fixed/people_1000000": {
+  "runs": [
+   {
+    "records": 1428005,
+    "people": 1000000,
+    "true_pairs": 951086,
+    "clustered": {
+     "precision": 91.61,
+     "recall": 93.8,
+     "f1": 92.7,
+     "clusters": 990639,
+     "largest_cluster": 37,
+     "adjusted_rand": 0.927
+    },
+    "threshold": 0.5,
+    "candidate_pairs": 34838256,
+    "seconds": 223.6,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 96.32,
+     "f1": 98.13,
+     "clusters": 1010768,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.9813
+    },
+    "seed": 1
+   }
+  ],
+  "mean_f1": 92.7,
+  "mean_ceiling_f1": 98.13
+ },
+ "postcode_initial_keys_adaptive/people_1000000": {
+  "runs": [
+   {
+    "records": 1428005,
+    "people": 1000000,
+    "true_pairs": 951086,
+    "clustered": {
+     "precision": 96.92,
+     "recall": 69.34,
+     "f1": 80.84,
+     "clusters": 1083700,
+     "largest_cluster": 14,
+     "adjusted_rand": 0.8084
+    },
+    "threshold": 0.5,
+    "candidate_pairs": 46927054,
+    "seconds": 253.2,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 99.12,
+     "f1": 99.56,
+     "clusters": 1002777,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.9956
+    },
+    "seed": 1
+   }
+  ],
+  "mean_f1": 80.84,
+  "mean_ceiling_f1": 99.56
+ },
+ "postcode_initial_keys_fixed/people_1000000/random_1000": {
+  "runs": [
+   {
+    "records": 1428005,
+    "people": 1000000,
+    "true_pairs": 951086,
+    "clustered": {
+     "precision": 94.36,
+     "recall": 92.94,
+     "f1": 93.64,
+     "clusters": 1000793,
+     "largest_cluster": 23,
+     "adjusted_rand": 0.9364
+    },
+    "threshold": 0.5,
+    "candidate_pairs": 34838256,
+    "seconds": 234.2,
+    "random_matches": 23,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 96.32,
+     "f1": 98.13,
+     "clusters": 1010768,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.9813
+    },
+    "seed": 1
+   }
+  ],
+  "mean_f1": 93.64,
+  "mean_ceiling_f1": 98.13
+ },
+ "postcode_initial_keys_adaptive/people_1000000/random_1000": {
+  "runs": [
+   {
+    "records": 1428005,
+    "people": 1000000,
+    "true_pairs": 951086,
+    "clustered": {
+     "precision": 91.78,
+     "recall": 96.41,
+     "f1": 94.04,
+     "clusters": 983053,
+     "largest_cluster": 48,
+     "adjusted_rand": 0.9404
+    },
+    "threshold": 0.4,
+    "candidate_pairs": 46927054,
+    "seconds": 301.7,
+    "random_matches": 21,
+    "ceiling": {
+     "precision": 100.0,
+     "recall": 99.12,
+     "f1": 99.56,
+     "clusters": 1002777,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.9956
+    },
+    "seed": 1
+   }
+  ],
+  "mean_f1": 94.04,
+  "mean_ceiling_f1": 99.56
  }
 }

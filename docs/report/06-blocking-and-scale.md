@@ -280,6 +280,7 @@ redesign:
 | As above, before the memory redesign | 84.53 | 90.2 / 79.6 | 11 | 55.1 GB |
 | The same, after it | 84.33 | 89.8 / 79.5 | 13 | 18.6 GB |
 | Oversized blocks split (`"blocking": "fixed"`), 1,000 random labels | 87.19 | 87.7 / 86.7 | 30 | 26.4 GB |
+| Split on three fields (`"blocking": "adaptive"`), 1,000 random labels, on an 18-core 64 GB laptop | 88.45 | 86.7 / 90.2 | 11 | 33.6 GB |
 
 The redesign cut peak memory by 66% at the same accuracy. Splitting blocks instead of
 dropping them, with enough random matches to judge the threshold, won back 2.9 of the points lost
@@ -287,6 +288,47 @@ against the 200,000-people sample - recall rose from 79.5 to 86.7 - and no warni
 rest of the gap is still open. (Both reruns' times are left out: they were slowed by a defect in the
 new blocker, since fixed, that scanned every block entry for each of about 50,000 skipped blocks.
 On the full file the fixed blocker takes about 5 to 8 minutes, against about 9 for the old one.)
+
+**Where the rest of the gap is** (`research/scripts/ncvr_blocking_scale.py`,
+`research/results/ncvr_blocking_scale.json`): blocking alone, with no labels or model, on samples
+of the same file. The ceiling is every true candidate pair accepted and closed.
+
+| People (records) | Default: pair completeness / ceiling F1 | `"fixed"` | `"adaptive"` | Candidate pairs, default / fixed / adaptive |
+| --- | --- | --- | --- | --- |
+| 200,000 (285,812) | 93.78 / 97.35 | 97.32 / 99.20 | 98.47 / 99.85 | 7.1M / 7.9M / 8.9M |
+| 1,000,000 (1,428,005) | 86.42 / 93.13 | 95.22 / 98.13 | 97.80 / 99.56 | 22.4M / 34.8M / 46.9M |
+| 3,500,840 (5,000,000) | 79.61 / 88.96 | 93.37 / 97.13 | 96.74 / 99.05 | 69.1M / 125.6M / 191.8M |
+
+With the default blocker, recall at full size is the blocking ceiling: 79.5 against a pair
+completeness of 79.6. With `"fixed"` it is not. The ceiling there is 97.1, but the run scored
+87.2, so ten points went to the matcher and the labels. The pairs `"fixed"` still misses are
+mostly ones where the field it split on has the typo. For example, a (postcode, first initial)
+block is split on the first three letters of the first name, so it loses "thoams gravel"
+against "thomas kravel". Splitting never used the file's own fields, town and postcode.
+`"blocking": "adaptive"` splits each oversized block on up to three refinements at once, each
+on a different field and the extra fields included, and keeps the pieces of all of them. A pair
+is lost only if it disagrees on every one. At full size that lifts pair completeness from 93.4%
+to 96.7% for 53% more pairs.
+
+End to end, on 1,000,000 people
+([chapter 9](09-against-other-tools.md), "A public benchmark"), adaptive splitting with 300
+random labels scored 80.84. That number says nothing about the blocker: only 2 of its 300
+random labels were matches, because extra candidate pairs make matches rarer among random
+pairs, and the warning fired. With 1,000 random labels it scored 94.04, against 93.64 for
+`"fixed"` and 90.29 for the default with 300. Precision, not recall, is now what limits it
+(91.8). On the full five million (the last row of the table above) it scored **88.45**, the best
+full-file result: recall rose from 86.7 to 90.2 and precision fell from 87.7 to 86.7. Only 11 of
+its 1,000 random labels were matches and the warning fired; the 700 active labels held 458. The
+blocking ceiling is 99.05, so about ten points are still lost after blocking, and precision is now
+the limit there too. It ran on a laptop (18 cores, 64 GB) in 2.2 hours, the final run 22 minutes;
+the process's peak footprint was 51 GB, against the 33.6 GB the run records. On the five small benchmarks
+(`research/scripts/beat_splink.py`, `rich_adaptive` against `rich_split_0_1_2`) it is level or
+ahead with active labels. With random labels it gains 2.11 on historical_50k and loses 0.32 to
+0.75 on febrl3, fake_1000 and the synthetic file. It is therefore opt-in, for files whose
+blocks outgrow `max_block`. Both rule blockers also got faster with identical output: a sort
+in place of a scan per oversized block, and an integer sort in place of a pandas groupby.
+`"fixed"` blocking at 200,000 people went from 9.7 to 6.3 seconds, and `"adaptive"` on the full
+file from 555 to 274 seconds at a 26 GB peak.
 
 ## What had to change to run this on a laptop, and what it costs
 
