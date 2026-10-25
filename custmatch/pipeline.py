@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from . import explain, identity, incremental, io, monitor, schema
-from .core import components, features, profile_contacts, relay_records
+from .core import components, features, profile_contacts, relay_records, service_records
 from .golden import build_golden
 
 THRESHOLDS = np.round(np.concatenate([np.arange(0.05, 0.96, 0.05), [0.97, 0.98, 0.99]]), 3)
@@ -243,6 +243,8 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             profanity_list = words is not None
             suspect_flags = suspect.flag(df, words)
     fake_name = fake_addr = fake_dob = np.zeros(n, bool)
+    from . import placeholders
+    extra_placeholders = placeholders.detect_extra(df, cfg)       # reported, still compared
     if cfg.get("placeholders"):
         # placeholder names / addresses / dates ("test test", "123 main st", 1900-01-01) are not
         # evidence: blank them
@@ -558,12 +560,27 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             f"than max_block, so it was skipped. Largest: {eg}. See blocking_report.json; raise "
             "\"max_block\" if these values are legitimately common, check them for placeholders, or "
             "split them instead (\"blocking\": \"adaptive\")")
+    for field, vals in extra_placeholders.items():
+        eg = "" if cfg.get("minimal_outputs") else " (" + ", ".join(repr(v) for v in vals[:3]) + ")"
+        summary["warnings"].append(
+            f"{field}: {len(vals)} value(s){eg} on a tenth or more of the records, whose people share no surname "
+            "or employer's email domain - a placeholder, or too common to tell people apart. It is compared "
+            "like any value: the model learns how little agreeing on it is worth (ignoring \"Multiple "
+            "Companies\" on synthetic address-book cards changed nothing). Check it is not a mistake")
     if names_tidied:
         summary["warnings"].append(
             f"{names_tidied:,} records had something other than a name in a name field - a qualification "
             "(\"phd\", \"mba\"), bracketed text, a phone number or an email address - which was taken out "
             "before matching; a \"(nee ...)\" surname became an alias. \"normalise\": {\"names\": false} keeps "
             "names as written")
+    service = service_records(df)
+    if service.any():
+        eg = "" if cfg.get("minimal_outputs") else " (e.g. " + ", ".join(
+            f"{a} <{b}>" for a, b in zip(df.first_name[service][:3], df.email[service][:3])) + ")"
+        summary["warnings"].append(
+            f"{int(service.sum()):,} records with a first name only that is their email's domain{eg}: usually a "
+            "service, product or practice saved as a person. Two such records can be linked on the name alone; "
+            "remove them if they are not people")
     relay, found = relay_records(df)
     k = int((relay & ((df.first_name != "") | (df.last_name != "")).to_numpy()).sum())
     if k:

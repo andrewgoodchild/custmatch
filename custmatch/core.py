@@ -504,7 +504,7 @@ def _features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, reco
     for name, compare in extra_fields:
         if compare == "years_apart":
             t = pd.to_datetime(df[name].replace("", None), errors="coerce", format="mixed", utc=True)
-            yr = (t.dt.year + (t.dt.dayofyear - 1) / 365.25).to_numpy(dtype=float)
+            yr = (t.dt.year + (t.dt.day_of_year - 1) / 365.25).to_numpy(dtype=float)
             gap = np.abs(yr[pairs[:, 0]] - yr[pairs[:, 1]])
             cols.append(np.where(np.isnan(gap), -1.0, gap))
             continue
@@ -566,6 +566,17 @@ ALIAS_FIELDS = ("last_name", "email", "phone")
 
 def alias_columns(df):
     return [c for c in df.columns if "@" in c and c.split("@", 1)[0] in ALIAS_FIELDS]
+
+
+def service_records(df):
+    """Records with a first name only that is their email's domain ("zoomly", hello@zoomly.example):
+    usually a service, product or practice saved as a person. Boolean mask."""
+    if "email" not in df.columns:
+        return np.zeros(len(df), bool)
+    name = df.first_name.str.replace(r"[^a-z0-9]", "", regex=True)
+    label = df.email.str.partition("@")[2].str.partition(".")[0].str.replace(r"[^a-z0-9]", "", regex=True)
+    inside = np.array([n in d for n, d in zip(name, label)], bool)
+    return ((df.last_name == "") & (name.str.len() >= 4)).to_numpy() & inside
 
 
 def relay_records(df):

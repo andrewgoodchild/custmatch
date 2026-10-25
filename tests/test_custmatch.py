@@ -911,6 +911,34 @@ def test_domain_typos_are_fixed_but_real_domains_are_not():
     assert country.email("jo.bloggs@me.com") == country.email("jo.bloggs@mac.com") == "jo.bloggs@icloud.com"
 
 
+def test_a_service_saved_as_a_person_is_found():
+    from custmatch.core import service_records
+    df = pd.DataFrame({"first_name": ["zoomly", "jo", "anna", "dialin"], "last_name": ["", "", "lee", ""],
+                       "email": ["hello@zoomly.example", "jo@jo.example", "anna@lee.example", "team@mydialin.example"]})
+    assert service_records(df).tolist() == [True, False, False, True]   # names under four letters are people
+
+
+def test_a_placeholder_extra_value_is_found_but_an_employer_or_a_state_is_not():
+    """"Multiple Companies" on a quarter of the cards, whose people share nothing; a school on as many,
+    whose staff share its domain; a state, common like every other state."""
+    from custmatch import placeholders
+    n = 400
+    rows = []
+    for k in range(n):
+        if k < 100:
+            company, email = "multiple companies", f"p{k}@{['gmail.com', 'outlook.com', f'org{k}.example'][k % 3]}"
+        elif k < 200:
+            company, email = "westfield college", f"p{k}@westfield-college.example"
+        else:
+            company, email = f"company {k}", f"p{k}@gmail.com"
+        rows.append({"first_name": f"f{k}", "last_name": f"s{k}", "email": email, "company": company,
+                     "state": ["nsw", "vic", "qld", "wa"][k % 4]})
+    df = pd.DataFrame(rows)
+    cfg = {"extra_fields": [{"name": "company", "compare": "similarity"}, {"name": "state", "compare": "exact"}]}
+    assert placeholders.detect_extra(df, cfg) == {"company": ["multiple companies"]}
+    assert placeholders.detect_extra(df.assign(email=""), cfg) == {}          # no emails: not judged
+
+
 def test_what_is_not_a_name_is_taken_out_of_name_fields():
     from custmatch import country
     for raw, clean in (("smith, phd, cpa", "smith"), ("kubiak mba", "kubiak"), ("william (bill)", "william"),

@@ -98,6 +98,7 @@ def main():
     ap.add_argument("--cards", type=int, help="Profile B (cards), label draws 1..N per book and budget")
     ap.add_argument("--budgets", default=",".join(CARD_BUDGETS), help="with --cards: which budgets")
     ap.add_argument("--tag", default="", help="with --cards: kept as .../drawN/TAG, beside the plain runs")
+    ap.add_argument("--set", default="{}", help='with --cards: config changes as JSON, e.g. \'{"placeholders": true}\'')
     a = ap.parse_args()
     res = json.loads(OUT.read_text()) if OUT.exists() else {}
     if a.cards:
@@ -144,16 +145,20 @@ def cards(a, res):
         truth["key"] = "cards:" + truth.card_id
         person = dict(zip(truth.key, truth.person_id))
         recs = pd.read_csv(book / "cards.csv", dtype=str, keep_default_na=False).assign(key=lambda d: "cards:" + d.card_id)
+        config = book / "cards.json"
+        if json.loads(a.set):                      # beside cards.csv, so its relative path still holds
+            config = book / f"cards_{a.tag or 'set'}.json"
+            config.write_text(json.dumps(json.loads((book / "cards.json").read_text()) | json.loads(a.set)))
         for budget in a.budgets.split(","):
             for draw in range(1, (1 if budget == "all" else a.cards) + 1):
                 key = f"s{seed}/cards/{budget}/draw{draw}" + (f"/{a.tag}" if a.tag else "")
                 with tempfile.TemporaryDirectory() as tmp:
                     tmp = Path(tmp)
-                    lp = label(book / "cards.json", budget, tmp, person, draw)
+                    lp = label(config, budget, tmp, person, draw)
                     lab = pd.read_csv(lp, dtype=str, keep_default_na=False)
                     random_matches = int(lab[lab.get("by", "random") != "active"].label.astype(int).sum())
                     try:
-                        summ = pipeline.run(book / "cards.json", lp, tmp / "out", seed=draw, log=lambda *_: None)
+                        summ = pipeline.run(config, lp, tmp / "out", seed=draw, log=lambda *_: None)
                     except io.ConfigError as e:
                         res[key] = {"error": str(e), "labels": len(lab), "matches": int(lab.label.astype(int).sum())}
                         print(f"{key:38s} stopped: {e}", flush=True)
