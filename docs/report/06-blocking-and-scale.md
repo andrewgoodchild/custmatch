@@ -285,6 +285,7 @@ redesign:
 | The same, after it | 84.33 | 89.8 / 79.5 | 13 | 18.6 GB |
 | Oversized blocks split (`"blocking": "fixed"`), 1,000 random labels | 87.19 | 87.7 / 86.7 | 30 | 26.4 GB |
 | Split on three fields (`"blocking": "adaptive"`), 1,000 random labels, on an 18-core 64 GB laptop | 88.45 | 86.7 / 90.2 | 11 | 33.6 GB |
+| Nothing set: switched to `"adaptive"` by itself, 300 random labels drawn stratified, same laptop | 86.24 | 87.7 / 84.9 | 10 | 42.4 GB |
 
 The redesign cut peak memory by 66% at the same accuracy. Splitting blocks instead of
 dropping them, with enough random matches to judge the threshold, won back 2.9 of the points lost
@@ -328,8 +329,14 @@ the limit there too. It ran on a laptop (18 cores, 64 GB) in 2.2 hours, the fina
 the process's peak footprint was 51 GB, against the 33.6 GB the run records. On the five small benchmarks
 (`research/scripts/beat_splink.py`, `rich_adaptive` against `rich_split_0_1_2`) it is level or
 ahead with active labels. With random labels it gains 2.11 on historical_50k and loses 0.32 to
-0.75 on febrl3, fake_1000 and the synthetic file. It is therefore opt-in, for files whose
-blocks outgrow `max_block`. Both rule blockers also got faster with identical output: a sort
+0.75 on febrl3, fake_1000 and the synthetic file. So it is not used everywhere: it switches on
+by itself only for files whose blocks outgrow `max_block` ("Splitting when it is needed, by
+default" below). With nothing set, the full file now runs that way, with 300 random labels
+drawn stratified, and scored 86.24 (the table's last row): 1.91 above the default before, on
+the same 300 random + 700 active labels, but 2.21 below the 1,000-random-label run. Stratifying
+did not find the matches here: 10 of its 300 random labels were matches, against 11 and 13 in
+plain draws of 300 and 11 of 1,000, and the threshold it judged on them, 0.55 against 0.5, cost recall (84.9
+against 90.2). At this size 300 random labels are too few however they are drawn. Both rule blockers also got faster with identical output: a sort
 in place of a scan per oversized block, and an integer sort in place of a pandas groupby.
 `"fixed"` blocking at 200,000 people went from 9.7 to 6.3 seconds, and `"adaptive"` on the full
 file from 555 to 274 seconds at a 26 GB peak.

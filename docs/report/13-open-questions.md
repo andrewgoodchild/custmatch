@@ -18,8 +18,9 @@ taught" and "Larger files"). What remains:
    the full five-million run with it scored 88.45, its recall 90.2. It is now the default where
    the default keys would leave over 1% of the records out, and random labels are drawn stratified
    from 2 million candidate pairs, which lifted a million people with 300 random labels from 80.84
-   to 94.85. Open: the ten points between the full run and its ceiling, mostly precision; the
-   full run again with stratified labels; and why stratified labels cost historical_50k 1.41
+   to 94.85. Open: the ten points between the full run and its ceiling, mostly precision; why the
+   full run with stratified labels (86.24 with nothing set, 300 random) found only 10 random
+   matches, no more than plain draws of 300 (11 and 13); and why stratified labels cost historical_50k 1.41
    points with active learning (three draws) while helping with random labels alone, which
    decides whether small files should stratify too.
 3. **Real drift: NCVR from the raw snapshots.** The Leipzig benchmark has real names but synthetic

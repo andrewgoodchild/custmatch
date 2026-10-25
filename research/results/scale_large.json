@@ -624,5 +624,82 @@
    }
   },
   "machine": "arm64 laptop, 18 cores, 64 GiB"
+ },
+ "ncvr_all_current_default": {
+  "result": {
+   "records": 5000000,
+   "people": 3500840,
+   "true_pairs": 3331384,
+   "clustered": {
+    "precision": 87.67,
+    "recall": 84.86,
+    "f1": 86.24,
+    "clusters": 3528160,
+    "largest_cluster": 50,
+    "adjusted_rand": 0.8624
+   },
+   "threshold": 0.55,
+   "candidate_pairs": 191800790,
+   "stage_seconds": {
+    "load and profile": 17.74,
+    "blocking (191,800,790 candidate pairs)": 261.77,
+    "forest: cross-fitted clustered F1 97.44": 736.64,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "large blocks checked: 0 of 49560 kept, 0 pairs added": 9.76,
+    "households, golden records, outputs": 79.77
+   },
+   "warnings": [
+    "only 10 of your randomly drawn labels are matches, and the threshold is judged on those: label more random pairs (custmatch sample) until at least 30 are matches",
+    "blocking switched to \"adaptive\": with the default keys 399,433 records (8.0%) were only in blocks larger than max_block and would never have been compared, so oversized blocks were split instead (set \"blocking\": \"core\" to keep the default keys and skip them)",
+    "largest customer has 50 records - check it for chaining (clusters.csv)"
+   ],
+   "random_matches": 10,
+   "config_changes": {
+    "blocking": null
+   }
+  },
+  "progress": {
+   "prepare": {
+    "seconds": 3.7,
+    "peak_memory_gb_so_far": 0.93
+   },
+   "random_300": {
+    "seconds": 323.3,
+    "peak_memory_gb_so_far": 24.22
+   },
+   "active_1": {
+    "seconds": 900.9,
+    "peak_memory_gb_so_far": 30.46
+   },
+   "active_2": {
+    "seconds": 894.9,
+    "peak_memory_gb_so_far": 31.78
+   },
+   "active_3": {
+    "seconds": 929.1,
+    "peak_memory_gb_so_far": 31.78
+   },
+   "active_4": {
+    "seconds": 1165.3,
+    "peak_memory_gb_so_far": 31.78
+   },
+   "active_5": {
+    "seconds": 1097.4,
+    "peak_memory_gb_so_far": 31.78
+   },
+   "active_6": {
+    "seconds": 954.7,
+    "peak_memory_gb_so_far": 31.78
+   },
+   "active_7": {
+    "seconds": 895.2,
+    "peak_memory_gb_so_far": 33.22
+   },
+   "final_run": {
+    "seconds": 1125.7,
+    "peak_memory_gb_so_far": 42.44
+   }
+  },
+  "machine": "arm64 laptop, 18 cores, 64 GiB"
  }
 }

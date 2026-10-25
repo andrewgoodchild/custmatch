@@ -983,8 +983,8 @@ def test_full_ncvr_reruns_claims():
     flat = _flat(GUIDE)
     peak = lambda x: max(v["peak_memory_gb_so_far"] for v in x["progress"].values())  # noqa: E731
     old, new, fx = r["ncvr_all"], r["ncvr_all_default_memory_redesign"], r["ncvr_all_fixed_blocking"]
-    ad = r["ncvr_all_adaptive_blocking"]
-    for x in (old, new, fx, ad):
+    ad, nothing = r["ncvr_all_adaptive_blocking"], r["ncvr_all_current_default"]
+    for x in (old, new, fx, ad, nothing):
         assert f"| {x['result']['clustered']['f1']:.2f} | {x['result']['clustered']['precision']:.1f} / {x['result']['clustered']['recall']:.1f} |" in flat
         assert f"{peak(x):.1f} GB |" in flat
     assert peak(new) < 0.5 * peak(old), "the memory redesign no longer halves full-scale memory"
@@ -994,6 +994,14 @@ def test_full_ncvr_reruns_claims():
     assert f"it scored {ad['result']['clustered']['f1']:.2f}, the best full-file result" in flat
     assert f"Only {ad['result']['random_matches']} of its 1,000 random labels were matches" in flat
     assert f"cut peak memory by {100 * (1 - peak(new) / peak(old)):.0f}%" in flat
+    # nothing set: the switch to adaptive and stratified labels by themselves, 300 random + 700 active
+    assert nothing["result"]["config_changes"] == {"blocking": None}
+    assert any(w.startswith('blocking switched to "adaptive"') for w in nothing["result"]["warnings"])
+    f1 = nothing["result"]["clustered"]["f1"]
+    assert f"scored {f1:.2f} (the table's last row): {f1 - new['result']['clustered']['f1']:.2f} above the default" in flat
+    assert f"but {ad['result']['clustered']['f1'] - f1:.2f} below the 1,000-random-label run" in flat
+    assert f"{nothing['result']['random_matches']} of its 300 random labels were matches, against " \
+           f"{old['result'].get('random_matches', 11)} and {new['result']['random_matches']} in plain draws of 300" in flat
 
 
 def test_tier1_speedups_match_the_results():
