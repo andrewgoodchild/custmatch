@@ -95,7 +95,7 @@ def fill(path, truth):
 def draw(cp, truth, n, how, seed, tmp):
     lp = tmp / "labels.csv"
     first = n if how == "random" else min(n, 100)
-    labels.sample(cp, first, lp, seed=seed)
+    labels.sample(cp, first, lp, seed=seed, stratified=False)
     lab = fill(lp, truth)
     while len(lab) < n:
         labels.sample_active(cp, lp, min(100, n - len(lab)), tmp / "next.csv", seed=seed)

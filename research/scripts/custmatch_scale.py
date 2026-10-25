@@ -64,7 +64,7 @@ def main():
             t0 = time.time(); pairs, _ = block(df, prof); t["block"] = time.time() - t0
             t0 = time.time(); features(df, pairs, prof); t["features"] = time.time() - t0
             lp = tmp / "labels.csv"
-            labels.sample(cfg, 1000, lp, seed=1)
+            labels.sample(cfg, 1000, lp, seed=1, stratified=False)
             lab = pd.read_csv(lp, dtype=str, keep_default_na=False)
             gold = {}
             for c in range(k):

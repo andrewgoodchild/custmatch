@@ -355,7 +355,7 @@ large organisation stays one customer; `add` and a run reusing the model block t
 **Random labels that still hold matches** (`labels.stratified_pick`). With every split block
 compared, matches are rarer among the candidate pairs, and a plain random draw holds a handful:
 2 of 300 at a million people, 11 of 1,000 on the full file. The threshold's recall is judged on
-those. From 2 million candidate pairs up (`labels.STRATIFY_FROM`), `custmatch sample` now draws
+those. `custmatch sample` now draws
 half the random labels uniformly and half spread over the pairs' agreement patterns - which of
 the fields agree exactly - each pattern's share the square root of its size, and writes each
 label's weight, the candidate pairs it stands for. The threshold's estimates are weighted by
@@ -367,26 +367,40 @@ active labels:
 
 | NCVR people | Plain random draw | Stratified by agreement pattern |
 | --- | --- | --- |
-| 200,000 (3 draws) | 97.63 | 97.98 |
-| 1,000,000, 300 random labels | 80.84 (2 random matches) | 94.85 (8) |
-| 1,000,000, 1,000 random labels | 94.04 (21) | 94.91 (40) |
+| 200,000 (3 draws) | 97.63 | 98.03 |
+| 1,000,000, 300 random labels | 80.84 (2 random matches) | 92.88 (7) |
+| 1,000,000, 1,000 random labels | 94.04 (21) | 94.36 (38) |
 
 On the five small benchmarks, over three label draws each (`rich_stratified` against
 `rich_rerun`, seeds 1 to 3; mean clustered F1, the draws' range in brackets):
 
 | Dataset | 1,000 random: plain | stratified | 300 random + 700 active: plain | stratified |
 | --- | --- | --- | --- | --- |
-| febrl3 | 99.51 (99.29-99.83) | 99.83 (99.69-99.92) | 99.99 | 99.99 |
-| febrl4 | 99.87 (99.84-99.92) | 99.90 (99.84-99.94) | 99.99 | 99.99 |
-| historical_50k | 86.63 (85.53-88.00) | 87.73 (87.32-88.04) | 87.36 (86.64-87.83) | 85.95 (84.79-86.94) |
-| fake_1000 | 93.36 (91.65-95.98) | 93.52 (93.33-93.64) | 98.29 (96.75-99.08) | 99.03 (99.03-99.03) |
-| synthetic | 97.53 (97.28-97.74) | 97.71 (97.49-97.87) | 98.84 (98.61-98.98) | 99.06 (98.96-99.11) |
+| febrl3 | 99.51 (99.29-99.83) | 99.62 (99.25-99.92) | 99.99 | 99.99 |
+| febrl4 | 99.87 (99.84-99.92) | 99.89 (99.79-99.98) | 99.99 | 99.99 |
+| historical_50k | 86.63 (85.53-88.00) | 87.46 (87.23-87.83) | 87.36 (86.64-87.83) | 85.95 (84.79-86.94) |
+| fake_1000 | 93.36 (91.65-95.98) | 92.44 (91.17-93.25) | 98.29 (96.75-99.08) | 99.03 (99.03-99.03) |
+| synthetic | 97.53 (97.28-97.74) | 97.75 (97.61-97.88) | 98.84 (98.61-98.98) | 99.06 (98.96-99.11) |
 
-With random labels alone it is level or better on every file and steadier between draws. With
+With random labels alone it is level or better on four files and 0.92 worse on fake_1000. With
 active labels it is level or better on four and worse on historical_50k on all three draws, by
-1.41 on average. So small files, all under a million candidate pairs, still draw plainly by
-default; `custmatch sample --stratified` draws this way at any size, and the warning about too
-few random matches suggests it.
+1.41 on average. That first decided against stratifying small files. An address book then
+argued for it: a real one of 808 records, with 300 random labels, went from 80.9 to 92.3-93.2
+pairwise F1 on three stratified draws, and on synthetic books built to its profile
+(`research/scripts/address_book_data.py`: one record per email address, no street or birth
+date, relay addresses, a switchboard phone, shared household phones) ten draws of 300 random
+labels on each of three books gave:
+
+| Synthetic address books, 300 random labels, 30 draws | Plain | Stratified |
+| --- | --- | --- |
+| As generated: clustered F1, mean (lowest draw) | 73.21 (60.32) | 76.55 (59.76) |
+| Relay records removed, switchboard blanked | 77.75 (41.13) | 81.37 (65.09) |
+| Random matches among the 300 | 10.8 | 20.8 / 23.5 |
+
+Stratified was ahead on all six book and version pairs (by 0.2 to 6.1). Since 0.1.3 every file
+draws this way by default (`--no-stratified` draws plainly); the results recorded before it,
+and the comparisons that give every tool the same labels, still draw plainly
+(`stratified=False` in their scripts).
 
 ## What had to change to run this on a laptop, and what it costs
 

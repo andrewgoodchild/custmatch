@@ -530,9 +530,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     if saved is None and len(ly) and 0 < random_matches < MIN_RANDOM_MATCHES:
         summary["warnings"].append(
             f"only {random_matches} of your randomly drawn labels are matches, and the threshold is judged on "
-            f"those: label more random pairs (custmatch sample) until at least {MIN_RANDOM_MATCHES} are matches. "
-            "custmatch sample --stratified spreads a random batch over pairs agreeing on different fields "
-            "and weighs it back; on the small benchmarks it scored as well or better with 1,000 random labels")
+            f"those: label more random pairs (custmatch sample) until at least {MIN_RANDOM_MATCHES} are matches")
     bad = io.unknown_keys(cfg)
     if bad:
         summary["warnings"].append("config keys custmatch does not use, so they had no effect: " + ", ".join(bad))

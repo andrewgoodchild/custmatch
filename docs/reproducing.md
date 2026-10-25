@@ -133,7 +133,9 @@ Grouped by the report chapter whose numbers they produce.
 | --- | --- | --- |
 | `research/scripts/splink_vs_custmatch.py` | Splink vs custmatch on the synthetic file, scored identically; also Splink-seeded labels | ~1 min |
 | `research/scripts/splink_datasets_benchmark.py` | custmatch vs Splink on Splink's bundled datasets, Splink running its official example settings | ~15 min |
-| `research/scripts/beat_splink.py` | Each custmatch option (rich features, the since-removed Splink feature, active mix, Jev labels) on all five datasets against Splink | ~15 min per variant |
+| `research/scripts/beat_splink.py` | Each custmatch option (rich features, the since-removed Splink feature, active mix, Jev labels) on all five datasets against Splink; `--seed N` for another label draw | ~15 min per variant |
+| `research/scripts/address_book_data.py` | Synthetic personal address books (one record per email address) with relay, switchboard, household, same-name and brand traps; `--seed N`; writes `data/address_book/sN/` | seconds |
+| `research/scripts/address_book_benchmark.py` | Four labelling budgets on dirty and clean books, false links by trap; `--draws 10` compares plain and stratified 300 random labels over ten draws | ~5 min; ~10 min with `--draws 10` |
 | `research/scripts/head_to_head.py` | custmatch against Splink 5 (and, with `--dedupe`, dedupe) on the synthetic file copied to a million records: time, peak memory, clustered F1 (`.venv-splink5`, `.venv-dedupe`) | ~30 min |
 | `research/scripts/home_data_benchmark.py` | Each tool on every tool's own datasets: Splink's four and dedupe's two (`data/dedupe/`) | ~40 min per dedupe pass |
 | `research/scripts/ncvr_leipzig.py` | custmatch and Splink on the Leipzig NCVR benchmark, by sample size and blocking keys, three draws; `--random N`, `--stratified` (random labels drawn by agreement pattern); the `current_default` variant sets nothing | ~15 min |

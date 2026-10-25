@@ -71,7 +71,7 @@ def main():
         tmp = Path(tmp)
         for n in (500, 1000, 3000):
             lp = tmp / f"labels_{n}.csv"
-            labels.sample(CONFIG, n, lp, seed=1)
+            labels.sample(CONFIG, n, lp, seed=1, stratified=False)
             lab = fill(lp, gold)
             pipeline.run(CONFIG, lp, tmp / f"out_{n}")
             res[f"hand_{n}"] = score(tmp / f"out_{n}", gold, lab)
@@ -84,7 +84,7 @@ def main():
             # chosen 100 at a time by uncertainty, retraining each round
             for total in (500, 1000):
                 lp = tmp / f"active_{total}.csv"
-                labels.sample(CONFIG, 300, lp, seed=1)
+                labels.sample(CONFIG, 300, lp, seed=1, stratified=False)
                 lab = fill(lp, gold)
                 while len(lab) < total:
                     nxt = tmp / "next.csv"
@@ -102,10 +102,10 @@ def main():
             rows = []
             for seed in (2, 3, 4):
                 rp, ap = tmp / f"r{seed}.csv", tmp / f"a{seed}.csv"
-                labels.sample(CONFIG, 1000, rp, seed=seed)
+                labels.sample(CONFIG, 1000, rp, seed=seed, stratified=False)
                 rl = fill(rp, gold)
                 pipeline.run(CONFIG, rp, tmp / f"or{seed}", log=lambda *_: None)
-                labels.sample(CONFIG, 300, ap, seed=seed)
+                labels.sample(CONFIG, 300, ap, seed=seed, stratified=False)
                 al = fill(ap, gold)
                 while len(al) < 1000:
                     nxt = tmp / "next.csv"
@@ -120,7 +120,7 @@ def main():
             res["active_vs_random_1000_seeds"] = rows
         if "--jev" in sys.argv:
             check = tmp / "check.csv"
-            labels.sample(CONFIG, 300, check, seed=2)
+            labels.sample(CONFIG, 300, check, seed=2, stratified=False)
             fill(check, gold)
             gate = jev_labelling.label(CONFIG, 2000, check, tmp / "jev_labels.csv", max_cost=0.30)
             lab = pd.read_csv(tmp / "jev_labels.csv", dtype=str, keep_default_na=False)

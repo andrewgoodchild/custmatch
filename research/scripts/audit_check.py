@@ -60,7 +60,7 @@ def main():
         for s in cfg["sources"]:
             s["path"] = str((V.CONFIG.parent / s["path"]).resolve())
         (tmp / "c.json").write_text(json.dumps(cfg))
-        labels.sample(tmp / "c.json", 1000, tmp / "l.csv", seed=1)
+        labels.sample(tmp / "c.json", 1000, tmp / "l.csv", seed=1, stratified=False)
         V.fill(tmp / "l.csv", gold)
         pipeline.run(tmp / "c.json", tmp / "l.csv", tmp / "run", log=lambda *_: None)
 

@@ -58,7 +58,7 @@ def main():
         d = pd.read_csv(path, dtype=str, keep_default_na=False)
         d["label"] = [int(truth[a] == truth[b]) for a, b in zip(d.a, d.b)]
         return d[["a", "b", "label", "by"]]
-    labels.sample(OUT / "config.json", 300, OUT / "labels.csv", seed=1)
+    labels.sample(OUT / "config.json", 300, OUT / "labels.csv", seed=1, stratified=False)
     lab = fill(OUT / "labels.csv")
     lab.to_csv(OUT / "labels.csv", index=False)
     while len(lab) < 600:

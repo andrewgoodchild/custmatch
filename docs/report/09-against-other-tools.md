@@ -199,19 +199,18 @@ the ceiling accepts every true pair blocking proposes.
 | 200,000 people, + postcode and initial keys | 3 | 285,713 | 95.63 | 98.13 | 93.27 | 97.42 | 7.2M | 121 s |
 | 200,000 people, the same, oversized blocks split (`"blocking": "fixed"`) | 3 | 285,713 | 97.30 | 96.92 | 97.70 | 99.25 | 7.9M | 44 s |
 | 200,000 people, the same, split on three fields (`"blocking": "adaptive"`) | 3 | 285,713 | 97.63 | 96.99 | 98.28 | 99.86 | 8.9M | 46 s |
-| 200,000 people, `"adaptive"`, random labels stratified (`--stratified`) | 3 | 285,713 | 97.98 | 97.75 | 98.22 | 99.86 | 8.9M | 44 s |
-| 200,000 people, + postcode and initial keys, nothing else set: the defaults switch to both | 3 | 285,713 | 97.98 | 97.75 | 98.22 | 99.86 | 8.9M | 48 s |
+| 200,000 people, `"adaptive"`, random labels stratified (`--stratified`) | 3 | 285,713 | 98.03 | 97.56 | 98.52 | 99.86 | 8.9M | 48 s |
+| 200,000 people, + postcode and initial keys, nothing else set: the defaults switch to both | 3 | 285,713 | 98.03 | 97.56 | 98.52 | 99.86 | 8.9M | 42 s |
 | 1,000,000 people, + postcode and initial keys | 1 | 1,428,005 | 90.29 | 94.71 | 86.27 | 93.13 | 22.4M | 162 s |
 | 1,000,000 people, `"fixed"` | 1 | 1,428,005 | 92.70 | 91.61 | 93.80 | 98.13 | 34.8M | 224 s |
 | 1,000,000 people, `"adaptive"` (2 matches among the 300 random labels) | 1 | 1,428,005 | 80.84 | 96.92 | 69.34 | 99.56 | 46.9M | 253 s |
 | 1,000,000 people, `"fixed"`, 1,000 random + 700 active labels | 1 | 1,428,005 | 93.64 | 94.36 | 92.94 | 98.13 | 34.8M | 234 s |
 | 1,000,000 people, `"adaptive"`, 1,000 random + 700 active labels | 1 | 1,428,005 | 94.04 | 91.78 | 96.41 | 99.56 | 46.9M | 302 s |
-| 1,000,000 people, `"adaptive"`, random labels stratified (8 matches among the 300) | 1 | 1,428,005 | 94.85 | 93.58 | 96.15 | 99.56 | 46.9M | 386 s |
-| 1,000,000 people, `"adaptive"`, 1,000 random labels stratified + 700 active | 1 | 1,428,005 | 94.91 | 92.89 | 97.02 | 99.56 | 46.9M | 382 s |
+| 1,000,000 people, `"adaptive"`, random labels stratified (7 matches among the 300) | 1 | 1,428,005 | 92.88 | 93.88 | 91.90 | 99.56 | 46.9M | 227 s |
+| 1,000,000 people, `"adaptive"`, 1,000 random labels stratified + 700 active | 1 | 1,428,005 | 94.36 | 92.38 | 96.44 | 99.56 | 46.9M | 219 s |
 
 <sub>The 200,000-people rows without a blocking mode ran on an earlier version; later rows' times
-are on the current code, whose blocking and features are faster. Times are the final run only; the
-two stratified million-people runs ran side by side, so their times are high.</sub>
+are on the current code, whose blocking and features are faster. Times are the final run only.</sub>
 
 - **The matcher is not the limit; blocking is.** custmatch scores within about half a point of
   the ceiling - the best any matcher could do with the pairs blocking proposed - at 99.7%

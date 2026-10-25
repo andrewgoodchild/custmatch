@@ -191,7 +191,7 @@ def run_variants(label_seeds):
             cp.write_text(json.dumps(base | spec))
             for seed in label_seeds:
                 lp = tmp / f"{name}_{seed}.csv"
-                labels.sample(cp, 300, lp, seed=seed)
+                labels.sample(cp, 300, lp, seed=seed, stratified=False)
                 lab = fill(lp, pid)
                 while len(lab) < 1000:
                     nxt = tmp / "next.csv"

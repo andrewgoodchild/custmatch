@@ -40,7 +40,7 @@ VARIANTS = {"default": ({}, 300),
             # completeness from 93.4% to 96.7% here (research/results/ncvr_blocking_scale.json)
             "adaptive_blocking": ({"blocking": "adaptive"}, 1000),
             # nothing set (None drops the key): blocking switches to adaptive by itself and the
-            # random labels are drawn stratified, as on any file of over 2 million candidate pairs
+            # random labels are drawn stratified (labels.sample's default; the other variants plainly)
             "current_default": ({"blocking": None}, 300)}
 
 app = modal.App("custmatch-ncvr-full")
@@ -125,7 +125,7 @@ def _run(variant, fresh, work):
         cp.write_text(json.dumps(cfg))
 
     def random_labels():
-        labels.sample(cp, n_random, lp, seed=seed)
+        labels.sample(cp, n_random, lp, seed=seed, stratified=None if variant == "current_default" else False)
         fill(lp).to_csv(lp, index=False)
 
     def active_round():

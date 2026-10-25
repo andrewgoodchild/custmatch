@@ -123,7 +123,7 @@ def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"
     if jev:
         # no hand labels beyond a 100-pair check: Jev labels 900 random candidate pairs, gated
         check = tmp / f"{tag}_check.csv"
-        labels.sample(config, 100, check, seed=7)
+        labels.sample(config, 100, check, seed=7, stratified=False)
         fill(check)
         gate = jev_labelling.label(config, 900, check, tmp / f"{tag}_jev.csv", min_accuracy=0.0, max_cost=0.10)
         jl = pd.read_csv(tmp / f"{tag}_jev.csv", dtype=str, keep_default_na=False)

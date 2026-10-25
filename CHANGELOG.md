@@ -50,12 +50,24 @@ two organisation files, which gain (childcare sites 86.95 to 89.08, patents 75.8
 On all 5,000,000 NCVR records with nothing set, both changes together score 86.24 clustered F1
 against 84.33 before, with the same 300 random + 700 active labels.
 
-**Changed:** from 2 million candidate pairs up, `custmatch sample` draws half the random labels
-spread over the pairs' agreement patterns and writes each one's `weight`; `run` weighs the
-threshold's estimates by it, so they stay unbiased. Plain draws there held a handful of matches:
-on 1,000,000 NCVR people with 300 random + 700 active labels clustered F1 rose from 80.84 (2
-random matches) to 94.85. `--stratified` / `--no-stratified` choose; labels without weights count
-equally, as before (docs/report/06-blocking-and-scale.md "Random labels that still hold matches").
+**Changed:** `custmatch sample` draws half the random labels spread over the pairs' agreement
+patterns and writes each one's `weight`; `run` weighs the threshold's estimates by it, so they
+stay unbiased. Plain draws held a handful of matches: on 1,000,000 NCVR people with 300 random +
+700 active labels clustered F1 rose from 80.84 (2 random matches) to 92.88, and on synthetic
+address books with 300 random labels from 73.21 to 76.55 over 30 draws. It is the default at
+every size; `--no-stratified` draws plainly; labels without weights count equally, as before.
+Results recorded before, and comparisons giving every tool the same labels, still draw plainly
+(docs/report/06-blocking-and-scale.md "Random labels that still hold matches"). A stratified draw now
+returns as many pairs as asked: a pair both halves picked was kept once, so on a small file 300
+asked could give 290 or so (30 asked gave 29). Each overlap is redrawn from its stratum; where
+none overlaps, as on NCVR, the same pairs are drawn.
+
+**Added:** `research/scripts/address_book_data.py`, synthetic personal address books built from
+people (one record per email address; employer changes, Apple and Gmail variants, nicknames,
+titles, maiden names) with the traps a real one has - relay addresses under a person's name, a
+switchboard phone, shared household phones, same-name strangers, brand names - each tagged in
+the truth; and `research/scripts/address_book_benchmark.py`, which scores four labelling budgets
+on dirty and clean books with false links broken down by trap.
 
 **Faster:** oversized blocks are split with one sort, not a scan apiece, and pairs are
 deduplicated with an integer sort: `"fixed"` blocking at 200,000 people takes 6.3 s, from 9.7 s.

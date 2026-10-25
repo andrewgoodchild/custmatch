@@ -240,7 +240,7 @@ def run_dataset(name, spec, tmp):
     n_cand = len(labels.candidates(df, cfg))
     budget = min(1000, n_cand)
     lp = tmp / f"{name}_labels.csv"
-    labels.sample(config, budget, lp, seed=1)
+    labels.sample(config, budget, lp, seed=1, stratified=False)
     lab = fill(lp)
     t0 = time.time()
     s = pipeline.run(config, lp, tmp / f"{name}_out", log=lambda *_: None)
@@ -248,7 +248,7 @@ def run_dataset(name, spec, tmp):
                                                           "candidate_pairs": s["candidate_pairs"]}
     if budget >= 1000:
         ap = tmp / f"{name}_active.csv"
-        labels.sample(config, 300, ap, seed=1)
+        labels.sample(config, 300, ap, seed=1, stratified=False)
         al = fill(ap)
         while len(al) < 1000:
             nxt = tmp / "next.csv"
@@ -323,12 +323,12 @@ def run_dataset(name, spec, tmp):
             (tmp / f"{name}_{tag}.json").write_text(json.dumps(vcfg))
             vpath = tmp / f"{name}_{tag}.json"
             lp2 = tmp / f"{name}_{tag}_labels.csv"
-            labels.sample(vpath, min(1000, len(labels.candidates(df, vcfg))), lp2, seed=1)
+            labels.sample(vpath, min(1000, len(labels.candidates(df, vcfg))), lp2, seed=1, stratified=False)
             fill(lp2)
             pipeline.run(vpath, lp2, tmp / f"{name}_out_{tag}", log=lambda *_: None)
             out[f"custmatch_1000_{tag}"] = score_run(tmp / f"{name}_out_{tag}")
             ap2 = tmp / f"{name}_{tag}_active.csv"
-            labels.sample(vpath, 300, ap2, seed=1)
+            labels.sample(vpath, 300, ap2, seed=1, stratified=False)
             al2 = fill(ap2)
             while len(al2) < 1000:
                 labels.sample_active(vpath, ap2, 100, tmp / "next.csv")

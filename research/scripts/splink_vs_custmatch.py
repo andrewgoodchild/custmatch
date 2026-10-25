@@ -107,7 +107,7 @@ def main():
     out = {}
     with tempfile.TemporaryDirectory() as tmp:
         lp = Path(tmp) / "labels_1000.csv"      # the same 1,000 pairs custmatch_validate used
-        labels.sample(V.CONFIG, 1000, lp, seed=1)
+        labels.sample(V.CONFIG, 1000, lp, seed=1, stratified=False)
         V.fill(lp, gold)
         li, lj, ly = pipeline.read_labels(lp, df)
     lab = np.c_[np.minimum(li, lj), np.maximum(li, lj)]

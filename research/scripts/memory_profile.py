@@ -46,7 +46,7 @@ def main():
         cp = tmp / "config.json"
         cp.write_text(json.dumps(cfg))
         lp = tmp / "labels.csv"
-        labels.sample(cp, 1000, lp, seed=1)
+        labels.sample(cp, 1000, lp, seed=1, stratified=False)
         lab = pd.read_csv(lp, dtype=str, keep_default_na=False)
         person = lambda k: k.split(":")[1].rsplit("_", 1)[0]  # noqa: E731
         lab["label"] = [int(person(x) == person(y)) for x, y in zip(lab.a, lab.b)]

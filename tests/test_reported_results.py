@@ -977,6 +977,34 @@ def test_full_ncvr_claims():
     assert any("randomly drawn labels are matches" in w for w in r["warnings"]), "the few-random-matches warning no longer fires"
 
 
+def test_address_book_stratified_label_claims():
+    """docs/report/06 "Random labels that still hold matches", the guide and the changelog: plain
+    against stratified 300 random labels, ten draws on each of three synthetic address books."""
+    r = load("address_book.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    flat = _flat(GUIDE + (ROOT / "CHANGELOG.md").read_text())
+    cell = {}
+    for v in ("dirty", "clean"):
+        for b in ("random_300", "stratified_300"):
+            runs = [x for k, x in r.items() if k.split("/")[1:3] == [v, b] and "/draw" in k]
+            assert len(runs) == 30, (v, b)
+            f1 = [x["f1"] for x in runs]
+            cell[v, b] = (fmean(f1), min(f1), fmean([x["random_matches"] for x in runs]))
+    for v, row in (("dirty", "As generated: clustered F1, mean (lowest draw)"), ("clean", "Relay records removed, switchboard blanked")):
+        p, q = cell[v, "random_300"], cell[v, "stratified_300"]
+        assert f"| {row} | {p[0]:.2f} ({p[1]:.2f}) | {q[0]:.2f} ({q[1]:.2f}) |" in text, v
+    assert (f"| Random matches among the 300 | {cell['dirty', 'random_300'][2]:.1f} | "
+            f"{cell['dirty', 'stratified_300'][2]:.1f} / {cell['clean', 'stratified_300'][2]:.1f} |") in text
+    assert f"from {cell['dirty', 'random_300'][0]:.2f} to {cell['dirty', 'stratified_300'][0]:.2f} over 30 draws" in flat
+    gains = []
+    for book in (1, 2, 3):
+        for v in ("dirty", "clean"):
+            m = {b: fmean([r[f"s{book}/{v}/{b}/draw{d}"]["f1"] for d in range(1, 11)]) for b in ("random_300", "stratified_300")}
+            gains.append(m["stratified_300"] - m["random_300"])
+    assert min(gains) > 0, "stratified labels no longer win on every address book"
+    assert f"(by {min(gains):.1f} to {max(gains):.1f})" in text
+
+
 def test_full_ncvr_reruns_claims():
     """docs/report/ "Larger files": the full NCVR reruns after the memory redesign."""
     r = load("scale_large.json")

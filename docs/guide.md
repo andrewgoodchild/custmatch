@@ -126,7 +126,7 @@ blocks of a few dozen at 200,000 people make blocks of thousands at millions, an
 leaves records compared with no one. When the default keys would leave more than 1% of the
 records only in skipped blocks, custmatch instead splits each oversized block on up to three
 other fields at once, keeping the pieces of all of them (`"blocking": "adaptive"`), and
-`summary.json` says it did. On the NCVR voter file that lifted clustered F1 from 90.29 to 94.85 at
+`summary.json` says it did. On the NCVR voter file that lifted clustered F1 from 90.29 to 92.88 at
 a million people (300 random + 700 active labels, the random ones stratified as below), and on
 all five million records from 87.19 to 88.45 against splitting on one field (`"fixed"`). The five small benchmarks
 and BPID stay under 1% (0.45% at most), so they block as before; dedupe's two organisation
@@ -586,18 +586,17 @@ compare both on your own data. Actively chosen pairs are marked `by = active`: `
 them but chooses its threshold only on the random ones, because a threshold judged on hard
 pairs alone misjudges the clusters.
 
-**Big files: random pairs are drawn where the matches are.** With millions of candidate pairs,
-matches are a fraction of a percent of them, and 300 random pairs can hold two - too few to judge
-the threshold on. From 2 million candidate pairs up, `custmatch sample` draws half of them
-uniformly and half spread over the pairs' agreement patterns (which fields agree exactly), and
-writes a `weight` column: the candidate pairs each label stands for. Keep that column - `run`
-weighs each random label by it when it judges the threshold, so the estimate stays unbiased. On
-1,000,000 NCVR people with 300 random + 700 active labels it lifted clustered F1 from 80.84 to
-94.85 (8 random matches instead of 2). `--stratified` draws this way on any file and
-`--no-stratified` never does; labels without weights count equally, as before. On the five small
-benchmarks over three draws, `--stratified` was level or better with 1,000 random labels and
-steadier between draws, but with 300 random + 700 active it cost historical_50k 1.4 points, so
-small files are not stratified by default.
+**Random pairs are drawn where the matches are.** Matches are rare among candidate pairs - a
+fraction of a percent with millions of them - and 300 plain random pairs can hold two, too few
+to judge the threshold on. `custmatch sample` draws half of them uniformly and half spread over
+the pairs' agreement patterns (which fields agree exactly), and writes a `weight` column: the
+candidate pairs each label stands for. Keep that column - `run` weighs each random label by it
+when it judges the threshold, so the estimate stays unbiased. On 1,000,000 NCVR people with 300
+random + 700 active labels it lifted clustered F1 from 80.84 to 92.88 (7 random matches instead
+of 2); on synthetic address books with 300 random labels, from 73.21 to 76.55 over 30 draws,
+with about twice the matches. `--no-stratified` draws plainly, as before 0.1.3; labels without
+weights count equally. The losses measured: historical_50k with 300 random + 700 active
+labels, 87.36 to 85.95 over three draws, and fake_1000 with 1,000 random, 93.36 to 92.44.
 
 ## 3. Run
 

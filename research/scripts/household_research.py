@@ -203,7 +203,7 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         lp = tmp / "l.csv"
-        labels.sample(V.CONFIG, 1000, lp, seed=1)
+        labels.sample(V.CONFIG, 1000, lp, seed=1, stratified=False)
         V.fill(lp, gold)
         pipeline.run(V.CONFIG, lp, tmp / "o", log=lambda *_: None)
         c = pd.read_csv(tmp / "o" / "clusters.csv", dtype=str)

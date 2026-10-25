@@ -56,14 +56,14 @@ golden records ◄─ households ◄─ customers ◄─ threshold chosen on who
 
 ## Results
 
-**On other people's data.** Public benchmarks, with every tool given the same labelled pairs and
-Splink its documented settings. Clustered F1; the best in each row is bold
+**On other people's data.** Public benchmarks, with every tool given the same labelled pairs (a
+plain random draw, which every tool can use) and Splink its documented settings. Clustered F1; the best in each row is bold
 ([chapter 9](docs/report/09-against-other-tools.md) has the details):
 
 | Dataset | custmatch | Splink | dedupe |
 | --- | :---: | :---: | :---: |
 | NCVR (Leipzig): real voter names, generated errors, 20,000 people | **99.22**, against a blocking ceiling of 99.46 | 98.01 | not run |
-| NCVR (Leipzig), 200,000 people | **97.98** | 93.94 | not run |
+| NCVR (Leipzig), 200,000 people | **98.03** | 93.94 | not run |
 | historical_50k (Splink's): dense genealogy records | **87.01** | 76.82; 82.79 at its documented threshold | 80.02 |
 | febrl4 (Splink's) | **99.84** | 99.83 | 99.11 |
 | febrl3 (Splink's) | 99.42 | **99.63** | 98.11 |

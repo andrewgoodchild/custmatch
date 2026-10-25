@@ -61,8 +61,8 @@ def main(argv=None):
     s.add_argument("--mix", type=float, default=0.0,
                    help="with --active: share of each batch drawn at random instead (e.g. 0.5)")
     s.add_argument("--stratified", action=argparse.BooleanOptionalAction, default=None,
-                   help="draw half the random pairs towards ones agreeing on more fields, weighted "
-                        "(default: from 2 million candidate pairs up)")
+                   help="draw half the random pairs spread over which fields agree, weighted back "
+                        "(the default); --no-stratified draws plainly")
     r = sub.add_parser("run", help="match, cluster, households, golden records")
     r.add_argument("config")
     r.add_argument("--labels", help="labelled pairs; optional with --model")

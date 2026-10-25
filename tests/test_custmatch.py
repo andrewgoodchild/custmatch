@@ -1391,6 +1391,17 @@ def test_choose_threshold_weighs_labels_and_equal_weights_change_nothing():
     assert m["sweep"]["0.5"]["recall"] == 10.0
 
 
+def test_a_stratified_draw_returns_as_many_pairs_as_asked_on_a_small_file():
+    """The uniform half and the strata overlap often on a small file; each overlap is redrawn from
+    its stratum (30 asked once gave 29), and the weights still add up to the file."""
+    from custmatch.labels import stratified_pick
+    for n_pairs, n in ((60, 30), (1057, 300), (20000, 1000)):
+        score = np.unique(np.random.default_rng(1).integers(0, 12, n_pairs), return_inverse=True)[1]
+        pick, weight = stratified_pick(score, n, np.random.default_rng(3))
+        assert len(pick) == len(np.unique(pick)) == n, n_pairs
+        assert abs(weight.sum() - n_pairs) < 0.1 * n_pairs, n_pairs
+
+
 def test_stratified_random_labels_find_more_matches_and_weigh_back_to_the_whole(world, tmp_path):
     tmp, truth, _ = world
     df, cfg = io.load(tmp / "config.json")

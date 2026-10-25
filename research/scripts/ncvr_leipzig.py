@@ -51,7 +51,7 @@ VARIANTS = {"default_keys": dict(CONFIG, blocking="core"), "postcode_initial_key
             "postcode_initial_keys_fixed": dict(CONFIG_KEYS, blocking="fixed"),
             "postcode_initial_keys_adaptive": dict(CONFIG_KEYS, blocking="adaptive"),
             # nothing set: blocking switches to "adaptive" itself and random labels are drawn
-            # stratified from 2 million candidate pairs (labels.STRATIFY_FROM)
+            # stratified (labels.sample's default)
             "current_default": CONFIG_KEYS,
             "lsh_blocking": dict(CONFIG, lsh_blocking=LSH),
             "lsh_blocking_unique_sources": dict(CONFIG, lsh_blocking=LSH, unique_sources=True)}

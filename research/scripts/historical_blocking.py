@@ -46,7 +46,7 @@ def run(cp, truth, tmp, tag, seed, active):
         lab.to_csv(path, index=False)
         return lab
     lp = tmp / f"{tag}.csv"
-    labels.sample(cp, 300 if active else 1000, lp, seed=seed)
+    labels.sample(cp, 300 if active else 1000, lp, seed=seed, stratified=False)
     lab = fill(lp)
     while active and len(lab) < 1000:
         labels.sample_active(cp, lp, 100, tmp / "next.csv", seed=seed)

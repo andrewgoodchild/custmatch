@@ -42,7 +42,7 @@ def main():
         tmp = Path(tmp)
         old_cfg, new_cfg = split_config(tmp)
         lp = tmp / "labels.csv"
-        labels.sample(old_cfg, 1000, lp, seed=1)
+        labels.sample(old_cfg, 1000, lp, seed=1, stratified=False)
         lab = V.fill(lp, gold)
         t0 = time.time()
         pipeline.run(old_cfg, lp, tmp / "batch_90", log=lambda *_: None)

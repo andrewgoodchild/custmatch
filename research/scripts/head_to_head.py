@@ -90,7 +90,7 @@ def prepare(copies, work):
     gold = {f"{k.split(':', 1)[0]}:{k.split(':', 1)[1]}-x{c}": f"{s}-x{c}"
             for c in range(copies) for k, (s, _) in V.truth().items()}
     lp = work / "labels.csv"
-    labels.sample(cfg, 1000, lp, seed=1)
+    labels.sample(cfg, 1000, lp, seed=1, stratified=False)
     lab = pd.read_csv(lp, dtype=str, keep_default_na=False)
     lab["label"] = [int(gold[a] == gold[b]) for a, b in zip(lab.a, lab.b)]
     lab.to_csv(lp, index=False)

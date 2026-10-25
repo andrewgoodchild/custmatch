@@ -12,7 +12,9 @@ them, so it gets plain string comparisons on the same fields. dedupe runs with i
 settings verbatim on its own data, and with fields mirroring Splink's comparisons on Splink's.
 
 All three learn from the same labelled pairs (custmatch's sampler, seed 1, answered from the
-truth; at most 1,000), dedupe without its interactive console. Each is scored as clustered pairwise
+truth; at most 1,000), dedupe without its interactive console. The draw is plain, not
+custmatch's default stratified one: the other tools would read its weighted pairs unweighted.
+Each is scored as clustered pairwise
 F1 against the truth on all records. dedupe clusters at its documented threshold, 0.5; Splink at
 the match weight the labels choose.
 
@@ -246,7 +248,7 @@ def run(name, spec, tmp, tools, out, dedupe_key="dedupe"):
     keys = io.key(df)
     truth = np.array([truth_of[k] for k in keys])
     lp = tmp / f"{name}_labels.csv"
-    labels.sample(config, min(1000, len(labels.candidates(df, cfg))), lp, seed=1)
+    labels.sample(config, min(1000, len(labels.candidates(df, cfg))), lp, seed=1, stratified=False)
     lab = pd.read_csv(lp, dtype=str, keep_default_na=False)
     lab["label"] = [int(truth_of[a] == truth_of[b]) for a, b in zip(lab.a, lab.b)]
     lab.to_csv(lp, index=False)
@@ -264,7 +266,7 @@ def run(name, spec, tmp, tools, out, dedupe_key="dedupe"):
             vcfg = tmp / f"{name}_{tag}.json"
             vcfg.write_text(json.dumps(cfg | extra))
             vl = tmp / f"{name}_{tag}_labels.csv"
-            labels.sample(vcfg, min(1000, len(labels.candidates(df, cfg | extra))), vl, seed=1)
+            labels.sample(vcfg, min(1000, len(labels.candidates(df, cfg | extra))), vl, seed=1, stratified=False)
             v = pd.read_csv(vl, dtype=str, keep_default_na=False)
             v["label"] = [int(truth_of[a] == truth_of[b]) for a, b in zip(v.a, v.b)]
             v.to_csv(vl, index=False)

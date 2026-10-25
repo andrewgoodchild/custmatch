@@ -32,12 +32,14 @@ def record(r, fields=None):
 
 AGREE_FIELDS = ["first_name", "last_name", "date_of_birth", "email", "phone", "addr_number", "addr_street"]
 AGREE_CHUNK = 5_000_000
-# random labels are drawn stratified from this many candidate pairs up: on NCVR from 200,000
-# people (8.9 million pairs) a plain draw held a handful of matches, and at a million people
-# with 300 random labels stratifying lifted 80.84 to 94.85. The five small benchmarks (under a
-# million pairs) gained too with 1,000 random labels, on one draw each, and were level with
-# active ones; they draw plainly until more draws confirm it (docs/report/06-blocking-and-scale.md)
-STRATIFY_FROM = 2_000_000
+# random labels are drawn stratified by default, at every size. On NCVR at a million people with
+# 300 random labels it lifted 80.84 to 92.88; on the synthetic address books
+# (research/scripts/address_book_benchmark.py), ten draws of 300 on each of three books, from
+# 73.21 to 76.55 clustered F1 (77.75 to 81.37 without the relay records), ahead on all six
+# books; on the five small benchmarks over three draws, level or better on four with 1,000
+# random labels. The losses: fake_1000 there, 93.36 to 92.44, and historical_50k with 300
+# random + 700 active, 87.36 to 85.95
+# (docs/report/06-blocking-and-scale.md "Random labels that still hold matches")
 
 
 def agreement(df, pairs, cfg=None):
@@ -69,25 +71,41 @@ def stratified_pick(score, n, rng):
     share = np.sqrt(size)
     m = np.minimum(size, np.floor((n // 2) * share / share.sum()).astype(np.int64))
     m[np.argmax(share)] += min(n // 2 - m.sum(), size[np.argmax(share)] - m[np.argmax(share)])
-    pick = [rng.choice(N, min(n_u, N), replace=False)]
+    uniform = rng.choice(N, min(n_u, N), replace=False)
+    taken = np.zeros(N, bool)
+    taken[uniform] = True
+    pick = [uniform]
     for s in np.flatnonzero(m):
-        pick.append(rng.choice(np.flatnonzero(score == s), m[s], replace=False))
-    pick = np.unique(np.concatenate(pick))
-    # inclusion probability of a pair in stratum s, from the uniform half and its stratum's draw
-    p_in = 1 - (1 - min(n_u, N) / N) * (1 - m / np.maximum(size, 1))
+        members = np.flatnonzero(score == s)
+        got = rng.choice(members, m[s], replace=False)
+        again = taken[got]
+        taken[got] = True
+        if again.any():
+            # a pair the uniform half already drew is replaced from the rest of its stratum, so n
+            # pairs come back: on a small file they overlap often (30 asked gave 29), on millions
+            # almost never - and where none overlaps the same pairs are drawn as before 0.1.3
+            rest = members[~taken[members]]
+            more = rng.choice(rest, min(int(again.sum()), len(rest)), replace=False)
+            taken[more] = True
+            got = np.concatenate([got[~again], more])
+        pick.append(got)
+    pick = np.sort(np.concatenate(pick))
+    # inclusion probability of a pair in stratum s: the uniform half's n_u / N, plus its
+    # stratum's m_s drawn from the members the uniform half left
+    p_in = np.minimum(1.0, min(n_u, N) / N + m / np.maximum(size, 1))
     return pick, 1 / p_in[score[pick]]
 
 
 def sample(config_path, n, out_path, seed=0, stratified=None):
     """Random candidate pairs, both records side by side, `label` left blank to fill 1/0.
-    stratified: half of them drawn towards pairs that agree on more fields (stratified_pick),
-    each with the `weight` that keeps the threshold's estimates unbiased; None (the default)
-    stratifies from STRATIFY_FROM candidate pairs up."""
+    stratified: half of them spread over the pairs' agreement patterns (stratified_pick), each
+    with the `weight` that keeps the threshold's estimates unbiased; None (the default) or True
+    draws this way, False draws plainly, as every draw did before 0.1.3."""
     df, cfg = io.load(config_path)
     pairs = candidates(df, cfg)
     rng = np.random.default_rng(seed)
     if stratified is None:
-        stratified = len(pairs) >= STRATIFY_FROM
+        stratified = True
     if stratified and len(pairs) > n:
         pick, weight = stratified_pick(agreement(df, pairs, cfg), n, rng)
     else:

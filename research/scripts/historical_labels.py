@@ -64,7 +64,7 @@ def main():
                     if tag in res:
                         continue
                     lp = tmp / f"{tag}.csv"
-                    labels.sample(cp, n, lp, seed=seed)
+                    labels.sample(cp, n, lp, seed=seed, stratified=False)
                     lab = pd.read_csv(lp, dtype=str, keep_default_na=False)
                     lab["label"] = [int(truth[a] == truth[b]) for a, b in zip(lab.a, lab.b)]
                     lab.to_csv(lp, index=False)
