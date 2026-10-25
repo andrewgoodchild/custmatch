@@ -15,7 +15,8 @@ Each step can be switched off for measurement with "normalise": {"phone": false,
              hotmail.con; fix_domain) - never a real domain such as ge.com or cloud.com.
   names      what is not a name taken out of the name fields (tidy_name): qualifications after it
              ("smith, phd, cpa", "mba", "®"), bracketed text ("william (bill)"), a phone number
-             written into it; a name that is an email address is blank. "(nee x)" in a surname
+             written into it; a name that is an email address becomes the name it spells
+             (name_from_email: nancy.lewis@... -> nancy lewis). "(nee x)" in a surname
              becomes its alias (last_name@nee) where aliases can be used (the default blocking).
   titles     a leading title dropped from the first name: "Dr John" and "Prof. Jane" are john
              and jane (TITLES). Kept when nothing else is left: a record named only "Dr".
@@ -121,6 +122,11 @@ def normalise(df, cfg):
         nee = df.last_name.str.extract(NEE, expand=False).fillna("").str.strip()
         if (nee != "").any() and cfg.get("blocking") in (None, "", "core") and "last_name@nee" not in df.columns:
             df["last_name@nee"] = nee
+        at = df.first_name.str.contains("@", regex=False) | df.last_name.str.contains("@", regex=False)
+        if at.any():                                  # an email address as the name: the name it spells
+            parts = [name_from_email(f if "@" in f else n) for f, n in zip(df.first_name[at], df.last_name[at])]
+            df.loc[at, "first_name"] = [p[0] for p in parts]
+            df.loc[at, "last_name"] = [p[1] for p in parts]
         for c in ("first_name", "last_name"):
             df[c] = _map_unique(df[c], tidy_name)
         df.attrs["names_tidied"] = int((before != df[["first_name", "last_name"]]).any(axis=1).sum())
@@ -364,6 +370,16 @@ POSTNOMINALS = {"phd", "mba", "cpa", "mbbs", "frcs", "fracs", "fracp", "facs", "
 SHORT_POSTNOMINALS = {"ca", "md", "ba", "ma", "jd", "ao", "ac", "am", "jp", "pe", "rn"}
 NEE = re.compile(r"\((?:nee|née|born|formerly)\s+([^)]+)\)")
 _PHONE_IN_NAME = re.compile(r"\s*[-–]?\s*\+?\d[\d ()\-]{6,}\d")
+
+
+def name_from_email(address):
+    """(first, last) from an email address used as a name: "nancy.lewis@x" -> ("nancy", "lewis"),
+    "jsmith@x" -> ("jsmith", ""). Blanking it made nameless records, which few labels linked to
+    each other (five such cards, one customer, on a synthetic address book)."""
+    parts = [p for p in re.split(r"[._\-]+", address.split("@")[0]) if p.isalpha()]
+    if len(parts) == 2 and min(map(len, parts)) >= 2:
+        return parts[0], parts[1]
+    return re.sub(r"\d+", "", address.split("@")[0]), ""
 
 
 def tidy_name(name):

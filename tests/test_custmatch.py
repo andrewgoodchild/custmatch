@@ -947,6 +947,8 @@ def test_what_is_not_a_name_is_taken_out_of_name_fields():
                        ("o'brien", "o'brien"), ("mary-jane", "mary-jane")):
         assert country.tidy_name(raw) == clean, raw
     assert country.drop_title("assoc.prof.dr.jane") == "jane" and country.drop_title("j.r.") == "j.r."
+    assert country.name_from_email("nancy.lewis@example.com") == ("nancy", "lewis")
+    assert country.name_from_email("jsmith42@example.com") == ("jsmith", "")
     df = pd.DataFrame({"first_name": ["kate", "anna"], "last_name": ["jones (nee brown)", "lee, phd"],
                        "date_of_birth": "", "email": "", "phone": "", "addr_street": ""})
     out = country.normalise(df, {"country": "AU", "normalise": {"phone": False}})
