@@ -245,6 +245,184 @@ def build(seed):
     return df.sample(frac=1, random_state=seed).reset_index(drop=True)
 
 
+# ---------------------------------------------------------------- Profile B: address-book cards
+JOBS = ("manager director engineer teacher nurse analyst consultant designer accountant lawyer "
+        "developer coordinator officer adviser researcher lecturer principal partner").split()
+POSTNOMINALS = [", PhD", " MBA", ", PhD, CPA", " ®", " FRACS", ", CPA"]
+SERVICES = ["zoomly", "dialin", "pracsoft", "cloudnote", "bookwell", "teamhub", "payrite", "confline"]
+PLACEHOLDER_COMPANY = "Multiple Companies"
+# how the eleven duplicate pairs differ: no pair shares an email (an address book merges those)
+ASIAN_SURNAMES = set(A.CHINESE_SURNAMES) | set(A.GROUPS["vietnamese"]["surnames"])   # names written either way round
+DUP_KINDS = ["nickname"] * 4 + ["typo"] * 2 + ["middle"] * 2 + ["married", "reordered", "moved"]
+
+
+def build_cards(seed, mail):
+    """Profile B: about 1,300 address-book cards, one row per card with up to three emails and two
+    phones, from the people of Profile A's book (`mail`) plus contacts the mail never saw. Eleven
+    people have two cards (DUP_KINDS), about 0.3% of the candidate pairs; hard negatives and
+    junk in the name fields are planted and tagged in `kind`."""
+    b = Book(seed + 1000)
+    g, r = b.g, b.r
+    b.names = set(zip(mail["first"], mail["last"]))
+    people = mail[~mail.trap.isin(["relay", "brand"])].groupby("person_id", sort=False)
+    cards = []
+
+    def card(pid, first, last, emails=(), phones=(), **kw):
+        c = dict(card_id=f"c{len(cards)}", person_id=pid, first=first, last=last, middle="", maiden="",
+                 company="", job="", address="", birthday="", kind="")
+        for k, v in enumerate(list(dict.fromkeys(e for e in emails if e))[:3]):
+            c["email" if k == 0 else f"email_{k + 1}"] = v
+        for k, v in enumerate(list(dict.fromkeys(x for x in phones if x))[:2]):
+            c["phone" if k == 0 else f"phone_{k + 1}"] = v
+        cards.append(c | kw)
+        return cards[-1]
+
+    for pid, rows in people:
+        if g.p(0.2):                                  # not every correspondent is a contact
+            continue
+        first, last = rows["first"].iloc[0], rows["last"].iloc[0]
+        trap = next((t for t in rows.trap if t in ("same_name", "household")), "")   # Profile A's look-alikes
+        card(pid, first, last, rows.email, rows.phone, kind=trap)
+    n = 0
+    while len(cards) < 1290:                          # contacts the mail never saw
+        p = b.name()
+        email = b.free(p["given"], p["surname"]) if g.p(0.4) else b.work(p["given"], p["surname"])[0]
+        card(f"q{n}", p["given"], p["surname"], [email], [b.phone(g.mobile())] if g.p(0.4) else [])
+        n += 1
+    for c in cards:
+        if not c.get("phone") and g.p(0.08):
+            c["phone"] = b.phone(g.mobile())
+        if c.get("phone") and not c.get("phone_2") and g.p(0.1):
+            c["phone_2"] = b.phone(g.mobile())
+        if not c.get("email_2") and g.p(0.04):
+            c["email_2"] = b.free(c["first"], c["last"])
+        dom = c.get("email", "").split("@")[-1]
+        u = r.random()
+        if u < 0.25:
+            c["company"] = PLACEHOLDER_COMPANY        # a social-network import's placeholder
+        elif u >= 0.4:                                # the employer, from the work address or not
+            c["company"] = (dom if dom.endswith(".example") else g.pick(b.orgs)).removesuffix(".example").replace("-", " ").title()
+        c["job"] = g.pick(JOBS) if g.p(0.75) else ""
+        c["middle"] = A.given_for(g, "anglo", "m" if g.p(0.5) else "f", 40) if g.p(0.15) else ""
+        if g.p(0.02):
+            sub = g.pick(A.SUBURBS)
+            c["address"] = f"{int(r.integers(1, 200))} {g.pick(A.STREETS)} st, {sub[0]} {sub[1]} {sub[2]}"
+        if g.p(0.06):
+            c["birthday"] = f"{int(r.integers(1950, 2004))}-{int(r.integers(1, 13)):02d}-{int(r.integers(1, 29)):02d}"
+        if g.p(0.05) and not c.get("email_2"):
+            c["email"] = ""                           # no email: a phone-only contact
+    # duplicates: a second card for eleven people, sharing no email
+    pool = [c for c in cards if c["last"] and c.get("email")]
+    for kind in DUP_KINDS:
+        while True:
+            c = pool[int(r.integers(len(pool)))]
+            if not c["kind"] and (kind != "nickname" or c["first"] in A.NICKNAMES) and \
+                    (kind != "married" or c["person_id"].startswith("q")) and \
+                    (kind != "reordered" or c["last"] in ASIAN_SURNAMES):
+                break
+        c["kind"] = f"duplicate:{kind}"
+        first, last, middle = c["first"], c["last"], c["middle"]
+        phones = [c["phone"]] if c.get("phone") and g.p(0.35) else []
+        kw = {"birthday": c["birthday"], "company": c["company"] if g.p(0.4) else ""}
+        if kind == "nickname":
+            first = g.pick(A.NICKNAMES[first])
+        elif kind == "typo":
+            first, last = (A.typo(g, first), last) if g.p(0.5) else (first, A.typo(g, last))
+        elif kind == "middle":
+            middle = A.given_for(g, "anglo", "f", 40) if middle else A.given_for(g, "anglo", "m", 40)
+            c["middle"] = c["middle"] or A.given_for(g, "anglo", "f", 40)
+        elif kind == "married":
+            kw["maiden"], last = last, A.surname_for(g, "anglo")
+        elif kind == "reordered":
+            first, last = last, first                 # given name first on one card, family name on the other
+        elif kind == "moved":
+            phones = [f"+44 7700 900{int(r.integers(100, 999))}"]
+            kw["birthday"] = c["birthday"] = c["birthday"] or "1981-04-17"
+        email = b.free(first, last) if kind == "moved" or g.p(0.5) else b.work(first, last)[0]
+        card(c["person_id"], first, last, [email], phones, middle=middle, kind=f"duplicate:{kind}", **kw)
+    # hard negatives: different people who look alike
+    alone = [c for c in cards if not c["kind"] and c["last"]]
+    for c in [alone[i] for i in r.choice(len(alone), 10, replace=False)]:      # relatives
+        first = g.pick(A.NICKNAMES[c["first"]]) if c["first"] in A.NICKNAMES and g.p(0.5) else b.name()["given"]
+        c["kind"] = "relative"
+        card(f"q{n}", first, c["last"], [b.free(first, c["last"])], [], kind="relative")
+        n += 1
+    for c in [x for x in alone if x["company"] not in ("", PLACEHOLDER_COMPANY) and not x["kind"]
+              and x.get("email", "").endswith(".example")][:10]:
+        other = b.name()                              # one first name, one company, another person
+        c["kind"] = "same_first_name_same_company"
+        card(f"q{n}", c["first"], other["surname"], [b.work(c["first"], other["surname"], c["email"].split("@")[1][:-8])[0]],
+             [], company=c["company"], kind="same_first_name_same_company")
+        n += 1
+    for full in ["jonathan", "katherine", "william"]:  # first-name-only cards, nicknames of each other
+        for name in (full, A.NICKNAMES[full][0]):
+            card(f"q{n}", name, "", [b.free(name, "")], [], kind="first_name_only_nicknames")
+            n += 1
+    staff = [c for c in cards if c.get("email", "").endswith("@westfield-college.example")][:25]
+    board = g.mobile()
+    for c in staff:
+        c["phone"], c["kind"] = f"(02) {board[2:6]} {board[6:]}", c["kind"] or "switchboard"
+    # junk in the name fields and cards that are not people
+    for c in cards:
+        u = r.random()
+        if c["kind"].startswith("duplicate") and u > 0.05:
+            continue
+        if u < 0.02 and c["last"]:
+            c["last"] += g.pick(POSTNOMINALS)
+            c["kind"] = c["kind"] or "junk:postnominal"
+        elif u < 0.03:
+            c["first"] += g.pick([f" ({g.pick(A.NICKNAMES.get(c['first'], ['sales']))})", " (sales)"]) if g.p(0.6) else ""
+            c["last"] += f" (nee {A.surname_for(g, 'anglo')})" if c["last"] and g.p(0.4) else ""
+            c["kind"] = c["kind"] or "junk:brackets"
+        elif u < 0.033 and c.get("email"):
+            c["first"], c["last"] = c["email"], ""
+            c["kind"] = c["kind"] or "junk:email_as_name"
+        elif u < 0.034 and c["last"]:
+            c["last"] += f" - {b.phone(g.mobile())}"
+            c["kind"] = c["kind"] or "junk:phone_in_name"
+        elif u < 0.035:
+            c["first"] = "Assoc.Prof.Dr." + c["first"]
+            c["kind"] = c["kind"] or "junk:fused_title"
+        elif u < 0.037:
+            c["first"], c["last"] = c["first"].upper(), c["last"].upper()
+            c["kind"] = c["kind"] or "junk:all_caps"
+    for k in range(13):                               # services and products saved as people
+        name = SERVICES[k % len(SERVICES)] + (str(k) if k >= len(SERVICES) else "")
+        card(f"q{n}", name.title(), "", [f"hello@{name}.example"], [], kind="service")
+        n += 1
+    df = pd.DataFrame(cards).fillna("")
+    return df.sample(frac=1, random_state=seed).reset_index(drop=True)
+
+
+def plausible_pairs(cards):
+    """The pairs a simple pre-filter would offer for labelling: one full name, one phone or one email.
+    It misses duplicates whose names differ (a nickname, a typo, a title), as a real one did."""
+    keys = []
+    full = (cards["first"].str.lower().str.strip() + " " + cards["last"].str.lower().str.strip()).where(cards["last"] != "")
+    keys.append(full)
+    for c in [c for c in cards.columns if c.startswith(("email", "phone"))]:
+        v = cards[c].str.replace(r"\D", "", regex=True) if c.startswith("phone") else cards[c].str.lower()
+        keys.append(v.where(v != ""))
+    out = set()
+    for k in keys:
+        for _, ids in cards.card_id.groupby(k.to_numpy()):
+            ids = sorted(ids)
+            out |= {(a, b) for i, a in enumerate(ids) for b in ids[i + 1:]}
+    return pd.DataFrame(sorted(out), columns=["a", "b"])
+
+
+def card_profile(df):
+    sizes = df.groupby("person_id").size()
+    has = lambda c: (df[c] != "") if c in df else pd.Series(False, index=df.index)  # noqa: E731
+    print(f"  cards {len(df):,}; people {len(sizes):,}; duplicate pairs {int((sizes * (sizes - 1) // 2).sum())}; "
+          f"2+ emails {100 * has('email_2').mean():.1f}%; 2+ phones {100 * has('phone_2').mean():.1f}%; "
+          f"no email {100 * (~has('email')).mean():.1f}%; no phone {100 * (~has('phone')).mean():.1f}%")
+    comp = df.company.value_counts(normalize=True)
+    print(f"  company placeholder {100 * comp.get(PLACEHOLDER_COMPANY, 0):.0f}%, blank {100 * comp.get('', 0):.0f}%; "
+          f"job {100 * has('job').mean():.0f}%; address {100 * has('address').mean():.1f}%; "
+          f"birthday {100 * has('birthday').mean():.1f}%; kinds {dict(df.kind[df.kind != ''].str.split(':').str[0].value_counts())}")
+
+
 def profile(df):
     sizes = df.groupby("person_id").size()
     counts = sizes.value_counts().sort_index()
@@ -282,6 +460,21 @@ def main():
                                                                 "last_name": "last", "email": "email", "phone": "phone"}}]}, indent=1))
     print(f"seed {a.seed} -> {out}")
     profile(df)
+    cards = build_cards(a.seed, df)
+    cols = [c for c in ["card_id", "first", "middle", "last", "maiden", "email", "email_2", "email_3", "phone",
+                        "phone_2", "company", "job", "address", "birthday"] if c in cards]
+    cards[cols].to_csv(out / "cards.csv", index=False)
+    cards[["card_id", "person_id", "kind"]].to_csv(out / "cards_truth.csv", index=False)
+    plausible_pairs(cards).to_csv(out / "cards_plausible_pairs.csv", index=False)
+    columns = {"record_id": "card_id", "first_name": "first", "middle_initial": "middle", "last_name": "last",
+               "email": "email", "phone": "phone", "address": "address", "date_of_birth": "birthday",
+               "company": "company"} | {c: c for c in cols if c[-2:] in ("_2", "_3") or c == "maiden"}
+    (out / "cards.json").write_text(json.dumps({
+        "country": "AU", "extra_fields": [{"name": "company", "compare": "similarity"}],
+        "aliases": {"email": [c for c in cols if c.startswith("email_")], "phone": [c for c in cols if c.startswith("phone_")],
+                    "last_name": ["maiden"]},
+        "sources": [{"name": "cards", "path": "cards.csv", "columns": columns}]}, indent=1))
+    card_profile(cards)
 
 
 if __name__ == "__main__":

@@ -14,6 +14,8 @@ links - pairs put together that are different people - by the trap either record
     python research/scripts/address_book_benchmark.py [--seeds 1,2,3]
     python research/scripts/address_book_benchmark.py --draws 10   # random_300 against stratified_300,
                                                                    # label draws 1-10 on each book
+    python research/scripts/address_book_benchmark.py --cards 5    # Profile B, the address-book cards:
+                                                                   # CARD_BUDGETS, label draws 1-5 per book
 
 Generates the books first if they are missing. Writes research/results/address_book.json.
 """
@@ -29,14 +31,15 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from custmatch import labels, pipeline  # noqa: E402
+from custmatch import io, labels, pipeline  # noqa: E402
 from custmatch.core import partition_scores  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 BOOKS = ROOT / "data/address_book"
 OUT = ROOT / "research/results/address_book.json"
 BUDGETS = ["random_300", "stratified_300", "random150_active150", "all"]
-TRAPS = ["relay", "switchboard", "household", "same_name", "brand"]
+# Profile B: duplicates are 0.3% of the candidate pairs, so 150 random labels can hold none
+CARD_BUDGETS = ["random_300", "stratified_300", "random150_active150", "stratified300_active150", "all"]
 
 
 def fill(path, person):
@@ -52,7 +55,7 @@ def label(config, budget, tmp, person, seed):
         labels.sample(config, 10 ** 9, lp, seed=seed, stratified=False)
         fill(lp, person)
         return lp
-    n = 150 if budget.startswith("random150") else 300
+    n = 150 if budget.startswith("random150") else 300     # random_300, stratified300_active150, ...
     labels.sample(config, n, lp, seed=seed, stratified=budget.startswith("stratified"))
     lab = fill(lp, person)
     for batch in ((100, 50) if "active" in budget else ()):
@@ -75,7 +78,7 @@ def score(out_dir, truth, recs):
     multi = multi[multi > 1].index
     multiname = names.groupby("person_id").full.nunique()
     multiname = multiname[multiname > 1].index
-    false = dict.fromkeys(TRAPS + ["none"], 0)
+    false = dict.fromkeys(sorted(set(truth.trap) - {""}) + ["none"], 0)
     for _, g in c.groupby("customer_id"):
         if g.person_id.nunique() > 1:
             for x, y in itertools.combinations(g.to_dict("records"), 2):
@@ -92,8 +95,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", default="1,2,3")
     ap.add_argument("--draws", type=int, help="only the two 300-label budgets, label draws 1..N per book")
+    ap.add_argument("--cards", type=int, help="Profile B (cards), label draws 1..N per book and budget")
+    ap.add_argument("--budgets", default=",".join(CARD_BUDGETS), help="with --cards: which budgets")
+    ap.add_argument("--tag", default="", help="with --cards: kept as .../drawN/TAG, beside the plain runs")
     a = ap.parse_args()
     res = json.loads(OUT.read_text()) if OUT.exists() else {}
+    if a.cards:
+        return cards(a, res)
     for seed in map(int, a.seeds.split(",")):
         book = BOOKS / f"s{seed}"
         if not (book / "records.csv").exists():
@@ -123,6 +131,41 @@ def main():
                 print(f"{key:38s} P {r['precision']:6.2f} R {r['recall']:6.2f} F1 {r['f1']:6.2f}  "
                       f"several records {r['people_with_several_records_found']:9s} names {r['people_with_several_names_found']:8s} "
                       f"random matches {r['random_matches']:3d}  false {r['false_links_by_trap']}", flush=True)
+
+
+def cards(a, res):
+    """Profile B: every CARD_BUDGETS budget on label draws 1..N of each book's cards. A run whose
+    labels hold no match records the error it stops with."""
+    for seed in map(int, a.seeds.split(",")):
+        book = BOOKS / f"s{seed}"
+        if not (book / "cards.csv").exists():
+            subprocess.run([sys.executable, str(Path(__file__).parent / "address_book_data.py"), "--seed", str(seed)], check=True)
+        truth = pd.read_csv(book / "cards_truth.csv", dtype=str, keep_default_na=False).rename(columns={"kind": "trap"})
+        truth["key"] = "cards:" + truth.card_id
+        person = dict(zip(truth.key, truth.person_id))
+        recs = pd.read_csv(book / "cards.csv", dtype=str, keep_default_na=False).assign(key=lambda d: "cards:" + d.card_id)
+        for budget in a.budgets.split(","):
+            for draw in range(1, (1 if budget == "all" else a.cards) + 1):
+                key = f"s{seed}/cards/{budget}/draw{draw}" + (f"/{a.tag}" if a.tag else "")
+                with tempfile.TemporaryDirectory() as tmp:
+                    tmp = Path(tmp)
+                    lp = label(book / "cards.json", budget, tmp, person, draw)
+                    lab = pd.read_csv(lp, dtype=str, keep_default_na=False)
+                    random_matches = int(lab[lab.get("by", "random") != "active"].label.astype(int).sum())
+                    try:
+                        summ = pipeline.run(book / "cards.json", lp, tmp / "out", seed=draw, log=lambda *_: None)
+                    except io.ConfigError as e:
+                        res[key] = {"error": str(e), "labels": len(lab), "matches": int(lab.label.astype(int).sum())}
+                        print(f"{key:38s} stopped: {e}", flush=True)
+                        continue
+                    r = score(tmp / "out", truth, recs)
+                dups = r.pop("people_with_several_records_found")
+                res[key] = r | {"duplicates_found": dups, "candidate_pairs": summ["candidate_pairs"], "labels": len(lab),
+                                "random_matches": random_matches, "warnings": summ["warnings"]}
+                OUT.write_text(json.dumps(res, indent=1, default=float))
+                print(f"{key:38s} P {r['precision']:6.2f} R {r['recall']:6.2f} F1 {r['f1']:6.2f}  duplicates {dups:8s} "
+                      f"random matches {random_matches:2d}  false {dict((k, v) for k, v in r['false_links_by_trap'].items() if v)}",
+                      flush=True)
 
 
 if __name__ == "__main__":

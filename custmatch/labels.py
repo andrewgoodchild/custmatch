@@ -178,13 +178,29 @@ def sample_active(config_path, labels_path, n, out_path, seed=0, mix=0.0, strate
     done = np.unique(lab[:, 0].astype(np.int64) * n_rec + lab[:, 1])
     fresh = ~np.isin(codes, done)
     if ly.all() or not ly.any():
-        # nothing to be uncertain between yet: another random batch, marked as such
+        # nothing to be uncertain between yet. Where 0.3% of pairs are matches a random batch finds
+        # none either (an address book: 150 random labels, 150 "active" ones drawn at random, all
+        # non-matches, and the run stopped). So with no match yet, half the batch is the pairs with
+        # the highest match weight (unsupervised, matchweight.py), marked active: they train
+        # but never choose the threshold; the rest is another random batch, drawn stratified
         pool = np.flatnonzero(fresh)
-        pick = np.sort(np.random.default_rng(seed + len(done)).choice(pool, min(n, len(pool)), replace=False))
-        out = _pairs_for_labelling(df, [(pairs[pick], "random")])
-        out["weight"] = round(len(pool) / max(len(pick), 1), 3)
+        rng = np.random.default_rng(seed + len(done))
+        top = np.zeros(0, np.int64)
+        if not ly.any() and len(pool):
+            from .matchweight import weights
+            w = weights(df, profiles, [pairs, pairs[pool]], cfg, seed)[1]
+            top = pool[np.sort(np.argsort(-w, kind="stable")[:n // 2])]
+            pool = np.setdiff1d(pool, top)
+        m = n - len(top)
+        if len(pool) > m:
+            got, weight = stratified_pick(agreement(df, pairs[pool], cfg), m, rng)
+            pick = pool[got]
+        else:
+            pick, weight = pool, np.ones(len(pool))
+        out = _pairs_for_labelling(df, [(pairs[top], "active"), (pairs[pick], "random")])
+        out["weight"] = np.r_[np.full(len(top), np.nan), np.round(weight, 3)]
         out.to_csv(out_path, index=False)
-        return len(pick)
+        return len(out)
     rf = RandomForestClassifier(n_estimators=300, random_state=seed, n_jobs=-1,
                                 class_weight="balanced_subsample").fit(features(df, lab, profiles, **fopts), ly)
     # scored a chunk at a time: the full feature matrix of every candidate pair is never held

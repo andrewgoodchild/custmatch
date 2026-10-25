@@ -1382,9 +1382,15 @@ def test_active_sampling_with_one_label_class_falls_back_to_random(world, tmp_pa
     keys = io.key(df)
     pairs = labels.candidates(df)[:20]
     pd.DataFrame([{"a": keys[i], "b": keys[j], "label": 0} for i, j in pairs]).to_csv(tmp_path / "l.csv", index=False)
-    k = labels.sample_active(tmp / "config.json", tmp_path / "l.csv", 10, tmp_path / "next.csv")
+    k = labels.sample_active(tmp / "config.json", tmp_path / "l.csv", 100, tmp_path / "next.csv")
     got = pd.read_csv(tmp_path / "next.csv")
-    assert k == 10 and (got.by == "random").all()
+    # no match labelled yet: half are the pairs with the highest match weight, marked active; the
+    # rest a stratified random batch whose weights stand for the pairs not yet labelled
+    assert k == 100 and (got.by == "active").sum() == 50 and (got.by == "random").sum() == 50
+    rest = got[got.by == "random"]
+    assert abs(rest.weight.sum() - (len(labels.candidates(df)) - 70)) < 0.25 * len(labels.candidates(df))
+    lab = got.assign(label=[int(truth[a] == truth[b]) for a, b in zip(got.a, got.b)])
+    assert lab[lab.by == "active"].label.mean() > lab[lab.by == "random"].label.mean()
 
 
 def test_no_candidate_pairs_is_explained(tmp_path):

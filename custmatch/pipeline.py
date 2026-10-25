@@ -262,7 +262,10 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         lw = np.zeros(0)
     if saved is None and (len(ly) < MIN_LABELS or ly.all() or not ly.any()):
         raise io.ConfigError(f"need at least {MIN_LABELS} labelled pairs with both matches and "
-                             f"non-matches (got {len(ly)}, {int(ly.sum())} matches)")
+                             f"non-matches (got {len(ly)}, {int(ly.sum())} matches)" +
+                             ("; matches are rare among these candidate pairs: label another batch from "
+                              "custmatch sample --active, which keeps drawing stratified batches until one holds "
+                              "a match" if len(ly) and not ly.any() else ""))
     lab_pairs = np.c_[np.minimum(li, lj), np.maximum(li, lj)].astype(np.int32)
     from . import blocking, stewardship
     stage("load and profile")
