@@ -22,6 +22,9 @@ def frame(rows):
 @pytest.mark.parametrize("value", [
     "test@test.com", "asdf@asdf.com", "none@none.com", "noreply@example.com",
     "a@a.com", "0000000", "1234567890", "5551234567",
+    # service relays, filed by mail clients under the name of the person they wrote for
+    "drive-shares-noreply@google.com", "calendar-notification@google.com", "notifications@github.com",
+    "no-reply@accounts.example.com", "do_not_reply@bank.example", "mailer-daemon@example.com",
 ])
 def test_syntactic_junk_catches_common_placeholders(value):
     assert syntactic_junk(value)
@@ -29,6 +32,7 @@ def test_syntactic_junk_catches_common_placeholders(value):
 
 @pytest.mark.parametrize("value", [
     "jane.smith42@mail.com", "thesmithfamily7@mail.com", "2065551234x@mail.com",
+    "gertie.noreply@bigcorp.net", "nora.reply@mail.com", "knoreply@mail.com",   # BPID's people have the first
 ])
 def test_syntactic_junk_does_not_fire_on_real_looking_values(value):
     assert not syntactic_junk(value)

@@ -15,6 +15,19 @@ are one Apple account, so jo@me.com and jo@icloud.com now agree. Reported from d
 address book, where one person's me.com and mac.com addresses did not agree. BPID's 13 me.com
 addresses change nothing there (74.45 with 8,000 labels, rerun).
 
+**Fixed:** with a country set, a title in the first-name field ("Dr John", "Prof. Jane") is
+dropped. It stopped "Dr John" agreeing with "John", and became the name's nickname root, so
+every "Dr" in a file shared a blocking key. `"normalise": {"titles": false}` keeps titles.
+No benchmark sets a country, so none moves.
+
+**Fixed:** no-reply, notification and bounce addresses (`drive-shares-noreply@google.com`,
+`calendar-notification@...`, `notifications@...`, `mailer-daemon@...`) are junk on sight, not
+only a bare `noreply@`; the user name's word must be joined by `-` or `_`, as services write
+them, so BPID's `gertie.noreply@` style personal addresses are not caught. A run warns when such
+an address carries a person's name: in an address book, a file-sharing relay filed under one
+person's name was linked to ten of that person's addresses, every false link of the best run.
+No benchmark file has one besides `noreply@example.com`, already junk.
+
 **Added:** a warning when a two-field blocking key blocked on one field alone for a quarter of
 the candidate pairs or more (first name + street is first name alone where there is no street),
 and a per-key count of those pairs in `blocking_report.json` (`pairs_with_a_blank_part`). On an

@@ -13,6 +13,8 @@ Each step can be switched off for measurement with "normalise": {"phone": false,
   email      Gmail dots and +tags removed (they reach the same inbox), +tags removed on any
              domain, me.com and mac.com read as icloud.com (one Apple account), and a big provider's name mistyped by one letter corrected (gmial.com,
              hotmail.con; fix_domain) - never a real domain such as ge.com or cloud.com.
+  titles     a leading title dropped from the first name: "Dr John" and "Prof. Jane" are john
+             and jane (TITLES). Kept when nothing else is left: a record named only "Dr".
   nicknames  `first_roots`: the name and every name it is a diminutive of, from the
              carltonnorthern/nicknames list (US given names, Apache 2.0; custmatch/data). Mick,
              Mike -> michael; Lisa -> elizabeth | melissa. Anglicised names (Wei -> Kevin)
@@ -48,7 +50,7 @@ from pathlib import Path
 
 import numpy as np
 
-STEPS = ("script", "phone", "dates", "email", "nicknames", "local_nicknames",
+STEPS = ("script", "phone", "dates", "email", "titles", "nicknames", "local_nicknames",
          "email_user", "postcode", "national_id")
 COMMON_DOMAINS = ["gmail.com", "hotmail.com", "outlook.com", "icloud.com", "yahoo.com",
                   "live.com", "msn.com", "aol.com", "me.com", "googlemail.com",
@@ -110,6 +112,8 @@ def normalise(df, cfg):
                      else v for v, r in zip(df.ssn, regions)]
     if steps["email"]:
         df["email"] = _map_unique(df.email, email)
+    if steps["titles"]:
+        df["first_name"] = _map_unique(df.first_name, drop_title)
     if steps["nicknames"]:
         lists = tuple(sorted({n for c in countries(cfg) for n in profile(c)["nicknames"]
                               if n == "en" or steps["local_nicknames"]}))
@@ -333,6 +337,27 @@ def _nickname_roots(lst="en"):
         for row in csv.DictReader(f):
             roots[row["name2"].strip().lower()].add(row["name1"].strip().lower())
     return roots
+
+
+# titles written into the first-name field. Not "sir", "dame" or "lord" alone: in a first name
+# they are as often a given name or a nickname as a title; nor "m" or "sr", which are initials
+TITLES = {"mr", "mrs", "ms", "miss", "mx", "dr", "doctor", "prof", "professor", "assoc prof", "a/prof", "rev",
+          "revd", "reverend", "fr", "hon", "sra", "herr", "frau", "mme", "mlle"}
+
+
+def drop_title(name):
+    """name without leading titles ("dr john" -> "john"); unchanged if nothing else is left."""
+    toks = name.split(" ")
+    k = 0
+    while k < len(toks) - 1:
+        two = " ".join(toks[k:k + 2]).replace(".", "")
+        if two in TITLES and k + 2 < len(toks):
+            k += 2
+        elif toks[k].rstrip(".") in TITLES:
+            k += 1
+        else:
+            break
+    return " ".join(toks[k:]) if k else name
 
 
 def first_roots(name, lists=("en",)):

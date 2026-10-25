@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from . import explain, identity, incremental, io, monitor, schema
-from .core import components, features, profile_contacts
+from .core import RELAY_EMAIL, components, features, profile_contacts
 from .golden import build_golden
 
 THRESHOLDS = np.round(np.concatenate([np.arange(0.05, 0.96, 0.05), [0.97, 0.98, 0.99]]), 3)
@@ -556,6 +556,15 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             f"than max_block, so it was skipped. Largest: {eg}. See blocking_report.json; raise "
             "\"max_block\" if these values are legitimately common, check them for placeholders, or "
             "split them instead (\"blocking\": \"adaptive\")")
+    relay = df.email.str.contains(RELAY_EMAIL, regex=True, na=False) & ((df.first_name != "") | (df.last_name != ""))
+    if relay.any():
+        eg = "" if cfg.get("minimal_outputs") else f" (e.g. {', '.join(sorted(set(df.email[relay]))[:3])})"
+        summary["warnings"].append(
+            (f"{int(relay.sum()):,} records have" if relay.sum() > 1 else "1 record has") +
+            f" a no-reply or notification address and a person's name{eg}: "
+            "usually a service that wrote on someone's behalf, filed under their name, not that person's contact. "
+            "The address is ignored as evidence, but the name can still link the record to that person; remove "
+            "such records if they are not people")
     for row in block_report.get("pairs_by_key", []):
         part = row.get("pairs_with_a_blank_part", 0)
         if part >= max(BLANK_KEY_PAIRS, BLANK_KEY_SHARE * summary["candidate_pairs"]):

@@ -24,13 +24,22 @@ FAMILY_MAX = 20         # above this an address is group quarters, not a family
 HOUSEHOLD_DIVERSITY = 0.5
 THRESHOLDS = np.round(np.arange(0.05, 0.96, 0.05), 2)
 
+# addresses a service sends from, not a person: no-reply, notification and bounce mailboxes, as a
+# word of the user name (drive-shares-noreply@, calendar-notification@, mailer-daemon@), joined
+# by - or _ as services write them: BPID's people have addresses like gertie.noreply@. Mail
+# clients file them under the name of the person the service wrote for, so an address book
+# holds them with a real name: on one, a file-sharing relay named for one person was linked to
+# ten of that person's addresses, every false link of the run
+RELAY_EMAIL = re.compile(r"^(?:[^@]*[-_])?(?:no-?_?reply|do-?_?not-?_?reply|notifications?|mailer-daemon|bounces?)"
+                         r"(?:[-_.+][^@]*)?@")
 JUNK_PATTERNS = [                                       # values no one can own: junk on sight
+    RELAY_EMAIL,
     re.compile(r"^(.)\1{6,}$"),                        # 0000000, aaaaaaa
     re.compile(r"^(?:0123456789|1234567890|9876543210)$"),
     re.compile(r"^5{3}\d{7}$"),                        # 555-xxx-xxxx
     re.compile(r"^61491570\d{3}$"),                     # ACMA fictional mobiles (E.164)
     re.compile(r"^61[2378](?:5550|7010)\d{4}$"),         # ACMA fictional landlines (E.164)
-    re.compile(r"^(?:test|asdf|none|noreply|no|xxx+|abc|a)@"),
+    re.compile(r"^(?:test|asdf|none|no|xxx+|abc|a)@"),
     re.compile(r"@(?:test|example|none|xxx)\.(?:com|org|net)$"),
     re.compile(r"^(?:mailinator|yopmail)\."),
 ]

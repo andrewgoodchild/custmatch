@@ -60,6 +60,8 @@ A **country profile** (`"country": "AU"`, also US, NZ, GB, CA) adds the local ru
 - **Emails** cleaned: Gmail's dots and `+tags` ignored, me.com and mac.com read as icloud.com
   (one Apple account), common domain typos fixed.
 - **Postcodes** read off the end of an address.
+- **Titles** dropped from first names: "Dr John" and "Prof. Jane" are john and jane. A record
+  named only "Dr" keeps it.
 - **Nicknames**: Bill is William, Peggy is Margaret. Each first name gets its **roots** - the
   full names it can be short for - and two first names are compatible when their roots meet.
 - **Transliteration**: names written in Chinese characters or Arabic script are written in
@@ -73,7 +75,11 @@ kinds of shared value break that rule, and custmatch looks for both before match
 - **Junk values**: placeholders typed to get past a mandatory field - `test@test.com`,
   `noemail@noemail.com`, `0400 000 000`, `123 Main St`. Some are recognised by pattern; others by
   behaviour: a value carried by many records whose names and addresses agree on nothing is
-  junk. Junk values are ignored, as if blank.
+  junk. Junk values are ignored, as if blank. Service addresses are junk on sight too: no-reply,
+  notification and bounce mailboxes (`drive-shares-noreply@google.com`,
+  `calendar-notification@...`, `mailer-daemon@...`). Mail clients file them under the name of
+  the person the service wrote for, so an address book holds them with a real name, and the
+  run warns about those: the name can still link them to that person.
 - **Household values**: a family email or a home phone, shared by people with one surname or one
   address. Agreeing on it means "same household", not "same person", so it counts for less.
 
@@ -1006,6 +1012,9 @@ warns below 30.
 - **"blocking switched to adaptive"**: the default keys would have left over 1% of the records
   compared with no one, so their oversized blocks were split instead ("Big files" under
   Blocking). Expect more candidate pairs and a longer run; `"blocking": "core"` turns it off.
+- **"... a no-reply or notification address and a person's name"**: a service's relay filed
+  under someone's name ("Junk values" under Contact profiling). Its address is ignored, but its name can
+  still link it to that person; remove such records if they are not people.
 - **"... was blank in one part for many records"**: a default key blocked on one field alone
   ("Half-blank keys" under Blocking), so many candidate pairs share only, say, a first name.
   Random labels drawn from them hold few matches: label more, or fill in the missing field.

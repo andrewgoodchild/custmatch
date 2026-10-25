@@ -75,6 +75,28 @@ def all_candidate_labels(tmp, truth, path):
     return len(pairs)
 
 
+def test_a_named_relay_address_is_warned_about(world, tmp_path):
+    """A file-sharing relay filed under a person's name: its address is junk, and the run says
+    that its name can still link it."""
+    tmp, truth, _ = world
+    crm = pd.read_csv(tmp / "crm.csv", dtype=str)
+    crm.loc[0, "email"] = "drive-shares-noreply@google.com"
+    crm.to_csv(tmp_path / "crm.csv", index=False)
+    cfg = json.loads((tmp / "config.json").read_text())
+    cfg["sources"][0]["path"] = str(tmp_path / "crm.csv")
+    cfg["sources"][1]["path"] = str(tmp / cfg["sources"][1]["path"])
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    df, _ = io.load(tmp_path / "config.json")
+    keys = io.key(df)
+    pd.DataFrame([{"a": keys[i], "b": keys[j], "label": int(truth[keys[i]] == truth[keys[j]])}
+                  for i, j in labels.candidates(df)]).to_csv(tmp_path / "labels.csv", index=False)
+    s = pipeline.run(tmp_path / "config.json", tmp_path / "labels.csv", tmp_path / "out", log=lambda *_: None)
+    assert any(w.startswith("1 record has a no-reply or notification address") and "drive-shares-noreply" in w
+               for w in s["warnings"]), s["warnings"]
+    junk = pd.read_csv(tmp_path / "out" / "shared_and_junk_contacts.csv", dtype=str)
+    assert "drive-shares-noreply@google.com" in set(junk[junk["class"] == "junk"].value)
+
+
 def test_a_key_blocking_on_one_field_where_the_other_is_blank_is_warned_about(world, tmp_path):
     """No addresses (an address book): first name + street is first name alone, and its pairs -
     mostly strangers who share a first name - are counted and warned about."""
@@ -141,6 +163,7 @@ def test_run_end_to_end(world):
     assert score["f1"] > 95, score
     assert s["largest_customer"] <= 3, "junk contacts must not chain unrelated people together"
     assert not any("blank in one part" in w for w in s["warnings"]), "every record has a street here"
+    assert not any("no-reply or notification address" in w for w in s["warnings"])
     contacts = pd.read_csv(tmp / "out" / "shared_and_junk_contacts.csv", dtype=str)
     junk = set(contacts[contacts["class"] == "junk"].value)
     assert "test@test.com" in junk and "1111111111" in junk
@@ -830,6 +853,20 @@ def test_domain_typos_are_fixed_but_real_domains_are_not():
         assert country.fix_domain(real) == real, real          # real domains a frequency rule rewrote
     assert country.email("jo.bloggs+shop@gmial.com") == "jobloggs@gmail.com"
     assert country.email("jo.bloggs@me.com") == country.email("jo.bloggs@mac.com") == "jo.bloggs@icloud.com"
+
+
+def test_titles_are_dropped_from_first_names_but_initials_and_lone_titles_stay():
+    from custmatch import country
+    for raw, clean in (("dr john", "john"), ("prof. jane", "jane"), ("assoc prof kim", "kim"), ("mrs. dr anna", "anna"),
+                       ("mr m", "m"), ("m", "m"), ("dr", "dr"), ("sir", "sir"), ("drew", "drew")):
+        assert country.drop_title(raw) == clean, raw
+    df = pd.DataFrame({"first_name": ["Dr John", "Prof Jane"], "last_name": ["smith", "lee"]})
+    df = io._clean(df.first_name).to_frame("first_name").assign(last_name=["smith", "lee"], date_of_birth="",
+                                                                   email="", phone="", addr_street="")
+    out = country.normalise(df, {"country": "AU", "normalise": {"phone": False}})
+    assert out.first_name.tolist() == ["john", "jane"]
+    assert out.first_roots[0].split("|")[0] != "dr", "a title must not become a nickname root"
+    assert country.normalise(df, {"country": "AU", "normalise": {"titles": False}}).first_name[0] == "dr john"
 
 
 def test_fake_numbers_on_sight_and_patterned_numbers():
