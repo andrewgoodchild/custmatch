@@ -232,6 +232,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         # saved with the state: `add` must build the same name features whatever its batch holds
         cfg["_name_skeleton"] = "name_skeleton" in df.columns
     n = len(df)
+    names_tidied = int(df.attrs.get("names_tidied", 0))      # country.tidy_name, before anything copies df
     suspect_flags, profanity_list = {}, True
     if cfg.get("suspect_records", True):          # for review only: matching is not affected
         from . import suspect
@@ -557,6 +558,12 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             f"than max_block, so it was skipped. Largest: {eg}. See blocking_report.json; raise "
             "\"max_block\" if these values are legitimately common, check them for placeholders, or "
             "split them instead (\"blocking\": \"adaptive\")")
+    if names_tidied:
+        summary["warnings"].append(
+            f"{names_tidied:,} records had something other than a name in a name field - a qualification "
+            "(\"phd\", \"mba\"), bracketed text, a phone number or an email address - which was taken out "
+            "before matching; a \"(nee ...)\" surname became an alias. \"normalise\": {\"names\": false} keeps "
+            "names as written")
     relay, found = relay_records(df)
     k = int((relay & ((df.first_name != "") | (df.last_name != "")).to_numpy()).sum())
     if k:

@@ -13,6 +13,10 @@ Each step can be switched off for measurement with "normalise": {"phone": false,
   email      Gmail dots and +tags removed (they reach the same inbox), +tags removed on any
              domain, me.com and mac.com read as icloud.com (one Apple account), and a big provider's name mistyped by one letter corrected (gmial.com,
              hotmail.con; fix_domain) - never a real domain such as ge.com or cloud.com.
+  names      what is not a name taken out of the name fields (tidy_name): qualifications after it
+             ("smith, phd, cpa", "mba", "®"), bracketed text ("william (bill)"), a phone number
+             written into it; a name that is an email address is blank. "(nee x)" in a surname
+             becomes its alias (last_name@nee) where aliases can be used (the default blocking).
   titles     a leading title dropped from the first name: "Dr John" and "Prof. Jane" are john
              and jane (TITLES). Kept when nothing else is left: a record named only "Dr".
   nicknames  `first_roots`: the name and every name it is a diminutive of, from the
@@ -50,7 +54,7 @@ from pathlib import Path
 
 import numpy as np
 
-STEPS = ("script", "phone", "dates", "email", "titles", "nicknames", "local_nicknames",
+STEPS = ("script", "phone", "dates", "email", "names", "titles", "nicknames", "local_nicknames",
          "email_user", "postcode", "national_id")
 COMMON_DOMAINS = ["gmail.com", "hotmail.com", "outlook.com", "icloud.com", "yahoo.com",
                   "live.com", "msn.com", "aol.com", "me.com", "googlemail.com",
@@ -112,6 +116,14 @@ def normalise(df, cfg):
                      else v for v, r in zip(df.ssn, regions)]
     if steps["email"]:
         df["email"] = _map_unique(df.email, email)
+    if steps["names"]:
+        before = df[["first_name", "last_name"]].copy()
+        nee = df.last_name.str.extract(NEE, expand=False).fillna("").str.strip()
+        if (nee != "").any() and cfg.get("blocking") in (None, "", "core") and "last_name@nee" not in df.columns:
+            df["last_name@nee"] = nee
+        for c in ("first_name", "last_name"):
+            df[c] = _map_unique(df[c], tidy_name)
+        df.attrs["names_tidied"] = int((before != df[["first_name", "last_name"]]).any(axis=1).sum())
     if steps["titles"]:
         df["first_name"] = _map_unique(df.first_name, drop_title)
     if steps["nicknames"]:
@@ -345,8 +357,38 @@ TITLES = {"mr", "mrs", "ms", "miss", "mx", "dr", "doctor", "prof", "professor", 
           "revd", "reverend", "fr", "hon", "sra", "herr", "frau", "mme", "mlle"}
 
 
+# written after a name, never part of it; not jr or sr, which tell a father from his son. The
+# short ones are names too (Ma is a Chinese surname), so they are taken only after a comma
+POSTNOMINALS = {"phd", "mba", "cpa", "mbbs", "frcs", "fracs", "fracp", "facs", "msc", "bsc", "llb", "esq", "oam",
+                "cfa", "cpeng", "faicd", "gaicd", "mcom", "bcom"}
+SHORT_POSTNOMINALS = {"ca", "md", "ba", "ma", "jd", "ao", "ac", "am", "jp", "pe", "rn"}
+NEE = re.compile(r"\((?:nee|née|born|formerly)\s+([^)]+)\)")
+_PHONE_IN_NAME = re.compile(r"\s*[-–]?\s*\+?\d[\d ()\-]{6,}\d")
+
+
+def tidy_name(name):
+    """name without what is not a name: qualifications after it, bracketed text, a phone number
+    in it, trade-mark signs; "" for an email address. "smith, phd, cpa" -> "smith",
+    "william (bill)" -> "william", "jones - 0412 345 678" -> "jones"."""
+    if "@" in name:
+        return ""
+    v = _PHONE_IN_NAME.sub("", re.sub(r"\s*\([^)]*\)", "", name))
+    v = re.sub(r"[®™©]", "", v)
+    head, comma, tail = v.partition(",")
+    if comma and all(t.strip(".") in POSTNOMINALS | SHORT_POSTNOMINALS for t in re.split(r"[\s,]+", tail) if t):
+        v = head
+    toks = v.split()
+    while len(toks) > 1 and toks[-1].strip(".") in POSTNOMINALS:
+        toks.pop()
+    return " ".join(toks)
+
+
 def drop_title(name):
-    """name without leading titles ("dr john" -> "john"); unchanged if nothing else is left."""
+    """name without leading titles ("dr john" -> "john", fused "assoc.prof.dr.jane" -> "jane");
+    unchanged if nothing else is left."""
+    fused = re.match(r"^(?:(?:assoc|a/prof|prof|dr|mr|mrs|ms|miss|rev)\.)+(?=\w)", name)
+    if fused:
+        name = fused.group(0).replace(".", " ") + name[fused.end():]
     toks = name.split(" ")
     k = 0
     while k < len(toks) - 1:

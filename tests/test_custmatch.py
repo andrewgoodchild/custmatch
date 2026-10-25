@@ -911,6 +911,25 @@ def test_domain_typos_are_fixed_but_real_domains_are_not():
     assert country.email("jo.bloggs@me.com") == country.email("jo.bloggs@mac.com") == "jo.bloggs@icloud.com"
 
 
+def test_what_is_not_a_name_is_taken_out_of_name_fields():
+    from custmatch import country
+    for raw, clean in (("smith, phd, cpa", "smith"), ("kubiak mba", "kubiak"), ("william (bill)", "william"),
+                       ("jones - 0412 345 678", "jones"), ("jo@example.com", ""), ("acme®", "acme"),
+                       ("jones, md", "jones"), ("smith ma", "smith ma"), ("li ma", "li ma"), ("smith jr", "smith jr"),
+                       ("o'brien", "o'brien"), ("mary-jane", "mary-jane")):
+        assert country.tidy_name(raw) == clean, raw
+    assert country.drop_title("assoc.prof.dr.jane") == "jane" and country.drop_title("j.r.") == "j.r."
+    df = pd.DataFrame({"first_name": ["kate", "anna"], "last_name": ["jones (nee brown)", "lee, phd"],
+                       "date_of_birth": "", "email": "", "phone": "", "addr_street": ""})
+    out = country.normalise(df, {"country": "AU", "normalise": {"phone": False}})
+    assert out.last_name.tolist() == ["jones", "lee"] and out["last_name@nee"].tolist() == ["brown", ""]
+    assert out.attrs["names_tidied"] == 2
+    kept = country.normalise(df, {"country": "AU", "normalise": {"names": False}})
+    assert kept.last_name[0] == "jones (nee brown)" and "last_name@nee" not in kept
+    # a maiden name cannot become an alias where aliases cannot be used
+    assert "last_name@nee" not in country.normalise(df, {"country": "AU", "blocking": "fixed"})
+
+
 def test_titles_are_dropped_from_first_names_but_initials_and_lone_titles_stay():
     from custmatch import country
     for raw, clean in (("dr john", "john"), ("prof. jane", "jane"), ("assoc prof kim", "kim"), ("mrs. dr anna", "anna"),
