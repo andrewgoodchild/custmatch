@@ -12,7 +12,8 @@ dataset in this repository reads differently (docs/report/09-against-other-tools
 
 **Fixed:** me.com and mac.com addresses read as icloud.com, as Gmail's dots already were: they
 are one Apple account, so jo@me.com and jo@icloud.com now agree. Reported from deduplicating an
-address book, where one person's me.com and mac.com addresses did not agree.
+address book, where one person's me.com and mac.com addresses did not agree. BPID's 13 me.com
+addresses change nothing there (74.45 with 8,000 labels, rerun).
 
 **Added:** a warning when a two-field blocking key blocked on one field alone for a quarter of
 the candidate pairs or more (first name + street is first name alone where there is no street),
