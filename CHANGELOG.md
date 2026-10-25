@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+**Changed:** Python 3.11 or newer is required. Python 3.10 reached end of life in October 2026, and
+pandas, numpy, scipy and scikit-learn had already dropped it, so 3.10 resolved an older set of
+versions (pandas 2) and, through the catboost extra, a Pillow with 37 known vulnerabilities.
+custmatch 0.1.2 still installs on 3.10.
+
 **Fixed:** dates of birth are read in more forms: with a space between the parts ("1953 11 09",
 "11 09 1953"), with the month in words ("09 nov 1953", "November 9, 1953", "jul 18sat 1953"), and
 with no separators ("19531109"). They stayed as written before and disagreed with the same date

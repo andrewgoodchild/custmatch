@@ -8,12 +8,12 @@ license-files = ["LICENSE", "NOTICE"]
 authors = [{name = "Andrew Goodchild"}]
 keywords = ["entity resolution", "record linkage", "deduplication", "customer matching", "householding"]
 classifiers = ["Development Status :: 3 - Alpha", "Programming Language :: Python :: 3",
-               "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11",
+               "Programming Language :: Python :: 3.11",
                "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13",
                "Intended Audience :: Developers", "Intended Audience :: Science/Research",
                "Operating System :: OS Independent", "Topic :: Database",
                "Topic :: Scientific/Engineering :: Information Analysis"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = ["numpy", "pandas", "scipy", "scikit-learn", "rapidfuzz", "certifi", "pyarrow", "phonenumbers",
                 "anyascii", "networkx"]
 
@@ -23,7 +23,7 @@ Documentation = "https://github.com/andrewgoodchild/custmatch/blob/main/docs/gui
 Issues = "https://github.com/andrewgoodchild/custmatch/issues"
 
 [project.optional-dependencies]
-test = ["pytest", "tomli; python_version < '3.11'"]
+test = ["pytest"]
 catboost = ["catboost>=1.2"]
 
 [project.scripts]

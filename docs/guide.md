@@ -521,7 +521,7 @@ address, email and phone; the old surname kept as `previous_surname`), clustered
 from 75.83 to 96.67 and F1 from 86.26 to 91.34. Precision fell from 100 to 86.57: every false
 merge joined two different people with the same first name and surname, whom nothing else told
 apart (`tests/test_custmatch.py`, test_previous_surnames_find_people_who_changed_their_name;
-library versions move these by a point or two - Python 3.10's gave precision 87.88).
+library versions move these by a point or two).
 
 **Three matcher options.**
 

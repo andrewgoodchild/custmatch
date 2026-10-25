@@ -520,8 +520,7 @@ def test_previous_surnames_find_people_who_changed_their_name(world, tmp_path):
         scores[tag] = partition_scores(out.customer_id.to_numpy(), pid, float(np.sum(sizes * (sizes - 1) / 2)))
     assert scores["alias"]["recall"] > scores["plain"]["recall"] + 15, scores
     assert scores["alias"]["f1"] > scores["plain"]["f1"] + 3, scores
-    # the guide quotes this test: within a point or two, since library versions move the forest a
-    # little (Python 3.10's wheels gave precision 87.88 where 3.11-3.13 give 86.57)
+    # the guide quotes this test: within a point or two, since library versions move the forest a little
     import re
     guide = " ".join((Path(__file__).parents[1] / "docs" / "guide.md").read_text().split())
     quoted = re.search(r"clustered recall rose from ([\d.]+) to ([\d.]+) and F1 from ([\d.]+) to ([\d.]+)\. "

@@ -2,7 +2,7 @@
 
 [![tests](https://github.com/andrewgoodchild/custmatch/actions/workflows/tests.yml/badge.svg)](https://github.com/andrewgoodchild/custmatch/actions/workflows/tests.yml)
 [![licence: Apache 2.0](https://img.shields.io/badge/licence-Apache%202.0-blue.svg)](https://github.com/andrewgoodchild/custmatch/blob/main/LICENSE)
-![python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+![python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)
 
 Find the records that are the same customer - across your CRM, billing and web sign-ups -
 group them into households, and write one golden record per customer.
@@ -121,7 +121,7 @@ test suite checks every number against `research/results/*.json`.
 ## Quick start
 
 ```bash
-pip install custmatch                 # Python 3.10+ (or from a clone: pip install -e .)
+pip install custmatch                 # Python 3.11+ (or from a clone: pip install -e .)
 # try it on the bundled demo (1,766 synthetic records, 600 pairs already labelled):
 custmatch run examples/demo/config.json --labels examples/demo/labels.csv --out demo_out/
 
