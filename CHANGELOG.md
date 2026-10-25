@@ -20,6 +20,30 @@ are one Apple account, so jo@me.com and jo@icloud.com now agree. Reported from d
 address book, where one person's me.com and mac.com addresses did not agree. BPID's 13 me.com
 addresses change nothing there (74.45 with 8,000 labels, rerun).
 
+**Fixed:** `custmatch sample --active` no longer stalls while no labelled pair is a match: half
+its batch is then the pairs with the highest match weight (fitted without labels, marked
+active), half another random batch, drawn stratified. Where matches are 0.3% of the candidate
+pairs, 150 random labels can hold none; on synthetic address-book cards, 150 random + 150 active
+labels stopped on 6 of 15 draws and scored 42.88 clustered F1; now none stop and it scores 90.63.
+The stop message says what to do.
+
+**Added:** with a country set, names are tidied ("normalise" step `names`): qualifications after a
+name ("smith, phd, cpa", "mba"; short ones such as "ma" only after a comma, as Ma is a surname),
+bracketed text, a phone number in a name and trade-mark signs are taken out; "(nee brown)" becomes a
+surname alias where aliases can be used; an email address used as a name becomes the name it
+spells; fused titles ("assoc.prof.dr.jane") are split. `summary.json` says how many records
+changed. No name in the Australian files or the first address-book profile changes.
+
+**Added:** warnings for an extra field's value on a tenth or more of the records whose people share
+no surname or employer's domain ("Multiple Companies"; still compared - ignoring it changed nothing
+measured), and for records with a first name only that is their email's domain (a service saved as
+a person).
+
+**Added:** Profile B of `research/scripts/address_book_data.py`: address-book cards, one per
+contact with several emails and phones, eleven duplicates among about 4,100 candidate pairs, from
+the same people as the first profile; `address_book_benchmark.py --cards N`
+(docs/report/06-blocking-and-scale.md, "Address-book cards").
+
 **Added:** `"group_rows": true` on a source reads long-format data - one row per contact point,
 rows sharing a `record_id` one record. The record's other surnames, emails and phones become
 aliases, so a person with several addresses is one record, not a record per address whose

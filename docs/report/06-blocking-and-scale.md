@@ -402,6 +402,38 @@ draws this way by default (`--no-stratified` draws plainly); the results recorde
 and the comparisons that give every tool the same labels, still draw plainly
 (`stratified=False` in their scripts).
 
+**Address-book cards, where matches are rarer still.** A second real address book - 1,302
+cards, one per contact, several emails and phones on some - held 11 duplicates among 3,942
+candidate pairs, 0.28% of them. Its owner found that 300 random labels held 2 matches, that
+150 random then 150 active labels stopped with none (active learning had nothing to be
+uncertain between, and drew another random batch), and that the name fields held qualifications,
+bracketed nicknames, email addresses and phone numbers. Profile B of
+`research/scripts/address_book_data.py` builds cards to its profile from Profile A's people: 1,340
+cards, 11 duplicate pairs that share no email (0.26-0.28% of about 4,100 candidate pairs),
+relatives, namesakes, colleagues with one first name, service cards and junk in the names.
+Over three books and five label draws each (`address_book_benchmark.py --cards 5`; a run that
+stops scores 0), before and after four changes - active learning offering the highest
+match-weight pairs while no match is labelled (`labels.sample_active`), the name clean-up
+(`country.tidy_name`), and the email address used as a name read as the name it spells:
+
+| Profile B, 15 runs per budget | Before: clustered F1 (runs stopped) | Duplicates found | Now: clustered F1 (runs stopped) | Duplicates found |
+| --- | --- | --- | --- | --- |
+| 300 random | 4.45 (9) | 0.3 of 11 | 12.99 (9) | 1.0 of 11 |
+| 300 stratified | 52.18 (0) | 5.0 of 11 | 59.06 (0) | 5.7 of 11 |
+| 150 random + 150 active | 42.88 (6) | 4.8 of 11 | 90.63 (0) | 9.5 of 11 |
+| 300 stratified + 150 active | 84.20 (0) | 9.0 of 11 | 88.61 (0) | 9.7 of 11 |
+| Every candidate pair labelled (3 runs) | 84.42 (0) | 9.0 of 11 | 85.61 (0) | 9.7 of 11 |
+
+Random labels alone cannot work here: 300 of them hold one match or none. With active learning
+after them, every budget now gets within a few points of labelling every pair, and the run never
+stops. Blocking misses one or two duplicates per book, reordered Chinese and Vietnamese names,
+so 9.7 of 11 is about the most it allows. Two more of the owner's suggestions were measured and
+reported rather than acted on: a company placeholder ("Multiple Companies" on a quarter of the
+cards) is flagged, but ignoring it changed nothing (89.18 against 89.91 with 300 stratified + 150
+active labels, measured before the email-as-name change: the model already learns it is worth
+little), so it is only reported; and two first-name-only cards whose
+names are nicknames of each other were never linked in 54 runs.
+
 ## What had to change to run this on a laptop, and what it costs
 
 | Deviation | Reason | Effect on comparability |

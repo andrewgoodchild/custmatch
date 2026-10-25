@@ -60,8 +60,13 @@ A **country profile** (`"country": "AU"`, also US, NZ, GB, CA) adds the local ru
 - **Emails** cleaned: Gmail's dots and `+tags` ignored, me.com and mac.com read as icloud.com
   (one Apple account), common domain typos fixed.
 - **Postcodes** read off the end of an address.
-- **Titles** dropped from first names: "Dr John" and "Prof. Jane" are john and jane. A record
-  named only "Dr" keeps it.
+- **Names** tidied: qualifications after a name ("Smith, PhD, CPA", "MBA", "®"), bracketed text
+  ("William (Bill)") and a phone number typed into a name are taken out, a "(nee Brown)" surname
+  becomes an alias, and an email address used as a name becomes the name it spells
+  (nancy.lewis@... is Nancy Lewis). Short qualifications that are also names ("Ma") go only after
+  a comma. `"normalise": {"names": false}` keeps names as written.
+- **Titles** dropped from first names: "Dr John", "Prof. Jane" and "Assoc.Prof.Dr.Jane" are
+  john and jane. A record named only "Dr" keeps it.
 - **Nicknames**: Bill is William, Peggy is Margaret. Each first name gets its **roots** - the
   full names it can be short for - and two first names are compatible when their roots meet.
 - **Transliteration**: names written in Chinese characters or Arabic script are written in
@@ -604,6 +609,14 @@ compare both on your own data. Actively chosen pairs are marked `by = active`: `
 them but chooses its threshold only on the random ones, because a threshold judged on hard
 pairs alone misjudges the clusters.
 
+**Small files where matches are very rare** - an address book, where a few duplicates hide among
+thousands of candidate pairs: label 300 random pairs (drawn stratified, the default), then at
+least 150 active ones. Random labels alone found 1 of 11 duplicates on synthetic address-book
+cards, stratified ones 5.7; adding 150 active labels found 9.7 (docs/report/06-blocking-and-scale.md,
+"Address-book cards"). While no labelled pair is a match yet, `--active` offers half its batch as
+the pairs with the highest match weight (fitted without labels) and half as another random
+batch, so it does not stop for want of one.
+
 **Random pairs are drawn where the matches are.** Matches are rare among candidate pairs - a
 fraction of a percent with millions of them - and 300 plain random pairs can hold two, too few
 to judge the threshold on. `custmatch sample` draws half of them uniformly and half spread over
@@ -1029,6 +1042,14 @@ warns below 30.
 - **"blocking switched to adaptive"**: the default keys would have left over 1% of the records
   compared with no one, so their oversized blocks were split instead ("Big files" under
   Blocking). Expect more candidate pairs and a longer run; `"blocking": "core"` turns it off.
+- **"... something other than a name in a name field"**: names were tidied ("Names" under
+  Cleaning and country profiles). Check a few in the outputs if your names are unusual.
+- **"... on a tenth or more of the records, whose people share no surname"**: an extra field's
+  value is a placeholder or too common to tell people apart ("Multiple Companies" from a social
+  network's import). It is still compared - the model learns how little it is worth - so check
+  it is not a mistake in the data.
+- **"... a first name only that is their email's domain"**: a service, product or practice saved
+  as a person ("Zoomly" at hello@zoomly.example). Remove such records if they are not people.
 - **"... a no-reply or notification address and a person's name"**: a service's relay filed
   under someone's name ("Junk values" under Contact profiling). Its address is ignored, but its name can
   still link it to that person; remove such records if they are not people.

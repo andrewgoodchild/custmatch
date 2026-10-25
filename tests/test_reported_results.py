@@ -1005,6 +1005,32 @@ def test_address_book_stratified_label_claims():
     assert f"(by {min(gains):.1f} to {max(gains):.1f})" in text
 
 
+def test_address_book_cards_claims():
+    """docs/report/06 "Address-book cards": Profile B before and after, from address_book.json."""
+    r = load("address_book.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    rows = {"random_300": "300 random", "stratified_300": "300 stratified", "random150_active150": "150 random + 150 active",
+            "stratified300_active150": "300 stratified + 150 active", "all": "Every candidate pair labelled (3 runs)"}
+    cells = {}
+    for budget, row in rows.items():
+        out = []
+        for tag in ("/before", ""):
+            runs = [v for k, v in r.items() if k.split("/")[1:3] == ["cards", budget]
+                    and (k.endswith(tag) if tag else k.count("/") == 3)]
+            assert len(runs) == (3 if budget == "all" else 15), (budget, tag)
+            f1 = fmean([v.get("f1", 0.0) for v in runs])       # a run that stops scores 0
+            stopped = sum("error" in v for v in runs)
+            found = fmean([int(v["duplicates_found"].split()[0]) if "duplicates_found" in v else 0 for v in runs])
+            out.append(f"{f1:.2f} ({stopped}) | {found:.1f} of 11")
+            cells[budget, tag] = f1
+        assert f"| {row} | {out[0]} | {out[1]} |" in text, budget
+    assert cells["random150_active150", ""] > cells["random150_active150", "/before"] + 30
+    ph = {t: [v["f1"] for k, v in r.items() if "/cards/stratified300_active150/" in k and k.endswith(t)]
+          for t in ("/placeholders_ignored", "/placeholders_compared")}
+    assert all(len(v) == 15 for v in ph.values())
+    assert f"changed nothing ({fmean(ph['/placeholders_ignored']):.2f} against {fmean(ph['/placeholders_compared']):.2f}" in text
+
+
 def test_full_ncvr_reruns_claims():
     """docs/report/ "Larger files": the full NCVR reruns after the memory redesign."""
     r = load("scale_large.json")
