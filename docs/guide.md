@@ -481,6 +481,24 @@ true matches differ in date of birth. Each extra field must also be mapped in `c
 large block is a legitimately common value such as a city, not a junk contact. A skipped block
 whose records the model judges to be one entity is compared anyway ("How it decides").
 
+**One row per contact point (`"group_rows"`).** Many exports hold a person once per email or
+phone - an address book, a CRM's contact-methods table. Set `"group_rows": true` on the source
+and map `record_id` to the person's or contact's ID: rows sharing it become one record. Each field
+takes the record's first filled value, and its other surnames, emails and phones become
+aliases (below; named `last_name_2`, `email_2`, `email_3`, ...), so they are blocked and compared
+without a second record per address:
+
+```json
+{"name": "contacts", "path": "contacts.csv", "group_rows": true,
+ "columns": {"record_id": "contact_id", "first_name": "first", "last_name": "last", "email": "email", "phone": "phone"}}
+```
+
+Only surnames, emails and phones can carry several values; a second first name or address is
+dropped (a record's nickname is matched through the nickname list anyway). As with aliases, it
+works with the default blocking only. Splitting such a file into one record per address instead
+makes pairs of a person's own addresses, which take up the labels: 61 of them on the address book
+that prompted this option.
+
 **Previous names and second contacts (`aliases`).** A record may carry other values of a
 field - a maiden or previous surname, a second email, a work phone. Map each as a column of its
 own and list it under its field:

@@ -428,6 +428,56 @@ def test_alias_config_is_checked(tmp_path):
                       {"last_name": ["phone"]})
 
 
+def test_long_format_rows_with_one_id_are_one_record_with_aliases(world, tmp_path):
+    """"group_rows": one row per contact point, rows sharing a record_id one record. A quarter of
+    the billing people married and moved, and their old surname, email and phone arrive as a
+    second row: folded, they are aliases, so the person is found - in a run and in `add`."""
+    tmp, truth, _ = world
+    rng = random.Random(1)
+    billing = pd.read_csv(tmp / "billing.csv", dtype=str)
+    moved = np.array([rng.random() < 0.25 for _ in range(len(billing))])
+    k = np.arange(len(billing))
+    new = billing.assign(last=np.where(moved, [rng.choice(["okafor", "lindqvist", "moreau", "tanaka"]) for _ in moved],
+                                       billing["last"]),
+                         mail=np.where(moved, [f"new{i}@mail.com" for i in k], billing.mail),
+                         tel=np.where(moved, [f"(425) 555-{1000 + i}" for i in k], billing.tel))
+    long = pd.concat([new, billing[moved].assign(street_address="")]).sort_values("acct", kind="stable")
+    head, tail = long[~long.acct.isin(billing.acct[-6:])], long[long.acct.isin(billing.acct[-6:])]
+    head.to_csv(tmp_path / "billing.csv", index=False)
+    tail.to_csv(tmp_path / "billing_new.csv", index=False)
+    cfg = json.loads((tmp / "config.json").read_text())
+    cfg["sources"][0]["path"] = str(tmp / cfg["sources"][0]["path"])
+    cfg["sources"][1] |= {"path": "billing.csv", "group_rows": True}
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    df, _ = io.load(tmp_path / "config.json")
+    b = df[df.source == "billing"]
+    assert len(b) == head.acct.nunique() and b.record_id.is_unique
+    first_moved = billing.acct[moved].iloc[0]
+    row = b[b.record_id == first_moved].iloc[0]
+    assert row["last_name@last_name_2"] == billing.loc[billing.acct == first_moved, "last"].iloc[0].lower()
+    assert row["email@email_2"] == billing.loc[billing.acct == first_moved, "mail"].iloc[0].lower()
+    keys = io.key(df)
+    pd.DataFrame([{"a": keys[i], "b": keys[j], "label": int(truth[keys[i]] == truth[keys[j]])}
+                  for i, j in labels.candidates(df, cfg)]).to_csv(tmp_path / "labels.csv", index=False)
+    pipeline.run(tmp_path / "config.json", tmp_path / "labels.csv", tmp_path / "out", log=lambda *_: None)
+    out = pd.read_csv(tmp_path / "out" / "clusters.csv", dtype=str)
+    pid = np.array([truth[f"{a}:{b}"] for a, b in zip(out.source, out.record_id)])
+    _, sizes = np.unique(pid, return_counts=True)
+    score = partition_scores(out.customer_id.to_numpy(), pid, float(np.sum(sizes * (sizes - 1) / 2)))
+    assert score["recall"] > 90, score
+    new_cfg = {"sources": [cfg["sources"][1] | {"path": "billing_new.csv"}]}
+    (tmp_path / "new.json").write_text(json.dumps(new_cfg))
+    incremental.add(tmp_path / "out", tmp_path / "new.json", tmp_path / "out2")
+    c2 = pd.read_csv(tmp_path / "out2" / "clusters.csv", dtype=str)
+    assert set(tail.acct) <= set(c2.record_id[c2.source == "billing"])
+    assert len(c2) == len(out) + tail.acct.nunique()
+    together = c2.assign(pid=[truth[f"{a}:{b}"] for a, b in zip(c2.source, c2.record_id)])
+    added = together[together.record_id.isin(tail.acct) & (together.source == "billing")]
+    for _, r in added.iterrows():                 # each added person joins their crm record
+        crm = together[(together.pid == r.pid) & (together.source == "crm")]
+        assert (crm.customer_id == r.customer_id).all(), r.record_id
+
+
 def test_previous_surnames_find_people_who_changed_their_name(world, tmp_path):
     """A quarter of the billing records are people who married and moved: a new surname (the old one
     as previous_surname), a new address, email and phone. Only the alias still connects them."""

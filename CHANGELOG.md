@@ -15,6 +15,11 @@ are one Apple account, so jo@me.com and jo@icloud.com now agree. Reported from d
 address book, where one person's me.com and mac.com addresses did not agree. BPID's 13 me.com
 addresses change nothing there (74.45 with 8,000 labels, rerun).
 
+**Added:** `"group_rows": true` on a source reads long-format data - one row per contact point,
+rows sharing a `record_id` one record. The record's other surnames, emails and phones become
+aliases, so a person with several addresses is one record, not a record per address whose
+pairs take up the labels. `add` reads such sources the same way.
+
 **Fixed:** with a country set, a title in the first-name field ("Dr John", "Prof. Jane") is
 dropped. It stopped "Dr John" agreeing with "John", and became the name's nickname root, so
 every "Dr" in a file shared a blocking key. `"normalise": {"titles": false}` keeps titles.
