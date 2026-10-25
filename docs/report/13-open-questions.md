@@ -19,8 +19,9 @@ taught" and "Larger files"). What remains:
    the default keys would leave over 1% of the records out, and random labels are drawn stratified
    from 2 million candidate pairs, which lifted a million people with 300 random labels from 80.84
    to 94.85. Open: the ten points between the full run and its ceiling, mostly precision; the
-   full run again with stratified labels; and whether small files should stratify too (they
-   gained on one draw each).
+   full run again with stratified labels; and why stratified labels cost historical_50k 1.41
+   points with active learning (three draws) while helping with random labels alone, which
+   decides whether small files should stratify too.
 3. **Real drift: NCVR from the raw snapshots.** The Leipzig benchmark has real names but synthetic
    errors in four fields. Pairing two of the State Board of Elections' snapshots by NCID would give
    real moves, name changes and typos - the contact-poor case where [chapter 2](02-whole-customers.md) found a transformer

@@ -57,7 +57,8 @@ A **country profile** (`"country": "AU"`, also US, NZ, GB, CA) adds the local ru
 - **Phones** parsed with the country's numbering plan, so `0412 345 678` and `+61 412 345 678`
   become one number. Without it they are two different numbers.
 - **Dates** read day-first or month-first as the country writes them.
-- **Emails** cleaned: Gmail's dots and `+tags` ignored, common domain typos fixed.
+- **Emails** cleaned: Gmail's dots and `+tags` ignored, me.com and mac.com read as icloud.com
+  (one Apple account), common domain typos fixed.
 - **Postcodes** read off the end of an address.
 - **Nicknames**: Bill is William, Peggy is Margaret. Each first name gets its **roots** - the
   full names it can be short for - and two first names are compatible when their roots meet.
@@ -104,8 +105,15 @@ S530. As a blocking key it lets a misspelt surname still meet the right one.
 
 **Hubs.** A key shared by too many records - a common surname in a big city, a postcode - would
 produce a huge block whose pairs are mostly strangers. Blocks over `"max_block"` records (60 by
-default) are skipped. Blank keys (no address at all) are always skipped; a summary warning names
-common values that were, so you can raise the limit if they are legitimate.
+default) are skipped; a summary warning names common values that were, so you can raise the
+limit if they are legitimate.
+
+**Half-blank keys.** A two-field key with one field blank blocks on the other alone: first name
++ street is first name alone where there is no street. That keeps recall where addresses are
+patchy, and historical_50k, which has no streets, relies on it; but on a file with no
+addresses, such as an address book, those pairs are mostly strangers who share a
+first name. `blocking_report.json` counts them per key (`pairs_with_a_blank_part`), and
+`summary.json` warns when one key's are a quarter of the candidate pairs or more.
 
 **Big files: oversized blocks are split, not skipped.** Blocks grow with the file: keys that make
 blocks of a few dozen at 200,000 people make blocks of thousands at millions, and skipping them
@@ -438,7 +446,7 @@ ways, mixed date orders, nicknames, placeholders - as in [report/05-customer-dat
 In more detail, for files where names are partial and an email or mobile carries the match (see
 [report/05-customer-data.md](report/05-customer-data.md) "Sparse records"), the country profile puts phones in one
 international format (0412 345 678, +61 412 345 678 and 412345678 agree),
-reads dates day-first outside the US, cleans emails (Gmail dots and +tags; a big mail
+reads dates day-first outside the US, cleans emails (Gmail dots and +tags; me.com and mac.com as icloud.com; a big mail
 provider's name mistyped by one letter, gmial.com or hotmail.con - real domains such as ge.com
 are left alone), matches nicknames (Mick, Mike -> Michael) and names across languages
 (Giuseppe -> Joseph, Kostas -> Konstantinos), transliterates names written
@@ -580,7 +588,10 @@ writes a `weight` column: the candidate pairs each label stands for. Keep that c
 weighs each random label by it when it judges the threshold, so the estimate stays unbiased. On
 1,000,000 NCVR people with 300 random + 700 active labels it lifted clustered F1 from 80.84 to
 94.85 (8 random matches instead of 2). `--stratified` draws this way on any file and
-`--no-stratified` never does; labels without weights count equally, as before.
+`--no-stratified` never does; labels without weights count equally, as before. On the five small
+benchmarks over three draws, `--stratified` was level or better with 1,000 random labels and
+steadier between draws, but with 300 random + 700 active it cost historical_50k 1.4 points, so
+small files are not stratified by default.
 
 ## 3. Run
 
@@ -995,6 +1006,9 @@ warns below 30.
 - **"blocking switched to adaptive"**: the default keys would have left over 1% of the records
   compared with no one, so their oversized blocks were split instead ("Big files" under
   Blocking). Expect more candidate pairs and a longer run; `"blocking": "core"` turns it off.
+- **"... was blank in one part for many records"**: a default key blocked on one field alone
+  ("Half-blank keys" under Blocking), so many candidate pairs share only, say, a first name.
+  Random labels drawn from them hold few matches: label more, or fill in the missing field.
 - **Fewer than 500 labels**: below 500 was not measured. Single draws at 500, 1,000 and 3,000
   labels scored 97.37, 97.28 and 97.80 on the synthetic file - within the spread between draws -
   and sparse files needed active learning far more than more random labels.

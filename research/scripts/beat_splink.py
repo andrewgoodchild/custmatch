@@ -8,6 +8,7 @@ its official-settings results from research/results/splink_datasets_benchmark.js
 research/results/splink_vs_custmatch.json.
 
   beat_splink.py VARIANT [DATASET ...]      variants: base, rich, ...
+  beat_splink.py VARIANT --seed 2 [DATASET ...]   another label draw, kept as "VARIANT/seed2"
 Writes research/results/beat_splink.json.
 """
 import json
@@ -105,7 +106,7 @@ def with_overrides(config, overrides, tmp, tag):
     return out
 
 
-def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty", stratified=False):
+def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty", stratified=False, seed=1):
     def fill(path):
         lab = pd.read_csv(path, dtype=str, keep_default_na=False)
         lab["label"] = [int(truth[a] == truth[b]) for a, b in zip(lab.a, lab.b)]
@@ -132,7 +133,7 @@ def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"
         return {"jev_900_plus_100_hand": score(tmp / f"{tag}_j"), "gate": gate}
     n = min(1000, len(labels.candidates(df, cfg)))
     lp = tmp / f"{tag}_r.csv"
-    labels.sample(config, n, lp, seed=1, stratified=stratified)
+    labels.sample(config, n, lp, seed=seed, stratified=stratified)
     fill(lp)
     import time
     t0 = time.time()
@@ -141,7 +142,7 @@ def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"
     res["candidate_pairs"] = summ["candidate_pairs"]
     res["seconds"] = round(time.time() - t0, 1)
     ap = tmp / f"{tag}_a.csv"
-    labels.sample(config, 300, ap, seed=1, stratified=stratified)
+    labels.sample(config, 300, ap, seed=seed, stratified=stratified)
     al = fill(ap)
     while len(al) < 1000:
         labels.sample_active(config, ap, 100, tmp / "next.csv", mix=mix, strategy=strategy)
@@ -153,8 +154,14 @@ def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"
 
 
 def main():
-    variant = sys.argv[1]
-    which = sys.argv[2:] or DATASETS
+    args = sys.argv[1:]
+    seed = 1
+    if "--seed" in args:
+        k = args.index("--seed")
+        seed = int(args[k + 1])
+        del args[k:k + 2]
+    variant, which = args[0], args[1:] or DATASETS
+    key = variant if seed == 1 else f"{variant}/seed{seed}"
     path = ROOT / "research/results/beat_splink.json"
     out = json.loads(path.read_text()) if path.exists() else {}
     out["splink_reference"] = splink_reference()
@@ -165,10 +172,10 @@ def main():
             config = with_overrides(config, VARIANTS[variant], tmp, f"{name}_{variant}")
             ov = VARIANTS[variant]
             r = evaluate(config, truth, tmp, f"{name}_{variant}", mix=ov.get("_mix", 0.0), jev=ov.get("_jev", False),
-                         strategy=ov.get("_strategy", "uncertainty"), stratified=ov.get("_stratified", False))
-            out.setdefault(variant, {})[name] = r
+                         strategy=ov.get("_strategy", "uncertainty"), stratified=ov.get("_stratified", False), seed=seed)
+            out.setdefault(key, {})[name] = r
             shown = "  ".join(f"{k} {v:6.2f}" for k, v in r.items() if isinstance(v, float))
-            print(f"{variant:16s} {name:15s} {shown}   | Splink {out['splink_reference'][name]:6.2f}", flush=True)
+            print(f"{key:16s} {name:15s} {shown}   | Splink {out['splink_reference'][name]:6.2f}", flush=True)
             path.write_text(json.dumps(out, indent=1))
 
 

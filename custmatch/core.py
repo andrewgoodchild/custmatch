@@ -176,7 +176,9 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
     set - a very common name, say - as opposed to blank ones (no address), which mean nothing.
     by_key: a list to fill with each key family's candidate pairs and how many of them no earlier
     family proposed (Splink's cumulative comparisons chart): exact up to BY_KEY_EXACT_PAIRS
-    candidate pairs; above that, each family's pairs without the overlap ("new" is None).
+    candidate pairs; above that, each family's pairs without the overlap ("new" is None). A key of
+    two fields also counts the pairs from blocks where one was blank ("pairs_with_a_blank_part"):
+    first name + street is first name alone where there is no street.
 
     Everything is integer codes and numpy: each key family is factorised to codes, a block is a
     (family, code), and pairs are generated block by block in vectorised steps and de-duplicated
@@ -190,6 +192,7 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
     limit = (max_block or MAX_BLOCK) if aware else 400   # even the naive run needs some ceiling
     fams = []                                           # (codes per entry, record per entry, key of a code)
     labels = []
+    blank = []                                          # per family: a code's key has a blank part (or None)
     for fam in blocking_families(df, profiles, aware, extra_keys, lsh):
         labels.append(_family_label(fam, len(labels)))
         if fam[0] == "tuples":
@@ -197,10 +200,16 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
             codes, uniq = pd.factorize(pd.Series(list(keys), dtype=object))
             idx = np.asarray(idx, dtype=np.int64)
             fams.append((codes.astype(np.int64), idx if owner is None else owner[idx], lambda c, u=uniq: u[c]))
+            blank.append(None)
         else:
             _, tag, arrays, idx = fam
             codes, uniq = _factorize_columns(arrays)
             idx = idx.astype(np.int64)
+            part = None
+            if len(arrays) > 1 and len(codes):
+                part = np.zeros(int(codes.max()) + 1, bool)
+                part[codes] = np.logical_or.reduce([np.asarray(a, dtype=object) == "" for a in arrays])
+            blank.append(part)
             fams.append((codes.astype(np.int64), idx if owner is None else owner[idx],
                          lambda c, u=uniq, t=tag: tuple(t) + tuple(u[c])))
     if not fams:
@@ -243,6 +252,10 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
             else:                                   # within-block pairs, before removing overlap
                 _, counts = np.unique(block_id[m], return_counts=True)
                 row |= {"pairs": int((counts * (counts - 1) // 2).sum()), "new": None, "cumulative": None}
+            if blank[f] is not None:                # within-block pairs, as some are also another key's
+                ub, counts = np.unique(block_id[m], return_counts=True)
+                part = blank[f][ub - lo]
+                row["pairs_with_a_blank_part"] = int((counts[part] * (counts[part] - 1) // 2).sum())
             by_key.append(row)
     return np.column_stack([codes // n, codes % n]).astype(np.int32), hubs
 

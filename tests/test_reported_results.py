@@ -1319,8 +1319,18 @@ def test_auto_adaptive_and_stratified_label_claims():
     # the true default switches to both by itself, and lands where the explicit settings do
     assert r["current_default/people_200000"]["mean_f1"] == strat["mean_f1"]
     b = load("beat_splink.json")
-    for ds, x in b["rich_stratified"].items():
-        assert f"{b['rich_rerun'][ds]['random_1000']:.2f} to {x['random_1000']:.2f}" in text, ds
+    # three label draws per dataset: mean and range, plain and stratified, random and active
+    seeds = ["", "/seed2", "/seed3"]
+    for ds in b["rich_stratified"]:
+        cells = []
+        for m in ("random_1000", "active_300_700"):
+            for v in ("rich_rerun", "rich_stratified"):
+                f = [b[v + s][ds][m] for s in seeds]
+                lo, hi = f"{min(f):.2f}", f"{max(f):.2f}"
+                cells.append(f"{fmean(f):.2f}" + ("" if lo == hi == "99.99" else f" ({lo}-{hi})"))
+        assert f"| {ds} | " + " | ".join(cells) + " |" in text, ds
+    hist = {v: fmean([b[v + s]["historical_50k"]["active_300_700"] for s in seeds]) for v in ("rich_rerun", "rich_stratified")}
+    assert f"by {hist['rich_rerun'] - hist['rich_stratified']:.2f} on average" in text
     h = load("home_data_benchmark.json")
     assert (f"the childcare sites from 86.95 to {h['dedupe_csv_example']['custmatch_1000']['f1']:.2f}, the patent "
             f"applicants from 75.88 to {h['dedupe_patent_example']['custmatch_1000']['f1']:.2f}") in text

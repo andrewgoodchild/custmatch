@@ -10,6 +10,17 @@ public benchmark of personal identities: pairwise F1 on its 10,000 labelled pair
 to 74.45 with 8,000 labels, and its blocking recall from 70.18% to 71.89%. No date in any other
 dataset in this repository reads differently (docs/report/09-against-other-tools.md "BPID").
 
+**Fixed:** me.com and mac.com addresses read as icloud.com, as Gmail's dots already were: they
+are one Apple account, so jo@me.com and jo@icloud.com now agree. Reported from deduplicating an
+address book, where one person's me.com and mac.com addresses did not agree.
+
+**Added:** a warning when a two-field blocking key blocked on one field alone for a quarter of
+the candidate pairs or more (first name + street is first name alone where there is no street),
+and a per-key count of those pairs in `blocking_report.json` (`pairs_with_a_blank_part`). On an
+address book with no streets, first name alone gave 660 of 1,057 pairs, mostly strangers, and
+nothing said so. Of the benchmarks it fires on historical_50k and fake_1000, which have no
+streets; the keys themselves are unchanged.
+
 **Added:** `"blocking": "adaptive"`. A block too big for `max_block` is split on up to three
 refinements on different fields, the file's extra fields included, and every piece is kept, so a
 typo in one refining field no longer loses the pair. On the 5M-record NCVR benchmark it lifts the

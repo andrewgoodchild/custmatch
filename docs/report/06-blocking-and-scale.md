@@ -364,12 +364,22 @@ active labels:
 | 1,000,000, 300 random labels | 80.84 (2 random matches) | 94.85 (8) |
 | 1,000,000, 1,000 random labels | 94.04 (21) | 94.91 (40) |
 
-On the five small benchmarks it helped with 1,000 random labels on one draw each (febrl3 99.42
-to 99.92, febrl4 99.84 to 99.94, historical_50k 85.53 to 88.04, fake_1000 92.46 to 93.60,
-synthetic 97.28 to 97.78; `rich_stratified` against `rich_rerun`) and was level with active
-labels (historical_50k 86.64 to 86.13, synthetic 98.61 to 99.11, the rest within 0.05). Those
-files have under a million candidate pairs, so by default they still draw plainly until more
-draws confirm it; `custmatch sample --stratified` draws this way at any size.
+On the five small benchmarks, over three label draws each (`rich_stratified` against
+`rich_rerun`, seeds 1 to 3; mean clustered F1, the draws' range in brackets):
+
+| Dataset | 1,000 random: plain | stratified | 300 random + 700 active: plain | stratified |
+| --- | --- | --- | --- | --- |
+| febrl3 | 99.51 (99.29-99.83) | 99.83 (99.69-99.92) | 99.99 | 99.99 |
+| febrl4 | 99.87 (99.84-99.92) | 99.90 (99.84-99.94) | 99.99 | 99.99 |
+| historical_50k | 86.63 (85.53-88.00) | 87.73 (87.32-88.04) | 87.36 (86.64-87.83) | 85.95 (84.79-86.94) |
+| fake_1000 | 93.36 (91.65-95.98) | 93.52 (93.33-93.64) | 98.29 (96.75-99.08) | 99.03 (99.03-99.03) |
+| synthetic | 97.53 (97.28-97.74) | 97.71 (97.49-97.87) | 98.84 (98.61-98.98) | 99.06 (98.96-99.11) |
+
+With random labels alone it is level or better on every file and steadier between draws. With
+active labels it is level or better on four and worse on historical_50k on all three draws, by
+1.41 on average. So small files, all under a million candidate pairs, still draw plainly by
+default; `custmatch sample --stratified` draws this way at any size, and the warning about too
+few random matches suggests it.
 
 ## What had to change to run this on a laptop, and what it costs
 

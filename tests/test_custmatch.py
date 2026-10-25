@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from custmatch import explain, incremental, io, labels, pipeline
+from custmatch import blocking, explain, incremental, io, labels, pipeline
 from custmatch.core import partition_scores
 
 FIRST = ["anna", "ben", "carla", "david", "erin", "frank", "grace", "henry", "iris", "jack",
@@ -75,6 +75,29 @@ def all_candidate_labels(tmp, truth, path):
     return len(pairs)
 
 
+def test_a_key_blocking_on_one_field_where_the_other_is_blank_is_warned_about(world, tmp_path):
+    """No addresses (an address book): first name + street is first name alone, and its pairs -
+    mostly strangers who share a first name - are counted and warned about."""
+    tmp, truth, _ = world
+    cfg = json.loads((tmp / "config.json").read_text())
+    for src in cfg["sources"]:
+        src["path"] = str(tmp / src["path"])
+        del src["columns"]["address"]
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    df, cfg = io.load(tmp_path / "config.json")
+    profiles = {f: labels.profile_contacts(df, f) for f in ("email", "phone")}
+    _, _, report, _ = blocking.candidates_for(df, profiles, cfg)
+    fn = next(r for r in report["pairs_by_key"] if r["key"] == "first name + street")
+    assert fn["pairs_with_a_blank_part"] == fn["pairs"] > 0
+    assert "pairs_with_a_blank_part" not in next(r for r in report["pairs_by_key"] if r["key"] == "email")
+    keys = io.key(df)
+    pairs = labels.candidates(df, cfg)
+    pd.DataFrame([{"a": keys[i], "b": keys[j], "label": int(truth[keys[i]] == truth[keys[j]])}
+                  for i, j in pairs]).to_csv(tmp_path / "labels.csv", index=False)
+    s = pipeline.run(tmp_path / "config.json", tmp_path / "labels.csv", tmp_path / "out", log=lambda *_: None)
+    assert any(w.startswith('"first name + street" was blank in one part') for w in s["warnings"]), s["warnings"]
+
+
 # ------------------------------------------------------------------------------ config / io
 def test_split_address():
     assert io.split_address("5112 145th St Apt 3") == ("5112", "145th st", "apt 3")
@@ -117,6 +140,7 @@ def test_run_end_to_end(world):
     score = partition_scores(c.customer_id.to_numpy(), pid, float(np.sum(sizes * (sizes - 1) / 2)))
     assert score["f1"] > 95, score
     assert s["largest_customer"] <= 3, "junk contacts must not chain unrelated people together"
+    assert not any("blank in one part" in w for w in s["warnings"]), "every record has a street here"
     contacts = pd.read_csv(tmp / "out" / "shared_and_junk_contacts.csv", dtype=str)
     junk = set(contacts[contacts["class"] == "junk"].value)
     assert "test@test.com" in junk and "1111111111" in junk
@@ -805,6 +829,7 @@ def test_domain_typos_are_fixed_but_real_domains_are_not():
     for real in ("ge.com", "ms.com", "cloud.com", "aon.com", "mail.com", "email.com", "gmx.com", "example.com"):
         assert country.fix_domain(real) == real, real          # real domains a frequency rule rewrote
     assert country.email("jo.bloggs+shop@gmial.com") == "jobloggs@gmail.com"
+    assert country.email("jo.bloggs@me.com") == country.email("jo.bloggs@mac.com") == "jo.bloggs@icloud.com"
 
 
 def test_fake_numbers_on_sight_and_patterned_numbers():

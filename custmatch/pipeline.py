@@ -27,6 +27,10 @@ GOLDEN_FIELDS = ["first_name", "middle_initial", "last_name", "date_of_birth", "
                  "addr_street", "addr_unit", "email", "phone"]
 MIN_LABELS = 200
 MIN_RANDOM_MATCHES = 30     # random labelled matches below which the threshold choice is noisy
+# a two-field blocking key degraded to one field (blocking report "pairs_with_a_blank_part"): warn
+# when those pairs are at least this share of the candidate pairs. On an address book with no
+# streets, first name + street gave 660 of 1,057 pairs
+BLANK_KEY_SHARE, BLANK_KEY_PAIRS = 0.25, 100
 RECOMMENDED_LABELS = 500   # custmatch_validate, rich features: 500 labels 97.38, 1,000 97.32 clustered F1
 FOLDS = 4
 
@@ -526,7 +530,9 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     if saved is None and len(ly) and 0 < random_matches < MIN_RANDOM_MATCHES:
         summary["warnings"].append(
             f"only {random_matches} of your randomly drawn labels are matches, and the threshold is judged on "
-            f"those: label more random pairs (custmatch sample) until at least {MIN_RANDOM_MATCHES} are matches")
+            f"those: label more random pairs (custmatch sample) until at least {MIN_RANDOM_MATCHES} are matches. "
+            "custmatch sample --stratified spreads a random batch over pairs agreeing on different fields "
+            "and weighs it back; on the small benchmarks it scored as well or better with 1,000 random labels")
     bad = io.unknown_keys(cfg)
     if bad:
         summary["warnings"].append("config keys custmatch does not use, so they had no effect: " + ", ".join(bad))
@@ -550,6 +556,15 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             f"than max_block, so it was skipped. Largest: {eg}. See blocking_report.json; raise "
             "\"max_block\" if these values are legitimately common, check them for placeholders, or "
             "split them instead (\"blocking\": \"adaptive\")")
+    for row in block_report.get("pairs_by_key", []):
+        part = row.get("pairs_with_a_blank_part", 0)
+        if part >= max(BLANK_KEY_PAIRS, BLANK_KEY_SHARE * summary["candidate_pairs"]):
+            summary["warnings"].append(
+                f"\"{row['key']}\" was blank in one part for many records, so it blocked on the other part "
+                f"alone (first name + street is first name alone where there is no street): it gave {part:,} "
+                f"pairs, against {summary['candidate_pairs']:,} candidate pairs in all. Those pairs share one field and are "
+                "mostly different people, so random labels drawn from them hold few matches - label more, or "
+                "fill in the missing field. See pairs_by_key in blocking_report.json")
     switched = block_report.get("switched_from_core")
     if switched:
         summary["warnings"].append(

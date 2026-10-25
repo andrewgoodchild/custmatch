@@ -11,7 +11,7 @@ Each step can be switched off for measurement with "normalise": {"phone": false,
   dates      read in the country's order (day first everywhere but the US) and stored as ISO,
              so 11/09/2005 and 2005-09-11 agree.
   email      Gmail dots and +tags removed (they reach the same inbox), +tags removed on any
-             domain, and a big provider's name mistyped by one letter corrected (gmial.com,
+             domain, me.com and mac.com read as icloud.com (one Apple account), and a big provider's name mistyped by one letter corrected (gmial.com,
              hotmail.con; fix_domain) - never a real domain such as ge.com or cloud.com.
   nicknames  `first_roots`: the name and every name it is a diminutive of, from the
              carltonnorthern/nicknames list (US given names, Apache 2.0; custmatch/data). Mick,
@@ -243,6 +243,8 @@ def email(v):
     local = local.split("+", 1)[0]
     if dom in ("gmail.com", "googlemail.com"):
         local, dom = local.replace(".", ""), "gmail.com"
+    elif dom in ("me.com", "mac.com"):     # Apple's three domains are one account: jo@me.com is jo@icloud.com
+        dom = "icloud.com"
     return f"{local}@{dom}" if local else v
 
 
