@@ -59,7 +59,7 @@ against 84.33 before, with the same 300 random + 700 active labels.
 patterns and writes each one's `weight`; `run` weighs the threshold's estimates by it, so they
 stay unbiased. Plain draws held a handful of matches: on 1,000,000 NCVR people with 300 random +
 700 active labels clustered F1 rose from 80.84 (2 random matches) to 92.88, and on synthetic
-address books with 300 random labels from 73.21 to 76.55 over 30 draws. It is the default at
+address books with 300 random labels from 71.58 to 77.21 over 30 draws. It is the default at
 every size; `--no-stratified` draws plainly; labels without weights count equally, as before.
 Results recorded before, and comparisons giving every tool the same labels, still draw plainly
 (docs/report/06-blocking-and-scale.md "Random labels that still hold matches"). A stratified draw now

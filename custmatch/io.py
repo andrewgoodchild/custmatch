@@ -201,9 +201,6 @@ def load_config(cfg, base_dir, data=None, whole_config=True):
         absent = [v for v in cols.values() if v not in raw.columns]
         if absent:
             raise ConfigError(f"source '{name}': columns {absent} not in {src['path']}")
-        if src.get("group_rows"):
-            raw, cols, more = group_rows(raw, cols)
-            aliases = aliases + [a for a in more if a not in aliases]
         out = pd.DataFrame({"source": name, "record_id": raw[cols["record_id"]].astype(str)})
         for c in CANONICAL[1:]:
             out[c] = _clean(raw[cols[c]]) if c in cols else ""
@@ -226,6 +223,9 @@ def load_config(cfg, base_dir, data=None, whole_config=True):
                 out[f"{field}@{name}"] = out[f"{field}@{name}"].str.replace(r"\D", "", regex=True)
         out["phone"] = out.phone.str.replace(r"\D", "", regex=True)
         out["middle_initial"] = out.middle_initial.str[:1]
+        if src.get("group_rows"):
+            out, more = group_rows(out)
+            aliases = aliases + [a for a in more if a not in aliases]
         frames.append(out)
     df = pd.concat(frames, ignore_index=True)
     alias_cols = [c for c in df.columns if "@" in c]
@@ -278,37 +278,31 @@ def load_config(cfg, base_dir, data=None, whole_config=True):
     return df, cfg
 
 
-def group_rows(raw, cols):
+def group_rows(out):
     """A long-format source - one row per contact point, rows sharing a record_id one record -
-    as one row per record: (rows, columns, aliases). Each field takes the record's first filled
-    value; its other surnames, emails and phones (core.ALIAS_FIELDS) become aliases, columns
-    "email_2", "email_3", ... - compared and blocked as "aliases" are. Other fields keep the first
-    value only: a second first name or address is dropped."""
+    as one row per record: (records, aliases), from the source's cleaned rows. Each field takes the
+    record's first filled value; its other surnames, emails and phones (core.ALIAS_FIELDS) become
+    aliases, columns "email@email_2", "email@email_3", ... - compared and blocked as "aliases"
+    are. Other fields keep the first value only: a second first name or address is dropped."""
     from .core import ALIAS_FIELDS
-    rid = raw[cols["record_id"]].astype(str)
-    order = pd.unique(rid)
-    out = pd.DataFrame({cols["record_id"]: order})
-    cols = dict(cols)
+    codes, ids = pd.factorize(out.record_id)
+    grouped = pd.DataFrame({"source": out.source.iloc[:len(ids)].to_numpy(), "record_id": ids})
     aliases = []
-    for field, col in list(cols.items()):
-        if field == "record_id":
-            continue
-        clean = _clean(raw[col])
-        key = clean.str.replace(r"\D", "", regex=True) if field == "phone" else clean
-        vals = pd.DataFrame({"rid": rid, "raw": raw[col].astype(str).where(raw[col].notna(), ""), "key": key})
-        vals = vals[vals.key != ""].drop_duplicates(["rid", "key"])
-        vals["k"] = vals.groupby("rid").cumcount()
-        wide = vals.pivot(index="rid", columns="k", values="raw").reindex(order).fillna("")
-        out[col] = wide[0].to_numpy() if 0 in wide.columns else ""
-        if field in ALIAS_FIELDS:
-            for k in [k for k in wide.columns if k > 0]:
-                name = f"{field}_{k + 1}"
-                while name in raw.columns or name in cols:
+    for col in out.columns.drop(["source", "record_id"]):
+        v = out[col].to_numpy(dtype=object)
+        keep = v != ""
+        vals = pd.DataFrame({"g": codes[keep], "v": v[keep]}).drop_duplicates()
+        vals["k"] = vals.groupby("g").cumcount()
+        wide = vals.pivot(index="g", columns="k", values="v").reindex(range(len(ids))).fillna("")
+        grouped[col] = wide[0].to_numpy() if 0 in wide.columns else ""
+        if col in ALIAS_FIELDS:
+            for k in wide.columns[1:]:
+                name = f"{col}_{k + 1}"
+                while f"{col}@{name}" in out.columns:
                     name = "_" + name
-                out[name] = wide[k].to_numpy()
-                cols[name] = name
-                aliases.append((field, name))
-    return out, cols, aliases
+                grouped[f"{col}@{name}"] = wide[k].to_numpy()
+                aliases.append((col, name))
+    return grouped, aliases
 
 
 def check_aliases(cfg, whole_config=True):

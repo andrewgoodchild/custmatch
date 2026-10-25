@@ -230,7 +230,7 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
     rec = np.concatenate([i for _, i, _ in fams])
     entry = np.unique(block_id * n + rec)
     block_id, rec = entry // n, entry % n
-    sizes = np.bincount(block_id)
+    sizes = np.bincount(block_id, minlength=int(offsets[-1] + sizes_by_fam[-1]))
     hubs = int(((sizes > limit) & (sizes >= 2)).sum()) if aware else 0
     if skipped is not None and aware:
         # entries are sorted by block, so a block's records are one slice: binary search, not a scan
@@ -251,20 +251,20 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
         for f, label in enumerate(labels):
             lo, hi = offsets[f], offsets[f] + sizes_by_fam[f]
             m = (block_id >= lo) & (block_id < hi)
-            row = {"key": label, "blocks_used": int(len(np.unique(block_id[m]))),
-                   "blocks_skipped": int(((sizes[lo:hi] > limit) & (sizes[lo:hi] >= 2)).sum()) if aware else 0}
+            s = sizes[lo:hi]
+            used = (s >= 2) & (s <= limit)               # the family's blocks that made pairs
+            row = {"key": label, "blocks_used": int(used.sum()),
+                   "blocks_skipped": int(((s > limit) & (s >= 2)).sum()) if aware else 0}
             if exact:
                 fc = _block_codes(block_id[m], rec[m], n)
                 new = np.setdiff1d(fc, seen, assume_unique=True)
                 seen = np.union1d(seen, new)
                 row |= {"pairs": int(len(fc)), "new": int(len(new)), "cumulative": int(len(seen))}
             else:                                   # within-block pairs, before removing overlap
-                _, counts = np.unique(block_id[m], return_counts=True)
-                row |= {"pairs": int((counts * (counts - 1) // 2).sum()), "new": None, "cumulative": None}
+                row |= {"pairs": int((s[used] * (s[used] - 1) // 2).sum()), "new": None, "cumulative": None}
             if blank[f] is not None:                # within-block pairs, as some are also another key's
-                ub, counts = np.unique(block_id[m], return_counts=True)
-                part = blank[f][ub - lo]
-                row["pairs_with_a_blank_part"] = int((counts[part] * (counts[part] - 1) // 2).sum())
+                k = used & blank[f]
+                row["pairs_with_a_blank_part"] = int((s[k] * (s[k] - 1) // 2).sum())
             by_key.append(row)
     return np.column_stack([codes // n, codes % n]).astype(np.int32), hubs
 
@@ -566,6 +566,18 @@ ALIAS_FIELDS = ("last_name", "email", "phone")
 
 def alias_columns(df):
     return [c for c in df.columns if "@" in c and c.split("@", 1)[0] in ALIAS_FIELDS]
+
+
+def relay_records(df):
+    """(mask, addresses): records whose email or an alias email is a service relay (RELAY_EMAIL),
+    and the relay addresses found. Each distinct address is tested once."""
+    mask, found = np.zeros(len(df), bool), set()
+    for c in ["email"] + [c for c in alias_columns(df) if c.startswith("email@")]:
+        hits = [v for v in df[c].unique() if v and RELAY_EMAIL.search(v)]
+        if hits:
+            mask |= df[c].isin(hits).to_numpy()
+            found.update(hits)
+    return mask, sorted(found)
 
 
 def alias_views(df):

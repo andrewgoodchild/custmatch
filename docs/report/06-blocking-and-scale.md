@@ -393,11 +393,11 @@ labels on each of three books gave:
 
 | Synthetic address books, 300 random labels, 30 draws | Plain | Stratified |
 | --- | --- | --- |
-| As generated: clustered F1, mean (lowest draw) | 73.21 (60.32) | 76.55 (59.76) |
+| As generated: clustered F1, mean (lowest draw) | 71.58 (59.30) | 77.21 (61.27) |
 | Relay records removed, switchboard blanked | 77.75 (41.13) | 81.37 (65.09) |
-| Random matches among the 300 | 10.8 | 20.8 / 23.5 |
+| Random matches among the 300 | 10.6 | 19.6 / 23.5 |
 
-Stratified was ahead on all six book and version pairs (by 0.2 to 6.1). Since 0.1.3 every file
+Stratified was ahead on all six book and version pairs (by 0.2 to 12.2). Since 0.1.3 every file
 draws this way by default (`--no-stratified` draws plainly); the results recorded before it,
 and the comparisons that give every tool the same labels, still draw plainly
 (`stratified=False` in their scripts).

@@ -2,7 +2,7 @@
 
 Built from people, not rows: about 940 people, each with one or more email "identities", one
 record per email address, as a mail client exports contacts. The shape copies aggregate counts
-from a real 808-record address book (20 years of one person's mail; nothing from it but the
+from a real 808-record address book (nothing from it but the
 counts below), scaled to about 1,000 records:
 
   records per person   about 885 alone, 45 with 2, 7 with 3, 1-2 with 6-8 (about 95 true pairs)
@@ -143,7 +143,7 @@ def build(seed):
     big_slots = [org for org, n in BIG for _ in range(n)]       # work records the big employers hold
     people = []
     for pid, size in enumerate(sizes):
-        p = b.name() | {"pid": f"p{pid}", "size": int(size)}
+        p = b.name() | {"pid": f"p{pid}", "size": int(size), "big": size >= 6}
         while size >= 6 and (p["sex"] != "f" or p["given"] not in A.NICKNAMES):
             # like the real file's person with eight records: three names - a nickname, the
             # formal name and a maiden name
@@ -188,8 +188,8 @@ def build(seed):
                 user = icloud.split("@")[0]
                 dom = g.pick([d for d in ("me.com", "mac.com", "icloud.com") if not icloud.endswith(d)])
                 email = f"{user}@{dom}"
-            elif kind == "gmail_dots" and any(x["email"].endswith("@gmail.com") for x in b.rows if x["person_id"] == p["pid"]):
-                prev = next(x["email"] for x in b.rows if x["person_id"] == p["pid"] and x["email"].endswith("@gmail.com"))
+            elif kind == "gmail_dots" and (prev := next((x["email"] for x in b.rows if x["person_id"] == p["pid"]
+                                                          and x["email"].endswith("@gmail.com")), None)):
                 user = prev.split("@")[0]
                 email = (user.replace(".", "") if "." in user else f"{user[:1]}.{user[1:]}") + "@gmail.com"
             else:
@@ -233,8 +233,9 @@ def build(seed):
             first, _, last = name.partition(" ")
             b.add(new_pid(), first, last, f"{box}@{A.slug(name)}{int(r.integers(1, 9))}.example", "", "brand")
     # relay addresses filed under a real person's name, the people with most records first
+    # ties broken by id: a set's order changes from one Python process to the next
     owners = sorted({x["person_id"] for x in rows if not x["trap"]},
-                    key=lambda q: -sum(y["person_id"] == q for y in rows))
+                    key=lambda q: (-sum(y["person_id"] == q for y in rows), q))
     k = int(r.integers(5, 11))
     chosen = owners[:max(2, k // 2)] + [owners[i] for i in r.choice(np.arange(len(owners) // 2, len(owners)), k - max(2, k // 2), replace=False)]
     for relay, q in zip(r.permutation(RELAYS), chosen):

@@ -18,6 +18,7 @@ links - pairs put together that are different people - by the trap either record
 Generates the books first if they are missing. Writes research/results/address_book.json.
 """
 import argparse
+import itertools
 import json
 import subprocess
 import sys
@@ -28,7 +29,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from custmatch import io, labels, pipeline  # noqa: E402
+from custmatch import labels, pipeline  # noqa: E402
 from custmatch.core import partition_scores  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -47,11 +48,9 @@ def fill(path, person):
 
 def label(config, budget, tmp, person, seed):
     lp = tmp / f"{budget}.csv"
-    if budget == "all":
-        df, cfg = io.load(config)
-        keys = io.key(df)
-        pd.DataFrame([{"a": keys[i], "b": keys[j], "label": int(person[keys[i]] == person[keys[j]]), "by": "random"}
-                      for i, j in labels.candidates(df, cfg)]).to_csv(lp, index=False)
+    if budget == "all":                           # n beyond the candidate pairs: every one of them
+        labels.sample(config, 10 ** 9, lp, seed=seed, stratified=False)
+        fill(lp, person)
         return lp
     n = 150 if budget.startswith("random150") else 300
     labels.sample(config, n, lp, seed=seed, stratified=budget.startswith("stratified"))
@@ -76,18 +75,13 @@ def score(out_dir, truth, recs):
     multi = multi[multi > 1].index
     multiname = names.groupby("person_id").full.nunique()
     multiname = multiname[multiname > 1].index
-    false = {t: 0 for t in TRAPS}
+    false = dict.fromkeys(TRAPS + ["none"], 0)
     for _, g in c.groupby("customer_id"):
-        if g.person_id.nunique() < 2:
-            continue
-        rows = g.to_dict("records")
-        for i in range(len(rows)):
-            for j in range(i + 1, len(rows)):
-                if rows[i]["person_id"] != rows[j]["person_id"]:
-                    for t in {rows[i]["trap"], rows[j]["trap"]} - {""}:
+        if g.person_id.nunique() > 1:
+            for x, y in itertools.combinations(g.to_dict("records"), 2):
+                if x["person_id"] != y["person_id"]:
+                    for t in ({x["trap"], y["trap"]} - {""}) or {"none"}:
                         false[t] += 1
-                    if not {rows[i]["trap"], rows[j]["trap"]} - {""}:
-                        false["none"] = false.get("none", 0) + 1
     return {"precision": s["precision"], "recall": s["recall"], "f1": s["f1"],
             "people_with_several_records_found": f"{int((by_person[multi] == 1).sum())} of {len(multi)}",
             "people_with_several_names_found": f"{int((by_person[multiname] == 1).sum())} of {len(multiname)}",

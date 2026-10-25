@@ -334,13 +334,15 @@ def generate(df, keys, rules, max_block=60, ways=1, refine=REFINEMENTS):
                        "oversized_blocks_split": split_blocks, "blocks_dropped_as_hubs": dropped})
     table = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame({"rule": [], "key": [], "rid": []})
     per_rule = _block_pairs(table.rule.to_numpy(np.int64), table.key.to_numpy(np.int64), table.rid.to_numpy(np.int64))
-    counts = np.bincount(per_rule.rule.to_numpy(), minlength=len(rules))
     # each pair once, credited to the first rule that produced it: one sort of int64 codes
     # (pair * rules + rule), not a pandas groupby and sort - those were half of blocking's time
     # at a million records
     nr, nrec = max(len(rules), 1), len(df)
     code = np.unique((per_rule.i.to_numpy() * nrec + per_rule.j.to_numpy()) * nr + per_rule.rule.to_numpy())
     del per_rule
+    # pairs per rule, each once: with "adaptive" a block's pieces overlap, so a pair can come
+    # from one rule more than once
+    counts = np.bincount(code % nr, minlength=len(rules))
     pair = code // nr
     first = np.r_[True, pair[1:] != pair[:-1]] if len(pair) else np.zeros(0, bool)
     pair, new = pair[first], np.bincount(code[first] % nr, minlength=len(rules))
@@ -398,7 +400,7 @@ def candidates_for(df, profiles, cfg, labelled_pos=None, rules=None):
     views, owner = alias_views(df)
     if owner is None:
         return _candidates_for(df, profiles, cfg, labelled_pos, rules)
-    if cfg.get("blocking") not in (None, "", "core") or rules is not None:
+    if not _core_mode(cfg) or rules is not None:
         from .io import ConfigError
         raise ConfigError('"aliases" works with the default blocking only; remove "blocking": '
                           f'"{cfg.get("blocking") or "saved rules"}" or "aliases"')
@@ -440,7 +442,7 @@ def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None
     from .schema import max_block as cfg_max_block
     mode = cfg.get("blocking")
     mb = cfg_max_block(cfg) or 60
-    if rules is None and mode in (None, "", "core"):
+    if rules is None and _core_mode(cfg):
         pairs, hubs, report = _core_candidates(df, profiles, cfg, owner)
         records = report["records_only_in_skipped_blocks"]
         if not mode and owner is None and not cfg.get("lsh_blocking") and records > AUTO_ADAPTIVE_SHARE * len(df):
@@ -462,10 +464,9 @@ def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None
                                        max_block=mb)
         else:
             rules = fixed_rules(cfg, df)
-    if mode == "adaptive":
-        pairs, report = generate(df, keys, rules, max_block=mb, ways=ADAPTIVE_WAYS, refine=refinements(cfg))
-    else:
-        pairs, report = generate(df, keys, rules, max_block=mb)
+    adaptive = mode == "adaptive"
+    pairs, report = generate(df, keys, rules, max_block=mb, ways=ADAPTIVE_WAYS if adaptive else 1,
+                             refine=refinements(cfg) if adaptive else REFINEMENTS)
     extra = country_pairs(df, profiles, mb)        # country.py keys: nickname + DOB, email user...
     if len(extra):
         allp = np.vstack([pairs, extra]) if len(pairs) else extra
@@ -526,11 +527,15 @@ LARGE_BLOCK_MATCH_SHARE = 0.5   # kept when at least this share of them are matc
 LARGE_BLOCK_MAX = 5000          # records: larger blocks are not checked (12.5 million pairs each)
 
 
+def _core_mode(cfg):
+    """The default keys (core.block): "blocking" unset, or "core"."""
+    return cfg.get("blocking") in (None, "", "core")
+
+
 def large_block_check_on(cfg):
     """On unless "check_large_blocks": false - it found no large entity, and changed nothing, on
     six person benchmarks, and lifted dedupe's patent-applicant file from 6.93 to 75.88."""
-    return cfg.get("check_large_blocks", True) and (cfg.get("blocking") in (None, "", "core")
-                                                    or bool(cfg.get("_blocking_switched")))
+    return cfg.get("check_large_blocks", True) and (_core_mode(cfg) or cfg.get("_blocking_switched", False))
 
 
 def saved_run_large_blocks(cfg, report, predict, th, pairs):

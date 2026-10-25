@@ -210,7 +210,7 @@ def _text_date(v):
     "jul 18sat 1953" - or None. One month word, a four-digit year and a day, in any order."""
     tokens = _WEEKDAY.sub("", v.lower()).replace(",", " ").split()
     months = [i + 1 for t in tokens if len(t) >= 3 for i, name in enumerate(_MONTHS) if name.startswith(t)]
-    numbers = [t for t in tokens if t.isdigit()]
+    numbers = [t for t in tokens if t.isdecimal()]
     if len(months) != 1 or len(numbers) != 2 or len(tokens) != 3:
         return None
     years = [t for t in numbers if len(t) == 4]

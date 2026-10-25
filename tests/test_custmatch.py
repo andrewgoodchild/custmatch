@@ -95,6 +95,13 @@ def test_a_named_relay_address_is_warned_about(world, tmp_path):
                for w in s["warnings"]), s["warnings"]
     junk = pd.read_csv(tmp_path / "out" / "shared_and_junk_contacts.csv", dtype=str)
     assert "drive-shares-noreply@google.com" in set(junk[junk["class"] == "junk"].value)
+    # the same relay as a long-format person's second row: an alias email, still warned about
+    two = pd.concat([crm.iloc[[1]].assign(email="calendar-notification@google.com"), crm])
+    two.to_csv(tmp_path / "crm.csv", index=False)
+    cfg["sources"][0]["group_rows"] = True
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    s = pipeline.run(tmp_path / "config.json", tmp_path / "labels.csv", tmp_path / "out_long", log=lambda *_: None)
+    assert any("calendar-notification@google.com" in w for w in s["warnings"]), s["warnings"]
 
 
 def test_a_key_blocking_on_one_field_where_the_other_is_blank_is_warned_about(world, tmp_path):

@@ -125,7 +125,7 @@ def _run(variant, fresh, work):
         cp.write_text(json.dumps(cfg))
 
     def random_labels():
-        labels.sample(cp, n_random, lp, seed=seed, stratified=None if variant == "current_default" else False)
+        labels.sample(cp, n_random, lp, seed=seed, stratified=variant == "current_default")
         fill(lp).to_csv(lp, index=False)
 
     def active_round():

@@ -221,7 +221,7 @@ def main():
             for seed in [int(x) for x in a.seeds.split(",")]:
                 with tempfile.TemporaryDirectory() as tmp:
                     r = run(sample(allrec, people, seed), Path(tmp), seed, VARIANTS[variant], a.splink, a.random,
-                             None if variant == "current_default" else a.stratified)
+                             True if variant == "current_default" else a.stratified)
                 prev = next((x for x in res.get(key, {}).get("runs", []) if x.get("seed") == seed), None)
                 if not a.splink and prev is not None and "splink" in prev:
                     r["splink"] = prev["splink"]          # Splink does not depend on custmatch's threshold

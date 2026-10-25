@@ -611,7 +611,7 @@ the pairs' agreement patterns (which fields agree exactly), and writes a `weight
 candidate pairs each label stands for. Keep that column - `run` weighs each random label by it
 when it judges the threshold, so the estimate stays unbiased. On 1,000,000 NCVR people with 300
 random + 700 active labels it lifted clustered F1 from 80.84 to 92.88 (7 random matches instead
-of 2); on synthetic address books with 300 random labels, from 73.21 to 76.55 over 30 draws,
+of 2); on synthetic address books with 300 random labels, from 71.58 to 77.21 over 30 draws,
 with about twice the matches. `--no-stratified` draws plainly, as before 0.1.3; labels without
 weights count equally. The losses measured: historical_50k with 300 random + 700 active
 labels, 87.36 to 85.95 over three draws, and fake_1000 with 1,000 random, 93.36 to 92.44.

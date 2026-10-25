@@ -35,7 +35,7 @@ AGREE_CHUNK = 5_000_000
 # random labels are drawn stratified by default, at every size. On NCVR at a million people with
 # 300 random labels it lifted 80.84 to 92.88; on the synthetic address books
 # (research/scripts/address_book_benchmark.py), ten draws of 300 on each of three books, from
-# 73.21 to 76.55 clustered F1 (77.75 to 81.37 without the relay records), ahead on all six
+# 71.58 to 77.21 clustered F1 (77.75 to 81.37 without the relay records), ahead on all six
 # books; on the five small benchmarks over three draws, level or better on four with 1,000
 # random labels. The losses: fake_1000 there, 93.36 to 92.44, and historical_50k with 300
 # random + 700 active, 87.36 to 85.95
@@ -56,7 +56,8 @@ def agreement(df, pairs, cfg=None):
         for s in range(0, len(pairs), AGREE_CHUNK):
             a, b = codes[pairs[s:s + AGREE_CHUNK, 0]], codes[pairs[s:s + AGREE_CHUNK, 1]]
             out[s:s + AGREE_CHUNK] |= ((a == b) & (a >= 0)).astype(np.int32) << bit
-    return np.unique(out, return_inverse=True)[1].astype(np.int32)       # patterns as 0..k-1
+    present = np.bincount(out, minlength=1 << len(cols)) > 0            # patterns as 0..k-1, in O(n)
+    return (np.cumsum(present) - 1)[out].astype(np.int32)
 
 
 def stratified_pick(score, n, rng):
@@ -70,13 +71,17 @@ def stratified_pick(score, n, rng):
     size = np.bincount(score)
     share = np.sqrt(size)
     m = np.minimum(size, np.floor((n // 2) * share / share.sum()).astype(np.int64))
-    m[np.argmax(share)] += min(n // 2 - m.sum(), size[np.argmax(share)] - m[np.argmax(share)])
+    top = np.argmax(size)
+    m[top] += min(n // 2 - m.sum(), size[top] - m[top])
     uniform = rng.choice(N, min(n_u, N), replace=False)
     taken = np.zeros(N, bool)
     taken[uniform] = True
     pick = [uniform]
+    # each stratum's members as one slice of a stable sort (ascending, as flatnonzero gave them),
+    # not a scan of every pair per stratum
+    by_stratum, starts = np.argsort(score, kind="stable"), np.r_[0, np.cumsum(size)]
     for s in np.flatnonzero(m):
-        members = np.flatnonzero(score == s)
+        members = by_stratum[starts[s]:starts[s + 1]]
         got = rng.choice(members, m[s], replace=False)
         again = taken[got]
         taken[got] = True
@@ -96,16 +101,14 @@ def stratified_pick(score, n, rng):
     return pick, 1 / p_in[score[pick]]
 
 
-def sample(config_path, n, out_path, seed=0, stratified=None):
+def sample(config_path, n, out_path, seed=0, stratified=True):
     """Random candidate pairs, both records side by side, `label` left blank to fill 1/0.
     stratified: half of them spread over the pairs' agreement patterns (stratified_pick), each
-    with the `weight` that keeps the threshold's estimates unbiased; None (the default) or True
-    draws this way, False draws plainly, as every draw did before 0.1.3."""
+    with the `weight` that keeps the threshold's estimates unbiased; True (the default) draws this
+    way, False draws plainly, as every draw did before 0.1.3."""
     df, cfg = io.load(config_path)
     pairs = candidates(df, cfg)
     rng = np.random.default_rng(seed)
-    if stratified is None:
-        stratified = True
     if stratified and len(pairs) > n:
         pick, weight = stratified_pick(agreement(df, pairs, cfg), n, rng)
     else:

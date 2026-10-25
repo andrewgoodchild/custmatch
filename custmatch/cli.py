@@ -60,7 +60,7 @@ def main(argv=None):
                    help="with --active: disagreement also offers pairs blocking missed that the forest calls matches")
     s.add_argument("--mix", type=float, default=0.0,
                    help="with --active: share of each batch drawn at random instead (e.g. 0.5)")
-    s.add_argument("--stratified", action=argparse.BooleanOptionalAction, default=None,
+    s.add_argument("--stratified", action=argparse.BooleanOptionalAction, default=True,
                    help="draw half the random pairs spread over which fields agree, weighted back "
                         "(the default); --no-stratified draws plainly")
     r = sub.add_parser("run", help="match, cluster, households, golden records")
