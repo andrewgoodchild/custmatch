@@ -41,9 +41,18 @@ CONFIG = {"country": "US",
 CONFIG_KEYS = dict(CONFIG, extra_blocking=[["postcode"], ["postcode", "first_name:first1"],
                                            ["postcode", "last_name:first1"], ["town", "last_name:soundex"]])
 LSH = {"fields": ["first_name", "last_name"], "with": "town", "bands": 16, "rows": 3}
-VARIANTS = {"default_keys": CONFIG, "postcode_initial_keys": CONFIG_KEYS,
+# the default blocker as these were measured: oversized blocks skipped ("core"), not the switch
+# to "adaptive" an unset "blocking" now makes when they leave over 1% of the records out
+VARIANTS = {"default_keys": dict(CONFIG, blocking="core"), "postcode_initial_keys": dict(CONFIG_KEYS, blocking="core"),
             # from anonlink: one record per source per person; similarity (LSH) blocking
-            "postcode_initial_keys_unique_sources": dict(CONFIG_KEYS, unique_sources=True),
+            "postcode_initial_keys_unique_sources": dict(CONFIG_KEYS, blocking="core", unique_sources=True),
+            # oversized blocks split rather than skipped: on one refinement, or on several at once
+            # (research/scripts/ncvr_blocking_scale.py measures the blocking alone)
+            "postcode_initial_keys_fixed": dict(CONFIG_KEYS, blocking="fixed"),
+            "postcode_initial_keys_adaptive": dict(CONFIG_KEYS, blocking="adaptive"),
+            # nothing set: blocking switches to "adaptive" itself and random labels are drawn
+            # stratified (labels.sample's default)
+            "current_default": CONFIG_KEYS,
             "lsh_blocking": dict(CONFIG, lsh_blocking=LSH),
             "lsh_blocking_unique_sources": dict(CONFIG, lsh_blocking=LSH, unique_sources=True)}
 
@@ -146,7 +155,7 @@ def _cuts(df, pairs, w, pid, li, lj, ly):
             "best_in_hindsight": best_true[1] | {"match_weight": float(best_true[0])}}
 
 
-def run(sub, tmp, seed, base=CONFIG, splink=False):
+def run(sub, tmp, seed, base=CONFIG, splink=False, n_random=300, stratified=False):
     cfg = dict(base, sources=[])
     for s, g in sub.groupby("source"):
         g = g.reset_index(drop=True).assign(rid=lambda d: d.recid + "_" + d.index.astype(str))
@@ -164,9 +173,10 @@ def run(sub, tmp, seed, base=CONFIG, splink=False):
         lab.to_csv(path, index=False)
         return lab
     lp = tmp / "labels.csv"
-    labels.sample(cp, 300, lp, seed=seed)
+    labels.sample(cp, n_random, lp, seed=seed, stratified=stratified)
     lab = fill(lp)
-    while len(lab) < 1000:
+    random_matches = int(lab.label.sum())
+    while len(lab) < n_random + 700:
         labels.sample_active(cp, lp, 100, tmp / "next.csv", seed=seed)
         lab = pd.concat([lab, fill(tmp / "next.csv")], ignore_index=True)
         lab.to_csv(lp, index=False)
@@ -176,7 +186,7 @@ def run(sub, tmp, seed, base=CONFIG, splink=False):
     res = {"records": int(len(c)), "people": int(len(set(pid))), "true_pairs": int(n_true(pid)),
            "clustered": partition_scores(c.customer_id.to_numpy(), pid, n_true(pid)),
            "threshold": s["threshold"], "candidate_pairs": s["candidate_pairs"],
-           "seconds": round(sum(s["stage_seconds"].values()), 1)}
+           "seconds": round(sum(s["stage_seconds"].values()), 1), "random_matches": random_matches}
     # the ceiling: every true candidate pair accepted and closed
     from scipy.sparse import coo_matrix
     from scipy.sparse.csgraph import connected_components
@@ -198,16 +208,20 @@ def main():
     ap.add_argument("--seeds", default="1,2,3")
     ap.add_argument("--variants", default=",".join(VARIANTS))
     ap.add_argument("--splink", action="store_true")
+    ap.add_argument("--random", type=int, default=300, help="random labels before the 700 active ones")
+    ap.add_argument("--stratified", action="store_true", help="draw the random labels stratified (labels.sample)")
     a = ap.parse_args()
     allrec = load()
     res = json.loads(OUT.read_text()) if OUT.exists() else {}
     for people in [int(x) for x in a.people.split(",")]:
         for variant in a.variants.split(","):
-            key = f"{variant}/people_{people}"
+            key = f"{variant}/people_{people}" + (f"/random_{a.random}" if a.random != 300 else "") \
+                + ("/stratified" if a.stratified else "")
             runs = [r for r in res.get(key, {}).get("runs", []) if r.get("seed", 1) not in {int(x) for x in a.seeds.split(",")}]
             for seed in [int(x) for x in a.seeds.split(",")]:
                 with tempfile.TemporaryDirectory() as tmp:
-                    r = run(sample(allrec, people, seed), Path(tmp), seed, VARIANTS[variant], a.splink)
+                    r = run(sample(allrec, people, seed), Path(tmp), seed, VARIANTS[variant], a.splink, a.random,
+                             True if variant == "current_default" else a.stratified)
                 prev = next((x for x in res.get(key, {}).get("runs", []) if x.get("seed") == seed), None)
                 if not a.splink and prev is not None and "splink" in prev:
                     r["splink"] = prev["splink"]          # Splink does not depend on custmatch's threshold

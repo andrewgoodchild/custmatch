@@ -303,10 +303,17 @@ def test_skipped_common_blocks_are_reported_but_blank_ones_are_not(tmp_path):
         x["first_name"], x["last_name"] = "john", "smith"
         x.to_csv(d / n, index=False)
     df, cfg = io.load(d / "config.json")
-    report = candidates_for(df, {f: profile_contacts(df, f) for f in ("email", "phone")}, cfg)[2]
+    prof = {f: profile_contacts(df, f) for f in ("email", "phone")}
+    pairs, _, report, _ = candidates_for(df, prof, cfg | {"blocking": "core"})
     # everyone is john smith: those with no email or phone to meet on were never compared
     assert 0 < report["records_only_in_skipped_blocks"] < len(df)
     assert "smith" in report["largest_skipped_blocks"][0]["key"]
+    # with no "blocking" set, that many records left out switches to splitting the blocks
+    auto, _, switched, rules = candidates_for(df, prof, cfg)
+    assert switched["mode"] == "adaptive" and rules
+    assert switched["switched_from_core"]["records_only_in_skipped_blocks"] == report["records_only_in_skipped_blocks"]
+    compared = lambda p: len(np.unique(p))  # noqa: E731
+    assert compared(auto) > compared(pairs)
 
 
 def test_trusted_ids_reach_the_run_without_being_an_extra_field(tmp_path):

@@ -447,6 +447,41 @@ def test_unicode_form_claims():
     assert f"changes {changed['historical_50k']} values in historical_50k" in changelog
 
 
+def test_bpid_claims():
+    b = load("bpid.json")
+    flat = " ".join(REPORT.split())
+    changelog = " ".join((ROOT / "CHANGELOG.md").read_text().split())
+    old, new, paper = b["shipped_0.1.2"], b["shipped"], b["paper"]
+    pct = lambda v: f"{100 * v:.2f}"  # noqa: E731
+    pct1 = lambda v: f"{100 * v:.1f}"  # noqa: E731
+    assert f"| custmatch 0.1.2, 8,000 labels | {pct(old['matching_8000']['f1'])} |" in flat
+    for n in (300, 1000, 8000):
+        m = new[f"matching_{n}"]
+        assert (f"| custmatch with dates read in more forms, {n:,} labels | {pct(m['f1'])} | {pct(m['precision'])} | "
+                f"{pct(m['recall'])} |") in flat
+    f1 = 100 * new["matching_8000"]["f1"]
+    assert f"That added {f1 - 100 * old['matching_8000']['f1']:.1f} points of F1" in flat
+    assert f"custmatch scores {f1:.2f}: {f1 - 100 * paper['random_forest']:.1f} points" in flat
+    assert f"{100 * paper['ditto'] - f1:.2f} below Ditto and {100 * paper['sudowoodo'] - f1:.2f} below" in flat
+    assert f1 > 100 * max(paper[k] for k in ("claude3_sonnet", "llama3_70b", "mistral_large", "gpt4_turbo"))
+    assert f"added {100 * (b['dob_edit']['matching_8000']['f1'] - new['matching_8000']['f1']):.2f}" in flat
+    fm, mm = new["errors"]["false_matches"], new["errors"]["missed_matches"]
+    assert (f"Of one draw's {fm['count']:,} false matches, {pct1(fm['shared_email_or_phone'])}% share an email or "
+            f"phone - {pct1(fm['shared_contact_names_differ'])}% while") in flat
+    assert f"{pct1(fm['a_name_blank'])}% have no name on one side" in flat
+    assert (f"Of the {mm['count']} missed matches, {pct1(mm['phone_agrees_only_in_last_10_digits'])}% share a phone "
+            f"only") in flat
+    assert f"{pct1(mm['shared_address_not_both_first'])}% share an address" in flat
+    assert f"and {pct1(mm['a_name_blank'])}% have no name on one side" in flat
+    bl, bl_old = new["blocking"], old["blocking"]
+    assert (f"proposed {pct(bl['recall'])}% of the matches at {bl['candidate_pairs'] / 1e6:.1f} million candidates "
+            f"in about {round(bl['seconds'])} seconds") in flat
+    assert f"with 0.1.2's date reading the keys found {pct(bl_old['recall'])}%" in flat
+    assert bl["recall"] > paper["blocking_best_recall"]
+    assert (f"from {pct(old['matching_8000']['f1'])} to {pct(new['matching_8000']['f1'])} with 8,000 labels, and its "
+            f"blocking recall from {pct(bl_old['recall'])}% to {pct(bl['recall'])}%") in changelog
+
+
 def test_audit_claims():
     a = load("audit_check.json")
     flat = " ".join(GUIDE.split())
@@ -942,19 +977,85 @@ def test_full_ncvr_claims():
     assert any("randomly drawn labels are matches" in w for w in r["warnings"]), "the few-random-matches warning no longer fires"
 
 
+def test_address_book_stratified_label_claims():
+    """docs/report/06 "Random labels that still hold matches", the guide and the changelog: plain
+    against stratified 300 random labels, ten draws on each of three synthetic address books."""
+    r = load("address_book.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    flat = _flat(GUIDE + (ROOT / "CHANGELOG.md").read_text())
+    cell = {}
+    for v in ("dirty", "clean"):
+        for b in ("random_300", "stratified_300"):
+            runs = [x for k, x in r.items() if k.split("/")[1:3] == [v, b] and "/draw" in k]
+            assert len(runs) == 30, (v, b)
+            f1 = [x["f1"] for x in runs]
+            cell[v, b] = (fmean(f1), min(f1), fmean([x["random_matches"] for x in runs]))
+    for v, row in (("dirty", "As generated: clustered F1, mean (lowest draw)"), ("clean", "Relay records removed, switchboard blanked")):
+        p, q = cell[v, "random_300"], cell[v, "stratified_300"]
+        assert f"| {row} | {p[0]:.2f} ({p[1]:.2f}) | {q[0]:.2f} ({q[1]:.2f}) |" in text, v
+    assert (f"| Random matches among the 300 | {cell['dirty', 'random_300'][2]:.1f} | "
+            f"{cell['dirty', 'stratified_300'][2]:.1f} / {cell['clean', 'stratified_300'][2]:.1f} |") in text
+    assert f"from {cell['dirty', 'random_300'][0]:.2f} to {cell['dirty', 'stratified_300'][0]:.2f} over 30 draws" in flat
+    gains = []
+    for book in (1, 2, 3):
+        for v in ("dirty", "clean"):
+            m = {b: fmean([r[f"s{book}/{v}/{b}/draw{d}"]["f1"] for d in range(1, 11)]) for b in ("random_300", "stratified_300")}
+            gains.append(m["stratified_300"] - m["random_300"])
+    assert min(gains) > 0, "stratified labels no longer win on every address book"
+    assert f"(by {min(gains):.1f} to {max(gains):.1f})" in text
+
+
+def test_address_book_cards_claims():
+    """docs/report/06 "Address-book cards": Profile B before and after, from address_book.json."""
+    r = load("address_book.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    rows = {"random_300": "300 random", "stratified_300": "300 stratified", "random150_active150": "150 random + 150 active",
+            "stratified300_active150": "300 stratified + 150 active", "all": "Every candidate pair labelled (3 runs)"}
+    cells = {}
+    for budget, row in rows.items():
+        out = []
+        for tag in ("/before", ""):
+            runs = [v for k, v in r.items() if k.split("/")[1:3] == ["cards", budget]
+                    and (k.endswith(tag) if tag else k.count("/") == 3)]
+            assert len(runs) == (3 if budget == "all" else 15), (budget, tag)
+            f1 = fmean([v.get("f1", 0.0) for v in runs])       # a run that stops scores 0
+            stopped = sum("error" in v for v in runs)
+            found = fmean([int(v["duplicates_found"].split()[0]) if "duplicates_found" in v else 0 for v in runs])
+            out.append(f"{f1:.2f} ({stopped}) | {found:.1f} of 11")
+            cells[budget, tag] = f1
+        assert f"| {row} | {out[0]} | {out[1]} |" in text, budget
+    assert cells["random150_active150", ""] > cells["random150_active150", "/before"] + 30
+    ph = {t: [v["f1"] for k, v in r.items() if "/cards/stratified300_active150/" in k and k.endswith(t)]
+          for t in ("/placeholders_ignored", "/placeholders_compared")}
+    assert all(len(v) == 15 for v in ph.values())
+    assert f"changed nothing ({fmean(ph['/placeholders_ignored']):.2f} against {fmean(ph['/placeholders_compared']):.2f}" in text
+
+
 def test_full_ncvr_reruns_claims():
     """docs/report/ "Larger files": the full NCVR reruns after the memory redesign."""
     r = load("scale_large.json")
     flat = _flat(GUIDE)
     peak = lambda x: max(v["peak_memory_gb_so_far"] for v in x["progress"].values())  # noqa: E731
     old, new, fx = r["ncvr_all"], r["ncvr_all_default_memory_redesign"], r["ncvr_all_fixed_blocking"]
-    for x in (old, new, fx):
+    ad, nothing = r["ncvr_all_adaptive_blocking"], r["ncvr_all_current_default"]
+    for x in (old, new, fx, ad, nothing):
         assert f"| {x['result']['clustered']['f1']:.2f} | {x['result']['clustered']['precision']:.1f} / {x['result']['clustered']['recall']:.1f} |" in flat
         assert f"{peak(x):.1f} GB |" in flat
     assert peak(new) < 0.5 * peak(old), "the memory redesign no longer halves full-scale memory"
     assert abs(new["result"]["clustered"]["f1"] - old["result"]["clustered"]["f1"]) < 1, "the redesign changed accuracy"
     assert fx["result"]["clustered"]["f1"] > new["result"]["clustered"]["f1"]
+    assert ad["result"]["clustered"]["f1"] > fx["result"]["clustered"]["f1"], "adaptive blocking no longer beats fixed at full size"
+    assert f"it scored {ad['result']['clustered']['f1']:.2f}, the best full-file result" in flat
+    assert f"Only {ad['result']['random_matches']} of its 1,000 random labels were matches" in flat
     assert f"cut peak memory by {100 * (1 - peak(new) / peak(old)):.0f}%" in flat
+    # nothing set: the switch to adaptive and stratified labels by themselves, 300 random + 700 active
+    assert nothing["result"]["config_changes"] == {"blocking": None}
+    assert any(w.startswith('blocking switched to "adaptive"') for w in nothing["result"]["warnings"])
+    f1 = nothing["result"]["clustered"]["f1"]
+    assert f"scored {f1:.2f} (the table's last row): {f1 - new['result']['clustered']['f1']:.2f} above the default" in flat
+    assert f"but {ad['result']['clustered']['f1'] - f1:.2f} below the 1,000-random-label run" in flat
+    assert f"{nothing['result']['random_matches']} of its 300 random labels were matches, against " \
+           f"{old['result'].get('random_matches', 11)} and {new['result']['random_matches']} in plain draws of 300" in flat
 
 
 def test_tier1_speedups_match_the_results():
@@ -1259,3 +1360,39 @@ def test_embedding_blocking_claims():
     assert f"{stage('keys_lsh', blk):.2f} s instead of {stage('keys', blk):.2f} s on NCVR" in text
     assert f"(labels in hand) {stage('keys_lsh', run):.1f} s instead of {stage('keys', run):.1f} s" in text
     assert f"neighbours, {stage('keys_emb10', run):.1f} s" in text
+
+
+def test_auto_adaptive_and_stratified_label_claims():
+    """docs/report/06-blocking-and-scale.md "Splitting when it is needed" and "Random labels that
+    still hold matches", from ncvr_leipzig.json, beat_splink.json and home_data_benchmark.json."""
+    r = load("ncvr_leipzig.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    ad = "postcode_initial_keys_adaptive"
+    plain, strat = r[f"{ad}/people_200000"], r[f"{ad}/people_200000/stratified"]
+    one, one_s = r[f"{ad}/people_1000000"]["runs"][0], r[f"{ad}/people_1000000/stratified"]["runs"][0]
+    k, k_s = r[f"{ad}/people_1000000/random_1000"]["runs"][0], r[f"{ad}/people_1000000/random_1000/stratified"]["runs"][0]
+    assert f"| 200,000 (3 draws) | {plain['mean_f1']:.2f} | {strat['mean_f1']:.2f} |" in text
+    assert (f"| 1,000,000, 300 random labels | {one['clustered']['f1']:.2f} (2 random matches) | "
+            f"{one_s['clustered']['f1']:.2f} ({one_s['random_matches']}) |") in text
+    assert (f"| 1,000,000, 1,000 random labels | {k['clustered']['f1']:.2f} ({k['random_matches']}) | "
+            f"{k_s['clustered']['f1']:.2f} ({k_s['random_matches']}) |") in text
+    assert strat["mean_f1"] > plain["mean_f1"] and one_s["clustered"]["f1"] > one["clustered"]["f1"] + 10
+    assert k_s["clustered"]["f1"] >= k["clustered"]["f1"], "stratified labels now cost at a million people"
+    # the true default switches to both by itself, and lands where the explicit settings do
+    assert r["current_default/people_200000"]["mean_f1"] == strat["mean_f1"]
+    b = load("beat_splink.json")
+    # three label draws per dataset: mean and range, plain and stratified, random and active
+    seeds = ["", "/seed2", "/seed3"]
+    for ds in b["rich_stratified"]:
+        cells = []
+        for m in ("random_1000", "active_300_700"):
+            for v in ("rich_rerun", "rich_stratified"):
+                f = [b[v + s][ds][m] for s in seeds]
+                lo, hi = f"{min(f):.2f}", f"{max(f):.2f}"
+                cells.append(f"{fmean(f):.2f}" + ("" if lo == hi == "99.99" else f" ({lo}-{hi})"))
+        assert f"| {ds} | " + " | ".join(cells) + " |" in text, ds
+    hist = {v: fmean([b[v + s]["historical_50k"]["active_300_700"] for s in seeds]) for v in ("rich_rerun", "rich_stratified")}
+    assert f"by {hist['rich_rerun'] - hist['rich_stratified']:.2f} on average" in text
+    h = load("home_data_benchmark.json")
+    assert (f"the childcare sites from 86.95 to {h['dedupe_csv_example']['custmatch_1000']['f1']:.2f}, the patent "
+            f"applicants from 75.88 to {h['dedupe_patent_example']['custmatch_1000']['f1']:.2f}") in text

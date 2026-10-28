@@ -57,8 +57,16 @@ A **country profile** (`"country": "AU"`, also US, NZ, GB, CA) adds the local ru
 - **Phones** parsed with the country's numbering plan, so `0412 345 678` and `+61 412 345 678`
   become one number. Without it they are two different numbers.
 - **Dates** read day-first or month-first as the country writes them.
-- **Emails** cleaned: Gmail's dots and `+tags` ignored, common domain typos fixed.
+- **Emails** cleaned: Gmail's dots and `+tags` ignored, me.com and mac.com read as icloud.com
+  (one Apple account), common domain typos fixed.
 - **Postcodes** read off the end of an address.
+- **Names** tidied: qualifications after a name ("Smith, PhD, CPA", "MBA", "®"), bracketed text
+  ("William (Bill)") and a phone number typed into a name are taken out, a "(nee Brown)" surname
+  becomes an alias, and an email address used as a name becomes the name it spells
+  (nancy.lewis@... is Nancy Lewis). Short qualifications that are also names ("Ma") go only after
+  a comma. `"normalise": {"names": false}` keeps names as written.
+- **Titles** dropped from first names: "Dr John", "Prof. Jane" and "Assoc.Prof.Dr.Jane" are
+  john and jane. A record named only "Dr" keeps it.
 - **Nicknames**: Bill is William, Peggy is Margaret. Each first name gets its **roots** - the
   full names it can be short for - and two first names are compatible when their roots meet.
 - **Transliteration**: names written in Chinese characters or Arabic script are written in
@@ -72,7 +80,11 @@ kinds of shared value break that rule, and custmatch looks for both before match
 - **Junk values**: placeholders typed to get past a mandatory field - `test@test.com`,
   `noemail@noemail.com`, `0400 000 000`, `123 Main St`. Some are recognised by pattern; others by
   behaviour: a value carried by many records whose names and addresses agree on nothing is
-  junk. Junk values are ignored, as if blank.
+  junk. Junk values are ignored, as if blank. Service addresses are junk on sight too: no-reply,
+  notification and bounce mailboxes (`drive-shares-noreply@google.com`,
+  `calendar-notification@...`, `mailer-daemon@...`). Mail clients file them under the name of
+  the person the service wrote for, so an address book holds them with a real name, and the
+  run warns about those: the name can still link them to that person.
 - **Household values**: a family email or a home phone, shared by people with one surname or one
   address. Agreeing on it means "same household", not "same person", so it counts for less.
 
@@ -104,8 +116,28 @@ S530. As a blocking key it lets a misspelt surname still meet the right one.
 
 **Hubs.** A key shared by too many records - a common surname in a big city, a postcode - would
 produce a huge block whose pairs are mostly strangers. Blocks over `"max_block"` records (60 by
-default) are skipped. Blank keys (no address at all) are always skipped; a summary warning names
-common values that were, so you can raise the limit if they are legitimate.
+default) are skipped; a summary warning names common values that were, so you can raise the
+limit if they are legitimate.
+
+**Half-blank keys.** A two-field key with one field blank blocks on the other alone: first name
++ street is first name alone where there is no street. That keeps recall where addresses are
+patchy, and historical_50k, which has no streets, relies on it; but on a file with no
+addresses, such as an address book, those pairs are mostly strangers who share a
+first name. `blocking_report.json` counts them per key (`pairs_with_a_blank_part`), and
+`summary.json` warns when one key's are a quarter of the candidate pairs or more.
+
+**Big files: oversized blocks are split, not skipped.** Blocks grow with the file: keys that make
+blocks of a few dozen at 200,000 people make blocks of thousands at millions, and skipping them
+leaves records compared with no one. When the default keys would leave more than 1% of the
+records only in skipped blocks, custmatch instead splits each oversized block on up to three
+other fields at once, keeping the pieces of all of them (`"blocking": "adaptive"`), and
+`summary.json` says it did. On the NCVR voter file that lifted clustered F1 from 90.29 to 92.88 at
+a million people (300 random + 700 active labels, the random ones stratified as below), and on
+all five million records from 87.19 to 88.45 against splitting on one field (`"fixed"`). The five small benchmarks
+and BPID stay under 1% (0.45% at most), so they block as before; dedupe's two organisation
+files switch, and score 89.08 and 77.37 against 86.95 and 75.88. `add` and runs reusing the model
+block the way the run did. Set `"blocking": "core"` to always skip instead; `"adaptive"` to always
+split.
 
 **Similarity blocking** (`"lsh_blocking"`) finds pairs no exact key would: it hashes the names'
 letter pairs (MinHash, locality-sensitive hashing) so that names with typos in both records still
@@ -425,7 +457,7 @@ ways, mixed date orders, nicknames, placeholders - as in [report/05-customer-dat
 In more detail, for files where names are partial and an email or mobile carries the match (see
 [report/05-customer-data.md](report/05-customer-data.md) "Sparse records"), the country profile puts phones in one
 international format (0412 345 678, +61 412 345 678 and 412345678 agree),
-reads dates day-first outside the US, cleans emails (Gmail dots and +tags; a big mail
+reads dates day-first outside the US, cleans emails (Gmail dots and +tags; me.com and mac.com as icloud.com; a big mail
 provider's name mistyped by one letter, gmial.com or hotmail.con - real domains such as ge.com
 are left alone), matches nicknames (Mick, Mike -> Michael) and names across languages
 (Giuseppe -> Joseph, Kostas -> Konstantinos), transliterates names written
@@ -454,6 +486,24 @@ true matches differ in date of birth. Each extra field must also be mapped in `c
 large block is a legitimately common value such as a city, not a junk contact. A skipped block
 whose records the model judges to be one entity is compared anyway ("How it decides").
 
+**One row per contact point (`"group_rows"`).** Many exports hold a person once per email or
+phone - an address book, a CRM's contact-methods table. Set `"group_rows": true` on the source
+and map `record_id` to the person's or contact's ID: rows sharing it become one record. Each field
+takes the record's first filled value, and its other surnames, emails and phones become
+aliases (below; named `last_name_2`, `email_2`, `email_3`, ...), so they are blocked and compared
+without a second record per address:
+
+```json
+{"name": "contacts", "path": "contacts.csv", "group_rows": true,
+ "columns": {"record_id": "contact_id", "first_name": "first", "last_name": "last", "email": "email", "phone": "phone"}}
+```
+
+Only surnames, emails and phones can carry several values; a second first name or address is
+dropped (a record's nickname is matched through the nickname list anyway). As with aliases, it
+works with the default blocking only. Splitting such a file into one record per address instead
+makes pairs of a person's own addresses, which take up the labels: 61 of them on the address book
+that prompted this option.
+
 **Previous names and second contacts (`aliases`).** A record may carry other values of a
 field - a maiden or previous surname, a second email, a work phone. Map each as a column of its
 own and list it under its field:
@@ -476,7 +526,7 @@ address, email and phone; the old surname kept as `previous_surname`), clustered
 from 75.83 to 96.67 and F1 from 86.26 to 91.34. Precision fell from 100 to 86.57: every false
 merge joined two different people with the same first name and surname, whom nothing else told
 apart (`tests/test_custmatch.py`, test_previous_surnames_find_people_who_changed_their_name;
-library versions move these by a point or two - Python 3.10's gave precision 87.88).
+library versions move these by a point or two).
 
 **Three matcher options.**
 
@@ -551,12 +601,33 @@ custmatch sample config.json --active labels.csv --n 100 --out next.csv  # label
 With 1,000 labels in total this scored **98.61** clustered F1 against 97.28 for 1,000 random ones,
 and it won on every one of three further label draws (98.85 / 98.81 / 98.90 against 97.58 /
 97.74 / 97.78) - more than 3,000 random labels achieved (97.80). Stop at 500 and it does not
-help yet (96.45 against 97.37). **On dense files it can hurt:** on historical_50k, with about ten
-records per person, it scored 86.20 against 87.02 for random labels, and drawing half of each
-batch at random (`--mix 0.5`) did not fix that (87.13 against 87.55, with the Splink feature on). Where one person has many
-records, label randomly. Actively chosen pairs are marked `by = active`: `run` trains on
+help yet (96.45 against 97.37). **On dense files it is inconsistent:** on historical_50k, with
+about ten records per person, it scored 86.64 against 85.53 for random labels, but 86.20 against
+87.02 on the code before 0.1.2, and drawing half of each batch at random (`--mix 0.5`) did not
+settle it (87.13 against 87.55, with the Splink feature on). Where one person has many records,
+compare both on your own data. Actively chosen pairs are marked `by = active`: `run` trains on
 them but chooses its threshold only on the random ones, because a threshold judged on hard
 pairs alone misjudges the clusters.
+
+**Small files where matches are very rare** - an address book, where a few duplicates hide among
+thousands of candidate pairs: label 300 random pairs (drawn stratified, the default), then at
+least 150 active ones. Random labels alone found 1 of 11 duplicates on synthetic address-book
+cards, stratified ones 5.7; adding 150 active labels found 9.7 (docs/report/06-blocking-and-scale.md,
+"Address-book cards"). While no labelled pair is a match yet, `--active` offers half its batch as
+the pairs with the highest match weight (fitted without labels) and half as another random
+batch, so it does not stop for want of one.
+
+**Random pairs are drawn where the matches are.** Matches are rare among candidate pairs - a
+fraction of a percent with millions of them - and 300 plain random pairs can hold two, too few
+to judge the threshold on. `custmatch sample` draws half of them uniformly and half spread over
+the pairs' agreement patterns (which fields agree exactly), and writes a `weight` column: the
+candidate pairs each label stands for. Keep that column - `run` weighs each random label by it
+when it judges the threshold, so the estimate stays unbiased. On 1,000,000 NCVR people with 300
+random + 700 active labels it lifted clustered F1 from 80.84 to 92.88 (7 random matches instead
+of 2); on synthetic address books with 300 random labels, from 71.58 to 77.21 over 30 draws,
+with about twice the matches. `--no-stratified` draws plainly, as before 0.1.3; labels without
+weights count equally. The losses measured: historical_50k with 300 random + 700 active
+labels, 87.36 to 85.95 over three draws, and fake_1000 with 1,000 random, 93.36 to 92.44.
 
 ## 3. Run
 
@@ -968,6 +1039,23 @@ warns below 30.
 
 - **A large `largest_customer`** (over about 20 records): look at that cluster. It usually
   means one bad link is chaining different people together.
+- **"blocking switched to adaptive"**: the default keys would have left over 1% of the records
+  compared with no one, so their oversized blocks were split instead ("Big files" under
+  Blocking). Expect more candidate pairs and a longer run; `"blocking": "core"` turns it off.
+- **"... something other than a name in a name field"**: names were tidied ("Names" under
+  Cleaning and country profiles). Check a few in the outputs if your names are unusual.
+- **"... on a tenth or more of the records, whose people share no surname"**: an extra field's
+  value is a placeholder or too common to tell people apart ("Multiple Companies" from a social
+  network's import). It is still compared - the model learns how little it is worth - so check
+  it is not a mistake in the data.
+- **"... a first name only that is their email's domain"**: a service, product or practice saved
+  as a person ("Zoomly" at hello@zoomly.example). Remove such records if they are not people.
+- **"... a no-reply or notification address and a person's name"**: a service's relay filed
+  under someone's name ("Junk values" under Contact profiling). Its address is ignored, but its name can
+  still link it to that person; remove such records if they are not people.
+- **"... was blank in one part for many records"**: a default key blocked on one field alone
+  ("Half-blank keys" under Blocking), so many candidate pairs share only, say, a first name.
+  Random labels drawn from them hold few matches: label more, or fill in the missing field.
 - **Fewer than 500 labels**: below 500 was not measured. Single draws at 500, 1,000 and 3,000
   labels scored 97.37, 97.28 and 97.80 on the synthetic file - within the spread between draws -
   and sparse files needed active learning far more than more random labels.

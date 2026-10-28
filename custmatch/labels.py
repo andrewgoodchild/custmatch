@@ -30,12 +30,92 @@ def record(r, fields=None):
     return out if fields is None else {k: v for k, v in out.items() if k in fields}
 
 
-def sample(config_path, n, out_path, seed=0):
-    """Random candidate pairs, both records side by side, `label` left blank to fill 1/0."""
+AGREE_FIELDS = ["first_name", "last_name", "date_of_birth", "email", "phone", "addr_number", "addr_street"]
+AGREE_CHUNK = 5_000_000
+# random labels are drawn stratified by default, at every size. On NCVR at a million people with
+# 300 random labels it lifted 80.84 to 92.88; on the synthetic address books
+# (research/scripts/address_book_benchmark.py), ten draws of 300 on each of three books, from
+# 71.58 to 77.21 clustered F1 (77.75 to 81.37 without the relay records), ahead on all six
+# books; on the five small benchmarks over three draws, level or better on four with 1,000
+# random labels. The losses: fake_1000 there, 93.36 to 92.44, and historical_50k with 300
+# random + 700 active, 87.36 to 85.95
+# (docs/report/06-blocking-and-scale.md "Random labels that still hold matches")
+
+
+def agreement(df, pairs, cfg=None):
+    """Which fields each candidate pair agrees on exactly (both filled), as a bit pattern: the
+    strata of a stratified draw. Not a count of agreeing fields - on NCVR at a million people
+    pairs agreeing on three of four fields were 0.01% matches (relatives: surname, town and
+    postcode) and pairs agreeing on two were 1.25% (movers)."""
+    cols = [c for c in AGREE_FIELDS + [f for f, _ in schema.extra_fields(cfg or {})] if c in df.columns]
+    out = np.zeros(len(pairs), np.int32)
+    for bit, c in enumerate(cols):
+        v = df[c].astype(str).to_numpy()
+        codes = pd.factorize(v)[0].astype(np.int32)
+        codes[v == ""] = -1
+        for s in range(0, len(pairs), AGREE_CHUNK):
+            a, b = codes[pairs[s:s + AGREE_CHUNK, 0]], codes[pairs[s:s + AGREE_CHUNK, 1]]
+            out[s:s + AGREE_CHUNK] |= ((a == b) & (a >= 0)).astype(np.int32) << bit
+    present = np.bincount(out, minlength=1 << len(cols)) > 0            # patterns as 0..k-1, in O(n)
+    return (np.cumsum(present) - 1)[out].astype(np.int32)
+
+
+def stratified_pick(score, n, rng):
+    """n pair indices: half uniformly at random, half from the strata (agreement patterns), each
+    stratum's share the square root of its size - every kind of pair is seen, not only the
+    commonest. Returns the picks and each one's weight - the candidate pairs it stands for (1 /
+    its chance of being drawn) - so estimates from the labels stay unbiased while far more of
+    them are matches: with millions of candidate pairs, matches are a fraction of a percent of
+    them and a plain random draw holds a handful."""
+    N, n_u = len(score), n - n // 2
+    size = np.bincount(score)
+    share = np.sqrt(size)
+    m = np.minimum(size, np.floor((n // 2) * share / share.sum()).astype(np.int64))
+    top = np.argmax(size)
+    m[top] += min(n // 2 - m.sum(), size[top] - m[top])
+    uniform = rng.choice(N, min(n_u, N), replace=False)
+    taken = np.zeros(N, bool)
+    taken[uniform] = True
+    pick = [uniform]
+    # each stratum's members as one slice of a stable sort (ascending, as flatnonzero gave them),
+    # not a scan of every pair per stratum
+    by_stratum, starts = np.argsort(score, kind="stable"), np.r_[0, np.cumsum(size)]
+    for s in np.flatnonzero(m):
+        members = by_stratum[starts[s]:starts[s + 1]]
+        got = rng.choice(members, m[s], replace=False)
+        again = taken[got]
+        taken[got] = True
+        if again.any():
+            # a pair the uniform half already drew is replaced from the rest of its stratum, so n
+            # pairs come back: on a small file they overlap often (30 asked gave 29), on millions
+            # almost never - and where none overlaps the same pairs are drawn as before 0.1.3
+            rest = members[~taken[members]]
+            more = rng.choice(rest, min(int(again.sum()), len(rest)), replace=False)
+            taken[more] = True
+            got = np.concatenate([got[~again], more])
+        pick.append(got)
+    pick = np.sort(np.concatenate(pick))
+    # inclusion probability of a pair in stratum s: the uniform half's n_u / N, plus its
+    # stratum's m_s drawn from the members the uniform half left
+    p_in = np.minimum(1.0, min(n_u, N) / N + m / np.maximum(size, 1))
+    return pick, 1 / p_in[score[pick]]
+
+
+def sample(config_path, n, out_path, seed=0, stratified=True):
+    """Random candidate pairs, both records side by side, `label` left blank to fill 1/0.
+    stratified: half of them spread over the pairs' agreement patterns (stratified_pick), each
+    with the `weight` that keeps the threshold's estimates unbiased; True (the default) draws this
+    way, False draws plainly, as every draw did before 0.1.3."""
     df, cfg = io.load(config_path)
     pairs = candidates(df, cfg)
-    pick = np.random.default_rng(seed).choice(len(pairs), min(n, len(pairs)), replace=False)
-    out = _pairs_for_labelling(df, [(pairs[np.sort(pick)], "random")])
+    rng = np.random.default_rng(seed)
+    if stratified and len(pairs) > n:
+        pick, weight = stratified_pick(agreement(df, pairs, cfg), n, rng)
+    else:
+        pick = np.sort(rng.choice(len(pairs), min(n, len(pairs)), replace=False))
+        weight = np.full(len(pick), len(pairs) / max(len(pick), 1))
+    out = _pairs_for_labelling(df, [(pairs[pick], "random")])
+    out["weight"] = np.round(weight, 3)
     out.to_csv(out_path, index=False)
     return len(out)
 
@@ -98,11 +178,29 @@ def sample_active(config_path, labels_path, n, out_path, seed=0, mix=0.0, strate
     done = np.unique(lab[:, 0].astype(np.int64) * n_rec + lab[:, 1])
     fresh = ~np.isin(codes, done)
     if ly.all() or not ly.any():
-        # nothing to be uncertain between yet: another random batch, marked as such
+        # nothing to be uncertain between yet. Where 0.3% of pairs are matches a random batch finds
+        # none either (an address book: 150 random labels, 150 "active" ones drawn at random, all
+        # non-matches, and the run stopped). So with no match yet, half the batch is the pairs with
+        # the highest match weight (unsupervised, matchweight.py), marked active: they train
+        # but never choose the threshold; the rest is another random batch, drawn stratified
         pool = np.flatnonzero(fresh)
-        pick = np.sort(np.random.default_rng(seed + len(done)).choice(pool, min(n, len(pool)), replace=False))
-        _pairs_for_labelling(df, [(pairs[pick], "random")]).to_csv(out_path, index=False)
-        return len(pick)
+        rng = np.random.default_rng(seed + len(done))
+        top = np.zeros(0, np.int64)
+        if not ly.any() and len(pool):
+            from .matchweight import weights
+            w = weights(df, profiles, [pairs, pairs[pool]], cfg, seed)[1]
+            top = pool[np.sort(np.argsort(-w, kind="stable")[:n // 2])]
+            pool = np.setdiff1d(pool, top)
+        m = n - len(top)
+        if len(pool) > m:
+            got, weight = stratified_pick(agreement(df, pairs[pool], cfg), m, rng)
+            pick = pool[got]
+        else:
+            pick, weight = pool, np.ones(len(pool))
+        out = _pairs_for_labelling(df, [(pairs[top], "active"), (pairs[pick], "random")])
+        out["weight"] = np.r_[np.full(len(top), np.nan), np.round(weight, 3)]
+        out.to_csv(out_path, index=False)
+        return len(out)
     rf = RandomForestClassifier(n_estimators=300, random_state=seed, n_jobs=-1,
                                 class_weight="balanced_subsample").fit(features(df, lab, profiles, **fopts), ly)
     # scored a chunk at a time: the full feature matrix of every candidate pair is never held
@@ -128,8 +226,9 @@ def sample_active(config_path, labels_path, n, out_path, seed=0, mix=0.0, strate
     pool = np.flatnonzero(taken)
     rand = np.random.default_rng(seed + len(done)).choice(pool, min(n_random, len(pool)), replace=False) \
         if n_random and len(pool) else np.zeros(0, np.int64)
-    _pairs_for_labelling(df, [(pairs[order], "active"), (pairs[rand], "random"), (off_rows, "active")]
-                         ).to_csv(out_path, index=False)
+    out = _pairs_for_labelling(df, [(pairs[order], "active"), (pairs[rand], "random"), (off_rows, "active")])
+    out["weight"] = np.where(out.by == "random", round(len(pool) / max(len(rand), 1), 3), np.nan)
+    out.to_csv(out_path, index=False)
     return len(order) + len(rand) + len(off_rows)
 
 

@@ -410,7 +410,7 @@ def score(variant="default", seeds=SEEDS, labels_n=1500):
         bp.write_text(json.dumps(bg_cfg))
         for seed in seeds:
             lp = tmp / f"labels{seed}.csv"
-            labels.sample(bp, labels_n * 2, lp, seed=seed)
+            labels.sample(bp, labels_n * 2, lp, seed=seed, stratified=False)
             lab = pd.read_csv(lp, dtype=str, keep_default_na=False)
             background_only = lambda d: d[(d.a.map(scen) == "background") & (d.b.map(scen) == "background")]  # noqa: E731
             lab = background_only(lab).head(500 if spec.get("_active") else labels_n)

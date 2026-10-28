@@ -56,10 +56,10 @@ def label_files(config, truth, tmp, tag, seed):
         lab.to_csv(path, index=False)
         return lab
     rp = tmp / f"{tag}_random.csv"
-    labels.sample(config, 1000, rp, seed=seed)
+    labels.sample(config, 1000, rp, seed=seed, stratified=False)
     fill(rp)
     ap = tmp / f"{tag}_active.csv"
-    labels.sample(config, 300, ap, seed=seed)
+    labels.sample(config, 300, ap, seed=seed, stratified=False)
     al = fill(ap)
     while len(al) < 1000:
         labels.sample_active(config, ap, 100, tmp / "next.csv", seed=seed)

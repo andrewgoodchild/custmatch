@@ -8,6 +8,7 @@ its official-settings results from research/results/splink_datasets_benchmark.js
 research/results/splink_vs_custmatch.json.
 
   beat_splink.py VARIANT [DATASET ...]      variants: base, rich, ...
+  beat_splink.py VARIANT --seed 2 [DATASET ...]   another label draw, kept as "VARIANT/seed2"
 Writes research/results/beat_splink.json.
 """
 import json
@@ -35,6 +36,14 @@ VARIANTS = {                         # config overrides; "_mix" / "_jev" change 
     # blocking lessons: fixed rules with oversized blocks split (Zingg), and rules learned from
     # the labelled matches (dedupe); max_block left at its default 60 on purpose
     "rich_split": {"blocking": "fixed", "max_block": 60},
+    # oversized blocks split on three fields at once (research/scripts/ncvr_blocking_scale.py),
+    # and rich_split again on the same code, since its saved figures predate 0.1.2
+    "rich_adaptive": {"blocking": "adaptive", "max_block": 60},
+    "rich_split_0_1_2": {"blocking": "fixed", "max_block": 60},
+    # random labels drawn stratified by fields agreeing, weighted back (labels.stratified_pick)
+    "rich_stratified": {"rich_features": True, "_stratified": True},
+    "rich_rerun": {"rich_features": True},       # rich on current code: rich_stratified's baseline
+    "rich_adaptive_stratified": {"blocking": "adaptive", "max_block": 60, "_stratified": True},
     "rich_learned": {"blocking": "learned", "max_block": 60},
     "rich_learned99": {"blocking": "learned", "max_block": 60, "blocking_recall": 0.99},
     # active learning that also looks where blocking missed (dedupe), feeding learned blocking
@@ -97,7 +106,7 @@ def with_overrides(config, overrides, tmp, tag):
     return out
 
 
-def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"):
+def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty", stratified=False, seed=1):
     def fill(path):
         lab = pd.read_csv(path, dtype=str, keep_default_na=False)
         lab["label"] = [int(truth[a] == truth[b]) for a, b in zip(lab.a, lab.b)]
@@ -114,7 +123,7 @@ def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"
     if jev:
         # no hand labels beyond a 100-pair check: Jev labels 900 random candidate pairs, gated
         check = tmp / f"{tag}_check.csv"
-        labels.sample(config, 100, check, seed=7)
+        labels.sample(config, 100, check, seed=7, stratified=False)
         fill(check)
         gate = jev_labelling.label(config, 900, check, tmp / f"{tag}_jev.csv", min_accuracy=0.0, max_cost=0.10)
         jl = pd.read_csv(tmp / f"{tag}_jev.csv", dtype=str, keep_default_na=False)
@@ -124,7 +133,7 @@ def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"
         return {"jev_900_plus_100_hand": score(tmp / f"{tag}_j"), "gate": gate}
     n = min(1000, len(labels.candidates(df, cfg)))
     lp = tmp / f"{tag}_r.csv"
-    labels.sample(config, n, lp, seed=1)
+    labels.sample(config, n, lp, seed=seed, stratified=stratified)
     fill(lp)
     import time
     t0 = time.time()
@@ -133,7 +142,7 @@ def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"
     res["candidate_pairs"] = summ["candidate_pairs"]
     res["seconds"] = round(time.time() - t0, 1)
     ap = tmp / f"{tag}_a.csv"
-    labels.sample(config, 300, ap, seed=1)
+    labels.sample(config, 300, ap, seed=seed, stratified=stratified)
     al = fill(ap)
     while len(al) < 1000:
         labels.sample_active(config, ap, 100, tmp / "next.csv", mix=mix, strategy=strategy)
@@ -145,8 +154,14 @@ def evaluate(config, truth, tmp, tag, mix=0.0, jev=False, strategy="uncertainty"
 
 
 def main():
-    variant = sys.argv[1]
-    which = sys.argv[2:] or DATASETS
+    args = sys.argv[1:]
+    seed = 1
+    if "--seed" in args:
+        k = args.index("--seed")
+        seed = int(args[k + 1])
+        del args[k:k + 2]
+    variant, which = args[0], args[1:] or DATASETS
+    key = variant if seed == 1 else f"{variant}/seed{seed}"
     path = ROOT / "research/results/beat_splink.json"
     out = json.loads(path.read_text()) if path.exists() else {}
     out["splink_reference"] = splink_reference()
@@ -157,10 +172,10 @@ def main():
             config = with_overrides(config, VARIANTS[variant], tmp, f"{name}_{variant}")
             ov = VARIANTS[variant]
             r = evaluate(config, truth, tmp, f"{name}_{variant}", mix=ov.get("_mix", 0.0), jev=ov.get("_jev", False),
-                         strategy=ov.get("_strategy", "uncertainty"))
-            out.setdefault(variant, {})[name] = r
+                         strategy=ov.get("_strategy", "uncertainty"), stratified=ov.get("_stratified", False), seed=seed)
+            out.setdefault(key, {})[name] = r
             shown = "  ".join(f"{k} {v:6.2f}" for k, v in r.items() if isinstance(v, float))
-            print(f"{variant:16s} {name:15s} {shown}   | Splink {out['splink_reference'][name]:6.2f}", flush=True)
+            print(f"{key:16s} {name:15s} {shown}   | Splink {out['splink_reference'][name]:6.2f}", flush=True)
             path.write_text(json.dumps(out, indent=1))
 
 

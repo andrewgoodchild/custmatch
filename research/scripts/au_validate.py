@@ -178,7 +178,7 @@ def main():
             for seed in SEEDS:
                 lp = tmp / f"{name}_{seed}_labels.csv"
                 # 1,000 random labels, or 300 random then 700 chosen by active learning 100 at a time
-                labels.sample(cp, 300 if spec.get("_active") else 1000, lp, seed=seed)
+                labels.sample(cp, 300 if spec.get("_active") else 1000, lp, seed=seed, stratified=False)
                 lab = fill(lp, gold)
                 while len(lab) < 1000:
                     nxt = tmp / "next.csv"

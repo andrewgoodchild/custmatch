@@ -273,7 +273,7 @@ def main():
                     print(name, seed, {m: r[m]["all_records"]["f1"] for m in r if m != "seed"}, flush=True)
                     continue
                 lp = tmp / f"l{seed}.csv"
-                labels.sample(cp, 300, lp, seed=seed)
+                labels.sample(cp, 300, lp, seed=seed, stratified=False)
                 lab = AU.fill(lp, gold)
                 while len(lab) < 1000:
                     labels.sample_active(cp, lp, 100, tmp / "next.csv", seed=seed)

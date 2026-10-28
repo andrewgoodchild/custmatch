@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from custmatch import explain, incremental, io, labels, pipeline
+from custmatch import blocking, explain, incremental, io, labels, pipeline
 from custmatch.core import partition_scores
 
 FIRST = ["anna", "ben", "carla", "david", "erin", "frank", "grace", "henry", "iris", "jack",
@@ -75,6 +75,58 @@ def all_candidate_labels(tmp, truth, path):
     return len(pairs)
 
 
+def test_a_named_relay_address_is_warned_about(world, tmp_path):
+    """A file-sharing relay filed under a person's name: its address is junk, and the run says
+    that its name can still link it."""
+    tmp, truth, _ = world
+    crm = pd.read_csv(tmp / "crm.csv", dtype=str)
+    crm.loc[0, "email"] = "drive-shares-noreply@google.com"
+    crm.to_csv(tmp_path / "crm.csv", index=False)
+    cfg = json.loads((tmp / "config.json").read_text())
+    cfg["sources"][0]["path"] = str(tmp_path / "crm.csv")
+    cfg["sources"][1]["path"] = str(tmp / cfg["sources"][1]["path"])
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    df, _ = io.load(tmp_path / "config.json")
+    keys = io.key(df)
+    pd.DataFrame([{"a": keys[i], "b": keys[j], "label": int(truth[keys[i]] == truth[keys[j]])}
+                  for i, j in labels.candidates(df)]).to_csv(tmp_path / "labels.csv", index=False)
+    s = pipeline.run(tmp_path / "config.json", tmp_path / "labels.csv", tmp_path / "out", log=lambda *_: None)
+    assert any(w.startswith("1 record has a no-reply or notification address") and "drive-shares-noreply" in w
+               for w in s["warnings"]), s["warnings"]
+    junk = pd.read_csv(tmp_path / "out" / "shared_and_junk_contacts.csv", dtype=str)
+    assert "drive-shares-noreply@google.com" in set(junk[junk["class"] == "junk"].value)
+    # the same relay as a long-format person's second row: an alias email, still warned about
+    two = pd.concat([crm.iloc[[1]].assign(email="calendar-notification@google.com"), crm])
+    two.to_csv(tmp_path / "crm.csv", index=False)
+    cfg["sources"][0]["group_rows"] = True
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    s = pipeline.run(tmp_path / "config.json", tmp_path / "labels.csv", tmp_path / "out_long", log=lambda *_: None)
+    assert any("calendar-notification@google.com" in w for w in s["warnings"]), s["warnings"]
+
+
+def test_a_key_blocking_on_one_field_where_the_other_is_blank_is_warned_about(world, tmp_path):
+    """No addresses (an address book): first name + street is first name alone, and its pairs -
+    mostly strangers who share a first name - are counted and warned about."""
+    tmp, truth, _ = world
+    cfg = json.loads((tmp / "config.json").read_text())
+    for src in cfg["sources"]:
+        src["path"] = str(tmp / src["path"])
+        del src["columns"]["address"]
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    df, cfg = io.load(tmp_path / "config.json")
+    profiles = {f: labels.profile_contacts(df, f) for f in ("email", "phone")}
+    _, _, report, _ = blocking.candidates_for(df, profiles, cfg)
+    fn = next(r for r in report["pairs_by_key"] if r["key"] == "first name + street")
+    assert fn["pairs_with_a_blank_part"] == fn["pairs"] > 0
+    assert "pairs_with_a_blank_part" not in next(r for r in report["pairs_by_key"] if r["key"] == "email")
+    keys = io.key(df)
+    pairs = labels.candidates(df, cfg)
+    pd.DataFrame([{"a": keys[i], "b": keys[j], "label": int(truth[keys[i]] == truth[keys[j]])}
+                  for i, j in pairs]).to_csv(tmp_path / "labels.csv", index=False)
+    s = pipeline.run(tmp_path / "config.json", tmp_path / "labels.csv", tmp_path / "out", log=lambda *_: None)
+    assert any(w.startswith('"first name + street" was blank in one part') for w in s["warnings"]), s["warnings"]
+
+
 # ------------------------------------------------------------------------------ config / io
 def test_split_address():
     assert io.split_address("5112 145th St Apt 3") == ("5112", "145th st", "apt 3")
@@ -117,6 +169,8 @@ def test_run_end_to_end(world):
     score = partition_scores(c.customer_id.to_numpy(), pid, float(np.sum(sizes * (sizes - 1) / 2)))
     assert score["f1"] > 95, score
     assert s["largest_customer"] <= 3, "junk contacts must not chain unrelated people together"
+    assert not any("blank in one part" in w for w in s["warnings"]), "every record has a street here"
+    assert not any("no-reply or notification address" in w for w in s["warnings"])
     contacts = pd.read_csv(tmp / "out" / "shared_and_junk_contacts.csv", dtype=str)
     junk = set(contacts[contacts["class"] == "junk"].value)
     assert "test@test.com" in junk and "1111111111" in junk
@@ -381,6 +435,56 @@ def test_alias_config_is_checked(tmp_path):
                       {"last_name": ["phone"]})
 
 
+def test_long_format_rows_with_one_id_are_one_record_with_aliases(world, tmp_path):
+    """"group_rows": one row per contact point, rows sharing a record_id one record. A quarter of
+    the billing people married and moved, and their old surname, email and phone arrive as a
+    second row: folded, they are aliases, so the person is found - in a run and in `add`."""
+    tmp, truth, _ = world
+    rng = random.Random(1)
+    billing = pd.read_csv(tmp / "billing.csv", dtype=str)
+    moved = np.array([rng.random() < 0.25 for _ in range(len(billing))])
+    k = np.arange(len(billing))
+    new = billing.assign(last=np.where(moved, [rng.choice(["okafor", "lindqvist", "moreau", "tanaka"]) for _ in moved],
+                                       billing["last"]),
+                         mail=np.where(moved, [f"new{i}@mail.com" for i in k], billing.mail),
+                         tel=np.where(moved, [f"(425) 555-{1000 + i}" for i in k], billing.tel))
+    long = pd.concat([new, billing[moved].assign(street_address="")]).sort_values("acct", kind="stable")
+    head, tail = long[~long.acct.isin(billing.acct[-6:])], long[long.acct.isin(billing.acct[-6:])]
+    head.to_csv(tmp_path / "billing.csv", index=False)
+    tail.to_csv(tmp_path / "billing_new.csv", index=False)
+    cfg = json.loads((tmp / "config.json").read_text())
+    cfg["sources"][0]["path"] = str(tmp / cfg["sources"][0]["path"])
+    cfg["sources"][1] |= {"path": "billing.csv", "group_rows": True}
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    df, _ = io.load(tmp_path / "config.json")
+    b = df[df.source == "billing"]
+    assert len(b) == head.acct.nunique() and b.record_id.is_unique
+    first_moved = billing.acct[moved].iloc[0]
+    row = b[b.record_id == first_moved].iloc[0]
+    assert row["last_name@last_name_2"] == billing.loc[billing.acct == first_moved, "last"].iloc[0].lower()
+    assert row["email@email_2"] == billing.loc[billing.acct == first_moved, "mail"].iloc[0].lower()
+    keys = io.key(df)
+    pd.DataFrame([{"a": keys[i], "b": keys[j], "label": int(truth[keys[i]] == truth[keys[j]])}
+                  for i, j in labels.candidates(df, cfg)]).to_csv(tmp_path / "labels.csv", index=False)
+    pipeline.run(tmp_path / "config.json", tmp_path / "labels.csv", tmp_path / "out", log=lambda *_: None)
+    out = pd.read_csv(tmp_path / "out" / "clusters.csv", dtype=str)
+    pid = np.array([truth[f"{a}:{b}"] for a, b in zip(out.source, out.record_id)])
+    _, sizes = np.unique(pid, return_counts=True)
+    score = partition_scores(out.customer_id.to_numpy(), pid, float(np.sum(sizes * (sizes - 1) / 2)))
+    assert score["recall"] > 90, score
+    new_cfg = {"sources": [cfg["sources"][1] | {"path": "billing_new.csv"}]}
+    (tmp_path / "new.json").write_text(json.dumps(new_cfg))
+    incremental.add(tmp_path / "out", tmp_path / "new.json", tmp_path / "out2")
+    c2 = pd.read_csv(tmp_path / "out2" / "clusters.csv", dtype=str)
+    assert set(tail.acct) <= set(c2.record_id[c2.source == "billing"])
+    assert len(c2) == len(out) + tail.acct.nunique()
+    together = c2.assign(pid=[truth[f"{a}:{b}"] for a, b in zip(c2.source, c2.record_id)])
+    added = together[together.record_id.isin(tail.acct) & (together.source == "billing")]
+    for _, r in added.iterrows():                 # each added person joins their crm record
+        crm = together[(together.pid == r.pid) & (together.source == "crm")]
+        assert (crm.customer_id == r.customer_id).all(), r.record_id
+
+
 def test_previous_surnames_find_people_who_changed_their_name(world, tmp_path):
     """A quarter of the billing records are people who married and moved: a new surname (the old one
     as previous_surname), a new address, email and phone. Only the alias still connects them."""
@@ -416,8 +520,7 @@ def test_previous_surnames_find_people_who_changed_their_name(world, tmp_path):
         scores[tag] = partition_scores(out.customer_id.to_numpy(), pid, float(np.sum(sizes * (sizes - 1) / 2)))
     assert scores["alias"]["recall"] > scores["plain"]["recall"] + 15, scores
     assert scores["alias"]["f1"] > scores["plain"]["f1"] + 3, scores
-    # the guide quotes this test: within a point or two, since library versions move the forest a
-    # little (Python 3.10's wheels gave precision 87.88 where 3.11-3.13 give 86.57)
+    # the guide quotes this test: within a point or two, since library versions move the forest a little
     import re
     guide = " ".join((Path(__file__).parents[1] / "docs" / "guide.md").read_text().split())
     quoted = re.search(r"clustered recall rose from ([\d.]+) to ([\d.]+) and F1 from ([\d.]+) to ([\d.]+)\. "
@@ -805,6 +908,70 @@ def test_domain_typos_are_fixed_but_real_domains_are_not():
     for real in ("ge.com", "ms.com", "cloud.com", "aon.com", "mail.com", "email.com", "gmx.com", "example.com"):
         assert country.fix_domain(real) == real, real          # real domains a frequency rule rewrote
     assert country.email("jo.bloggs+shop@gmial.com") == "jobloggs@gmail.com"
+    assert country.email("jo.bloggs@me.com") == country.email("jo.bloggs@mac.com") == "jo.bloggs@icloud.com"
+
+
+def test_a_service_saved_as_a_person_is_found():
+    from custmatch.core import service_records
+    df = pd.DataFrame({"first_name": ["zoomly", "jo", "anna", "dialin"], "last_name": ["", "", "lee", ""],
+                       "email": ["hello@zoomly.example", "jo@jo.example", "anna@lee.example", "team@mydialin.example"]})
+    assert service_records(df).tolist() == [True, False, False, True]   # names under four letters are people
+
+
+def test_a_placeholder_extra_value_is_found_but_an_employer_or_a_state_is_not():
+    """"Multiple Companies" on a quarter of the cards, whose people share nothing; a school on as many,
+    whose staff share its domain; a state, common like every other state."""
+    from custmatch import placeholders
+    n = 400
+    rows = []
+    for k in range(n):
+        if k < 100:
+            company, email = "multiple companies", f"p{k}@{['gmail.com', 'outlook.com', f'org{k}.example'][k % 3]}"
+        elif k < 200:
+            company, email = "westfield college", f"p{k}@westfield-college.example"
+        else:
+            company, email = f"company {k}", f"p{k}@gmail.com"
+        rows.append({"first_name": f"f{k}", "last_name": f"s{k}", "email": email, "company": company,
+                     "state": ["nsw", "vic", "qld", "wa"][k % 4]})
+    df = pd.DataFrame(rows)
+    cfg = {"extra_fields": [{"name": "company", "compare": "similarity"}, {"name": "state", "compare": "exact"}]}
+    assert placeholders.detect_extra(df, cfg) == {"company": ["multiple companies"]}
+    assert placeholders.detect_extra(df.assign(email=""), cfg) == {}          # no emails: not judged
+
+
+def test_what_is_not_a_name_is_taken_out_of_name_fields():
+    from custmatch import country
+    for raw, clean in (("smith, phd, cpa", "smith"), ("kubiak mba", "kubiak"), ("william (bill)", "william"),
+                       ("jones - 0412 345 678", "jones"), ("jo@example.com", ""), ("acme®", "acme"),
+                       ("jones, md", "jones"), ("smith ma", "smith ma"), ("li ma", "li ma"), ("smith jr", "smith jr"),
+                       ("o'brien", "o'brien"), ("mary-jane", "mary-jane")):
+        assert country.tidy_name(raw) == clean, raw
+    assert country.drop_title("assoc.prof.dr.jane") == "jane" and country.drop_title("j.r.") == "j.r."
+    assert country.name_from_email("nancy.lewis@example.com") == ("nancy", "lewis")
+    assert country.name_from_email("jsmith42@example.com") == ("jsmith", "")
+    df = pd.DataFrame({"first_name": ["kate", "anna"], "last_name": ["jones (nee brown)", "lee, phd"],
+                       "date_of_birth": "", "email": "", "phone": "", "addr_street": ""})
+    out = country.normalise(df, {"country": "AU", "normalise": {"phone": False}})
+    assert out.last_name.tolist() == ["jones", "lee"] and out["last_name@nee"].tolist() == ["brown", ""]
+    assert out.attrs["names_tidied"] == 2
+    kept = country.normalise(df, {"country": "AU", "normalise": {"names": False}})
+    assert kept.last_name[0] == "jones (nee brown)" and "last_name@nee" not in kept
+    # a maiden name cannot become an alias where aliases cannot be used
+    assert "last_name@nee" not in country.normalise(df, {"country": "AU", "blocking": "fixed"})
+
+
+def test_titles_are_dropped_from_first_names_but_initials_and_lone_titles_stay():
+    from custmatch import country
+    for raw, clean in (("dr john", "john"), ("prof. jane", "jane"), ("assoc prof kim", "kim"), ("mrs. dr anna", "anna"),
+                       ("mr m", "m"), ("m", "m"), ("dr", "dr"), ("sir", "sir"), ("drew", "drew")):
+        assert country.drop_title(raw) == clean, raw
+    df = pd.DataFrame({"first_name": ["Dr John", "Prof Jane"], "last_name": ["smith", "lee"]})
+    df = io._clean(df.first_name).to_frame("first_name").assign(last_name=["smith", "lee"], date_of_birth="",
+                                                                   email="", phone="", addr_street="")
+    out = country.normalise(df, {"country": "AU", "normalise": {"phone": False}})
+    assert out.first_name.tolist() == ["john", "jane"]
+    assert out.first_roots[0].split("|")[0] != "dr", "a title must not become a nickname root"
+    assert country.normalise(df, {"country": "AU", "normalise": {"titles": False}}).first_name[0] == "dr john"
 
 
 def test_fake_numbers_on_sight_and_patterned_numbers():
@@ -963,6 +1130,14 @@ def test_a_large_organisation_is_one_customer_in_run_explain_and_add(world, tmp_
     incremental.add(tmp_path / "out", tmp_path / "config.json", tmp_path / "out2")   # every record again
     c2 = pd.read_csv(tmp_path / "out2" / "clusters.csv", dtype=str)
     assert c2[c2.record_id.str.startswith("acme")].customer_id.nunique() == 1
+    # 70 of 310 records only in skipped blocks: blocking switched to splitting them, and the
+    # large-block check still ran on the default keys' skipped blocks - in the run, in `add`, and
+    # in a run reusing the model
+    assert rep["mode"] == "adaptive" and any(w.startswith("blocking switched") for w in s["warnings"])
+    pipeline.run(tmp_path / "config.json", None, tmp_path / "out_m", model_dir=tmp_path / "out", log=lambda *_: None)
+    cm = pd.read_csv(tmp_path / "out_m" / "clusters.csv", dtype=str)
+    assert cm[cm.record_id.str.startswith("acme")].customer_id.nunique() == 1
+    assert json.loads((tmp_path / "out_m" / "blocking_report.json").read_text())["mode"] == "adaptive"
     off = json.loads((tmp_path / "config.json").read_text()) | {"check_large_blocks": False}
     (tmp_path / "off.json").write_text(json.dumps(off))
     pipeline.run(tmp_path / "off.json", tmp_path / "labels.csv", tmp_path / "out_off", log=lambda *_: None)
@@ -1144,6 +1319,23 @@ def test_splitting_a_big_block_keeps_records_without_the_refining_key():
     assert any(a in al and b in al for a, b in pairs), "the 'al' records lost every pair"
 
 
+def test_adaptive_splitting_keeps_a_pair_misspelt_in_the_first_refinement():
+    from custmatch.blocking import REFINEMENTS, Keys, generate
+    # 80 Smiths: too many for one block, so it is split. The first refinement is the first three
+    # letters of the first name, where "katherine" and "catherine" disagree; their birth date agrees
+    rows = [(f"name{k:02d}", "smith", "", "", "", "", "", f"19{k:02d}-01-01", "") for k in range(78)]
+    rows += [("katherine", "smith", "", "", "", "", "", "1985-06-02", ""),
+             ("catherine", "smith", "", "", "", "", "", "1985-06-02", "")]
+    df = _people(rows).assign(source="s", record_id=[str(k) for k in range(80)], ssn="")
+    rule = [("last_name:exact",)]
+    one, _ = generate(df, Keys(df), rule, max_block=60)
+    ways, _ = generate(df, Keys(df), rule, max_block=60, ways=3, refine=REFINEMENTS)
+    assert [78, 79] not in one.tolist() and [78, 79] in ways.tolist()
+    assert set(map(tuple, one.tolist())) <= set(map(tuple, ways.tolist()))
+    ln = df.last_name.to_numpy()
+    assert (ln[ways[:, 0]] == ln[ways[:, 1]]).all()
+
+
 def test_fixed_and_learned_blocking_keep_the_country_keys():
     from custmatch import country
     from custmatch.blocking import candidates_for
@@ -1153,7 +1345,7 @@ def test_fixed_and_learned_blocking_keep_the_country_keys():
         source="s", record_id=["1", "2"], ssn="")
     df = country.normalise(df, {"country": "AU"})
     prof = {f: profile_contacts(df, f) for f in ("email", "phone")}
-    for mode in (None, "fixed", "learned"):
+    for mode in (None, "fixed", "learned", "adaptive"):
         cfg = {"country": "AU"} | ({"blocking": mode} if mode else {})
         pairs = candidates_for(df, prof, cfg)[0]
         assert [0, 1] in pairs.tolist(), mode
@@ -1239,9 +1431,15 @@ def test_active_sampling_with_one_label_class_falls_back_to_random(world, tmp_pa
     keys = io.key(df)
     pairs = labels.candidates(df)[:20]
     pd.DataFrame([{"a": keys[i], "b": keys[j], "label": 0} for i, j in pairs]).to_csv(tmp_path / "l.csv", index=False)
-    k = labels.sample_active(tmp / "config.json", tmp_path / "l.csv", 10, tmp_path / "next.csv")
+    k = labels.sample_active(tmp / "config.json", tmp_path / "l.csv", 100, tmp_path / "next.csv")
     got = pd.read_csv(tmp_path / "next.csv")
-    assert k == 10 and (got.by == "random").all()
+    # no match labelled yet: half are the pairs with the highest match weight, marked active; the
+    # rest a stratified random batch whose weights stand for the pairs not yet labelled
+    assert k == 100 and (got.by == "active").sum() == 50 and (got.by == "random").sum() == 50
+    rest = got[got.by == "random"]
+    assert abs(rest.weight.sum() - (len(labels.candidates(df)) - 70)) < 0.25 * len(labels.candidates(df))
+    lab = got.assign(label=[int(truth[a] == truth[b]) for a, b in zip(got.a, got.b)])
+    assert lab[lab.by == "active"].label.mean() > lab[lab.by == "random"].label.mean()
 
 
 def test_no_candidate_pairs_is_explained(tmp_path):
@@ -1291,6 +1489,51 @@ def test_choose_threshold_lets_the_in_cluster_check_overrule_labelled_pairs():
     th, metrics = pipeline.choose_threshold(n, pairs, pairs, ly, folds, pipeline.THRESHOLDS,
                                             coherence=lambda t: 0.3 if t < 0.5 else 1.0)
     assert loose < 0.4 <= th and "labelled_pair_precision" in metrics
+
+
+def test_choose_threshold_weighs_labels_and_equal_weights_change_nothing():
+    n, pairs = 6, np.array([[0, 1], [2, 3], [4, 5]], dtype=np.int32)
+    ly = np.array([True, True, False])
+    folds = [(np.array([0.4, 0.9, 0.1]), np.ones(3, bool))]
+    plain = pipeline.choose_threshold(n, pairs, pairs, ly, folds, pipeline.THRESHOLDS)
+    assert pipeline.choose_threshold(n, pairs, pairs, ly, folds, pipeline.THRESHOLDS, weight=np.full(3, 7.0)) == plain
+    # the match scored 0.4 standing for nine others: thresholds above 0.4 lose most of the recall
+    _, m = pipeline.choose_threshold(n, pairs, pairs, ly, folds, pipeline.THRESHOLDS, weight=np.array([9.0, 1, 1]))
+    assert m["sweep"]["0.5"]["recall"] == 10.0
+
+
+def test_a_stratified_draw_returns_as_many_pairs_as_asked_on_a_small_file():
+    """The uniform half and the strata overlap often on a small file; each overlap is redrawn from
+    its stratum (30 asked once gave 29), and the weights still add up to the file."""
+    from custmatch.labels import stratified_pick
+    for n_pairs, n in ((60, 30), (1057, 300), (20000, 1000)):
+        score = np.unique(np.random.default_rng(1).integers(0, 12, n_pairs), return_inverse=True)[1]
+        pick, weight = stratified_pick(score, n, np.random.default_rng(3))
+        assert len(pick) == len(np.unique(pick)) == n, n_pairs
+        assert abs(weight.sum() - n_pairs) < 0.1 * n_pairs, n_pairs
+
+
+def test_stratified_random_labels_find_more_matches_and_weigh_back_to_the_whole(world, tmp_path):
+    tmp, truth, _ = world
+    df, cfg = io.load(tmp / "config.json")
+    pairs = labels.candidates(df, cfg)
+    score = labels.agreement(df, pairs, cfg)
+    rng = np.random.default_rng(0)
+    # the weights are the inverse chances of being drawn: summed over many draws, they count
+    # every stratum's pairs
+    totals = np.zeros(score.max() + 1)
+    for _ in range(200):
+        pick, w = labels.stratified_pick(score, 60, rng)
+        totals += np.bincount(score[pick], weights=w, minlength=len(totals))
+    assert np.allclose(totals / 200, np.bincount(score), rtol=0.15, atol=3)
+    key = lambda p: int((p.a.map(truth) == p.b.map(truth)).sum())  # noqa: E731
+    found = {}
+    for strat in (False, True):
+        labels.sample(tmp / "config.json", 60, tmp_path / f"s{strat}.csv", seed=1, stratified=strat)
+        got = pd.read_csv(tmp_path / f"s{strat}.csv", dtype=str)
+        assert (got.by == "random").all() and pd.to_numeric(got.weight).gt(0).all()
+        found[strat] = key(got)
+    assert found[True] > found[False]
 
 
 def test_placeholders_on_in_run_keeps_two_john_does_apart(world, tmp_path):
@@ -1388,6 +1631,14 @@ def test_date_order_can_be_set_for_a_country_that_uses_both():
     df = _country_df([("a", "b", "", "05/06/1994", "", "", "")])
     assert country.normalise(df, {"country": "CA"}).date_of_birth[0] == "1994-06-05"
     assert country.normalise(df, {"country": "CA", "date_order": "mdy"}).date_of_birth[0] == "1994-05-06"
+
+
+def test_dates_with_spaces_month_words_and_no_separators_agree():
+    from custmatch.country import iso_date
+    for v in ("1953 11 09", "11 09 1953", "09 nov 1953", "November 9, 1953", "nov 09sat 1953", "19531109"):
+        assert iso_date(v, "mdy") == "1953-11-09", v
+    for v in ("1953 11", "22 november", "marsh 9 1953", "09111953", "1"):   # partial or unclear: as written
+        assert iso_date(v, "mdy") == v, v
 
 
 def test_a_country_column_is_read_from_the_source(tmp_path):

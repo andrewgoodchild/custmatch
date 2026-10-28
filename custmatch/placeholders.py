@@ -27,8 +27,19 @@ Elsewhere a crowded 1 January is a default like any other. Dates in the future a
 in fake_1000 and the synthetic file they are typos of real dates (7985 for 1985), still one edit
 from the truth, and the date features use that.
 
+Extra fields (detect_extra): a value on a tenth or more of the records with the field and
+EXTRA_RATIO times the median value's count, whose records have different surnames and no
+employer's domain in common (no work domain - not a big free-mail provider - on half of them):
+"Multiple Companies", a social network's placeholder, on a quarter of an address book's cards. A
+real employer's staff share a domain; a state or a gender is common but so is every other value
+of its field. Only checked where most records have an email: without one, a town's people look
+the same as a placeholder's.
+
 Enabled with "placeholders": true (off by default); detected values are blanked before blocking and features,
-and listed in placeholders.csv.
+and listed in placeholders.csv. Placeholder extra-field values are only reported, whatever the
+setting: ignoring "Multiple Companies" on synthetic address-book cards changed nothing (300
+stratified + 150 active labels, 15 draws: 89.91 compared, 89.18 ignored) - the model already learns
+that agreeing on it is worth little.
 """
 import re
 
@@ -140,6 +151,42 @@ def detect_dates(df, diversity=0.6):
             if len(set(first[rows])) / n > diversity and len(set(last[rows])) / n > diversity:
                 bad[u] = True
     return bad[inv] & has
+
+
+EXTRA_MIN_SHARE = 0.1          # of the records with the field
+EXTRA_RATIO = 20               # times the median value's count
+EXTRA_DIVERSITY = 0.6          # distinct surnames / records
+
+
+def detect_extra(df, cfg):
+    """{extra field: [placeholder values]} (the module docstring says which)."""
+    from .core import JUNK_MIN_RECORDS
+    from .country import COMMON_DOMAINS
+    from .schema import extra_fields
+    if "email" not in df.columns or (df.email != "").mean() < 0.5:
+        return {}
+    dom = df.email.str.partition("@")[2]
+    work = dom.where(~dom.isin(COMMON_DOMAINS + ["me.com", "mac.com"]), "")
+    out = {}
+    for field, _ in extra_fields(cfg):
+        if field not in df.columns:
+            continue
+        v = df[field]
+        counts = v[v != ""].value_counts()
+        crowded = counts[(counts >= max(JUNK_MIN_RECORDS, EXTRA_MIN_SHARE * counts.sum()))
+                         & (counts >= EXTRA_RATIO * counts.median())]
+        found = []
+        for value, n in crowded.items():
+            rows = (v == value).to_numpy()
+            last, w = df.last_name[rows], work[rows]
+            last, w = last[last != ""], w[w != ""]
+            names = last.nunique() / len(last) if len(last) >= 2 else df.first_name[rows].nunique() / n
+            employer = len(w) and w.value_counts().iloc[0] >= n / 2
+            if names > EXTRA_DIVERSITY and not employer:
+                found.append(value)
+        if found:
+            out[field] = found
+    return out
 
 
 def blank(df):

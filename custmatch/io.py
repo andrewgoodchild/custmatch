@@ -133,7 +133,7 @@ KNOWN_KEYS = {
     "unique_sources", "stability_margin", "identity_events",
     "cookie_max_identities", "cookie_max_records", "cookie_name_check", "household_postcode_join", "placeholders", "suspect_records",
     "survivorship", "golden_fields", "source_priority", "contact_confidence", "hash_fields", "hash_salt_env",
-    "minimal_outputs", "_name_skeleton", "threshold_rule", "aliases"}
+    "minimal_outputs", "_name_skeleton", "_blocking_switched", "threshold_rule", "aliases"}
 
 
 # options removed in 0.1.0 because measurement showed they did not earn their place
@@ -223,8 +223,13 @@ def load_config(cfg, base_dir, data=None, whole_config=True):
                 out[f"{field}@{name}"] = out[f"{field}@{name}"].str.replace(r"\D", "", regex=True)
         out["phone"] = out.phone.str.replace(r"\D", "", regex=True)
         out["middle_initial"] = out.middle_initial.str[:1]
+        if src.get("group_rows"):
+            out, more = group_rows(out)
+            aliases = aliases + [a for a in more if a not in aliases]
         frames.append(out)
     df = pd.concat(frames, ignore_index=True)
+    alias_cols = [c for c in df.columns if "@" in c]
+    df[alias_cols] = df[alias_cols].fillna("")       # a source without an alias column has no alias
     if not len(df):
         raise ConfigError("no records: every source file is empty")
     mapped = {c for src in cfg["sources"] for c in src.get("columns", {})}
@@ -271,6 +276,33 @@ def load_config(cfg, base_dir, data=None, whole_config=True):
         raise ConfigError(f"{int(dup.sum())} duplicate record_id(s) within a source, e.g. "
                           f"{df[dup].iloc[0][['source', 'record_id']].tolist()}")
     return df, cfg
+
+
+def group_rows(out):
+    """A long-format source - one row per contact point, rows sharing a record_id one record -
+    as one row per record: (records, aliases), from the source's cleaned rows. Each field takes the
+    record's first filled value; its other surnames, emails and phones (core.ALIAS_FIELDS) become
+    aliases, columns "email@email_2", "email@email_3", ... - compared and blocked as "aliases"
+    are. Other fields keep the first value only: a second first name or address is dropped."""
+    from .core import ALIAS_FIELDS
+    codes, ids = pd.factorize(out.record_id)
+    grouped = pd.DataFrame({"source": out.source.iloc[:len(ids)].to_numpy(), "record_id": ids})
+    aliases = []
+    for col in out.columns.drop(["source", "record_id"]):
+        v = out[col].to_numpy(dtype=object)
+        keep = v != ""
+        vals = pd.DataFrame({"g": codes[keep], "v": v[keep]}).drop_duplicates()
+        vals["k"] = vals.groupby("g").cumcount()
+        wide = vals.pivot(index="g", columns="k", values="v").reindex(range(len(ids))).fillna("")
+        grouped[col] = wide[0].to_numpy() if 0 in wide.columns else ""
+        if col in ALIAS_FIELDS:
+            for k in wide.columns[1:]:
+                name = f"{col}_{k + 1}"
+                while f"{col}@{name}" in out.columns:
+                    name = "_" + name
+                grouped[f"{col}@{name}"] = wide[k].to_numpy()
+                aliases.append((col, name))
+    return grouped, aliases
 
 
 def check_aliases(cfg, whole_config=True):

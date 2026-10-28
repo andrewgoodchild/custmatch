@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from . import explain, identity, incremental, io, monitor, schema
-from .core import components, features, profile_contacts
+from .core import components, features, profile_contacts, relay_records, service_records
 from .golden import build_golden
 
 THRESHOLDS = np.round(np.concatenate([np.arange(0.05, 0.96, 0.05), [0.97, 0.98, 0.99]]), 3)
@@ -27,6 +27,10 @@ GOLDEN_FIELDS = ["first_name", "middle_initial", "last_name", "date_of_birth", "
                  "addr_street", "addr_unit", "email", "phone"]
 MIN_LABELS = 200
 MIN_RANDOM_MATCHES = 30     # random labelled matches below which the threshold choice is noisy
+# a two-field blocking key degraded to one field (blocking report "pairs_with_a_blank_part"): warn
+# when those pairs are at least this share of the candidate pairs. On an address book with no
+# streets, first name + street gave 660 of 1,057 pairs
+BLANK_KEY_SHARE, BLANK_KEY_PAIRS = 0.25, 100
 RECOMMENDED_LABELS = 500   # custmatch_validate, rich features: 500 labels 97.38, 1,000 97.32 clustered F1
 FOLDS = 4
 
@@ -34,9 +38,11 @@ FOLDS = 4
 LABEL_YES = {"1", "1.0", "true", "t", "yes", "y", "match", "same"}
 LABEL_NO = {"0", "0.0", "false", "f", "no", "n", "nonmatch", "non-match", "different"}
 
-def read_labels(path, df, with_active=False):
+def read_labels(path, df, with_active=False, with_weight=False):
     """Labelled pairs as (row i, row j, label); labels name records as 'source:record_id'.
-    with_active also returns a mask of pairs chosen by active learning (`by` == "active")."""
+    with_active also returns a mask of pairs chosen by active learning (`by` == "active");
+    with_weight also each pair's `weight`, the candidate pairs a randomly drawn label stands for
+    (custmatch sample writes it; labels without one count equally - the median of the others')."""
     lab = pd.read_csv(path, dtype=str, keep_default_na=False)
     for c in ("a", "b", "label"):
         if c not in lab.columns:
@@ -55,10 +61,17 @@ def read_labels(path, df, with_active=False):
                              f"{', '.join(sorted(LABEL_YES))} and {', '.join(sorted(LABEL_NO))})")
     y = v.isin(LABEL_YES).to_numpy()
     i, j = np.array([pos[a] for a in lab.a]), np.array([pos[b] for b in lab.b])
-    if with_active:
-        active = (lab.by == "active").to_numpy() if "by" in lab.columns else np.zeros(len(y), bool)
+    if not with_active:
+        return i, j, y
+    active = (lab.by == "active").to_numpy() if "by" in lab.columns else np.zeros(len(y), bool)
+    if not with_weight:
         return i, j, y, active
-    return i, j, y
+    w = pd.to_numeric(lab["weight"], errors="coerce").to_numpy(dtype=float, copy=True) if "weight" in lab.columns \
+        else np.full(len(y), np.nan)
+    w[active] = np.nan
+    have = np.isfinite(w) & (w > 0)
+    w = np.where(have, w, np.median(w[have]) if have.any() else 1.0)
+    return i, j, y, active, w
 
 
 def _scores(tp, fp, fn):
@@ -101,18 +114,21 @@ def _redact_keys(report):
 
 
 def choose_threshold(n, pairs, lab_pairs, ly, fold_scores, grid, coherence=None, min_precision=None,
-                     rule="middle"):
+                     rule="middle", weight=None):
     """Closure-aware threshold from cross-fitted scores: fold_scores = [(candidate scores from a
     model that did not see these labels, held-out mask)]. Ties go to the stricter threshold.
     coherence(t) -> estimated cluster precision; when given it replaces the labelled pairs'
-    precision, which cannot see chaining between records that were never candidates."""
-    counts = {t: np.zeros(3, dtype=int) for t in grid}
+    precision, which cannot see chaining between records that were never candidates.
+    weight: the candidate pairs each labelled pair stands for (a stratified draw); None counts
+    every pair once."""
+    w = np.ones(len(ly)) if weight is None else np.asarray(weight, dtype=float)
+    counts = {t: np.zeros(3) for t in grid}
     for s, held in fold_scores:
-        hi, hj, hy = lab_pairs[held, 0], lab_pairs[held, 1], ly[held]
+        hi, hj, hy, hw = lab_pairs[held, 0], lab_pairs[held, 1], ly[held], w[held]
         for t in grid:
             cc = components(n, pairs, s > t)
             same = cc[hi] == cc[hj]
-            counts[t] += [(same & hy).sum(), (same & ~hy).sum(), (~same & hy).sum()]
+            counts[t] += [hw[same & hy].sum(), hw[same & ~hy].sum(), hw[~same & hy].sum()]
     sweep = {t: _scores(*c) for t, c in counts.items()}
     if coherence is not None:
         for t, v in sweep.items():
@@ -140,7 +156,10 @@ def choose_threshold(n, pairs, lab_pairs, ly, fold_scores, grid, coherence=None,
         # the recall estimate is flat across a wide range while the precision estimate creeps up,
         # and the strictest of them lost real recall: NCVR, 200,000 people, 8 random matches,
         # 0.85 chosen against a best of 0.6 (research/scripts/threshold_rules.py)
-        matches = int(sum(ly[held].sum() for _, held in fold_scores))
+        # held-out matches, counted as a sample of that many equal ones would be (Kish's
+        # effective size): equal weights give their number
+        mw = np.concatenate([w[held & ly] for _, held in fold_scores])
+        matches = mw.sum() ** 2 / (mw ** 2).sum() if len(mw) else 0.0
         tol = 50.0 / max(matches, 1)
         near = sorted(t for t, v in pool.items() if v["f1"] >= best - tol)
         th = near[len(near) // 2]
@@ -213,6 +232,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         # saved with the state: `add` must build the same name features whatever its batch holds
         cfg["_name_skeleton"] = "name_skeleton" in df.columns
     n = len(df)
+    names_tidied = int(df.attrs.get("names_tidied", 0))      # country.tidy_name, before anything copies df
     suspect_flags, profanity_list = {}, True
     if cfg.get("suspect_records", True):          # for review only: matching is not affected
         from . import suspect
@@ -223,6 +243,8 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             profanity_list = words is not None
             suspect_flags = suspect.flag(df, words)
     fake_name = fake_addr = fake_dob = np.zeros(n, bool)
+    from . import placeholders
+    extra_placeholders = placeholders.detect_extra(df, cfg)       # reported, still compared
     if cfg.get("placeholders"):
         # placeholder names / addresses / dates ("test test", "123 main st", 1900-01-01) are not
         # evidence: blank them
@@ -236,18 +258,28 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         from .models import load_model
         saved = load_model(Path(model_dir) / incremental.STATE)
     if labels_path is not None:
-        li, lj, ly, active = read_labels(labels_path, df, with_active=True)
+        li, lj, ly, active, lw = read_labels(labels_path, df, with_active=True, with_weight=True)
     else:
         li = lj = np.zeros(0, np.int64)
         ly = active = np.zeros(0, bool)
+        lw = np.zeros(0)
     if saved is None and (len(ly) < MIN_LABELS or ly.all() or not ly.any()):
         raise io.ConfigError(f"need at least {MIN_LABELS} labelled pairs with both matches and "
-                             f"non-matches (got {len(ly)}, {int(ly.sum())} matches)")
+                             f"non-matches (got {len(ly)}, {int(ly.sum())} matches)" +
+                             ("; matches are rare among these candidate pairs: label another batch from "
+                              "custmatch sample --active, which keeps drawing stratified batches until one holds "
+                              "a match" if len(ly) and not ly.any() else ""))
     lab_pairs = np.c_[np.minimum(li, lj), np.maximum(li, lj)].astype(np.int32)
     from . import blocking, stewardship
     stage("load and profile")
+    if saved is not None and saved.get("blocking") and not cfg.get("blocking"):
+        # the reused model's blocker, chosen or switched to
+        cfg.update(blocking=saved["blocking"], _blocking_switched=saved.get("_blocking_switched", False))
     pairs, hubs, block_report, rules = blocking.candidates_for(
         df, profiles, cfg, lab_pairs[ly], rules=saved.get("rules") if saved else None)
+    if block_report.get("switched_from_core"):
+        # saved with the state, so `add` blocks the same way and still checks the large blocks
+        cfg.update(blocking="adaptive", _blocking_switched=True)
     stage(f"blocking ({len(pairs):,} candidate pairs)")
     if not len(pairs):
         raise io.ConfigError("blocking produced no candidate pairs: no two records share a name, "
@@ -290,7 +322,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         th, held_out = choose_threshold(n, pairs, lab_pairs, ly, fold_scores, THRESHOLDS,
                                         coherence=lambda t: cluster_coherence(n, pairs, prob, t, predict, seed),
                                         min_precision=cfg.get("min_precision"),
-                                        rule=cfg.get("threshold_rule", "middle"))
+                                        rule=cfg.get("threshold_rule", "middle"), weight=lw)
         return {"final": final, "prob": prob, "predict": predict, "th": th, "held_out": held_out}
 
     if saved is None:                             # the saved model is reused, not refitted
@@ -526,7 +558,55 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         summary["warnings"].append(
             f"{in_skipped:,} records were never compared with any other: every block they share is larger "
             f"than max_block, so it was skipped. Largest: {eg}. See blocking_report.json; raise "
-            "\"max_block\" if these values are legitimately common, or check them for placeholders")
+            "\"max_block\" if these values are legitimately common, check them for placeholders, or "
+            "split them instead (\"blocking\": \"adaptive\")")
+    for field, vals in extra_placeholders.items():
+        eg = "" if cfg.get("minimal_outputs") else " (" + ", ".join(repr(v) for v in vals[:3]) + ")"
+        summary["warnings"].append(
+            f"{field}: {len(vals)} value(s){eg} on a tenth or more of the records, whose people share no surname "
+            "or employer's email domain - a placeholder, or too common to tell people apart. It is compared "
+            "like any value: the model learns how little agreeing on it is worth (ignoring \"Multiple "
+            "Companies\" on synthetic address-book cards changed nothing). Check it is not a mistake")
+    if names_tidied:
+        summary["warnings"].append(
+            f"{names_tidied:,} records had something other than a name in a name field - a qualification "
+            "(\"phd\", \"mba\"), bracketed text, a phone number or an email address - which was taken out "
+            "before matching; a \"(nee ...)\" surname became an alias. \"normalise\": {\"names\": false} keeps "
+            "names as written")
+    service = service_records(df)
+    if service.any():
+        eg = "" if cfg.get("minimal_outputs") else " (e.g. " + ", ".join(
+            f"{a} <{b}>" for a, b in zip(df.first_name[service][:3], df.email[service][:3])) + ")"
+        summary["warnings"].append(
+            f"{int(service.sum()):,} records with a first name only that is their email's domain{eg}: usually a "
+            "service, product or practice saved as a person. Two such records can be linked on the name alone; "
+            "remove them if they are not people")
+    relay, found = relay_records(df)
+    k = int((relay & ((df.first_name != "") | (df.last_name != "")).to_numpy()).sum())
+    if k:
+        eg = "" if cfg.get("minimal_outputs") else f" (e.g. {', '.join(found[:3])})"
+        summary["warnings"].append(
+            (f"{k:,} records have" if k > 1 else "1 record has") +
+            f" a no-reply or notification address and a person's name{eg}: "
+            "usually a service that wrote on someone's behalf, filed under their name, not that person's contact. "
+            "The address is ignored as evidence, but the name can still link the record to that person; remove "
+            "such records if they are not people")
+    for row in block_report.get("pairs_by_key", []):
+        part = row.get("pairs_with_a_blank_part", 0)
+        if part >= max(BLANK_KEY_PAIRS, BLANK_KEY_SHARE * summary["candidate_pairs"]):
+            summary["warnings"].append(
+                f"\"{row['key']}\" was blank in one part for many records, so it blocked on the other part "
+                f"alone (first name + street is first name alone where there is no street): it gave {part:,} "
+                f"pairs, against {summary['candidate_pairs']:,} candidate pairs in all. Those pairs share one field and are "
+                "mostly different people, so random labels drawn from them hold few matches - label more, or "
+                "fill in the missing field. See pairs_by_key in blocking_report.json")
+    switched = block_report.get("switched_from_core")
+    if switched:
+        summary["warnings"].append(
+            f"blocking switched to \"adaptive\": with the default keys {switched['records_only_in_skipped_blocks']:,} "
+            f"records ({100 * switched['share']:.1f}%) were only in blocks larger than max_block and would never "
+            "have been compared, so oversized blocks were split instead (set \"blocking\": \"core\" to keep "
+            "the default keys and skip them)")
     if sizes.max() > 20:
         summary["warnings"].append(f"largest customer has {int(sizes.max())} records - check it "
                                    "for chaining (clusters.csv)")

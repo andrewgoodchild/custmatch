@@ -105,7 +105,7 @@ Grouped by the report chapter whose numbers they produce.
 | `research/scripts/historical_blocking.py` | historical_50k: the blocking ceiling with exact keys, similarity blocking and the GB profile; `--run V1,V2` also runs custmatch (1,000 random, and 300 + 700 active; three draws) | ~1 min, ~6 min per variant run |
 | `research/scripts/custmatch_scale.py` | Times each stage on disjoint copies of the synthetic file, up to 1M records; optional blocking mode (`fixed`, `learned`) | ~5 min |
 | `research/scripts/modal_scale.py` | On Modal (16 cores, 128 GiB): the scale test at 2, 5 and 10 million records and the full 5-million-record NCVR file, with peak memory | ~1-2 h |
-| `research/scripts/modal_ncvr_full.py` | On Modal: all 5 million NCVR records, labelled as a user would (300 random + 700 active), resumable | ~3 h |
+| `research/scripts/modal_ncvr_full.py` | On Modal: all 5 million NCVR records, labelled as a user would (300 random + 700 active), resumable; `--variants`; `python ... --local VARIANT` runs it on this machine (the adaptive variant: 2.2 h, about 51 GB, on an 18-core 64 GB laptop) | ~3 h |
 | `research/scripts/embedding_blocking.py` | historical_50k and NCVR (20,000 people): the blocking ceiling with each record's 5, 10 or 20 nearest neighbours by character n-gram vectors (`--neural` for a sentence model, a ~90 MB download), against the keys and LSH | ~10 min |
 | `research/scripts/embedding_pipeline.py` | The same two datasets through the whole pipeline with keys, keys + LSH and keys + 5 or 10 neighbours, exact or approximate; 100 random + 900 active labels, ten seeds, with stage times; `--timing` times each blocking alone | ~70 min for ten seeds |
 | `research/scripts/embedding_scale.py` | The Leipzig NCVR file from 100,000 to 5 million records: vectors and approximate neighbours (pynndescent), against keys and LSH blocking up to a million, with peak memory | ~40 min |
@@ -133,10 +133,14 @@ Grouped by the report chapter whose numbers they produce.
 | --- | --- | --- |
 | `research/scripts/splink_vs_custmatch.py` | Splink vs custmatch on the synthetic file, scored identically; also Splink-seeded labels | ~1 min |
 | `research/scripts/splink_datasets_benchmark.py` | custmatch vs Splink on Splink's bundled datasets, Splink running its official example settings | ~15 min |
-| `research/scripts/beat_splink.py` | Each custmatch option (rich features, the since-removed Splink feature, active mix, Jev labels) on all five datasets against Splink | ~15 min per variant |
+| `research/scripts/beat_splink.py` | Each custmatch option (rich features, the since-removed Splink feature, active mix, Jev labels) on all five datasets against Splink; `--seed N` for another label draw | ~15 min per variant |
+| `research/scripts/address_book_data.py` | Synthetic personal address books: Profile A, one record per email address, with relay, switchboard, household, same-name and brand traps; Profile B, address-book cards from the same people with eleven duplicates, hard negatives and junk in the names; `--seed N`; writes `data/address_book/sN/` | seconds |
+| `research/scripts/address_book_benchmark.py` | Four labelling budgets on dirty and clean books, false links by trap; `--draws 10` compares plain and stratified 300 random labels over ten draws; `--cards 5` runs Profile B (address-book cards) on five budgets | ~5 min; ~10 min with `--draws 10` or `--cards 5` |
 | `research/scripts/head_to_head.py` | custmatch against Splink 5 (and, with `--dedupe`, dedupe) on the synthetic file copied to a million records: time, peak memory, clustered F1 (`.venv-splink5`, `.venv-dedupe`) | ~30 min |
 | `research/scripts/home_data_benchmark.py` | Each tool on every tool's own datasets: Splink's four and dedupe's two (`data/dedupe/`) | ~40 min per dedupe pass |
-| `research/scripts/ncvr_leipzig.py` | custmatch and Splink on the Leipzig NCVR benchmark, by sample size and blocking keys, three draws | ~15 min |
+| `research/scripts/ncvr_leipzig.py` | custmatch and Splink on the Leipzig NCVR benchmark, by sample size and blocking keys, three draws; `--random N`, `--stratified` (random labels drawn by agreement pattern); the `current_default` variant sets nothing | ~15 min |
+| `research/scripts/ncvr_blocking_scale.py` | Blocking alone on NCVR at 200k, 1M and 3.5M people: pair completeness, the most F1 it allows, and candidate pairs for the default, `fixed` and `adaptive` blockers; `--splink-datasets` checks Splink's four datasets | ~30 min |
+| `research/scripts/bpid_benchmark.py` | BPID (AWS; download from Zenodo into `data/bpid/`): pairwise F1 on its 10,000 labelled pairs at 300, 1,000 and 8,000 labels, and blocking recall over its million profiles; `--variant`, `--tag` | ~3 min per variant |
 
 ### Reproductions of published results (chapter 10)
 

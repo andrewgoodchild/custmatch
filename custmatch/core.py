@@ -24,13 +24,22 @@ FAMILY_MAX = 20         # above this an address is group quarters, not a family
 HOUSEHOLD_DIVERSITY = 0.5
 THRESHOLDS = np.round(np.arange(0.05, 0.96, 0.05), 2)
 
+# addresses a service sends from, not a person: no-reply, notification and bounce mailboxes, as a
+# word of the user name (drive-shares-noreply@, calendar-notification@, mailer-daemon@), joined
+# by - or _ as services write them: BPID's people have addresses like gertie.noreply@. Mail
+# clients file them under the name of the person the service wrote for, so an address book
+# holds them with a real name: on one, a file-sharing relay named for one person was linked to
+# ten of that person's addresses, every false link of the run
+RELAY_EMAIL = re.compile(r"^(?:[^@]*[-_])?(?:no-?_?reply|do-?_?not-?_?reply|notifications?|mailer-daemon|bounces?)"
+                         r"(?:[-_.+][^@]*)?@")
 JUNK_PATTERNS = [                                       # values no one can own: junk on sight
+    RELAY_EMAIL,
     re.compile(r"^(.)\1{6,}$"),                        # 0000000, aaaaaaa
     re.compile(r"^(?:0123456789|1234567890|9876543210)$"),
     re.compile(r"^5{3}\d{7}$"),                        # 555-xxx-xxxx
     re.compile(r"^61491570\d{3}$"),                     # ACMA fictional mobiles (E.164)
     re.compile(r"^61[2378](?:5550|7010)\d{4}$"),         # ACMA fictional landlines (E.164)
-    re.compile(r"^(?:test|asdf|none|noreply|no|xxx+|abc|a)@"),
+    re.compile(r"^(?:test|asdf|none|no|xxx+|abc|a)@"),
     re.compile(r"@(?:test|example|none|xxx)\.(?:com|org|net)$"),
     re.compile(r"^(?:mailinator|yopmail)\."),
 ]
@@ -176,7 +185,9 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
     set - a very common name, say - as opposed to blank ones (no address), which mean nothing.
     by_key: a list to fill with each key family's candidate pairs and how many of them no earlier
     family proposed (Splink's cumulative comparisons chart): exact up to BY_KEY_EXACT_PAIRS
-    candidate pairs; above that, each family's pairs without the overlap ("new" is None).
+    candidate pairs; above that, each family's pairs without the overlap ("new" is None). A key of
+    two fields also counts the pairs from blocks where one was blank ("pairs_with_a_blank_part"):
+    first name + street is first name alone where there is no street.
 
     Everything is integer codes and numpy: each key family is factorised to codes, a block is a
     (family, code), and pairs are generated block by block in vectorised steps and de-duplicated
@@ -190,6 +201,7 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
     limit = (max_block or MAX_BLOCK) if aware else 400   # even the naive run needs some ceiling
     fams = []                                           # (codes per entry, record per entry, key of a code)
     labels = []
+    blank = []                                          # per family: a code's key has a blank part (or None)
     for fam in blocking_families(df, profiles, aware, extra_keys, lsh):
         labels.append(_family_label(fam, len(labels)))
         if fam[0] == "tuples":
@@ -197,10 +209,16 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
             codes, uniq = pd.factorize(pd.Series(list(keys), dtype=object))
             idx = np.asarray(idx, dtype=np.int64)
             fams.append((codes.astype(np.int64), idx if owner is None else owner[idx], lambda c, u=uniq: u[c]))
+            blank.append(None)
         else:
             _, tag, arrays, idx = fam
             codes, uniq = _factorize_columns(arrays)
             idx = idx.astype(np.int64)
+            part = None
+            if len(arrays) > 1 and len(codes):
+                part = np.zeros(int(codes.max()) + 1, bool)
+                part[codes] = np.logical_or.reduce([np.asarray(a, dtype=object) == "" for a in arrays])
+            blank.append(part)
             fams.append((codes.astype(np.int64), idx if owner is None else owner[idx],
                          lambda c, u=uniq, t=tag: tuple(t) + tuple(u[c])))
     if not fams:
@@ -212,7 +230,7 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
     rec = np.concatenate([i for _, i, _ in fams])
     entry = np.unique(block_id * n + rec)
     block_id, rec = entry // n, entry % n
-    sizes = np.bincount(block_id)
+    sizes = np.bincount(block_id, minlength=int(offsets[-1] + sizes_by_fam[-1]))
     hubs = int(((sizes > limit) & (sizes >= 2)).sum()) if aware else 0
     if skipped is not None and aware:
         # entries are sorted by block, so a block's records are one slice: binary search, not a scan
@@ -233,16 +251,20 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
         for f, label in enumerate(labels):
             lo, hi = offsets[f], offsets[f] + sizes_by_fam[f]
             m = (block_id >= lo) & (block_id < hi)
-            row = {"key": label, "blocks_used": int(len(np.unique(block_id[m]))),
-                   "blocks_skipped": int(((sizes[lo:hi] > limit) & (sizes[lo:hi] >= 2)).sum()) if aware else 0}
+            s = sizes[lo:hi]
+            used = (s >= 2) & (s <= limit)               # the family's blocks that made pairs
+            row = {"key": label, "blocks_used": int(used.sum()),
+                   "blocks_skipped": int(((s > limit) & (s >= 2)).sum()) if aware else 0}
             if exact:
                 fc = _block_codes(block_id[m], rec[m], n)
                 new = np.setdiff1d(fc, seen, assume_unique=True)
                 seen = np.union1d(seen, new)
                 row |= {"pairs": int(len(fc)), "new": int(len(new)), "cumulative": int(len(seen))}
             else:                                   # within-block pairs, before removing overlap
-                _, counts = np.unique(block_id[m], return_counts=True)
-                row |= {"pairs": int((counts * (counts - 1) // 2).sum()), "new": None, "cumulative": None}
+                row |= {"pairs": int((s[used] * (s[used] - 1) // 2).sum()), "new": None, "cumulative": None}
+            if blank[f] is not None:                # within-block pairs, as some are also another key's
+                k = used & blank[f]
+                row["pairs_with_a_blank_part"] = int((s[k] * (s[k] - 1) // 2).sum())
             by_key.append(row)
     return np.column_stack([codes // n, codes % n]).astype(np.int32), hubs
 
@@ -482,7 +504,7 @@ def _features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, reco
     for name, compare in extra_fields:
         if compare == "years_apart":
             t = pd.to_datetime(df[name].replace("", None), errors="coerce", format="mixed", utc=True)
-            yr = (t.dt.year + (t.dt.dayofyear - 1) / 365.25).to_numpy(dtype=float)
+            yr = (t.dt.year + (t.dt.day_of_year - 1) / 365.25).to_numpy(dtype=float)
             gap = np.abs(yr[pairs[:, 0]] - yr[pairs[:, 1]])
             cols.append(np.where(np.isnan(gap), -1.0, gap))
             continue
@@ -544,6 +566,29 @@ ALIAS_FIELDS = ("last_name", "email", "phone")
 
 def alias_columns(df):
     return [c for c in df.columns if "@" in c and c.split("@", 1)[0] in ALIAS_FIELDS]
+
+
+def service_records(df):
+    """Records with a first name only that is their email's domain ("zoomly", hello@zoomly.example):
+    usually a service, product or practice saved as a person. Boolean mask."""
+    if "email" not in df.columns:
+        return np.zeros(len(df), bool)
+    name = df.first_name.str.replace(r"[^a-z0-9]", "", regex=True)
+    label = df.email.str.partition("@")[2].str.partition(".")[0].str.replace(r"[^a-z0-9]", "", regex=True)
+    inside = np.array([n in d for n, d in zip(name, label)], bool)
+    return ((df.last_name == "") & (name.str.len() >= 4)).to_numpy() & inside
+
+
+def relay_records(df):
+    """(mask, addresses): records whose email or an alias email is a service relay (RELAY_EMAIL),
+    and the relay addresses found. Each distinct address is tested once."""
+    mask, found = np.zeros(len(df), bool), set()
+    for c in ["email"] + [c for c in alias_columns(df) if c.startswith("email@")]:
+        hits = [v for v in df[c].unique() if v and RELAY_EMAIL.search(v)]
+        if hits:
+            mask |= df[c].isin(hits).to_numpy()
+            found.update(hits)
+    return mask, sorted(found)
 
 
 def alias_views(df):

@@ -103,7 +103,7 @@ def main():
             runs = []
             for seed in AU.SEEDS:
                 lp = tmp / f"{name}_{seed}.csv"
-                labels.sample(cp, 300, lp, seed=seed)
+                labels.sample(cp, 300, lp, seed=seed, stratified=False)
                 lab = AU.fill(lp, gold)
                 while len(lab) < 1000:
                     nxt = tmp / "next.csv"

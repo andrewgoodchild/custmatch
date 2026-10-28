@@ -198,7 +198,7 @@ def main():
             r["cdp_tuned_newest"] = outcomes([prof[i] for i in range(len(df))], df, keys, pid, newest=True)
             # custmatch: 300 random + 700 active labels
             lp = tmp / f"l{seed}.csv"
-            labels.sample(cp, 300, lp, seed=seed)
+            labels.sample(cp, 300, lp, seed=seed, stratified=False)
             lab = AU.fill(lp, gold)
             while len(lab) < 1000:
                 labels.sample_active(cp, lp, 100, tmp / "next.csv", seed=seed)

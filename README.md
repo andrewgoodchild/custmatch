@@ -2,7 +2,7 @@
 
 [![tests](https://github.com/andrewgoodchild/custmatch/actions/workflows/tests.yml/badge.svg)](https://github.com/andrewgoodchild/custmatch/actions/workflows/tests.yml)
 [![licence: Apache 2.0](https://img.shields.io/badge/licence-Apache%202.0-blue.svg)](https://github.com/andrewgoodchild/custmatch/blob/main/LICENSE)
-![python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+![python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)
 
 Find the records that are the same customer - across your CRM, billing and web sign-ups -
 group them into households, and write one golden record per customer.
@@ -56,20 +56,20 @@ golden records ◄─ households ◄─ customers ◄─ threshold chosen on who
 
 ## Results
 
-**On other people's data.** Public benchmarks, with every tool given the same labelled pairs and
-Splink its documented settings. Clustered F1; the best in each row is bold
+**On other people's data.** Public benchmarks, with every tool given the same labelled pairs (a
+plain random draw, which every tool can use) and Splink its documented settings. Clustered F1; the best in each row is bold
 ([chapter 9](docs/report/09-against-other-tools.md) has the details):
 
 | Dataset | custmatch | Splink | dedupe |
 | --- | :---: | :---: | :---: |
 | NCVR (Leipzig): real voter names, generated errors, 20,000 people | **99.22**, against a blocking ceiling of 99.46 | 98.01 | not run |
-| NCVR (Leipzig), 200,000 people | **95.63** | 93.94 | not run |
-| historical_50k (Splink's): dense genealogy records | **87.02** | 76.82; 82.79 at its documented threshold | 80.02 |
+| NCVR (Leipzig), 200,000 people | **98.03** | 93.94 | not run |
+| historical_50k (Splink's): dense genealogy records | **87.01** | 76.82; 82.79 at its documented threshold | 80.02 |
 | febrl4 (Splink's) | **99.84** | 99.83 | 99.11 |
 | febrl3 (Splink's) | 99.42 | **99.63** | 98.11 |
 | fake_1000 (Splink's) | 87.11 | **92.52** with its tutorial's looser blocking | 70.26 |
-| csv_example (dedupe's): childcare sites | 86.95 | 64.59 | **91.37** |
-| patent_example (dedupe's): patent applicants | 87.26 with `"max_block": 300`; 75.88 by default | 80.19 | 49.66 |
+| csv_example (dedupe's): childcare sites | 89.08 | 64.59 | **91.37** |
+| patent_example (dedupe's): patent applicants | 87.26 with `"max_block": 300`; 77.37 by default | 80.19 | 49.66 |
 
 On real names custmatch comes within a quarter of a point of what its blocking allows; on clean
 records the tools tie; on organisations, which it is not built for, dedupe or its own settings
@@ -121,7 +121,7 @@ test suite checks every number against `research/results/*.json`.
 ## Quick start
 
 ```bash
-pip install custmatch                 # Python 3.10+ (or from a clone: pip install -e .)
+pip install custmatch                 # Python 3.11+ (or from a clone: pip install -e .)
 # try it on the bundled demo (1,766 synthetic records, 600 pairs already labelled):
 custmatch run examples/demo/config.json --labels examples/demo/labels.csv --out demo_out/
 

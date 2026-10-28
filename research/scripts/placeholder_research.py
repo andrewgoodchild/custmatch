@@ -108,7 +108,7 @@ def main():
         (tmp / "clean.json").write_text(json.dumps(clean))
         for prefix, base in (("", config), ("clean_", tmp / "clean.json")):
             lp = tmp / f"{prefix}l.csv"
-            labels.sample(base, 1000, lp, seed=1)
+            labels.sample(base, 1000, lp, seed=1, stratified=False)
             lab = V.fill(lp, gold)
             run_both(base, lp, lab, gold, tmp, prefix, out)
     (ROOT / "research/results/placeholder_research.json").write_text(json.dumps(out, indent=1, default=float))

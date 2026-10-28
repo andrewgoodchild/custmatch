@@ -5,10 +5,7 @@ import ast
 import sys
 from pathlib import Path
 
-try:
-    import tomllib                                  # Python 3.11+
-except ModuleNotFoundError:                         # 3.10: the same parser, as a package
-    import tomli as tomllib
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 IMPORT_TO_DIST = {"sklearn": "scikit-learn", "yaml": "pyyaml"}

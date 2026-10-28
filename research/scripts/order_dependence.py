@@ -215,7 +215,7 @@ def main():
             truth_household.update(zip(k, f.household_id))
         full_cfg = config(tmp, frames, {}, "full")
         all_labels_path = tmp / "all_labels.csv"
-        labels.sample(full_cfg, 1000, all_labels_path, seed=1)
+        labels.sample(full_cfg, 1000, all_labels_path, seed=1, stratified=False)
         all_labels = pd.read_csv(all_labels_path, dtype=str, keep_default_na=False)
         all_labels["label"] = [int(truth_person[x] == truth_person[y]) for x, y in zip(all_labels.a, all_labels.b)]
         keys = sorted(truth_person)

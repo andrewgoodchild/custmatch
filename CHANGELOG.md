@@ -1,5 +1,112 @@
 # Changelog
 
+## Unreleased
+
+**Changed:** Python 3.11 or newer is required. Python 3.10 reached end of life in October 2026, and
+pandas, numpy, scipy and scikit-learn had already dropped it, so 3.10 resolved an older set of
+versions (pandas 2) and, through the catboost extra, a Pillow with 37 known vulnerabilities.
+custmatch 0.1.2 still installs on 3.10.
+
+**Fixed:** dates of birth are read in more forms: with a space between the parts ("1953 11 09",
+"11 09 1953"), with the month in words ("09 nov 1953", "November 9, 1953", "jul 18sat 1953"), and
+with no separators ("19531109"). They stayed as written before and disagreed with the same date
+written "1953-11-09". Partial dates ("may 2008") are still kept as written. Found on BPID, AWS's
+public benchmark of personal identities: pairwise F1 on its 10,000 labelled pairs rose from 67.48
+to 74.45 with 8,000 labels, and its blocking recall from 70.18% to 71.89%. No date in any other
+dataset in this repository reads differently (docs/report/09-against-other-tools.md "BPID").
+
+**Fixed:** me.com and mac.com addresses read as icloud.com, as Gmail's dots already were: they
+are one Apple account, so jo@me.com and jo@icloud.com now agree. Reported from deduplicating an
+address book, where one person's me.com and mac.com addresses did not agree. BPID's 13 me.com
+addresses change nothing there (74.45 with 8,000 labels, rerun).
+
+**Fixed:** `custmatch sample --active` no longer stalls while no labelled pair is a match: half
+its batch is then the pairs with the highest match weight (fitted without labels, marked
+active), half another random batch, drawn stratified. Where matches are 0.3% of the candidate
+pairs, 150 random labels can hold none; on synthetic address-book cards, 150 random + 150 active
+labels stopped on 6 of 15 draws and scored 42.88 clustered F1; now none stop and it scores 90.63.
+The stop message says what to do.
+
+**Added:** with a country set, names are tidied ("normalise" step `names`): qualifications after a
+name ("smith, phd, cpa", "mba"; short ones such as "ma" only after a comma, as Ma is a surname),
+bracketed text, a phone number in a name and trade-mark signs are taken out; "(nee brown)" becomes a
+surname alias where aliases can be used; an email address used as a name becomes the name it
+spells; fused titles ("assoc.prof.dr.jane") are split. `summary.json` says how many records
+changed. No name in the Australian files or the first address-book profile changes.
+
+**Added:** warnings for an extra field's value on a tenth or more of the records whose people share
+no surname or employer's domain ("Multiple Companies"; still compared - ignoring it changed nothing
+measured), and for records with a first name only that is their email's domain (a service saved as
+a person).
+
+**Added:** Profile B of `research/scripts/address_book_data.py`: address-book cards, one per
+contact with several emails and phones, eleven duplicates among about 4,100 candidate pairs, from
+the same people as the first profile; `address_book_benchmark.py --cards N`
+(docs/report/06-blocking-and-scale.md, "Address-book cards").
+
+**Added:** `"group_rows": true` on a source reads long-format data - one row per contact point,
+rows sharing a `record_id` one record. The record's other surnames, emails and phones become
+aliases, so a person with several addresses is one record, not a record per address whose
+pairs take up the labels. `add` reads such sources the same way.
+
+**Fixed:** with a country set, a title in the first-name field ("Dr John", "Prof. Jane") is
+dropped. It stopped "Dr John" agreeing with "John", and became the name's nickname root, so
+every "Dr" in a file shared a blocking key. `"normalise": {"titles": false}` keeps titles.
+No benchmark sets a country, so none moves.
+
+**Fixed:** no-reply, notification and bounce addresses (`drive-shares-noreply@google.com`,
+`calendar-notification@...`, `notifications@...`, `mailer-daemon@...`) are junk on sight, not
+only a bare `noreply@`; the user name's word must be joined by `-` or `_`, as services write
+them, so BPID's `gertie.noreply@` style personal addresses are not caught. A run warns when such
+an address carries a person's name: in an address book, a file-sharing relay filed under one
+person's name was linked to ten of that person's addresses, every false link of the best run.
+No benchmark file has one besides `noreply@example.com`, already junk.
+
+**Added:** a warning when a two-field blocking key blocked on one field alone for a quarter of
+the candidate pairs or more (first name + street is first name alone where there is no street),
+and a per-key count of those pairs in `blocking_report.json` (`pairs_with_a_blank_part`). On an
+address book with no streets, first name alone gave 660 of 1,057 pairs, mostly strangers, and
+nothing said so. Of the benchmarks it fires on historical_50k and fake_1000, which have no
+streets; the keys themselves are unchanged.
+
+**Added:** `"blocking": "adaptive"`. A block too big for `max_block` is split on up to three
+refinements on different fields, the file's extra fields included, and every piece is kept, so a
+typo in one refining field no longer loses the pair. On the 5M-record NCVR benchmark it lifts the
+most F1 blocking allows from 97.13 (`"fixed"`) to 99.05, with 192M candidate pairs against 126M,
+and the full run's clustered F1 from 87.19 to 88.45 (recall 86.7 to 90.2).
+
+**Changed:** with no `"blocking"` set, blocking switches to `"adaptive"` by itself when the
+default keys would leave more than 1% of the records only in blocks too big to compare, and
+`summary.json` says so; the large-block check still runs, and `add` and runs reusing the model
+block the same way. `"blocking": "core"` keeps the old behaviour. None of the five small
+benchmarks or BPID switches (0.45% at most); NCVR does from 200,000 people, and so do dedupe's
+two organisation files, which gain (childcare sites 86.95 to 89.08, patents 75.88 to 77.37).
+On all 5,000,000 NCVR records with nothing set, both changes together score 86.24 clustered F1
+against 84.33 before, with the same 300 random + 700 active labels.
+
+**Changed:** `custmatch sample` draws half the random labels spread over the pairs' agreement
+patterns and writes each one's `weight`; `run` weighs the threshold's estimates by it, so they
+stay unbiased. Plain draws held a handful of matches: on 1,000,000 NCVR people with 300 random +
+700 active labels clustered F1 rose from 80.84 (2 random matches) to 92.88, and on synthetic
+address books with 300 random labels from 71.58 to 77.21 over 30 draws. It is the default at
+every size; `--no-stratified` draws plainly; labels without weights count equally, as before.
+Results recorded before, and comparisons giving every tool the same labels, still draw plainly
+(docs/report/06-blocking-and-scale.md "Random labels that still hold matches"). A stratified draw now
+returns as many pairs as asked: a pair both halves picked was kept once, so on a small file 300
+asked could give 290 or so (30 asked gave 29). Each overlap is redrawn from its stratum; where
+none overlaps, as on NCVR, the same pairs are drawn.
+
+**Added:** `research/scripts/address_book_data.py`, synthetic personal address books built from
+people (one record per email address; employer changes, Apple and Gmail variants, nicknames,
+titles, maiden names) with the traps a real one has - relay addresses under a person's name, a
+switchboard phone, shared household phones, same-name strangers, brand names - each tagged in
+the truth; and `research/scripts/address_book_benchmark.py`, which scores four labelling budgets
+on dirty and clean books with false links broken down by trap.
+
+**Faster:** oversized blocks are split with one sort, not a scan apiece, and pairs are
+deduplicated with an integer sort: `"fixed"` blocking at 200,000 people takes 6.3 s, from 9.7 s.
+The candidate pairs are the same.
+
 ## 0.1.2 (2026-10-16)
 
 Six ideas from three other matching projects - zer (ZAL-Analytics/zer), jlink (keltokhy/jlink)

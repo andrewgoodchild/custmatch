@@ -78,7 +78,7 @@ def _label(cp, lp, gold_pid, seed, active):
         lab["label"] = [int(gold_pid[a] == gold_pid[b]) for a, b in zip(lab.a, lab.b)]
         lab.to_csv(path, index=False)
         return lab
-    labels.sample(cp, 300 if active else 1000, lp, seed=seed)
+    labels.sample(cp, 300 if active else 1000, lp, seed=seed, stratified=False)
     lab = fill(lp)
     while active and len(lab) < 1000:
         labels.sample_active(cp, lp, 100, lp.parent / "next.csv", seed=seed)

@@ -139,7 +139,7 @@ def custmatch_runs(cp, keys, tmp, seed, gold, pid, hh, email, owners):
     out = {}
     for variant in ("clean_1000", "noisy5_1000", "random_300", "min_precision_097"):
         lp = tmp / f"l_{variant}_{seed}.csv"
-        labels.sample(cp, 300, lp, seed=seed)
+        labels.sample(cp, 300, lp, seed=seed, stratified=False)
         lab = AU.fill(lp, gold)
         while variant != "random_300" and len(lab) < 1000:   # min_precision: the same labels as clean
             labels.sample_active(cp, lp, 100, tmp / "next.csv", seed=seed)

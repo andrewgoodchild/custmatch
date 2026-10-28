@@ -19,13 +19,17 @@ features (`research/scripts/beat_splink.py`), clustered F1 with 1,000 random lab
 | historical_50k | 547,050 / 87.02 (86.20) | 672,502 / 84.85 (86.20) | 315,711 / 83.76 (86.19) | 87.79 (86.69) | 87.69 |
 | synthetic | 48,759 / 97.28 (98.61) | 48,884 / 97.36 (98.74) | 24,032 / 97.66 (97.64) | 97.28 (98.61) | 98.89 |
 
+These ran before 0.1.2. Rerun on 0.1.2's code, historical_50k scores 85.53 (86.64) with the old
+blocking and 84.95 (87.13) with `"fixed"` (`rich_rerun`, `rich_split_0_1_2`); the other four
+datasets give the same figures as above.
+
 - **`"blocking": "fixed"`** (Zingg): the same kind of keys as rules, but a block larger than
   `max_block` is split with the next key (first letters of the first name, birth year, street...)
   instead of dropped; records without that key (a two-letter first name) stay together as their
   own piece. It fixed fake_1000's 173-record London block without any hand tuning
   (95.54 against 92.46 with random labels; with active learning 98.17 against 99.08). It is
   level on the synthetic file and the febrl sets, and costs 2.17 on the dense historical_50k with random
-  labels, where splitting keeps more pairs than dropping. Use it when large blocks are ordinary
+  labels (0.58 on 0.1.2's code), where splitting keeps more pairs than dropping. Use it when large blocks are ordinary
   common values (a city), not shared contacts.
 - **`"blocking": "learned"`** (dedupe): a greedy set cover picks the cheapest rules from a library
   (exact, first three letters, Soundex, year and year-month of birth, and pairs of these) that
@@ -280,6 +284,8 @@ redesign:
 | As above, before the memory redesign | 84.53 | 90.2 / 79.6 | 11 | 55.1 GB |
 | The same, after it | 84.33 | 89.8 / 79.5 | 13 | 18.6 GB |
 | Oversized blocks split (`"blocking": "fixed"`), 1,000 random labels | 87.19 | 87.7 / 86.7 | 30 | 26.4 GB |
+| Split on three fields (`"blocking": "adaptive"`), 1,000 random labels, on an 18-core 64 GB laptop | 88.45 | 86.7 / 90.2 | 11 | 33.6 GB |
+| Nothing set: switched to `"adaptive"` by itself, 300 random labels drawn stratified, same laptop | 86.24 | 87.7 / 84.9 | 10 | 42.4 GB |
 
 The redesign cut peak memory by 66% at the same accuracy. Splitting blocks instead of
 dropping them, with enough random matches to judge the threshold, won back 2.9 of the points lost
@@ -287,6 +293,146 @@ against the 200,000-people sample - recall rose from 79.5 to 86.7 - and no warni
 rest of the gap is still open. (Both reruns' times are left out: they were slowed by a defect in the
 new blocker, since fixed, that scanned every block entry for each of about 50,000 skipped blocks.
 On the full file the fixed blocker takes about 5 to 8 minutes, against about 9 for the old one.)
+
+**Where the rest of the gap is** (`research/scripts/ncvr_blocking_scale.py`,
+`research/results/ncvr_blocking_scale.json`): blocking alone, with no labels or model, on samples
+of the same file. The ceiling is every true candidate pair accepted and closed.
+
+| People (records) | Default: pair completeness / ceiling F1 | `"fixed"` | `"adaptive"` | Candidate pairs, default / fixed / adaptive |
+| --- | --- | --- | --- | --- |
+| 200,000 (285,812) | 93.78 / 97.35 | 97.32 / 99.20 | 98.47 / 99.85 | 7.1M / 7.9M / 8.9M |
+| 1,000,000 (1,428,005) | 86.42 / 93.13 | 95.22 / 98.13 | 97.80 / 99.56 | 22.4M / 34.8M / 46.9M |
+| 3,500,840 (5,000,000) | 79.61 / 88.96 | 93.37 / 97.13 | 96.74 / 99.05 | 69.1M / 125.6M / 191.8M |
+
+With the default blocker, recall at full size is the blocking ceiling: 79.5 against a pair
+completeness of 79.6. With `"fixed"` it is not. The ceiling there is 97.1, but the run scored
+87.2, so ten points went to the matcher and the labels. The pairs `"fixed"` still misses are
+mostly ones where the field it split on has the typo. For example, a (postcode, first initial)
+block is split on the first three letters of the first name, so it loses "thoams gravel"
+against "thomas kravel". Splitting never used the file's own fields, town and postcode.
+`"blocking": "adaptive"` splits each oversized block on up to three refinements at once, each
+on a different field and the extra fields included, and keeps the pieces of all of them. A pair
+is lost only if it disagrees on every one. At full size that lifts pair completeness from 93.4%
+to 96.7% for 53% more pairs.
+
+End to end, on 1,000,000 people
+([chapter 9](09-against-other-tools.md), "A public benchmark"), adaptive splitting with 300
+random labels scored 80.84. That number says nothing about the blocker: only 2 of its 300
+random labels were matches, because extra candidate pairs make matches rarer among random
+pairs, and the warning fired. With 1,000 random labels it scored 94.04, against 93.64 for
+`"fixed"` and 90.29 for the default with 300. Precision, not recall, is now what limits it
+(91.8). On the full five million (the last row of the table above) it scored **88.45**, the best
+full-file result: recall rose from 86.7 to 90.2 and precision fell from 87.7 to 86.7. Only 11 of
+its 1,000 random labels were matches and the warning fired; the 700 active labels held 458. The
+blocking ceiling is 99.05, so about ten points are still lost after blocking, and precision is now
+the limit there too. It ran on a laptop (18 cores, 64 GB) in 2.2 hours, the final run 22 minutes;
+the process's peak footprint was 51 GB, against the 33.6 GB the run records. On the five small benchmarks
+(`research/scripts/beat_splink.py`, `rich_adaptive` against `rich_split_0_1_2`) it is level or
+ahead with active labels. With random labels it gains 2.11 on historical_50k and loses 0.32 to
+0.75 on febrl3, fake_1000 and the synthetic file. So it is not used everywhere: it switches on
+by itself only for files whose blocks outgrow `max_block` ("Splitting when it is needed, by
+default" below). With nothing set, the full file now runs that way, with 300 random labels
+drawn stratified, and scored 86.24 (the table's last row): 1.91 above the default before, on
+the same 300 random + 700 active labels, but 2.21 below the 1,000-random-label run. Stratifying
+did not find the matches here: 10 of its 300 random labels were matches, against 11 and 13 in
+plain draws of 300 and 11 of 1,000, and the threshold it judged on them, 0.55 against 0.5, cost recall (84.9
+against 90.2). At this size 300 random labels are too few however they are drawn. Both rule blockers also got faster with identical output: a sort
+in place of a scan per oversized block, and an integer sort in place of a pandas groupby.
+`"fixed"` blocking at 200,000 people went from 9.7 to 6.3 seconds, and `"adaptive"` on the full
+file from 555 to 274 seconds at a 26 GB peak.
+
+**Splitting when it is needed, by default.** The default blocker now switches to `"adaptive"`
+by itself when its keys would leave more than 1% of the records only in skipped blocks
+(`blocking.AUTO_ADAPTIVE_SHARE`), and `summary.json` says so. Measured with the default keys:
+at most 0.45% on the five small benchmarks (synthetic; febrl3 0.06%, historical_50k 0.02%,
+febrl4 and fake_1000 none) and 0.13% on BPID, so none of them changes; 1.1% on NCVR at 200,000
+people, 4.2% at a million and 8% at five million. dedupe's two organisation files switch too,
+and gain: the childcare sites from 86.95 to 89.08, the patent applicants from 75.88 to 77.37.
+After a switch the large-block check still runs on the blocks the default keys skipped, so a
+large organisation stays one customer; `add` and a run reusing the model block the same way.
+`"blocking": "core"` keeps the old behaviour.
+
+**Random labels that still hold matches** (`labels.stratified_pick`). With every split block
+compared, matches are rarer among the candidate pairs, and a plain random draw holds a handful:
+2 of 300 at a million people, 11 of 1,000 on the full file. The threshold's recall is judged on
+those. `custmatch sample` now draws
+half the random labels uniformly and half spread over the pairs' agreement patterns - which of
+the fields agree exactly - each pattern's share the square root of its size, and writes each
+label's weight, the candidate pairs it stands for. The threshold's estimates are weighted by
+it, so they stay unbiased. A first version stratified on how many fields agree, leaning towards
+more; it cost 2.4 points at a million people with 1,000 random labels, because there pairs
+agreeing on three of four fields were 0.01% matches (relatives sharing surname, town and
+postcode) and pairs agreeing on two 1.25%. With `"adaptive"` blocking and 300 random + 700
+active labels:
+
+| NCVR people | Plain random draw | Stratified by agreement pattern |
+| --- | --- | --- |
+| 200,000 (3 draws) | 97.63 | 98.03 |
+| 1,000,000, 300 random labels | 80.84 (2 random matches) | 92.88 (7) |
+| 1,000,000, 1,000 random labels | 94.04 (21) | 94.36 (38) |
+
+On the five small benchmarks, over three label draws each (`rich_stratified` against
+`rich_rerun`, seeds 1 to 3; mean clustered F1, the draws' range in brackets):
+
+| Dataset | 1,000 random: plain | stratified | 300 random + 700 active: plain | stratified |
+| --- | --- | --- | --- | --- |
+| febrl3 | 99.51 (99.29-99.83) | 99.62 (99.25-99.92) | 99.99 | 99.99 |
+| febrl4 | 99.87 (99.84-99.92) | 99.89 (99.79-99.98) | 99.99 | 99.99 |
+| historical_50k | 86.63 (85.53-88.00) | 87.46 (87.23-87.83) | 87.36 (86.64-87.83) | 85.95 (84.79-86.94) |
+| fake_1000 | 93.36 (91.65-95.98) | 92.44 (91.17-93.25) | 98.29 (96.75-99.08) | 99.03 (99.03-99.03) |
+| synthetic | 97.53 (97.28-97.74) | 97.75 (97.61-97.88) | 98.84 (98.61-98.98) | 99.06 (98.96-99.11) |
+
+With random labels alone it is level or better on four files and 0.92 worse on fake_1000. With
+active labels it is level or better on four and worse on historical_50k on all three draws, by
+1.41 on average. That first decided against stratifying small files. An address book then
+argued for it: a real one of 808 records, with 300 random labels, went from 80.9 to 92.3-93.2
+pairwise F1 on three stratified draws, and on synthetic books built to its profile
+(`research/scripts/address_book_data.py`: one record per email address, no street or birth
+date, relay addresses, a switchboard phone, shared household phones) ten draws of 300 random
+labels on each of three books gave:
+
+| Synthetic address books, 300 random labels, 30 draws | Plain | Stratified |
+| --- | --- | --- |
+| As generated: clustered F1, mean (lowest draw) | 71.58 (59.30) | 77.21 (61.27) |
+| Relay records removed, switchboard blanked | 77.75 (41.13) | 81.37 (65.09) |
+| Random matches among the 300 | 10.6 | 19.6 / 23.5 |
+
+Stratified was ahead on all six book and version pairs (by 0.2 to 12.2). Since 0.1.3 every file
+draws this way by default (`--no-stratified` draws plainly); the results recorded before it,
+and the comparisons that give every tool the same labels, still draw plainly
+(`stratified=False` in their scripts).
+
+**Address-book cards, where matches are rarer still.** A second real address book - 1,302
+cards, one per contact, several emails and phones on some - held 11 duplicates among 3,942
+candidate pairs, 0.28% of them. Its owner found that 300 random labels held 2 matches, that
+150 random then 150 active labels stopped with none (active learning had nothing to be
+uncertain between, and drew another random batch), and that the name fields held qualifications,
+bracketed nicknames, email addresses and phone numbers. Profile B of
+`research/scripts/address_book_data.py` builds cards to its profile from Profile A's people: 1,340
+cards, 11 duplicate pairs that share no email (0.26-0.28% of about 4,100 candidate pairs),
+relatives, namesakes, colleagues with one first name, service cards and junk in the names.
+Over three books and five label draws each (`address_book_benchmark.py --cards 5`; a run that
+stops scores 0), before and after four changes - active learning offering the highest
+match-weight pairs while no match is labelled (`labels.sample_active`), the name clean-up
+(`country.tidy_name`), and the email address used as a name read as the name it spells:
+
+| Profile B, 15 runs per budget | Before: clustered F1 (runs stopped) | Duplicates found | Now: clustered F1 (runs stopped) | Duplicates found |
+| --- | --- | --- | --- | --- |
+| 300 random | 4.45 (9) | 0.3 of 11 | 12.99 (9) | 1.0 of 11 |
+| 300 stratified | 52.18 (0) | 5.0 of 11 | 59.06 (0) | 5.7 of 11 |
+| 150 random + 150 active | 42.88 (6) | 4.8 of 11 | 90.63 (0) | 9.5 of 11 |
+| 300 stratified + 150 active | 84.20 (0) | 9.0 of 11 | 88.61 (0) | 9.7 of 11 |
+| Every candidate pair labelled (3 runs) | 84.42 (0) | 9.0 of 11 | 85.61 (0) | 9.7 of 11 |
+
+Random labels alone cannot work here: 300 of them hold one match or none. With active learning
+after them, every budget now gets within a few points of labelling every pair, and the run never
+stops. Blocking misses one or two duplicates per book, reordered Chinese and Vietnamese names,
+so 9.7 of 11 is about the most it allows. Two more of the owner's suggestions were measured and
+reported rather than acted on: a company placeholder ("Multiple Companies" on a quarter of the
+cards) is flagged, but ignoring it changed nothing (89.18 against 89.91 with 300 stratified + 150
+active labels, measured before the email-as-name change: the model already learns it is worth
+little), so it is only reported; and two first-name-only cards whose
+names are nicknames of each other were never linked in 54 runs.
 
 ## What had to change to run this on a laptop, and what it costs
 

@@ -46,7 +46,7 @@ def main():
             tmp = Path(tmp)
             config, truth = setup(ds, tmp)
             lp = tmp / "labels.csv"
-            labels.sample(config, 1000, lp, seed=1)
+            labels.sample(config, 1000, lp, seed=1, stratified=False)
             lab = pd.read_csv(lp, dtype=str, keep_default_na=False)
             lab["label"] = [int(truth[a] == truth[b]) for a, b in zip(lab.a, lab.b)]
             lab.to_csv(lp, index=False)
