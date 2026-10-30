@@ -158,23 +158,33 @@ def p_match(model, X):
     return out
 
 
-def distinct_rows(X, check=1_000_000):
+def distinct_rows(X, check=500_000):
     """(rows, inverse): indices of X's distinct rows, bit for bit, and each row's position among
     them, so X[rows][inverse] is X. A model scores equal rows equally, and among candidate pairs
     about 44% of feature rows repeat another (NCVR, a million people), so each is scored once.
     Rows are grouped by a hash of their bits and each checked against its group's first row; one
     whose hash collides with a different row's is kept as a row of its own."""
+    import os
+    from concurrent.futures import ThreadPoolExecutor
+
     import numpy as np
     import pandas as pd
     w = np.ascontiguousarray(X).reshape(len(X), -1).view(np.uint32)
     h = np.zeros(len(w), np.uint64)
-    for k in range(w.shape[1]):
-        h = h * np.uint64(0x9E3779B97F4A7C15) + w[:, k]      # wraps: uint64 arithmetic is modulo 2**64
-    inverse, keys = pd.factorize(h)
-    rows = np.empty(len(keys), np.int64)
-    rows[inverse[::-1]] = np.arange(len(w) - 1, -1, -1)  # each group's first row
-    odd = [s + np.flatnonzero((w[s:s + check] != w[rows[inverse[s:s + check]]]).any(axis=1))
-           for s in range(0, len(w), check)]
+    starts = range(0, len(w), check)
+
+    def hash_rows(s):                                    # slices on every core: numpy frees the GIL
+        part = h[s:s + check]
+        for k in range(w.shape[1]):
+            part *= np.uint64(0x9E3779B97F4A7C15)        # wraps: uint64 arithmetic is modulo 2**64
+            part += w[s:s + check, k]
+    with ThreadPoolExecutor(os.cpu_count() or 1) as pool:
+        list(pool.map(hash_rows, starts))
+        inverse, keys = pd.factorize(h)
+        rows = np.empty(len(keys), np.int64)
+        rows[inverse[::-1]] = np.arange(len(w) - 1, -1, -1)  # each group's first row
+        odd = list(pool.map(lambda s: s + np.flatnonzero((w[s:s + check] != w[rows[inverse[s:s + check]]]).any(axis=1)),
+                            starts))
     odd = np.concatenate(odd) if odd else np.zeros(0, np.int64)
     if len(odd):
         inverse[odd] = len(rows) + np.arange(len(odd))

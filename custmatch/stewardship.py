@@ -190,6 +190,13 @@ def carry_ids(keys, labels, previous, issued=-1):
     Returns (ids per record, history events)."""
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     labels = np.asarray(labels)
+    if not previous and np.issubdtype(labels.dtype, np.integer):
+        # a first run: every customer is new, numbered in label order (what the loop below does,
+        # without a vote per customer - a million of them at a million records)
+        uniq, inv, size = np.unique(labels, return_inverse=True, return_counts=True)
+        first = max(int(issued), -1) + 1
+        events = [[now, "new", first + k, "", c, ""] for k, c in enumerate(size.tolist())]
+        return (first + inv.reshape(-1)).astype(np.int64), events
     members = defaultdict(list)
     for k, lab in zip(keys, labels):
         members[lab].append(k)

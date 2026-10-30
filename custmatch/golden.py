@@ -131,7 +131,9 @@ def _build_by_field(df, labels, rules, fields, source_rank):
     for g, members in GROUPS.items():
         members = [m for m in members if m in fields]
         if g in rules and members and rules[g] == "most_complete":
-            joined = np.array([" ".join(str(arrays[m][k]) for m in members).strip() for k in range(len(df))], dtype=object)
+            parts = [pd.Series(arrays[m], dtype=object).map(str) for m in members]
+            joined = parts[0].str.cat(parts[1:], sep=" ").str.strip().to_numpy(dtype=object) if len(df) \
+                else np.zeros(0, dtype=object)        # " ".join(str(...)).strip(), column by column
             win = _most_complete(labels, joined, src, source_rank)
             # the first record (in record order) holding the winning joined value
             first = pd.DataFrame({"lab": labels, "j": joined}).reset_index().drop_duplicates(["lab", "j"])

@@ -438,16 +438,17 @@ _DATE_PATTERNS = [
 
 def parse_dates(values):
     """(year, month, day) int arrays, -1 where a value does not parse. Handles dates pandas
-    cannot (historical_50k has births before 1677)."""
-    out = np.full((len(values), 3), -1, dtype=np.int64)
-    for k, v in enumerate(values):
+    cannot (historical_50k has births before 1677). Each distinct value is parsed once."""
+    codes, uniq = pd.factorize(np.asarray(values, dtype=object), use_na_sentinel=False)
+    out = np.full((len(uniq), 3), -1, dtype=np.int64)
+    for k, v in enumerate(uniq):
         for pat, order in _DATE_PATTERNS:
             m = pat.match(v)
             if m:
                 g = m.groups()
                 out[k] = [int(g[order[0]]), int(g[order[1]]), int(g[order[2]])]
                 break
-    return out
+    return out[codes] if len(values) else np.full((0, 3), -1, dtype=np.int64)
 
 
 def record_arrays(df):
@@ -455,8 +456,13 @@ def record_arrays(df):
     normalised strings, name counts, first initials. Recomputing them on every features() call
     cost 44 s of a 155 s run at 500k records (the in-cluster check calls it once per threshold)."""
     dates = parse_dates(df.date_of_birth.to_numpy())
+    codes, uniq = pd.factorize(dates[:, 0] * 10_000 + dates[:, 1] * 100 + dates[:, 2])
+    first = np.zeros(len(uniq), np.int64)
+    first[codes[::-1]] = np.arange(len(codes) - 1, -1, -1)
+    # each distinct date's string once: "%04d%02d%02d", as before, "-001-1-1" for no date
+    strings = np.array([f"{y:04d}{m:02d}{d:02d}" for y, m, d in dates[first]])
     out = {"dates": dates,
-           "date_str": np.array([f"{y:04d}{m:02d}{d:02d}" for y, m, d in dates]),
+           "date_str": strings[codes] if len(codes) else np.array([]),
            "initial": df.first_name.str[:1].to_numpy()}
     for field in ("first_name", "last_name"):
         v = pd.Series(df[field].to_numpy())
@@ -880,12 +886,7 @@ def components(n, pairs, keep):
 
 def _first_seen_labels(cc):
     """cc relabelled in order of each component's lowest record, as connected_components numbers them."""
-    k = int(cc.max()) + 1 if len(cc) else 0
-    first = np.empty(k, np.int64)
-    first[cc[::-1]] = np.arange(len(cc) - 1, -1, -1)
-    rank = np.empty(k, np.int32)
-    rank[np.argsort(first)] = np.arange(k, dtype=np.int32)
-    return rank[cc]
+    return pd.factorize(cc)[0].astype(np.int32)           # codes in order of first appearance
 
 
 def components_by_threshold(n, pairs, score, grid):
@@ -893,17 +894,23 @@ def components_by_threshold(n, pairs, score, grid):
     pass over the pairs: from the strictest threshold down, each step joins the components already
     found with only the pairs whose score lies between it and the stricter one (NCVR, 47M pairs:
     clustering every pair afresh at each threshold was most of the threshold search)."""
-    out, cc, prev = {}, None, None
-    for t in sorted(grid, reverse=True):
+    grid = np.sort(np.asarray(grid, dtype=float))
+    # each pair's band: how many thresholds lie below its score, so it is kept at grid[k] exactly
+    # when band > k (score > t). One pass, and the pairs grouped by band with one small-int sort
+    band = np.searchsorted(grid, score, side="left").astype(np.uint8 if len(grid) < 255 else np.int64)
+    order = np.argsort(band, kind="stable")
+    edges = np.searchsorted(band[order], np.arange(len(grid) + 2))
+    out, cc = {}, None
+    for k in range(len(grid) - 1, -1, -1):
+        new = order[edges[k + 1]:edges[k + 2]]        # kept at grid[k], not at the next threshold up
         if cc is None:
-            cc = components(n, pairs, score > t)
-        else:
-            band = np.flatnonzero((score > t) & (score <= prev))
-            if len(band):
-                k = int(cc.max()) + 1
-                joined = components(k, cc[pairs[band]].astype(np.int64), np.ones(len(band), bool))
-                cc = _first_seen_labels(joined[cc])
-        out[t], prev = cc, t
+            keep = np.zeros(len(pairs), bool)
+            keep[new] = True
+            cc = components(n, pairs, keep)
+        elif len(new):
+            joined = components(int(cc.max()) + 1, cc[pairs[new]].astype(np.int64), np.ones(len(new), bool))
+            cc = _first_seen_labels(joined[cc])
+        out[grid[k].item()] = cc
     return out
 
 

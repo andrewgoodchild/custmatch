@@ -182,6 +182,10 @@ def assign(df, customers, profiles, postcode_join=False):
                   for e, p in zip(df.email.to_numpy(), df.phone.to_numpy())]
     home = {}
     for c, idx in by_c.items():
+        if len(idx) == 1:                   # most customers: their one record's value, no Counter
+            i = idx[0]
+            home[c] = ("addr:" + key[i]) if key[i] else ("hh:" + hh_contact[i]) if hh_contact[i] else f"own:{c}"
+            continue
         ks = [key[i] for i in idx if key[i]]
         if ks:
             home[c] = "addr:" + Counter(ks).most_common(1)[0][0]
@@ -198,7 +202,8 @@ def assign(df, customers, profiles, postcode_join=False):
     size = Counter(home.values())
     ln = df.last_name.to_numpy()
     # a customer's most common NON-blank surname: two customers with no surname share nothing
-    surname = {c: next((s for s, _ in Counter(ln[idx]).most_common() if s), "") for c, idx in by_c.items()}
+    surname = {c: (ln[idx[0]] or "") if len(idx) == 1 else next((s for s, _ in Counter(ln[idx]).most_common() if s), "")
+               for c, idx in by_c.items()}
     groups = defaultdict(set)
     for c, idx in by_c.items():
         for i in idx:
