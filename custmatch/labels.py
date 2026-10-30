@@ -204,9 +204,8 @@ def sample_active(config_path, labels_path, n, out_path, seed=0, mix=0.0, strate
     rf = RandomForestClassifier(n_estimators=300, random_state=seed, n_jobs=-1,
                                 class_weight="balanced_subsample").fit(features(df, lab, profiles, **fopts), ly)
     # scored a chunk at a time: the full feature matrix of every candidate pair is never held
-    from .core import SCORE_CHUNK
-    p = np.concatenate([p_match(rf, features(df, pairs[s:s + SCORE_CHUNK], profiles, **fopts))
-                        for s in range(0, len(pairs), SCORE_CHUNK)]) if len(pairs) else np.zeros(0)
+    from .models import score_pairs
+    p = score_pairs([rf], df, pairs, profiles, fopts)[0] if len(pairs) else np.zeros(0)
     n_random = int(round(n * mix))
     off_rows = np.zeros((0, 2), np.int64)
     if strategy == "disagreement":

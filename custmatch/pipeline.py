@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from . import explain, identity, incremental, io, monitor, schema
-from .core import SCORE_CHUNK, components, components_by_threshold, feature_chunks, features, profile_contacts, relay_records, service_records
+from .core import components, components_by_threshold, features, profile_contacts, relay_records, service_records
 from .golden import build_golden
 
 THRESHOLDS = np.round(np.concatenate([np.arange(0.05, 0.96, 0.05), [0.97, 0.98, 0.99]]), 3)
@@ -287,7 +287,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         raise io.ConfigError("blocking produced no candidate pairs: no two records share a name, "
                              "address, contact or extra blocking key - check the column mapping")
 
-    from .models import factory, p_match, p_match_rows
+    from .models import factory, p_match, score_pairs
     X_lab = features(df, lab_pairs, profiles, **fopts)
     weight_scorer = None                         # "match_weight_feature": custmatch/matchweight.py
     # opt-in ("match_weight_feature": true); a reused model (--model) keeps whatever its run did
@@ -303,35 +303,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         return X if weight_scorer is None else np.column_stack([X, weight_scorer.weights(p)])
 
     def score_all(models, p):
-        """Each model's P(match) for the pairs p, scored FEATURE_CHUNK pairs at a time: the features
-        of every candidate pair are never held at once (on all 5M NCVR records, 192M pairs, they
-        were the largest thing in memory)."""
-        out = [np.empty(len(p)) for _ in models]
-
-        def gathered():
-            # feature chunks gathered to SCORE_CHUNK rows, so the forest's threads are kept busy
-            start, parts = 0, []
-            for s, X in feature_chunks(df, p, profiles, **fopts):
-                if parts and sum(map(len, parts)) + len(X) > SCORE_CHUNK:
-                    yield start, np.vstack(parts) if len(parts) > 1 else parts[0]
-                    start, parts = s, []
-                parts.append(X)
-            yield start, np.vstack(parts) if len(parts) > 1 else parts[0]
-
-        # the next block's features are made in a second thread while the forests score this one:
-        # features run mostly on one core, the forests on all of them
-        from concurrent.futures import ThreadPoolExecutor
-        blocks = gathered()
-        with ThreadPoolExecutor(1) as ahead:
-            pending = ahead.submit(next, blocks, None)
-            while (block := pending.result()) is not None:
-                pending = ahead.submit(next, blocks, None)
-                s, X = block
-                X = model_input(p[s:s + len(X)], X)
-                for o, prob in zip(out, p_match_rows(models, X)):
-                    o[s:s + len(X)] = prob
-                del block, X
-        return out
+        return score_pairs(models, df, p, profiles, fopts, None if weight_scorer is None else model_input)
 
     # pairs chosen by active learning are deliberately unrepresentative (the hard ones): they
     # train every fold but never choose the threshold, which must be judged on random pairs

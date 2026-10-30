@@ -189,3 +189,39 @@ def p_match_rows(models, X):
     rows, inverse = distinct_rows(X)
     Xd = X[rows]
     return [p_match(m, Xd)[inverse] for m in models]
+
+
+def score_pairs(models, df, pairs, profiles, fopts, transform=None):
+    """Each model's P(match) for every pair, from features made core.SCORE_CHUNK pairs at a time,
+    so the features of every pair are never held at once (on all 5M NCVR records, 192M pairs, they
+    were the largest thing in memory). transform(pair rows, X) adds columns (the match weight).
+    The next block's features are made in a second thread while the models score this one:
+    features run mostly on one core, the forests on all of them."""
+    import numpy as np
+    from concurrent.futures import ThreadPoolExecutor
+
+    from .core import SCORE_CHUNK, feature_chunks
+    out = [np.empty(len(pairs)) for _ in models]
+
+    def gathered():
+        # feature chunks gathered to SCORE_CHUNK rows, so the forest's threads are kept busy
+        start, parts = 0, []
+        for s, X in feature_chunks(df, pairs, profiles, **fopts):
+            if parts and sum(map(len, parts)) + len(X) > SCORE_CHUNK:
+                yield start, np.vstack(parts) if len(parts) > 1 else parts[0]
+                start, parts = s, []
+            parts.append(X)
+        yield start, np.vstack(parts) if len(parts) > 1 else parts[0]
+
+    blocks = gathered()
+    with ThreadPoolExecutor(1) as ahead:
+        pending = ahead.submit(next, blocks, None)
+        while (block := pending.result()) is not None:
+            pending = ahead.submit(next, blocks, None)
+            s, X = block
+            if transform is not None:
+                X = transform(pairs[s:s + len(X)], X)
+            for o, prob in zip(out, p_match_rows(models, X)):
+                o[s:s + len(X)] = prob
+            del block, X
+    return out

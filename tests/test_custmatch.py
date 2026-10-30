@@ -1619,7 +1619,7 @@ def test_scoring_in_chunks_changes_no_output(tmp_path, monkeypatch, match_weight
     outs, whole = {}, core.FEATURE_CHUNK
     for chunk in (whole, 37):
         monkeypatch.setattr(core, "FEATURE_CHUNK", chunk)
-        monkeypatch.setattr(pipeline, "SCORE_CHUNK", 3 * chunk + 5)      # several feature chunks a batch
+        monkeypatch.setattr(core, "SCORE_CHUNK", 3 * chunk + 5)          # several feature chunks a batch
         out = tmp_path / f"out_{chunk}"
         s = pipeline.run(tmp_path / "config.json", root / "labels.csv", out, log=lambda *_: None)
         s.pop("stage_seconds")

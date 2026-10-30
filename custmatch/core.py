@@ -198,7 +198,8 @@ def sort_ints(a):
     return s
 
 
-def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, skipped=None, by_key=None, owner=None):
+def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, skipped=None, by_key=None, owner=None,
+          stop_above=None):
     """Candidate pairs: records sharing any blocking key. Returns (pairs int32 (m, 2), i < j,
     sorted; number of blocks skipped as hubs).
 
@@ -223,7 +224,12 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
 
     owner: df holds alias views (alias_views) and owner[k] is the record of row k - keys are
     computed per view and entered once per record, so a block's size counts records and the pairs
-    are pairs of records."""
+    are pairs of records.
+
+    stop_above (with skipped): when more records than this are only in skipped blocks - compared
+    with no one - return (None, hubs, that number) before making any pair: the caller blocks
+    another way (blocking.AUTO_ADAPTIVE_SHARE). A record is compared exactly when a block it is in
+    is used."""
     n = len(df) if owner is None else int(owner.max()) + 1
     limit = (max_block or MAX_BLOCK) if aware else 400   # even the naive run needs some ceiling
     fams = []                                           # (codes per entry, record per entry, key of a code)
@@ -270,6 +276,13 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
             if all(str(v) for v in key[1:]):
                 skipped.append((key, rec[lo:hi].copy()))      # an array: as a list, 695 MB at 5M records
     keep = (sizes[block_id] >= 2) & (sizes[block_id] <= limit)
+    if stop_above is not None and skipped is not None:
+        lonely = np.zeros(n, bool)
+        for _, idx in skipped:
+            lonely[idx] = True
+        lonely[rec[keep]] = False
+        if lonely.sum() > stop_above:
+            return None, hubs, int(lonely.sum())
     block_id, rec = block_id[keep], rec[keep]           # sorted by block, then record
     codes = _block_codes(block_id, rec, n)
     if by_key is not None:
@@ -316,10 +329,10 @@ def _block_codes(block_id, rec, n):
         return np.zeros(0, np.int64)
     end = np.repeat(np.r_[np.flatnonzero(np.diff(block_id)) + 1, len(block_id)],
                     np.diff(np.r_[0, np.flatnonzero(np.diff(block_id)) + 1, len(block_id)]))
-    pos = np.arange(len(block_id))
+    a = np.arange(len(block_id))
     out = []
-    for k in range(1, int((end - pos).max())):
-        a = pos[pos + k < end]
+    for k in range(1, int((end - a).max())):
+        a = a[a + k < end[a]]                  # entries whose block still has a k-th one after them
         out.append(unique_ints(rec[a] * n + rec[a + k]))  # rec ascending within a block: i < j
     return unique_ints(np.concatenate(out)) if out else np.zeros(0, np.int64)
 

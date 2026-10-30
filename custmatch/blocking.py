@@ -21,7 +21,7 @@ same non-empty key.
 import numpy as np
 import pandas as pd
 
-from .core import unique_ints
+from .core import sort_ints, unique_ints
 
 # predicate name -> (column, transform). Transforms map a cleaned string column to keys.
 _TRANSFORMS = {
@@ -423,8 +423,16 @@ def _within_blocks(rule, key, rid):
     only at the records whose block is still long enough."""
     if not len(rid):
         return
-    order = np.lexsort((rid, key, rule))
-    rule, key, rid = rule[order], key[order], rid[order]
+    nk, nr = int(key.max()) + 1, int(rid.max()) + 1
+    if (int(rule.max()) + 1) * nk * nr < 2 ** 62:
+        # sorted by rule, key, record as one integer each, on every core (core.sort_ints): the
+        # order np.lexsort gives, which sorted on one core was most of this function's time
+        c = sort_ints((rule * nk + key) * nr + rid)
+        rid, c = c % nr, c // nr
+        rule, key = c // nk, c % nk
+    else:
+        order = np.lexsort((rid, key, rule))
+        rule, key, rid = rule[order], key[order], rid[order]
     new = np.r_[True, (rule[1:] != rule[:-1]) | (key[1:] != key[:-1])]
     starts = np.flatnonzero(new)
     end = np.repeat(np.r_[starts[1:], len(rid)], np.diff(np.r_[starts, len(rid)]))   # block end per row
@@ -494,13 +502,18 @@ def candidates_for(df, profiles, cfg, labelled_pos=None, rules=None):
     return pairs, hubs, report, used
 
 
-def _core_candidates(df, profiles, cfg, owner=None):
-    """core.block's pairs and report: the default keys, blocks over max_block skipped."""
+def _core_candidates(df, profiles, cfg, owner=None, stop_above=None):
+    """core.block's pairs and report: the default keys, blocks over max_block skipped.
+    stop_above: (None, hubs, the skipped blocks and records left out) without making the pairs
+    when more records than this would be compared with no one."""
     from .core import block
     from .schema import extra_keys, max_block as cfg_max_block
     skipped, by_key = [], []
-    pairs, hubs = block(df, profiles, extra_keys=extra_keys(cfg), max_block=cfg_max_block(cfg),
-                        lsh=cfg.get("lsh_blocking"), skipped=skipped, by_key=by_key, owner=owner)
+    pairs, hubs, *left_out = block(df, profiles, extra_keys=extra_keys(cfg), max_block=cfg_max_block(cfg),
+                                   lsh=cfg.get("lsh_blocking"), skipped=skipped, by_key=by_key, owner=owner,
+                                   stop_above=stop_above)
+    if pairs is None:
+        return None, hubs, {"_skipped": skipped, "records_only_in_skipped_blocks": left_out[0]}
     # records never compared with anyone because their only blocks were skipped - a record
     # whose broad block (postcode alone) was skipped but whose narrow one was used is fine
     compared = np.zeros(len(df), bool)
@@ -531,10 +544,12 @@ def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None
     mode = cfg.get("blocking")
     mb = cfg_max_block(cfg) or 60
     if rules is None and _core_mode(cfg):
-        pairs, hubs, report = _core_candidates(df, profiles, cfg, owner)
+        may_switch = not mode and owner is None and not cfg.get("lsh_blocking")
+        # a file that switches never makes the default keys' pairs: only their skipped blocks
+        pairs, hubs, report = _core_candidates(df, profiles, cfg, owner,
+                                               AUTO_ADAPTIVE_SHARE * len(df) if may_switch else None)
         records = report["records_only_in_skipped_blocks"]
-        if not mode and owner is None and not cfg.get("lsh_blocking") and records > AUTO_ADAPTIVE_SHARE * len(df):
-            del pairs                                 # not held while the adaptive pairs are made
+        if pairs is None:                             # more than the share left out: switch
             pairs, hubs, switched, used = _candidates_for(df, profiles, cfg | {"blocking": "adaptive"}, labelled_pos)
             switched["switched_from_core"] = {"records_only_in_skipped_blocks": records, "records": len(df),
                                               "share": round(records / len(df), 4)}
@@ -565,7 +580,7 @@ def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None
     if cfg.get("_blocking_switched"):
         # a run that switched (a saved state's config): the default keys' skipped blocks, so the
         # large-block check sees what it saw in the run
-        report["_skipped"] = _core_candidates(df, profiles, cfg, owner)[2]["_skipped"]
+        report["_skipped"] = _core_candidates(df, profiles, cfg, owner, stop_above=-1)[2]["_skipped"]
     hubs = sum(r["blocks_dropped_as_hubs"] for r in report["rules"])
     return pairs, hubs, report, [list(r) for r in rules]
 
