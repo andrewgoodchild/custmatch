@@ -1422,3 +1422,18 @@ def test_ncvr_memory_claims():
     assert (f"a run takes {minutes['numpy']} minutes against {minutes['numpy/before']}, at a peak of "
             f"{peak['numpy']} GB against {peak['numpy/before']} GB") in flat
     assert f"the peak is {peak['duckdb']} GB against {peak['numpy']} GB" in flat
+
+
+def test_fold_trees_claims():
+    """docs/report/06 "Fewer trees in the fold models": from fold_trees.json."""
+    r = load("fold_trees.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    runs = [b for ds, seeds in r.items() if ds != "ncvr_1m" for s in seeds.values() for b in s.values()]
+    change = [b["100"]["f1"] - b["300"]["f1"] for b in runs]
+    same = sum(abs(c) < 1e-9 for c in change)
+    assert f"100 trees left {same} of the {len(runs)} runs' clustered F1 unchanged, the rest within " \
+           f"{min(change):.2f} to +{max(change):.2f}" in text
+    n = r["ncvr_1m"]["active_300_700"]
+    assert (f"({n['300']['forest_seconds']:.1f} s to {n['100']['forest_seconds']:.1f} s) but moved the threshold "
+            f"from {n['300']['threshold']:g} to {n['100']['threshold']:g} and cost "
+            f"{n['300']['f1'] - n['100']['f1']:.2f} points ({n['300']['f1']:.2f} to {n['100']['f1']:.2f})") in text

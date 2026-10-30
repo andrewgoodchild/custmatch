@@ -191,7 +191,10 @@ non-matches are required.
   those near the threshold - 100 at a time. These teach the model far more per label, especially
   on sparse records. Actively chosen pairs train the model but never judge the threshold,
   because they are deliberately unrepresentative. The recommended mix: 300 random, then active
-  batches up to about 1,000.
+  batches up to about 1,000. The candidate pairs are kept between rounds in a `.custmatch_cache`
+  folder beside the labels, so a round does not block the file again (on a million NCVR people
+  35 s a round against 53); a change to the records, the config or custmatch makes it block
+  afresh, and `"cache_candidates": false` keeps nothing.
 - **No language model.** custmatch does not use a language model to label: we tried one on synthetic data to see what the
   hype was about, and dropped it - it added little over active learning with hand labels, and
   sending customer records to a third party is a security risk (report/04-labels.md).

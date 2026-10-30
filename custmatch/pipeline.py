@@ -105,6 +105,15 @@ def cluster_coherence(n, pairs, score, t, predict, seed=0, k=2000, cc=None):
     return float(np.mean(predict(np.c_[np.minimum(i, j), np.maximum(i, j)].astype(np.int32)) > 0.5))
 
 
+def _fold_trees(model, cfg):
+    """A fold model with "fold_trees" trees, when set and the model is a random forest: the fold
+    models only choose the threshold. An experiment (research/scripts/fold_trees.py)."""
+    trees = cfg.get("fold_trees")
+    if trees and hasattr(model, "n_estimators"):
+        model.set_params(n_estimators=int(trees))
+    return model
+
+
 def _redact_keys(report):
     """The blocking report without key values (a block's key is a name, email or phone)."""
     if isinstance(report, dict):
@@ -311,7 +320,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
 
     def fit_matcher(make):
         """Cross-fitted fold scores, the final model, and the closure-aware threshold."""
-        fold_models = [make().fit(X_lab[folds != k], ly[folds != k]) for k in range(FOLDS)]
+        fold_models = [_fold_trees(make(), cfg).fit(X_lab[folds != k], ly[folds != k]) for k in range(FOLDS)]
         final = make().fit(X_lab, ly)
         *fold_probs, prob = score_all(fold_models + [final], pairs)
         fold_scores = [(s, folds == k) for k, s in enumerate(fold_probs)]

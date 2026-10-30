@@ -386,6 +386,15 @@ last stage (households, golden records, outputs) at five million. DuckDB lowered
 peak by a fifth, and at a million records it was higher: it is an option for files of several
 million records, not the default. These are single runs.
 
+**Fewer trees in the fold models: tried, not adopted** (`research/scripts/fold_trees.py`,
+`research/results/fold_trees.json`). The four fold models of the cross-fitting only score the
+candidate pairs to choose the threshold, and scoring is most of a large run, so they were given
+100 or 50 trees instead of 300 (`"fold_trees"`), on the same labels. On the five small benchmarks,
+three draws each of 1,000 random and of 300 random + 700 active labels, 100 trees left 26 of the 30
+runs' clustered F1 unchanged, the rest within -0.05 to +0.60. On a million NCVR people it cut the
+forest stage by a third (63.5 s to 42.3 s) but moved the threshold from 0.5 to 0.55 and cost 0.73
+points (91.67 to 90.94), on the one file where the time matters, so the fold models keep 300.
+
 **Splitting when it is needed, by default.** The default blocker now switches to `"adaptive"`
 by itself when its keys would leave more than 1% of the records only in skipped blocks
 (`blocking.AUTO_ADAPTIVE_SHARE`), and `summary.json` says so. Measured with the default keys:

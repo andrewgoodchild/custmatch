@@ -2311,3 +2311,37 @@ def test_a_removed_matcher_model_is_a_clear_config_error(world, tmp_path):
     with pytest.raises(io.ConfigError, match="removed in 0.1.0"):
         pipeline.run(tmp / "config.json", tmp / "labels.csv", tmp / "out", log=lambda *_: None)
     assert any("auto_models" in w for w in io.unknown_keys({"auto_models": ["forest"]}))
+
+
+def test_labelling_rounds_reuse_the_candidate_pairs_until_something_changes(tmp_path, monkeypatch):
+    """`sample` keeps its candidate pairs in .custmatch_cache beside the labels: the next
+    `sample --active` round draws the same batch without blocking again, a changed config blocks
+    afresh (and removes the stale file), and "cache_candidates": false keeps nothing."""
+    root = Path(__file__).resolve().parents[1] / "examples" / "demo"
+    cfg = json.loads((root / "config.json").read_text())
+    for s in cfg["sources"]:
+        s["path"] = str(root / s["path"])
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    lab = tmp_path / "labels.csv"
+    lab.write_text((root / "labels.csv").read_text())
+    labels.sample_active(tmp_path / "config.json", lab, 20, tmp_path / "first.csv", seed=1)
+    cache = list((tmp_path / labels.CACHE_DIR).glob("candidates-*.npy"))
+    assert len(cache) == 1
+
+    def no_blocking(*a, **k):
+        raise AssertionError("blocked again")
+    monkeypatch.setattr(blocking, "candidates_for", no_blocking)
+    labels.sample_active(tmp_path / "config.json", lab, 20, tmp_path / "second.csv", seed=1)
+    assert (tmp_path / "first.csv").read_text() == (tmp_path / "second.csv").read_text()
+    monkeypatch.undo()
+
+    (tmp_path / "config.json").write_text(json.dumps(cfg | {"max_block": 40}))
+    labels.sample_active(tmp_path / "config.json", lab, 20, tmp_path / "third.csv", seed=1)
+    now = list((tmp_path / labels.CACHE_DIR).glob("candidates-*.npy"))
+    assert len(now) == 1 and now != cache
+
+    off = tmp_path / "off"
+    off.mkdir()
+    (off / "config.json").write_text(json.dumps(cfg | {"cache_candidates": False}))
+    labels.sample(off / "config.json", 20, off / "random.csv", seed=1)
+    assert not (off / labels.CACHE_DIR).exists()

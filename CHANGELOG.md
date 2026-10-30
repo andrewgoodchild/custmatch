@@ -122,6 +122,12 @@ one integer code, sorts on every core instead of through `np.unique` (which nump
 17 times slower), and maps soundex once per distinct name (docs/report/06-blocking-and-scale.md
 "Memory and time on one machine").
 
+**Faster:** `custmatch sample` and each `sample --active` round keep the candidate pairs in a
+`.custmatch_cache` folder beside the labels, so a round does not block the file again: on a
+million NCVR people a round takes 35 s against 53, the same batch. The file is named by a hash
+of the loaded records, the config and custmatch's code, so a change to any of them blocks afresh;
+it holds only the pairs, as a .npy array. `"cache_candidates": false` turns it off.
+
 **Added:** `"blocking_engine": "duckdb"`, with the `duckdb` extra (`pip install
 "custmatch[duckdb]"`): the candidate pairs are made in DuckDB, which writes to disk past
 `"blocking_memory_limit"` (default `"2GB"`). Same pairs, same outputs; on the full NCVR file the
