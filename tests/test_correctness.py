@@ -82,6 +82,34 @@ def test_block_pairs_match_brute_force(seed):
     assert got_set == expected
 
 
+@pytest.mark.parametrize("seed", range(5))
+def test_link_bridges_match_networkx(seed):
+    """links.csv's is_bridge: the vectorised search finds networkx's bridges, on graphs with
+    trees, cycles, bridges between cycles and isolated records."""
+    from custmatch.explain import _bridges
+    rng = np.random.default_rng(seed)
+    for _ in range(60):
+        n = int(rng.integers(2, 40))
+        e = np.unique(np.sort(rng.integers(0, n, (int(rng.integers(1, 3 * n)), 2)), axis=1), axis=0)
+        e = e[e[:, 0] != e[:, 1]]
+        g = nx.Graph()
+        g.add_edges_from(map(tuple, e.tolist()))
+        bridges = {frozenset(x) for x in nx.bridges(g)}
+        assert _bridges(n, e).tolist() == [frozenset(x) in bridges for x in map(tuple, e.tolist())]
+
+
+def test_components_by_threshold_match_components():
+    from custmatch.core import components_by_threshold
+    rng = np.random.default_rng(0)
+    for n in (2, 50, 3000):
+        pairs = np.sort(rng.integers(0, n, (3 * n, 2)), axis=1).astype(np.int32)
+        score = rng.random(len(pairs)).round(2)          # ties at the thresholds themselves
+        grid = np.round(np.arange(0.05, 0.96, 0.05), 2)
+        got = components_by_threshold(n, pairs, score, grid)
+        for t in grid:
+            assert np.array_equal(got[t], components(n, pairs, score > t)), (n, t)
+
+
 def test_fixed_rule_blocking_proposes_exactly_the_pairs_sharing_a_key():
     """With no block over max_block, the candidates are exactly the pairs sharing some rule's key,
     and each rule's pair counts are right (Splink's test_total_comparison_count)."""

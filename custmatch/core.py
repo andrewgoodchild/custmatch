@@ -865,6 +865,35 @@ def components(n, pairs, keep):
     return connected_components(g, directed=False)[1]
 
 
+def _first_seen_labels(cc):
+    """cc relabelled in order of each component's lowest record, as connected_components numbers them."""
+    k = int(cc.max()) + 1 if len(cc) else 0
+    first = np.empty(k, np.int64)
+    first[cc[::-1]] = np.arange(len(cc) - 1, -1, -1)
+    rank = np.empty(k, np.int32)
+    rank[np.argsort(first)] = np.arange(k, dtype=np.int32)
+    return rank[cc]
+
+
+def components_by_threshold(n, pairs, score, grid):
+    """{t: components(n, pairs, score > t)} for each threshold in grid, the same labels, from one
+    pass over the pairs: from the strictest threshold down, each step joins the components already
+    found with only the pairs whose score lies between it and the stricter one (NCVR, 47M pairs:
+    clustering every pair afresh at each threshold was most of the threshold search)."""
+    out, cc, prev = {}, None, None
+    for t in sorted(grid, reverse=True):
+        if cc is None:
+            cc = components(n, pairs, score > t)
+        else:
+            band = np.flatnonzero((score > t) & (score <= prev))
+            if len(band):
+                k = int(cc.max()) + 1
+                joined = components(k, cc[pairs[band]].astype(np.int64), np.ones(len(band), bool))
+                cc = _first_seen_labels(joined[cc])
+        out[t], prev = cc, t
+    return out
+
+
 def household_partition(df, profiles, identity_labels):
     """Assign every record to a household.
 

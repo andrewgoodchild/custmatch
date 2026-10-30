@@ -36,9 +36,9 @@ CAP = {}
 def _hook():
     orig = pipeline.cluster_coherence
 
-    def coh(n, pairs, score, t, predict, seed=0, k=2000):
+    def coh(n, pairs, score, t, predict, seed=0, k=2000, **kw):
         CAP["pairs"], CAP["prob"] = pairs, score   # the final model's scores on every candidate
-        return orig(n, pairs, score, t, predict, seed, k)
+        return orig(n, pairs, score, t, predict, seed, k, **kw)
     pipeline.cluster_coherence = coh
 
 

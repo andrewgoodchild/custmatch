@@ -54,6 +54,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 STEPS = ("script", "phone", "dates", "email", "names", "titles", "nicknames", "local_nicknames",
          "email_user", "postcode", "national_id")
@@ -84,14 +85,13 @@ def record_regions(df, cfg):
 
 def _per_region(values, regions, fn):
     """fn(value, region) over (value, region) pairs, each distinct pair computed once."""
-    cache = {}
-    out = []
-    for v, r in zip(values, regions):
-        k = (v, r)
-        if k not in cache:
-            cache[k] = fn(v, r)
-        out.append(cache[k])
-    return out
+    vc, vu = pd.factorize(np.asarray(values, dtype=object), use_na_sentinel=False)
+    rc, ru = pd.factorize(np.asarray(regions, dtype=object), use_na_sentinel=False)
+    kc, ku = pd.factorize(vc.astype(np.int64) * max(len(ru), 1) + rc)
+    done = np.empty(len(ku), dtype=object)
+    for n, k in enumerate(ku.tolist()):
+        done[n] = fn(vu[k // len(ru)], ru[k % len(ru)])
+    return done[kc].tolist()
 
 
 def normalise(df, cfg):
@@ -481,19 +481,24 @@ def blocking_keys(df, profiles=None):
     distinctive."""
     keys = []
     if "first_roots" in df.columns:
-        for i, (roots, dob, ln) in enumerate(zip(df.first_roots, df.date_of_birth, df.last_name)):
-            for r in roots.split("|") if roots else []:
+        split = {}                                 # each distinct list of roots split once
+        for i, (roots, dob, ln) in enumerate(zip(df.first_roots.to_numpy(dtype=object),
+                                                 df.date_of_birth.to_numpy(dtype=object),
+                                                 df.last_name.to_numpy(dtype=object))):
+            if roots not in split:
+                split[roots] = roots.split("|") if roots else []
+            for r in split[roots]:
                 if dob:
                     keys.append((("fd", r, dob), i))
                 if ln:
                     keys.append((("fl", r, ln), i))
     if "email_user" in df.columns:
         junk = _junk_email(df, profiles)
-        for i, u in enumerate(df.email_user):
+        for i, u in enumerate(df.email_user.to_numpy(dtype=object)):
             if len(u) >= 5 and not junk[i]:
                 keys.append((("eu", u), i))
     if "name_skeleton" in df.columns:
-        for i, k in enumerate(df.name_skeleton):
+        for i, k in enumerate(df.name_skeleton.to_numpy(dtype=object)):
             if len(k) >= 5:
                 keys.append((("sk", k), i))
     return keys

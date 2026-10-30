@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from . import explain, identity, incremental, io, monitor, schema
-from .core import SCORE_CHUNK, components, feature_chunks, features, profile_contacts, relay_records, service_records
+from .core import SCORE_CHUNK, components, components_by_threshold, feature_chunks, features, profile_contacts, relay_records, service_records
 from .golden import build_golden
 
 THRESHOLDS = np.round(np.concatenate([np.arange(0.05, 0.96, 0.05), [0.97, 0.98, 0.99]]), 3)
@@ -80,15 +80,16 @@ def _scores(tp, fp, fn):
             "f1": round(200 * tp / (2 * tp + fp + fn), 2) if tp else 0.0}
 
 
-def cluster_coherence(n, pairs, score, t, predict, seed=0, k=2000):
+def cluster_coherence(n, pairs, score, t, predict, seed=0, k=2000, cc=None):
     """Estimated precision of the clusters at threshold t, without labels: sample record pairs
     INSIDE the predicted clusters (weighted by the pairs each cluster implies, so big clusters
     count for what they claim) and return the share the model itself calls a match.
 
     Labelled pairs are drawn from blocking candidates, so they cannot see the false pairs that
     chaining creates between records that were never candidates. On historical_50k (~10 records
-    per person) that hid a 242-record false cluster behind a 91.9 labelled-pair F1."""
-    cc = components(n, pairs, score > t)
+    per person) that hid a 242-record false cluster behind a 91.9 labelled-pair F1.
+    cc: components(n, pairs, score > t) when already computed."""
+    cc = components(n, pairs, score > t) if cc is None else cc
     sizes = np.bincount(cc)
     implied = sizes * (sizes - 1) / 2
     if implied.sum() == 0:
@@ -125,8 +126,9 @@ def choose_threshold(n, pairs, lab_pairs, ly, fold_scores, grid, coherence=None,
     counts = {t: np.zeros(3) for t in grid}
     for s, held in fold_scores:
         hi, hj, hy, hw = lab_pairs[held, 0], lab_pairs[held, 1], ly[held], w[held]
+        by_t = components_by_threshold(n, pairs, s, grid)
         for t in grid:
-            cc = components(n, pairs, s > t)
+            cc = by_t.pop(t)
             same = cc[hi] == cc[hj]
             counts[t] += [hw[same & hy].sum(), hw[same & ~hy].sum(), hw[~same & hy].sum()]
     sweep = {t: _scores(*c) for t, c in counts.items()}
@@ -306,18 +308,29 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         were the largest thing in memory)."""
         out = [np.empty(len(p)) for _ in models]
 
-        def score(s, parts):
-            X = model_input(p[s:s + sum(map(len, parts))], np.vstack(parts) if len(parts) > 1 else parts[0])
-            for o, prob in zip(out, p_match_rows(models, X)):
-                o[s:s + len(X)] = prob
-        # feature chunks gathered to SCORE_CHUNK rows, so the forest's threads are kept busy
-        start, parts = 0, []
-        for s, X in feature_chunks(df, p, profiles, **fopts):
-            if parts and sum(map(len, parts)) + len(X) > SCORE_CHUNK:
-                score(start, parts)
-                start, parts = s, []
-            parts.append(X)
-        score(start, parts)
+        def gathered():
+            # feature chunks gathered to SCORE_CHUNK rows, so the forest's threads are kept busy
+            start, parts = 0, []
+            for s, X in feature_chunks(df, p, profiles, **fopts):
+                if parts and sum(map(len, parts)) + len(X) > SCORE_CHUNK:
+                    yield start, np.vstack(parts) if len(parts) > 1 else parts[0]
+                    start, parts = s, []
+                parts.append(X)
+            yield start, np.vstack(parts) if len(parts) > 1 else parts[0]
+
+        # the next block's features are made in a second thread while the forests score this one:
+        # features run mostly on one core, the forests on all of them
+        from concurrent.futures import ThreadPoolExecutor
+        blocks = gathered()
+        with ThreadPoolExecutor(1) as ahead:
+            pending = ahead.submit(next, blocks, None)
+            while (block := pending.result()) is not None:
+                pending = ahead.submit(next, blocks, None)
+                s, X = block
+                X = model_input(p[s:s + len(X)], X)
+                for o, prob in zip(out, p_match_rows(models, X)):
+                    o[s:s + len(X)] = prob
+                del block, X
         return out
 
     # pairs chosen by active learning are deliberately unrepresentative (the hard ones): they
@@ -335,8 +348,16 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
 
         def predict(p):
             return p_match(final, model_input(p, features(df, p, profiles, **fopts)))
+        by_t = {}
+
+        def final_cc(t):
+            # the final model's components at every threshold, from one pass, when first asked
+            if not by_t:
+                by_t.update(components_by_threshold(n, pairs, prob, THRESHOLDS))
+            return by_t.pop(t, None)
         th, held_out = choose_threshold(n, pairs, lab_pairs, ly, fold_scores, THRESHOLDS,
-                                        coherence=lambda t: cluster_coherence(n, pairs, prob, t, predict, seed),
+                                        coherence=lambda t: cluster_coherence(n, pairs, prob, t, predict, seed,
+                                                                              cc=final_cc(t)),
                                         min_precision=cfg.get("min_precision"),
                                         rule=cfg.get("threshold_rule", "middle"), weight=lw)
         return {"final": final, "prob": prob, "predict": predict, "th": th, "held_out": held_out}
