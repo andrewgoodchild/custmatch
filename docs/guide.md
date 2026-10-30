@@ -139,6 +139,15 @@ files switch, and score 89.08 and 77.37 against 86.95 and 75.88. `add` and runs 
 block the way the run did. Set `"blocking": "core"` to always skip instead; `"adaptive"` to always
 split.
 
+**Big files: memory.** Blocking sets a large run's peak memory, as it holds every within-block
+pair before removing the duplicates. With the `duckdb` extra installed (Install below),
+`"blocking_engine": "duckdb"` makes the candidate pairs in DuckDB instead, which writes to disk
+past `"blocking_memory_limit"` (default `"2GB"`): the same pairs, so the same outputs. On all
+five million NCVR records the run took 9.5 minutes at a 27.5 GB peak with the default numpy
+blocking (22.9 minutes and 49 GB before this release) and 22.6 GB with DuckDB
+([report/06-blocking-and-scale.md](report/06-blocking-and-scale.md) "Memory and time on one
+machine"). At a million records DuckDB saved nothing; the default fits easily.
+
 **Similarity blocking** (`"lsh_blocking"`) finds pairs no exact key would: it hashes the names'
 letter pairs (MinHash, locality-sensitive hashing) so that names with typos in both records still
 land in a shared bucket.
@@ -373,6 +382,8 @@ uv pip install --python .venv/bin/python -e .
 
 One opt-in model needs an extra: `uv pip install --python .venv/bin/python -e ".[catboost]"`
 for `"matcher_model": "forest_catboost"` (report/03-which-matcher.md "Which classifier").
+`".[duckdb]"` adds DuckDB for `"blocking_engine": "duckdb"`, which lowers the peak memory of a
+file of several million records ("Big files: memory" above).
 
 custmatch ships no third-party data. The first run downloads the US nickname list
 (carltonnorthern/nicknames, Apache 2.0; 78 KB, pinned and checksum-checked) into

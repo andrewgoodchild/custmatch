@@ -32,7 +32,8 @@ name ("smith, phd, cpa", "mba"; short ones such as "ma" only after a comma, as M
 bracketed text, a phone number in a name and trade-mark signs are taken out; "(nee brown)" becomes a
 surname alias where aliases can be used; an email address used as a name becomes the name it
 spells; fused titles ("assoc.prof.dr.jane") are split. `summary.json` says how many records
-changed. No name in the Australian files or the first address-book profile changes.
+changed. No name in the Australian files or the first address-book profile changes; on NCVR 8 distinct
+names do (below, with titles).
 
 **Added:** warnings for an extra field's value on a tenth or more of the records whose people share
 no surname or employer's domain ("Multiple Companies"; still compared - ignoring it changed nothing
@@ -52,7 +53,10 @@ pairs take up the labels. `add` reads such sources the same way.
 **Fixed:** with a country set, a title in the first-name field ("Dr John", "Prof. Jane") is
 dropped. It stopped "Dr John" agreeing with "John", and became the name's nickname root, so
 every "Dr" in a file shared a blocking key. `"normalise": {"titles": false}` keeps titles.
-No benchmark sets a country, so none moves.
+Of the benchmarks only NCVR sets a country: 27 of its 5,000,000 records have a title ("mrs george",
+"dr. beverly"), and with the name tidying (above; 8 distinct names such as "joseph (joe)") the full run
+makes 191,801,852 candidate pairs against 191,800,790 (913 from titles, 149 from tidying), at the
+same 86.24 clustered F1.
 
 **Fixed:** no-reply, notification and bounce addresses (`drive-shares-noreply@google.com`,
 `calendar-notification@...`, `notifications@...`, `mailer-daemon@...`) are junk on sight, not
@@ -106,6 +110,22 @@ on dirty and clean books with false links broken down by trap.
 **Faster:** oversized blocks are split with one sort, not a scan apiece, and pairs are
 deduplicated with an integer sort: `"fixed"` blocking at 200,000 people takes 6.3 s, from 9.7 s.
 The candidate pairs are the same.
+
+**Faster, and less memory:** on all 5,000,000 NCVR records a run takes 9.5 minutes against
+22.9, at a peak of 27.5 GB against 49 GB; at a million people 2.2 minutes against 6.0, at 7.3 GB
+against 11.9. Every output is byte-for-byte the same. Candidate pairs are scored 8 million at a
+time (`core.SCORE_CHUNK`), all five forests of the cross-fitting in one pass, not from one array of
+every pair's features (20 GB on the full file); fields agree by comparing integer codes, made once
+per run, not strings; each string similarity is computed once per distinct pair of values, and
+each distinct feature row scored once (44% of rows repeat another). Blocking makes each pair as
+one integer code, sorts on every core instead of through `np.unique` (which numpy 2.4 made 12 to
+17 times slower), and maps soundex once per distinct name (docs/report/06-blocking-and-scale.md
+"Memory and time on one machine").
+
+**Added:** `"blocking_engine": "duckdb"`, with the `duckdb` extra (`pip install
+"custmatch[duckdb]"`): the candidate pairs are made in DuckDB, which writes to disk past
+`"blocking_memory_limit"` (default `"2GB"`). Same pairs, same outputs; on the full NCVR file the
+peak is 22.6 GB against 27.5 GB.
 
 ## 0.1.2 (2026-10-16)
 

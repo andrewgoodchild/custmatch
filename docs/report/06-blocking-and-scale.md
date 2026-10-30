@@ -341,6 +341,51 @@ in place of a scan per oversized block, and an integer sort in place of a pandas
 `"fixed"` blocking at 200,000 people went from 9.7 to 6.3 seconds, and `"adaptive"` on the full
 file from 555 to 274 seconds at a 26 GB peak.
 
+**Memory and time on one machine** (`research/scripts/ncvr_memory.py`, `research/results/ncvr_memory.json`).
+The full run's peak footprint was 49 GB, against the 33.6 GB the run recorded: the resident memory a
+run records reads low on macOS, which compresses pages under pressure, and high once a stage has
+freed memory the allocator keeps, so the script measures the process's lifetime maximum footprint
+(what Activity Monitor shows). Profiling the run found five things, each changed with every output
+kept the same:
+
+- **Blocking held every rule's pairs at once**, as a table of rule, i and j, before removing the
+  duplicates, and sorted through `np.unique`, which numpy 2.4 makes 12 to 17 times slower than
+  sorting. It now makes each pair as one integer code, sorts them on every core
+  (`core.sort_ints`: slices in threads, then one merging sort), and skips work on the pieces of
+  split blocks that are already small enough.
+- **The matcher built every candidate pair's features at once** to score them, 26 columns of 192
+  million pairs, 20 GB of floats. It now scores them 8 million pairs at a time
+  (`core.SCORE_CHUNK`), all five forests of the cross-fitting in one pass.
+- **Most of the feature time was string comparison** in Python: whether two names, emails or
+  phones agree, one pair at a time. Each column is now coded as integers once per run, so agreement
+  is an integer comparison, and each string similarity is computed once per distinct pair of values
+  (`core._similarity`): pairs of names repeat thousands of times in a block.
+- **44% of the feature rows repeat another** exactly, and a forest scores equal rows equally: each
+  distinct row is now scored once (`models.distinct_rows`).
+- `"blocking_engine": "duckdb"` (the `duckdb` extra) makes the pairs in DuckDB instead, which
+  removes duplicates as it goes and writes to disk past `"blocking_memory_limit"` (default
+  `"2GB"`).
+
+The same file, config and labels (300 random, drawn stratified, and 700 active) on the 18-core,
+64 GB laptop, one run each:
+
+| NCVR | Code | Peak memory | Blocking | Whole run |
+| --- | --- | --- | --- | --- |
+| 1,428,005 records of 1,000,000 people, 46.9M candidate pairs | Before | 11.9 GB | 162 s | 6.0 min |
+| | Now | 7.3 GB | 32 s | 2.2 min |
+| | Now, `"blocking_engine": "duckdb"` | 9.2 GB | 30 s | 2.2 min |
+| All 5,000,000 records, 191.8M candidate pairs | Before | 49.0 GB | 455 s | 22.9 min |
+| | Now | 27.5 GB | 122 s | 9.5 min |
+| | Now, `"blocking_engine": "duckdb"` | 22.6 GB | 117 s | 9.4 min |
+
+Every output file is byte-for-byte the same in all three, and so the clustered F1 (91.67 and
+86.24). The forest stage, most of the run, went from 804 to 341 seconds on the full file. With
+numpy blocking the peak is still set by blocking, which holds every within-block pair before
+removing the duplicates; with DuckDB it moves to the forest stage at a million records and to the
+last stage (households, golden records, outputs) at five million. DuckDB lowered the full file's
+peak by a fifth, and at a million records it was higher: it is an option for files of several
+million records, not the default. These are single runs.
+
 **Splitting when it is needed, by default.** The default blocker now switches to `"adaptive"`
 by itself when its keys would leave more than 1% of the records only in skipped blocks
 (`blocking.AUTO_ADAPTIVE_SHARE`), and `summary.json` says so. Measured with the default keys:

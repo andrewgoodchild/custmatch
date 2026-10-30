@@ -1,0 +1,457 @@
+{
+ "records_1428005/numpy": {
+  "records": 1428005,
+  "candidate_pairs": 46927205,
+  "engine": "numpy",
+  "clustered": {
+   "precision": 93.53,
+   "recall": 89.87,
+   "f1": 91.67,
+   "clusters": 1006553,
+   "largest_cluster": 30,
+   "adjusted_rand": 0.9167
+  },
+  "peak_memory_gb": 7.29,
+  "seconds": 134.5,
+  "stage_seconds": {
+   "load and profile": 6.11,
+   "blocking (46,927,205 candidate pairs)": 32.13,
+   "forest: cross-fitted clustered F1 98.71": 73.48,
+   "threshold (clustered, in-cluster precision check)": -0.0,
+   "large blocks checked: 0 of 16054 kept, 0 pairs added": 1.03,
+   "households, golden records, outputs": 21.04
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 6.1,
+    "peak_gb_so_far": 1.19
+   },
+   {
+    "stage": "blocking (46,927,205 candidate pairs)",
+    "seconds": 38.2,
+    "peak_gb_so_far": 6.94
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 98.71",
+    "seconds": 111.7,
+    "peak_gb_so_far": 7.29
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 111.7,
+    "peak_gb_so_far": 7.29
+   },
+   {
+    "stage": "large blocks checked: 0 of 16054 kept, 0 pairs added",
+    "seconds": 112.7,
+    "peak_gb_so_far": 7.29
+   }
+  ],
+  "machine": "18 cores, darwin"
+ },
+ "records_1428005/duckdb": {
+  "records": 1428005,
+  "candidate_pairs": 46927205,
+  "engine": "duckdb",
+  "clustered": {
+   "precision": 93.53,
+   "recall": 89.87,
+   "f1": 91.67,
+   "clusters": 1006553,
+   "largest_cluster": 30,
+   "adjusted_rand": 0.9167
+  },
+  "peak_memory_gb": 9.2,
+  "seconds": 133.6,
+  "stage_seconds": {
+   "load and profile": 6.51,
+   "blocking (46,927,205 candidate pairs)": 30.33,
+   "forest: cross-fitted clustered F1 98.71": 74.11,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 16054 kept, 0 pairs added": 1.02,
+   "households, golden records, outputs": 20.86
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 6.5,
+    "peak_gb_so_far": 1.18
+   },
+   {
+    "stage": "blocking (46,927,205 candidate pairs)",
+    "seconds": 36.8,
+    "peak_gb_so_far": 7.34
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 98.71",
+    "seconds": 111.0,
+    "peak_gb_so_far": 9.2
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 111.0,
+    "peak_gb_so_far": 9.2
+   },
+   {
+    "stage": "large blocks checked: 0 of 16054 kept, 0 pairs added",
+    "seconds": 112.0,
+    "peak_gb_so_far": 9.2
+   }
+  ],
+  "machine": "18 cores, darwin"
+ },
+ "records_5000000/numpy": {
+  "records": 5000000,
+  "candidate_pairs": 191801852,
+  "engine": "numpy",
+  "clustered": {
+   "precision": 87.66,
+   "recall": 84.86,
+   "f1": 86.24,
+   "clusters": 3528160,
+   "largest_cluster": 50,
+   "adjusted_rand": 0.8624
+  },
+  "peak_memory_gb": 27.46,
+  "seconds": 571.2,
+  "stage_seconds": {
+   "load and profile": 22.29,
+   "blocking (191,801,852 candidate pairs)": 122.19,
+   "forest: cross-fitted clustered F1 97.59": 341.43,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 49560 kept, 0 pairs added": 3.41,
+   "households, golden records, outputs": 78.71
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 22.3,
+    "peak_gb_so_far": 3.33
+   },
+   {
+    "stage": "blocking (191,801,852 candidate pairs)",
+    "seconds": 144.5,
+    "peak_gb_so_far": 27.46
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 97.59",
+    "seconds": 485.9,
+    "peak_gb_so_far": 27.46
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 485.9,
+    "peak_gb_so_far": 27.46
+   },
+   {
+    "stage": "large blocks checked: 0 of 49560 kept, 0 pairs added",
+    "seconds": 489.3,
+    "peak_gb_so_far": 27.46
+   }
+  ],
+  "machine": "18 cores, darwin"
+ },
+ "records_5000000/duckdb": {
+  "records": 5000000,
+  "candidate_pairs": 191801852,
+  "engine": "duckdb",
+  "clustered": {
+   "precision": 87.66,
+   "recall": 84.86,
+   "f1": 86.24,
+   "clusters": 3528160,
+   "largest_cluster": 50,
+   "adjusted_rand": 0.8624
+  },
+  "peak_memory_gb": 22.59,
+  "seconds": 566.5,
+  "stage_seconds": {
+   "load and profile": 22.32,
+   "blocking (191,801,852 candidate pairs)": 117.08,
+   "forest: cross-fitted clustered F1 97.59": 341.74,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 49560 kept, 0 pairs added": 3.39,
+   "households, golden records, outputs": 78.82
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 22.3,
+    "peak_gb_so_far": 3.32
+   },
+   {
+    "stage": "blocking (191,801,852 candidate pairs)",
+    "seconds": 139.4,
+    "peak_gb_so_far": 15.17
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 97.59",
+    "seconds": 481.1,
+    "peak_gb_so_far": 17.3
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 481.1,
+    "peak_gb_so_far": 17.3
+   },
+   {
+    "stage": "large blocks checked: 0 of 49560 kept, 0 pairs added",
+    "seconds": 484.5,
+    "peak_gb_so_far": 17.3
+   }
+  ],
+  "machine": "18 cores, darwin"
+ },
+ "records_1428005/numpy/before": {
+  "records": 1428005,
+  "candidate_pairs": 46927205,
+  "engine": "numpy",
+  "clustered": {
+   "precision": 93.53,
+   "recall": 89.87,
+   "f1": 91.67,
+   "clusters": 1006553,
+   "largest_cluster": 30,
+   "adjusted_rand": 0.9167
+  },
+  "peak_memory_gb": 11.89,
+  "seconds": 357.9,
+  "stage_seconds": {
+   "load and profile": 6.78,
+   "blocking (46,927,205 candidate pairs)": 162.38,
+   "forest: cross-fitted clustered F1 98.71": 163.9,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 16054 kept, 0 pairs added": 2.75,
+   "households, golden records, outputs": 21.27
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 6.8,
+    "peak_gb_so_far": 1.18
+   },
+   {
+    "stage": "blocking (46,927,205 candidate pairs)",
+    "seconds": 169.2,
+    "peak_gb_so_far": 11.89
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 98.71",
+    "seconds": 333.1,
+    "peak_gb_so_far": 11.89
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 333.1,
+    "peak_gb_so_far": 11.89
+   },
+   {
+    "stage": "large blocks checked: 0 of 16054 kept, 0 pairs added",
+    "seconds": 335.8,
+    "peak_gb_so_far": 11.89
+   }
+  ],
+  "machine": "18 cores, darwin"
+ },
+ "records_5000000/numpy/before": {
+  "records": 5000000,
+  "candidate_pairs": 191801852,
+  "engine": "numpy",
+  "clustered": {
+   "precision": 87.66,
+   "recall": 84.86,
+   "f1": 86.24,
+   "clusters": 3528160,
+   "largest_cluster": 50,
+   "adjusted_rand": 0.8624
+  },
+  "peak_memory_gb": 48.96,
+  "seconds": 1375.1,
+  "stage_seconds": {
+   "load and profile": 22.31,
+   "blocking (191,801,852 candidate pairs)": 455.14,
+   "forest: cross-fitted clustered F1 97.59": 803.81,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 49560 kept, 0 pairs added": 10.16,
+   "households, golden records, outputs": 80.12
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 22.3,
+    "peak_gb_so_far": 3.32
+   },
+   {
+    "stage": "blocking (191,801,852 candidate pairs)",
+    "seconds": 477.5,
+    "peak_gb_so_far": 48.96
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 97.59",
+    "seconds": 1281.3,
+    "peak_gb_so_far": 48.96
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 1281.3,
+    "peak_gb_so_far": 48.96
+   },
+   {
+    "stage": "large blocks checked: 0 of 49560 kept, 0 pairs added",
+    "seconds": 1291.4,
+    "peak_gb_so_far": 48.96
+   }
+  ],
+  "machine": "18 cores, darwin"
+ },
+ "records_1428005/splink": {
+  "records": 1428005,
+  "candidate_pairs": 423099610,
+  "engine": "splink 4.0.17",
+  "clustered": {
+   "precision": 80.62,
+   "recall": 94.32,
+   "f1": 86.93,
+   "clusters": 947602,
+   "largest_cluster": 56,
+   "adjusted_rand": 0.8693,
+   "match_weight": 4.0
+  },
+  "p_0.99": {
+   "precision": 94.0,
+   "recall": 85.95,
+   "f1": 89.8,
+   "clusters": 1020094,
+   "largest_cluster": 15,
+   "adjusted_rand": 0.898
+  },
+  "best_in_hindsight": {
+   "precision": 92.23,
+   "recall": 87.98,
+   "f1": 90.05,
+   "clusters": 1006236,
+   "largest_cluster": 18,
+   "adjusted_rand": 0.9005,
+   "match_weight": 6.0
+  },
+  "peak_memory_gb": 75.7,
+  "peak_after_loading_gb": 1.32,
+  "peak_after_predict_gb": 51.67,
+  "seconds": 110.4,
+  "machine": "18 cores, darwin",
+  "note": "candidate_pairs: Splink's predictions above p = 0.0001, not every pair it compared"
+ },
+ "records_1428005/splink/run2": {
+  "records": 1428005,
+  "candidate_pairs": 423091980,
+  "engine": "splink 4.0.17",
+  "clustered": {
+   "precision": 92.28,
+   "recall": 88.12,
+   "f1": 90.15,
+   "clusters": 1006069,
+   "largest_cluster": 18,
+   "adjusted_rand": 0.9015,
+   "match_weight": 6.0
+  },
+  "p_0.99": {
+   "precision": 94.03,
+   "recall": 85.95,
+   "f1": 89.81,
+   "clusters": 1020380,
+   "largest_cluster": 15,
+   "adjusted_rand": 0.8981
+  },
+  "best_in_hindsight": {
+   "precision": 92.28,
+   "recall": 88.12,
+   "f1": 90.15,
+   "clusters": 1006069,
+   "largest_cluster": 18,
+   "adjusted_rand": 0.9015,
+   "match_weight": 6.0
+  },
+  "peak_memory_gb": 75.88,
+  "peak_after_loading_gb": 1.31,
+  "peak_after_predict_gb": 51.58,
+  "seconds": 121.4,
+  "machine": "18 cores, darwin",
+  "note": "candidate_pairs: Splink's predictions above p = 0.0001, not every pair it compared"
+ },
+ "records_1428005/splink/run3": {
+  "records": 1428005,
+  "candidate_pairs": 423089734,
+  "engine": "splink 4.0.17",
+  "clustered": {
+   "precision": 78.52,
+   "recall": 94.44,
+   "f1": 85.75,
+   "clusters": 945063,
+   "largest_cluster": 57,
+   "adjusted_rand": 0.8575,
+   "match_weight": 4.0
+  },
+  "p_0.99": {
+   "precision": 93.7,
+   "recall": 86.32,
+   "f1": 89.86,
+   "clusters": 1018478,
+   "largest_cluster": 18,
+   "adjusted_rand": 0.8986
+  },
+  "best_in_hindsight": {
+   "precision": 91.69,
+   "recall": 88.22,
+   "f1": 89.92,
+   "clusters": 1004870,
+   "largest_cluster": 28,
+   "adjusted_rand": 0.8992,
+   "match_weight": 6.0
+  },
+  "peak_memory_gb": 76.07,
+  "peak_after_loading_gb": 1.28,
+  "peak_after_predict_gb": 51.71,
+  "seconds": 98.6,
+  "machine": "18 cores, darwin",
+  "note": "candidate_pairs: Splink's predictions above p = 0.0001, not every pair it compared"
+ },
+ "records_1428005/splink/memory_8gb": {
+  "records": 1428005,
+  "candidate_pairs": 423074271,
+  "engine": "splink 4.0.17",
+  "clustered": {
+   "precision": 80.25,
+   "recall": 94.26,
+   "f1": 86.69,
+   "clusters": 948719,
+   "largest_cluster": 56,
+   "adjusted_rand": 0.8669,
+   "match_weight": 4.0
+  },
+  "p_0.99": {
+   "precision": 94.05,
+   "recall": 83.34,
+   "f1": 88.37,
+   "clusters": 1028877,
+   "largest_cluster": 15,
+   "adjusted_rand": 0.8837
+  },
+  "best_in_hindsight": {
+   "precision": 92.13,
+   "recall": 87.97,
+   "f1": 90.01,
+   "clusters": 1006499,
+   "largest_cluster": 25,
+   "adjusted_rand": 0.9001,
+   "match_weight": 6.0
+  },
+  "peak_memory_gb": 37.41,
+  "duckdb_memory_limit": "8GB",
+  "peak_after_loading_gb": 1.31,
+  "peak_after_predict_gb": 8.97,
+  "seconds": 97.2,
+  "machine": "18 cores, darwin",
+  "note": "candidate_pairs: Splink's predictions above p = 0.0001, not every pair it compared"
+ }
+}

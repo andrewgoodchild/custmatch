@@ -156,3 +156,36 @@ def p_match(model, X):
         proba = model.predict_proba(X[s:s + PREDICT_CHUNK])
         out[s:s + len(proba)] = proba[:, 1] if proba.shape[1] == 2 else float(list(model.classes_)[0] == 1)
     return out
+
+
+def distinct_rows(X, check=1_000_000):
+    """(rows, inverse): indices of X's distinct rows, bit for bit, and each row's position among
+    them, so X[rows][inverse] is X. A model scores equal rows equally, and among candidate pairs
+    about 44% of feature rows repeat another (NCVR, a million people), so each is scored once.
+    Rows are grouped by a hash of their bits and each checked against its group's first row; one
+    whose hash collides with a different row's is kept as a row of its own."""
+    import numpy as np
+    import pandas as pd
+    w = np.ascontiguousarray(X).reshape(len(X), -1).view(np.uint32)
+    h = np.zeros(len(w), np.uint64)
+    for k in range(w.shape[1]):
+        h = h * np.uint64(0x9E3779B97F4A7C15) + w[:, k]      # wraps: uint64 arithmetic is modulo 2**64
+    inverse, keys = pd.factorize(h)
+    rows = np.empty(len(keys), np.int64)
+    rows[inverse[::-1]] = np.arange(len(w) - 1, -1, -1)  # each group's first row
+    odd = [s + np.flatnonzero((w[s:s + check] != w[rows[inverse[s:s + check]]]).any(axis=1))
+           for s in range(0, len(w), check)]
+    odd = np.concatenate(odd) if odd else np.zeros(0, np.int64)
+    if len(odd):
+        inverse[odd] = len(rows) + np.arange(len(odd))
+        rows = np.concatenate([rows, odd])
+    return rows, inverse
+
+
+def p_match_rows(models, X):
+    """p_match(m, X) for each model, each distinct row of X scored once (distinct_rows)."""
+    if len(X) <= SMALL_BATCH:
+        return [p_match(m, X) for m in models]
+    rows, inverse = distinct_rows(X)
+    Xd = X[rows]
+    return [p_match(m, Xd)[inverse] for m in models]

@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from . import explain, identity, incremental, io, monitor, schema
-from .core import components, features, profile_contacts, relay_records, service_records
+from .core import SCORE_CHUNK, components, feature_chunks, features, profile_contacts, relay_records, service_records
 from .golden import build_golden
 
 THRESHOLDS = np.round(np.concatenate([np.arange(0.05, 0.96, 0.05), [0.97, 0.98, 0.99]]), 3)
@@ -285,40 +285,56 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         raise io.ConfigError("blocking produced no candidate pairs: no two records share a name, "
                              "address, contact or extra blocking key - check the column mapping")
 
-    from .models import factory, p_match
+    from .models import factory, p_match, p_match_rows
     X_lab = features(df, lab_pairs, profiles, **fopts)
-    X_cand = features(df, pairs, profiles, **fopts)
     weight_scorer = None                         # "match_weight_feature": custmatch/matchweight.py
     # opt-in ("match_weight_feature": true); a reused model (--model) keeps whatever its run did
-    uses_weight = bool(cfg.get("match_weight_feature")) if saved is None else bool(saved.get("match_weight_model"))
-    if uses_weight and saved is not None:
+    if saved is not None and saved.get("match_weight_model"):
         from .matchweight import load_scorer
         weight_scorer = load_scorer(df, profiles, saved["match_weight_model"])
-        X_cand = np.column_stack([X_cand, weight_scorer.weights(pairs)])
-        uses_weight = False                      # scored above; no fitting below
-    if uses_weight:
-        from . import matchweight
-        (w_cand, w_lab), weight_scorer = matchweight.weights(df, profiles, [pairs, lab_pairs], cfg, seed,
-                                                             return_scorer=True)
-        X_cand, X_lab = np.column_stack([X_cand, w_cand]), np.column_stack([X_lab, w_lab])
+    elif saved is None and cfg.get("match_weight_feature"):
+        from . import matchweight                # m and u fitted on the candidate pairs
+        weight_scorer = matchweight.Scorer(df, profiles, matchweight.fit(df, profiles, pairs, cfg, seed))
+        X_lab = np.column_stack([X_lab, weight_scorer.weights(lab_pairs)])
+
+    def model_input(p, X):
+        return X if weight_scorer is None else np.column_stack([X, weight_scorer.weights(p)])
+
+    def score_all(models, p):
+        """Each model's P(match) for the pairs p, scored FEATURE_CHUNK pairs at a time: the features
+        of every candidate pair are never held at once (on all 5M NCVR records, 192M pairs, they
+        were the largest thing in memory)."""
+        out = [np.empty(len(p)) for _ in models]
+
+        def score(s, parts):
+            X = model_input(p[s:s + sum(map(len, parts))], np.vstack(parts) if len(parts) > 1 else parts[0])
+            for o, prob in zip(out, p_match_rows(models, X)):
+                o[s:s + len(X)] = prob
+        # feature chunks gathered to SCORE_CHUNK rows, so the forest's threads are kept busy
+        start, parts = 0, []
+        for s, X in feature_chunks(df, p, profiles, **fopts):
+            if parts and sum(map(len, parts)) + len(X) > SCORE_CHUNK:
+                score(start, parts)
+                start, parts = s, []
+            parts.append(X)
+        score(start, parts)
+        return out
+
     # pairs chosen by active learning are deliberately unrepresentative (the hard ones): they
     # train every fold but never choose the threshold, which must be judged on random pairs
     folds = np.where(active, -1, np.random.default_rng(seed).permutation(len(ly)) % FOLDS)
 
     def fit_matcher(make):
         """Cross-fitted fold scores, the final model, and the closure-aware threshold."""
-        fold_scores = [(p_match(make().fit(X_lab[folds != k], ly[folds != k]), X_cand), folds == k)
-                       for k in range(FOLDS)]
+        fold_models = [make().fit(X_lab[folds != k], ly[folds != k]) for k in range(FOLDS)]
         final = make().fit(X_lab, ly)
-        prob = p_match(final, X_cand)
+        *fold_probs, prob = score_all(fold_models + [final], pairs)
+        fold_scores = [(s, folds == k) for k, s in enumerate(fold_probs)]
         # the coherence check scores pairs inside predicted customers, most of which were never
         # candidates; the match weight scores any pair, so the full model judges them
 
         def predict(p):
-            X = features(df, p, profiles, **fopts)
-            if weight_scorer is not None:
-                X = np.column_stack([X, weight_scorer.weights(p)])
-            return p_match(final, X)
+            return p_match(final, model_input(p, features(df, p, profiles, **fopts)))
         th, held_out = choose_threshold(n, pairs, lab_pairs, ly, fold_scores, THRESHOLDS,
                                         coherence=lambda t: cluster_coherence(n, pairs, prob, t, predict, seed),
                                         min_precision=cfg.get("min_precision"),
@@ -337,13 +353,10 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     else:
         final_forest, th = saved["forest"], float(saved["threshold"])
         model_choice = saved.get("matcher_model", "forest")
-        prob = p_match(final_forest, X_cand)
+        prob, = score_all([final_forest], pairs)
 
         def predict(p):
-            X = features(df, p, profiles, **fopts)
-            if weight_scorer is not None:
-                X = np.column_stack([X, weight_scorer.weights(p)])
-            return p_match(final_forest, X)
+            return p_match(final_forest, model_input(p, features(df, p, profiles, **fopts)))
         held_out = {}
 
     stage("threshold (clustered, in-cluster precision check)")
@@ -356,11 +369,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             have = pairs[:, 0].astype(np.int64) * n + pairs[:, 1]
             extra = extra[~np.isin(extra[:, 0].astype(np.int64) * n + extra[:, 1], have)]
         if len(extra):
-            X_extra = features(df, extra, profiles, **fopts)
-            if weight_scorer is not None:
-                X_extra = np.column_stack([X_extra, weight_scorer.weights(extra)])
-            pairs, score = np.vstack([pairs, extra]), np.concatenate([score, p_match(final_forest, X_extra)])
-            X_cand = np.vstack([X_cand, X_extra])
+            pairs, score = np.vstack([pairs, extra]), np.concatenate([score, *score_all([final_forest], extra)])
         block_report["large_blocks_checked"] = rows
         block_report["large_block_pairs_added"] = int(len(extra))
         stage(f"large blocks checked: {sum(r['kept'] for r in rows)} of {len(rows)} kept, {len(extra):,} pairs added")
@@ -374,14 +383,21 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         trusted = np.unique(np.vstack([trusted, cookie_pairs]), axis=0)
     if len(trusted):
         must = np.unique(np.vstack([must, trusted]), axis=0)
+    n_scored = len(pairs)                          # pairs after these are must-links blocking did not propose
     if len(must) or len(cannot):
-        n_before = len(pairs)
         pairs, score = stewardship.apply_decisions(pairs, score, must, cannot)
-        if len(pairs) > n_before:                  # must-links blocking did not propose
-            extra = features(df, pairs[n_before:], profiles, **fopts)
-            if X_cand.shape[1] > extra.shape[1]:
-                extra = np.column_stack([extra, np.zeros((len(extra), X_cand.shape[1] - extra.shape[1]))])
-            X_cand = np.vstack([X_cand, extra])
+
+    def pair_features(idx):
+        """The features of pairs[idx] for review.csv and links.csv, which need only those near or
+        above the threshold: recomputed, not kept for every candidate pair. A must-link's match
+        weight is 0, as it was never scored."""
+        X = features(df, pairs[idx], profiles, **fopts)
+        if weight_scorer is None:
+            return X
+        w = np.zeros(len(idx), np.float32)
+        scored = idx < n_scored
+        w[scored] = weight_scorer.weights(pairs[idx[scored]])
+        return np.column_stack([X, w])
     # stability as records arrive (docs/guide.md "Stable matches"): keep the previous decision
     # unless evidence moves by "stability_margin"; hold records between two people
     # measured (research/scripts/order_dependence.py): 0.05 halved partner changes and removed the
@@ -438,7 +454,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         events = stewardship.carry_ids(keys, customers, {})[1]
     stewardship.write_history(out, events, previous_dir)
     band = float(cfg.get("review_band", 0.1))
-    stewardship.review_pairs(pairs, score, th, band, keys, X_cand, df, profiles).to_csv(out / "review.csv", index=False)
+    stewardship.review_pairs(pairs, score, th, band, keys, pair_features, df, profiles).to_csv(out / "review.csv", index=False)
     _, hh_id = np.unique(households, return_inverse=True)
     pd.DataFrame({"source": df.source, "record_id": df.record_id,
                   "customer_id": cust_id, "household_id": hh_id,
@@ -486,7 +502,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     if cfg.get("suspect_records", True) and not minimal:
         from . import suspect
         suspect.table(df, suspect_flags).to_csv(out / "suspect_records.csv", index=False)
-    link_table = explain.links(df, profiles, pairs, X_cand, score, th, io.key(df), cust_id)
+    link_table = explain.links(df, profiles, pairs, pair_features, score, th, io.key(df), cust_id)
     link_table.to_csv(out / "links.csv", index=False)
     if not minimal:
         pd.DataFrame([{"field": f, "value": v, "class": c, "weight": round(w, 3)}

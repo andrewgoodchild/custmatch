@@ -713,6 +713,24 @@ def test_oversized_blocks_are_split_not_dropped(world):
     assert rep["candidate_pairs"] == len(pairs) and r["new_pairs"] == len(pairs)
 
 
+
+@pytest.mark.parametrize("blocking_mode", ["fixed", "adaptive"])
+def test_duckdb_blocking_engine_makes_the_same_pairs(world, blocking_mode):
+    """"blocking_engine": "duckdb" makes the pairs from the same blocks in DuckDB: the same pairs,
+    the same per-rule counts, oversized blocks split into overlapping pieces included."""
+    pytest.importorskip("duckdb")
+    from custmatch import blocking
+    from custmatch.core import profile_contacts
+    tmp, *_ = world
+    df, cfg = io.load(tmp / "config.json")
+    prof = {f: profile_contacts(df, f) for f in ("email", "phone")}
+    base = cfg | {"blocking": blocking_mode, "max_block": 4}     # small blocks: many are split
+    a, _, rep_a, _ = blocking.candidates_for(df, prof, base)
+    b, _, rep_b, _ = blocking.candidates_for(df, prof, base | {"blocking_engine": "duckdb"})
+    assert sum(r["oversized_blocks_split"] for r in rep_a["rules"]) > 0
+    assert np.array_equal(a, b) and b.dtype == np.int32
+    assert [(r["pairs"], r["new_pairs"]) for r in rep_a["rules"]] == [(r["pairs"], r["new_pairs"]) for r in rep_b["rules"]]
+
 def test_learned_rules_reach_their_coverage_target(world):
     from custmatch import blocking
     from custmatch.core import profile_contacts
@@ -1586,6 +1604,29 @@ def test_the_bundled_demo_runs(tmp_path):
     t = np.array([pid[f"{a}:{b}"] for a, b in zip(c.source, c.record_id)])
     _, n = np.unique(t, return_counts=True)
     assert s["records"] == len(truth) and partition_scores(c.customer_id.to_numpy(), t, float(np.sum(n * (n - 1) / 2)))["f1"] > 70
+
+
+@pytest.mark.parametrize("match_weight", [False, True])
+def test_scoring_in_chunks_changes_no_output(tmp_path, monkeypatch, match_weight):
+    """Candidate pairs are scored FEATURE_CHUNK at a time and review.csv / links.csv recompute the
+    features they show: a run with tiny chunks writes exactly what one chunk writes."""
+    from custmatch import core
+    root = Path(__file__).resolve().parents[1] / "examples" / "demo"
+    cfg = json.loads((root / "config.json").read_text()) | {"match_weight_feature": match_weight}
+    for s in cfg["sources"]:
+        s["path"] = str(root / s["path"])
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    outs, whole = {}, core.FEATURE_CHUNK
+    for chunk in (whole, 37):
+        monkeypatch.setattr(core, "FEATURE_CHUNK", chunk)
+        monkeypatch.setattr(pipeline, "SCORE_CHUNK", 3 * chunk + 5)      # several feature chunks a batch
+        out = tmp_path / f"out_{chunk}"
+        s = pipeline.run(tmp_path / "config.json", root / "labels.csv", out, log=lambda *_: None)
+        s.pop("stage_seconds")
+        outs[chunk] = [s] + [(out / f).read_text() for f in ("clusters.csv", "links.csv", "review.csv",
+                                                              "golden_records.csv")]
+    assert s["candidate_pairs"] > 37 * 10
+    assert outs[whole] == outs[37]
 
 
 # ------------------------------------------------------------------------------ country profiles

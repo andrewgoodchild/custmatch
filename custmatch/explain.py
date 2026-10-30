@@ -105,7 +105,8 @@ def _bridges(n_nodes, edges):
 
 
 def links(df, profiles, pairs, X, score, threshold, keys, customer_id):
-    """DataFrame of accepted links: a, b, customer_id, score, is_bridge, evidence."""
+    """DataFrame of accepted links: a, b, customer_id, score, is_bridge, evidence. X: the pairs'
+    features, or a function giving the features of the pairs at some row indices."""
     keep = np.flatnonzero(score > threshold)
     e = pairs[keep].astype(np.int64)
     i, j = e[:, 0], e[:, 1]
@@ -114,7 +115,7 @@ def links(df, profiles, pairs, X, score, threshold, keys, customer_id):
         "a": keys[i], "b": keys[j], "customer_id": np.asarray(customer_id)[i].astype(int),
         "score": np.round(score[keep].astype(float), 4),
         "is_bridge": _bridges(len(df), e),
-        "evidence": evidence_many(X[keep], ce, cp, _both_streets(df, i, j))})
+        "evidence": evidence_many(X(keep) if callable(X) else X[keep], ce, cp, _both_streets(df, i, j))})
     return out.sort_values("score", kind="stable").reset_index(drop=True)  # review weakest first
 
 

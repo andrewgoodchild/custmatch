@@ -445,15 +445,26 @@ def features(df, pairs, profiles=None):
     """Two columns when the country steps ran: first names share a root (1/0, -1 missing), and
     email user names agree (1/0, -1 missing) - the same person on another or mistyped domain."""
     out = []
+    from .core import _cached, _coded_column, _codes, _object_column, per_value_pairs
     if "first_roots" in df.columns:
-        r = df.first_roots.to_numpy()
-        a, b = r[pairs[:, 0]], r[pairs[:, 1]]
-        out.append([(-1.0 if not x or not y else float(bool(set(x.split("|")) & set(y.split("|")))))
-                    for x, y in zip(a, b)])
+        c, r = _coded_column(df, "first_roots")
+        sets = _cached(df, "first_root_sets", lambda: [frozenset(v.split("|")) for v in r])
+
+        def roots(x, y):
+            return [0.0 if sets[a].isdisjoint(sets[b]) else 1.0 for a, b in zip(x.tolist(), y.tolist())]
+        a, b = c[pairs[:, 0]], c[pairs[:, 1]]
+        filled = (a >= 0) & (b >= 0)
+        shared = np.full(len(pairs), -1.0)        # once per distinct pair of root lists
+        shared[filled] = per_value_pairs(a[filled], b[filled], roots)
+        out.append(shared)
     if "email_user" in df.columns:
-        u = np.where(_junk_email(df, profiles), "", df.email_user.to_numpy())   # junk is not evidence
+        # junk is not evidence; kept with the profiles it was read from
+        held = _cached(df, "email_user_codes", lambda: [None, None])
+        if held[0] is not profiles:
+            held[:] = [profiles, _codes(np.where(_junk_email(df, profiles), "", _object_column(df, "email_user")))]
+        u = held[1]
         a, b = u[pairs[:, 0]], u[pairs[:, 1]]
-        out.append(np.where((a != "") & (b != ""), (a == b).astype(float), -1.0))
+        out.append(np.where((a >= 0) & (b >= 0), (a == b).astype(float), -1.0))
     if "name_skeleton" in df.columns:          # only when the file has non-Latin names
         k, f = df.name_skeleton.to_numpy(), df.name_script.to_numpy()
         a, b = k[pairs[:, 0]], k[pairs[:, 1]]

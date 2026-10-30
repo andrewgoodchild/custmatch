@@ -77,8 +77,9 @@ def n_true(ids):
     return float(np.sum(n * (n - 1) / 2))
 
 
-def splink_scores(df, base, labelled=None):
-    """(pairs, match weights) from Splink, with blocking mirroring custmatch's keys."""
+def splink_scores(df, base, labelled=None, after_predict=None, memory_limit=None, spill=None):
+    """(pairs, match weights) from Splink, with blocking mirroring custmatch's keys; DuckDB's default
+    memory limit (80% of RAM) unless `memory_limit` is set, spilling to `spill`."""
     import splink.comparison_library as cl
     from splink import DuckDBAPI, Linker, SettingsCreator, block_on
     d = df[["first_name", "last_name", "town", "postcode"]].replace("", None)
@@ -97,7 +98,12 @@ def splink_scores(df, base, labelled=None):
                      cl.JaroWinklerAtThresholds("town", [0.9, 0.8]),
                      cl.LevenshteinAtThresholds("postcode", [1, 2])],
         retain_intermediate_calculation_columns=False)
-    linker = Linker(d, settings, db_api=DuckDBAPI())
+    import duckdb
+    con = duckdb.connect()
+    if memory_limit:
+        con.execute(f"SET memory_limit = '{memory_limit}'")
+        con.execute(f"SET temp_directory = '{spill}'")
+    linker = Linker(d, settings, db_api=DuckDBAPI(con))
     linker.training.estimate_probability_two_random_records_match([block_on("first_name", "last_name", "postcode")],
                                                                   recall=0.8)
     linker.training.estimate_u_using_random_sampling(max_pairs=5e6)
@@ -112,9 +118,13 @@ def splink_scores(df, base, labelled=None):
         linker.training.estimate_m_from_pairwise_labels("labels")
     # pairs below p = 0.0001 (match weight about -13) are left in Splink: no useful threshold is
     # that low (the best found were -9 and above), and returning all of them ran out of memory
-    p = linker.inference.predict(threshold_match_probability=1e-4).as_pandas_dataframe()
-    pairs = np.c_[np.minimum(p.unique_id_l, p.unique_id_r), np.maximum(p.unique_id_l, p.unique_id_r)]
-    return pairs.astype(np.int64), p.match_weight.to_numpy()
+    # three columns straight from DuckDB: the whole table as pandas ran out of memory at a million people
+    p = linker.inference.predict(threshold_match_probability=1e-4).as_duckdbpyrelation()
+    if after_predict:
+        after_predict()
+    p = p.select("unique_id_l, unique_id_r, match_weight").fetchnumpy()
+    pairs = np.c_[np.minimum(p["unique_id_l"], p["unique_id_r"]), np.maximum(p["unique_id_l"], p["unique_id_r"])]
+    return pairs.astype(np.int64), np.asarray(p["match_weight"])
 
 
 def splink_results(df, base, pid, lab, keys):

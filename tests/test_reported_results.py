@@ -1396,3 +1396,29 @@ def test_auto_adaptive_and_stratified_label_claims():
     h = load("home_data_benchmark.json")
     assert (f"the childcare sites from 86.95 to {h['dedupe_csv_example']['custmatch_1000']['f1']:.2f}, the patent "
             f"applicants from 75.88 to {h['dedupe_patent_example']['custmatch_1000']['f1']:.2f}") in text
+
+
+def test_ncvr_memory_claims():
+    """docs/report/06 "Memory and time on one machine", the guide and the changelog: peak memory and time of
+    one NCVR run before scoring in chunks and after it, with each blocking engine, from
+    ncvr_memory.json."""
+    r = load("ncvr_memory.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    flat = _flat(GUIDE + (ROOT / "CHANGELOG.md").read_text())
+    label = {"numpy/before": "Before", "numpy": "Now", "duckdb": 'Now, `"blocking_engine": "duckdb"`'}
+    for n in (1428005, 5000000):
+        runs = {k: r[f"records_{n}/{k}"] for k in label}
+        first = runs["numpy/before"]
+        for k, x in runs.items():
+            assert x["clustered"] == first["clustered"] and x["candidate_pairs"] == first["candidate_pairs"], (n, k)
+            block = next(s for name, s in x["stage_seconds"].items() if name.startswith("blocking"))
+            assert (f"| {label[k]} | {x['peak_memory_gb']:.1f} GB | {block:.0f} s | {x['seconds'] / 60:.1f} min |") in text, (n, k)
+        assert max(runs["duckdb"]["peak_memory_gb"], runs["numpy"]["peak_memory_gb"]) < first["peak_memory_gb"], n
+        # the docs: DuckDB lowers the full file's peak, and saved nothing at a million records
+        assert (runs["duckdb"]["peak_memory_gb"] < runs["numpy"]["peak_memory_gb"]) == (n == 5000000), n
+    full = {k: r[f"records_5000000/{k}"] for k in label}
+    minutes = {k: f"{x['seconds'] / 60:.1f}" for k, x in full.items()}
+    peak = {k: f"{x['peak_memory_gb']:.1f}".removesuffix(".0") for k, x in full.items()}
+    assert (f"a run takes {minutes['numpy']} minutes against {minutes['numpy/before']}, at a peak of "
+            f"{peak['numpy']} GB against {peak['numpy/before']} GB") in flat
+    assert f"the peak is {peak['duckdb']} GB against {peak['numpy']} GB" in flat

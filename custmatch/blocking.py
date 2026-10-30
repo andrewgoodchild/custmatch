@@ -21,6 +21,8 @@ same non-empty key.
 import numpy as np
 import pandas as pd
 
+from .core import unique_ints
+
 # predicate name -> (column, transform). Transforms map a cleaned string column to keys.
 _TRANSFORMS = {
     "exact": lambda s: s,
@@ -63,7 +65,9 @@ def soundex(word):
 
 
 def _soundex(s):
-    return s.map(lambda v: soundex(v) if v and v[0].isalpha() else "")
+    codes, uniq = pd.factorize(s, use_na_sentinel=False)     # each distinct name once
+    out = np.array([soundex(v) if v and v[0].isalpha() else "" for v in uniq], dtype=object)
+    return pd.Series(out[codes], index=s.index)
 
 
 def _yearmonth(s):
@@ -285,20 +289,28 @@ def _split(keys, idx_block, rule, max_block, refine=REFINEMENTS):
         # no birth year) stay together as their own piece rather than being lost. Pieces are
         # slices of one stable sort, in order of value, as a loop over np.unique(sub) gave them
         order = np.argsort(sub, kind="stable")
-        bounds = np.flatnonzero(np.diff(sub[order])) + 1
-        for part in np.split(idx_block[order], bounds):
-            if len(part) < 2:
+        ordered = idx_block[order]
+        edges = np.r_[0, np.flatnonzero(np.diff(sub[order])) + 1, len(ordered)].tolist()
+        for a, b in zip(edges[:-1], edges[1:]):
+            if b - a < 2:
                 continue
-            o, d = _split(keys, part, rule + (p,), max_block, refine)
+            if b - a <= max_block:             # small enough already: no need to recurse
+                out.append(ordered[a:b])
+                continue
+            o, d = _split(keys, ordered[a:b], rule + (p,), max_block, refine)
             out += o
             dropped += d
         return out, dropped
     return [], 1        # nothing left to split on: drop it as a hub
 
 
-def generate(df, keys, rules, max_block=60, ways=1, refine=REFINEMENTS):
+DUCKDB_MEMORY = "2GB"   # "blocking_memory_limit": DuckDB's memory for the pairs; it spills past it
+
+
+def generate(df, keys, rules, max_block=60, ways=1, refine=REFINEMENTS, engine="numpy", memory_limit=DUCKDB_MEMORY):
     """Candidate pairs for the rules (splitting oversized blocks), plus per-rule diagnostics.
     ways > 1 splits each oversized block on that many refinements at once (_split_ways).
+    engine "duckdb" makes the pairs from the blocks in DuckDB (_pairs_duckdb).
     Returns (pairs int32 array sorted, report)."""
     rows, report = [], []
     for n, r in enumerate(rules):
@@ -333,62 +345,135 @@ def generate(df, keys, rules, max_block=60, ways=1, refine=REFINEMENTS):
                                           for c in order if sizes[c] > 0],
                        "oversized_blocks_split": split_blocks, "blocks_dropped_as_hubs": dropped})
     table = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame({"rule": [], "key": [], "rid": []})
-    per_rule = _block_pairs(table.rule.to_numpy(np.int64), table.key.to_numpy(np.int64), table.rid.to_numpy(np.int64))
-    # each pair once, credited to the first rule that produced it: one sort of int64 codes
-    # (pair * rules + rule), not a pandas groupby and sort - those were half of blocking's time
-    # at a million records
-    nr, nrec = max(len(rules), 1), len(df)
-    code = np.unique((per_rule.i.to_numpy() * nrec + per_rule.j.to_numpy()) * nr + per_rule.rule.to_numpy())
-    del per_rule
-    # pairs per rule, each once: with "adaptive" a block's pieces overlap, so a pair can come
-    # from one rule more than once
-    counts = np.bincount(code % nr, minlength=len(rules))
-    pair = code // nr
-    first = np.r_[True, pair[1:] != pair[:-1]] if len(pair) else np.zeros(0, bool)
-    pair, new = pair[first], np.bincount(code[first] % nr, minlength=len(rules))
+    if engine == "duckdb":
+        pairs, counts, new = _pairs_duckdb(table, len(rules), memory_limit)
+    else:
+        pairs, counts, new = _pairs_numpy(table, len(rules), len(df))
     for n, entry in enumerate(report):
         entry["pairs"] = int(counts[n])
         entry["new_pairs"] = int(new[n])      # not already produced by an earlier rule
-    pairs = np.column_stack([pair // nrec, pair % nrec]).astype(np.int32)
     return pairs, {"rules": report, "candidate_pairs": int(len(pairs)), "max_block": max_block}
 
 
-def _block_pairs(rule, key, rid):
-    """Every pair of records sharing a (rule, key) block: a DataFrame of rule, i < j. Sorted by
-    block, a record pairs with the k-th record after it while that one is still in its block;
-    blocks are capped at max_block, so k stays small and each step is one vectorised pass."""
+def _pairs_numpy(table, n_rules, nrec):
+    """generate()'s pairs (int32, i < j, sorted), pairs per rule and new pairs per rule from its
+    (rule, key, rid) block entries."""
+    # each pair once, credited to the first rule that produced it: one sort of int64 codes
+    # (pair * rules + rule), not a pandas groupby and sort - those were half of blocking's time
+    # at a million records. Made as codes, step by step: a table of rule, i and j held three times
+    # their memory
+    nr = max(n_rules, 1)
+    parts = [(np.minimum(i, j) * nrec + np.maximum(i, j)) * nr + r for r, i, j in _within_blocks(
+        table.rule.to_numpy(np.int64), table.key.to_numpy(np.int64), table.rid.to_numpy(np.int64))]
+    code = np.concatenate(parts) if parts else np.zeros(0, np.int64)
+    del parts
+    code = unique_ints(code)
+    # pairs per rule, each once: with "adaptive" a block's pieces overlap, so a pair can come
+    # from one rule more than once
+    counts = np.bincount(code % nr, minlength=n_rules)
+    pair = code // nr
+    first = np.r_[True, pair[1:] != pair[:-1]] if len(pair) else np.zeros(0, bool)
+    pair, new = pair[first], np.bincount(code[first] % nr, minlength=n_rules)
+    return np.column_stack([pair // nrec, pair % nrec]).astype(np.int32), counts, new
+
+
+def _pairs_duckdb(table, n_rules, memory_limit=DUCKDB_MEMORY):
+    """_pairs_numpy as one DuckDB query ("blocking_engine": "duckdb"): the self-join within blocks
+    and the de-duplication run on every core and spill to a temporary folder past memory_limit,
+    where numpy holds every within-block pair (three int64 columns) and sorts them on one core.
+    The same pairs and counts; it lowers the peak memory of a file of millions (on all 5M NCVR
+    records 22.6 GB against 27.5 GB for the whole run)."""
+    try:
+        import duckdb
+    except ImportError:
+        from .io import ConfigError
+        raise ConfigError('"blocking_engine": "duckdb" needs DuckDB: pip install "custmatch[duckdb]"') from None
+    import shutil
+    import tempfile
+    import pyarrow as pa
+    spill = tempfile.mkdtemp(prefix="custmatch_duckdb_")
+    try:
+        return _duckdb_query(duckdb, pa, table, n_rules, memory_limit, spill)
+    finally:
+        shutil.rmtree(spill, ignore_errors=True)
+
+
+def _duckdb_query(duckdb, pa, table, n_rules, memory_limit, spill):
+    con = duckdb.connect(config={"memory_limit": memory_limit, "temp_directory": spill,
+                                 "preserve_insertion_order": False})
+    con.register("t", pa.table({c: table[c].to_numpy(np.int64) for c in ("rule", "key", "rid")}))
+    # each (rule, pair) once: with "adaptive" a block's pieces overlap
+    con.execute("""CREATE TEMP TABLE p AS SELECT DISTINCT a.rule, a.rid AS i, b.rid AS j
+                   FROM t a JOIN t b ON a.rule = b.rule AND a.key = b.key AND a.rid < b.rid""")
+    con.execute("CREATE TEMP TABLE f AS SELECT i, j, min(rule) AS rule FROM p GROUP BY i, j")
+    counts, new = np.zeros(n_rules, np.int64), np.zeros(n_rules, np.int64)
+    for arr, tab in ((counts, "p"), (new, "f")):
+        for r, c in con.execute(f"SELECT rule, count(*) FROM {tab} GROUP BY rule").fetchall():
+            arr[r] = c
+    con.execute("DROP TABLE p")
+    out = con.execute("SELECT i::INTEGER AS i, j::INTEGER AS j FROM f ORDER BY i, j").fetchnumpy()
+    con.close()
+    return np.column_stack([out["i"], out["j"]]).astype(np.int32, copy=False), counts, new
+
+
+def _within_blocks(rule, key, rid):
+    """Every pair of records sharing a (rule, key) block, as (rule, record, record) arrays, one
+    step at a time. Sorted by block, a record pairs with the k-th record after it while that one
+    is still in its block; blocks are capped at max_block, so k stays small, and each step looks
+    only at the records whose block is still long enough."""
     if not len(rid):
-        return pd.DataFrame({"rule": np.zeros(0, np.int64), "i": np.zeros(0, np.int64), "j": np.zeros(0, np.int64)})
+        return
     order = np.lexsort((rid, key, rule))
     rule, key, rid = rule[order], key[order], rid[order]
     new = np.r_[True, (rule[1:] != rule[:-1]) | (key[1:] != key[:-1])]
     starts = np.flatnonzero(new)
     end = np.repeat(np.r_[starts[1:], len(rid)], np.diff(np.r_[starts, len(rid)]))   # block end per row
-    pos = np.arange(len(rid))
-    out_r, out_i, out_j = [], [], []
-    for k in range(1, int((end - pos).max())):
-        a = pos[pos + k < end]
-        b = a + k
-        out_r.append(rule[a]); out_i.append(np.minimum(rid[a], rid[b])); out_j.append(np.maximum(rid[a], rid[b]))
-    if not out_r:
+    a = np.arange(len(rid))
+    for k in range(1, int((end - a).max())):
+        a = a[a + k < end[a]]                  # rows whose block still has a k-th record after them
+        yield rule[a], rid[a], rid[a + k]
+
+
+def _block_pairs(rule, key, rid):
+    """_within_blocks as a DataFrame of rule, i < j."""
+    out = [(r, np.minimum(i, j), np.maximum(i, j)) for r, i, j in _within_blocks(rule, key, rid)]
+    if not out:
         return pd.DataFrame({"rule": np.zeros(0, np.int64), "i": np.zeros(0, np.int64), "j": np.zeros(0, np.int64)})
-    return pd.DataFrame({"rule": np.concatenate(out_r), "i": np.concatenate(out_i), "j": np.concatenate(out_j)})
+    return pd.DataFrame({c: np.concatenate([o[n] for o in out]) for n, c in enumerate(("rule", "i", "j"))})
+
+
+def union_pairs(*parts):
+    """The distinct rows of these (i, j) arrays of record indices, sorted, as np.unique(axis=0)
+    gives them - by one sort of int64 codes (core.unique_ints): on 48M pairs 1.5 s, not 22."""
+    parts = [p for p in parts if len(p)] or [parts[0]]
+    if not len(parts[0]):
+        return parts[0]
+    n = int(max(p.max() for p in parts)) + 1
+    code = unique_ints(np.concatenate([p[:, 0].astype(np.int64) * n + p[:, 1] for p in parts]))
+    out = np.empty((len(code), 2), parts[0].dtype)        # filled column by column: no int64 copy of it
+    out[:, 0] = code // n
+    out[:, 1] = code % n
+    return out
 
 
 def country_pairs(df, profiles, max_block):
     """Pairs from country.blocking_keys (first-name root + DOB or surname, email user name, name
     skeleton), blocks larger than max_block skipped - the same keys core.block uses."""
-    from collections import defaultdict
     from . import country
-    groups = defaultdict(list)
-    for k, i in country.blocking_keys(df, profiles):
-        groups[k].append(i)
-    out = set()
-    for idx in groups.values():
-        if 2 <= len(idx) <= max_block:
-            idx = sorted(set(idx))
-            out.update((a, b) for x, a in enumerate(idx) for b in idx[x + 1:])
-    return np.array(sorted(out), dtype=np.int32).reshape(-1, 2)
+    from .core import _block_codes
+    found = list(country.blocking_keys(df, profiles))
+    if not found:
+        return np.zeros((0, 2), np.int32)
+    # integer codes, as core.block: a Python set of pair tuples was about 100 bytes a pair
+    keys, idx = zip(*found)
+    codes, _ = pd.factorize(pd.Series(keys, dtype=object))
+    n = len(df)
+    entry = unique_ints(codes.astype(np.int64) * n + np.asarray(idx, np.int64))   # a record once per block
+    block, rec = entry // n, entry % n
+    sizes = np.bincount(block)
+    keep = (sizes[block] >= 2) & (sizes[block] <= max_block)
+    code = _block_codes(block[keep], rec[keep], n)
+    return np.column_stack([code // n, code % n]).astype(np.int32)
 
 
 def candidates_for(df, profiles, cfg, labelled_pos=None, rules=None):
@@ -420,7 +505,10 @@ def _core_candidates(df, profiles, cfg, owner=None):
     # whose broad block (postcode alone) was skipped but whose narrow one was used is fine
     compared = np.zeros(len(df), bool)
     compared[pairs.ravel()] = True
-    records = len({i for _, idx in skipped for i in idx if not compared[i]})
+    in_skipped = np.zeros(len(df), bool)
+    for _, idx in skipped:
+        in_skipped[idx] = True
+    records = int((in_skipped & ~compared).sum())
     top = sorted(skipped, key=lambda s: -len(s[1]))[:5]
     return pairs, hubs, {"mode": "core", "candidate_pairs": int(len(pairs)), "hubs_dropped": int(hubs),
                          "skipped_blocks_with_values": len(skipped), "records_only_in_skipped_blocks": records,
@@ -446,6 +534,7 @@ def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None
         pairs, hubs, report = _core_candidates(df, profiles, cfg, owner)
         records = report["records_only_in_skipped_blocks"]
         if not mode and owner is None and not cfg.get("lsh_blocking") and records > AUTO_ADAPTIVE_SHARE * len(df):
+            del pairs                                 # not held while the adaptive pairs are made
             pairs, hubs, switched, used = _candidates_for(df, profiles, cfg | {"blocking": "adaptive"}, labelled_pos)
             switched["switched_from_core"] = {"records_only_in_skipped_blocks": records, "records": len(df),
                                               "share": round(records / len(df), 4)}
@@ -466,11 +555,12 @@ def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None
             rules = fixed_rules(cfg, df)
     adaptive = mode == "adaptive"
     pairs, report = generate(df, keys, rules, max_block=mb, ways=ADAPTIVE_WAYS if adaptive else 1,
-                             refine=refinements(cfg) if adaptive else REFINEMENTS)
+                             refine=refinements(cfg) if adaptive else REFINEMENTS,
+                             engine=cfg.get("blocking_engine", "numpy"),
+                             memory_limit=cfg.get("blocking_memory_limit", DUCKDB_MEMORY))
     extra = country_pairs(df, profiles, mb)        # country.py keys: nickname + DOB, email user...
     if len(extra):
-        allp = np.vstack([pairs, extra]) if len(pairs) else extra
-        pairs = np.unique(allp, axis=0)
+        pairs = union_pairs(pairs, extra)
     report.update(mode=mode or "saved", learned=learn, country_key_pairs=int(len(extra)))
     if cfg.get("_blocking_switched"):
         # a run that switched (a saved state's config): the default keys' skipped blocks, so the
@@ -545,7 +635,7 @@ def saved_run_large_blocks(cfg, report, predict, th, pairs):
     if not (large_block_check_on(cfg) and skipped):
         return pairs
     extra, _ = check_large_blocks(skipped, predict, th, budget=max(1_000_000, len(pairs)))
-    return np.unique(np.vstack([pairs, extra]), axis=0).astype(np.int32) if len(extra) else pairs
+    return union_pairs(pairs, extra).astype(np.int32) if len(extra) else pairs
 
 
 def check_large_blocks(skipped, predict, th, budget, seed=0, share=LARGE_BLOCK_MATCH_SHARE):

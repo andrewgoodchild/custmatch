@@ -133,7 +133,8 @@ def enforce_cannot(n, pairs, score, th, labels, cannot):
 
 # ------------------------------------------------------------------ the review band
 def review_pairs(pairs, score, th, band, keys, X=None, df=None, profiles=None):
-    """Pairs within `band` of the threshold, most uncertain first."""
+    """Pairs within `band` of the threshold, most uncertain first. X: the pairs' features, or a
+    function giving the features of the pairs at some row indices."""
     near = np.flatnonzero(np.abs(score - th) < band)
     rows = pd.DataFrame({"a": keys[pairs[near, 0]], "b": keys[pairs[near, 1]],
                          "score": np.round(score[near].astype(float), 4),
@@ -142,7 +143,8 @@ def review_pairs(pairs, score, th, band, keys, X=None, df=None, profiles=None):
         from .explain import _both_streets, _contacts, evidence
         i, j = pairs[near, 0], pairs[near, 1]
         ce, cp = _contacts(df, profiles, "email", i, j), _contacts(df, profiles, "phone", i, j)
-        rows["evidence"] = [evidence(x, a_, b_, s) for x, a_, b_, s in zip(X[near], ce, cp, _both_streets(df, i, j))]
+        Xn = X(near) if callable(X) else X[near]
+        rows["evidence"] = [evidence(x, a_, b_, s) for x, a_, b_, s in zip(Xn, ce, cp, _both_streets(df, i, j))]
     return rows.iloc[np.argsort(np.abs(rows.score.to_numpy() - th), kind="stable")].reset_index(drop=True)
 
 

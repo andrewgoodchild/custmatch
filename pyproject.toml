@@ -25,6 +25,8 @@ Issues = "https://github.com/andrewgoodchild/custmatch/issues"
 [project.optional-dependencies]
 test = ["pytest"]
 catboost = ["catboost>=1.2"]
+# "blocking_engine": "duckdb": candidate pairs made in DuckDB, on every core and spilling to disk
+duckdb = ["duckdb>=1.1", "pyarrow>=14"]
 
 [project.scripts]
 custmatch = "custmatch.cli:main"
