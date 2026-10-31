@@ -18,7 +18,8 @@ records or choosing the threshold; it is scored at the threshold that does best 
 Peak memory is the process's lifetime maximum physical footprint on macOS (proc_pid_rusage, what
 Activity Monitor shows): resident memory reads low under memory pressure, as macOS compresses
 pages, and high after a stage frees memory that the allocator keeps for reuse. Elsewhere it is
-the peak resident memory (getrusage). Writes research/results/ncvr_memory.json.
+the peak resident memory (getrusage). Each result keeps the machine's load average at the end,
+as other work on it slows the run. Writes research/results/ncvr_memory.json.
 """
 import argparse
 import ctypes
@@ -117,7 +118,8 @@ def main():
     res = {"records": int(len(c)), "candidate_pairs": s["candidate_pairs"], "engine": a.engine,
            "clustered": partition_scores(c.customer_id.to_numpy(), pid, float((sz * (sz - 1) / 2).sum())),
            "peak_memory_gb": round(peak_gb(), 2), "seconds": seconds, "stage_seconds": s["stage_seconds"],
-           "peak_by_stage": stages, "machine": f"{os.cpu_count()} cores, {sys.platform}"}
+           "peak_by_stage": stages, "machine": f"{os.cpu_count()} cores, {sys.platform}",
+           "load_average": [round(x, 1) for x in os.getloadavg()]}   # other work on the machine, 1/5/15 min
     save(f"records_{len(c)}/{a.engine}" + (f"/{a.tag}" if a.tag else ""), res)
 
 

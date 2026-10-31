@@ -345,46 +345,55 @@ file from 555 to 274 seconds at a 26 GB peak.
 The full run's peak footprint was 49 GB, against the 33.6 GB the run recorded: the resident memory a
 run records reads low on macOS, which compresses pages under pressure, and high once a stage has
 freed memory the allocator keeps, so the script measures the process's lifetime maximum footprint
-(what Activity Monitor shows). Profiling the run found five things, each changed with every output
+(what Activity Monitor shows). Profiling the run found these, each changed with every output
 kept the same:
 
 - **Blocking held every rule's pairs at once**, as a table of rule, i and j, before removing the
   duplicates, and sorted through `np.unique`, which numpy 2.4 makes 12 to 17 times slower than
-  sorting. It now makes each pair as one integer code, sorts them on every core
-  (`core.sort_ints`: slices in threads, then one merging sort), and skips work on the pieces of
-  split blocks that are already small enough.
+  sorting. It now makes each pair as one integer code and sorts on every core (`core.sort_ints`:
+  slices in threads, then one merging sort). A file that switches to `"adaptive"` no longer makes
+  the default keys' pairs only to count the records they leave out.
 - **The matcher built every candidate pair's features at once** to score them, 26 columns of 192
   million pairs, 20 GB of floats. It now scores them 8 million pairs at a time
-  (`core.SCORE_CHUNK`), all five forests of the cross-fitting in one pass.
+  (`core.SCORE_CHUNK`), all five forests of the cross-fitting in one pass, while a second thread
+  makes the next block's features.
 - **Most of the feature time was string comparison** in Python: whether two names, emails or
   phones agree, one pair at a time. Each column is now coded as integers once per run, so agreement
   is an integer comparison, and each string similarity is computed once per distinct pair of values
   (`core._similarity`): pairs of names repeat thousands of times in a block.
 - **44% of the feature rows repeat another** exactly, and a forest scores equal rows equally: each
   distinct row is now scored once (`models.distinct_rows`).
+- **The threshold search clustered every candidate pair 110 times**, once per threshold for each
+  fold and for the in-cluster check. Lowering the threshold only adds pairs, so each fold is now
+  clustered once, from the strictest threshold down, joining the components already found with
+  only the pairs in each band (`core.components_by_threshold`).
+- **Smaller steps**: `links.csv`'s bridge flags from a vectorised spanning-forest count instead of
+  networkx (3.75 s to 0.14 s on 886,000 links), a first run's customer IDs without a vote per
+  customer, and normalisation, soundex and dates of birth once per distinct value.
 - `"blocking_engine": "duckdb"` (the `duckdb` extra) makes the pairs in DuckDB instead, which
   removes duplicates as it goes and writes to disk past `"blocking_memory_limit"` (default
   `"2GB"`).
 
 The same file, config and labels (300 random, drawn stratified, and 700 active) on the 18-core,
-64 GB laptop, one run each:
+64 GB laptop, one run each. Other work shared the machine for the runs after the changes (a
+load average of 6 to 14, kept in the results file), so their times are if anything long:
 
 | NCVR | Code | Peak memory | Blocking | Whole run |
 | --- | --- | --- | --- | --- |
 | 1,428,005 records of 1,000,000 people, 46.9M candidate pairs | Before | 11.9 GB | 162 s | 6.0 min |
-| | Now | 7.3 GB | 32 s | 2.2 min |
-| | Now, `"blocking_engine": "duckdb"` | 9.2 GB | 30 s | 2.2 min |
+| | Now | 9.1 GB | 18 s | 1.7 min |
+| | Now, `"blocking_engine": "duckdb"` | 9.8 GB | 20 s | 1.7 min |
 | All 5,000,000 records, 191.8M candidate pairs | Before | 49.0 GB | 455 s | 22.9 min |
-| | Now | 27.5 GB | 122 s | 9.5 min |
-| | Now, `"blocking_engine": "duckdb"` | 22.6 GB | 117 s | 9.4 min |
+| | Now | 27.0 GB | 69 s | 7.3 min |
+| | Now, `"blocking_engine": "duckdb"` | 21.4 GB | 115 s | 7.9 min |
 
 Every output file is byte-for-byte the same in all three, and so the clustered F1 (91.67 and
-86.24). The forest stage, most of the run, went from 804 to 341 seconds on the full file. With
-numpy blocking the peak is still set by blocking, which holds every within-block pair before
-removing the duplicates; with DuckDB it moves to the forest stage at a million records and to the
-last stage (households, golden records, outputs) at five million. DuckDB lowered the full file's
-peak by a fifth, and at a million records it was higher: it is an option for files of several
-million records, not the default. These are single runs.
+86.24). The forest stage, most of the run, went from 804 to 283 seconds on the full file. With
+numpy blocking the full file's peak is still set by blocking, which holds every within-block pair
+before removing the duplicates; at a million records it is now the forest stage, which holds the
+next block's features beside the one being scored (the peak was 7.3 GB before that thread). DuckDB
+lowered the full file's peak by a fifth and was higher at a million records: it is an option for
+files of several million records, not the default. These are single runs.
 
 **Fewer trees in the fold models: tried, not adopted** (`research/scripts/fold_trees.py`,
 `research/results/fold_trees.json`). The four fold models of the cross-fitting only score the

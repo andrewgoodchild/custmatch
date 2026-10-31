@@ -11,44 +11,49 @@
    "largest_cluster": 30,
    "adjusted_rand": 0.9167
   },
-  "peak_memory_gb": 7.29,
-  "seconds": 134.5,
+  "peak_memory_gb": 9.13,
+  "seconds": 104.2,
   "stage_seconds": {
-   "load and profile": 6.11,
-   "blocking (46,927,205 candidate pairs)": 32.13,
-   "forest: cross-fitted clustered F1 98.71": 73.48,
-   "threshold (clustered, in-cluster precision check)": -0.0,
-   "large blocks checked: 0 of 16054 kept, 0 pairs added": 1.03,
-   "households, golden records, outputs": 21.04
+   "load and profile": 4.97,
+   "blocking (46,927,205 candidate pairs)": 18.49,
+   "forest: cross-fitted clustered F1 98.71": 62.29,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 16054 kept, 0 pairs added": 1.18,
+   "households, golden records, outputs": 16.55
   },
   "peak_by_stage": [
    {
     "stage": "load and profile",
-    "seconds": 6.1,
-    "peak_gb_so_far": 1.19
+    "seconds": 5.0,
+    "peak_gb_so_far": 1.16
    },
    {
     "stage": "blocking (46,927,205 candidate pairs)",
-    "seconds": 38.2,
-    "peak_gb_so_far": 6.94
+    "seconds": 23.5,
+    "peak_gb_so_far": 6.96
    },
    {
     "stage": "forest: cross-fitted clustered F1 98.71",
-    "seconds": 111.7,
-    "peak_gb_so_far": 7.29
+    "seconds": 85.8,
+    "peak_gb_so_far": 9.13
    },
    {
     "stage": "threshold (clustered, in-cluster precision check)",
-    "seconds": 111.7,
-    "peak_gb_so_far": 7.29
+    "seconds": 85.8,
+    "peak_gb_so_far": 9.13
    },
    {
     "stage": "large blocks checked: 0 of 16054 kept, 0 pairs added",
-    "seconds": 112.7,
-    "peak_gb_so_far": 7.29
+    "seconds": 86.9,
+    "peak_gb_so_far": 9.13
    }
   ],
-  "machine": "18 cores, darwin"
+  "machine": "18 cores, darwin",
+  "load_average": [
+   9.7,
+   6.8,
+   6.5
+  ]
  },
  "records_1428005/duckdb": {
   "records": 1428005,
@@ -62,44 +67,49 @@
    "largest_cluster": 30,
    "adjusted_rand": 0.9167
   },
-  "peak_memory_gb": 9.2,
-  "seconds": 133.6,
+  "peak_memory_gb": 9.79,
+  "seconds": 101.6,
   "stage_seconds": {
-   "load and profile": 6.51,
-   "blocking (46,927,205 candidate pairs)": 30.33,
-   "forest: cross-fitted clustered F1 98.71": 74.11,
+   "load and profile": 4.7,
+   "blocking (46,927,205 candidate pairs)": 20.21,
+   "forest: cross-fitted clustered F1 98.71": 59.33,
    "threshold (clustered, in-cluster precision check)": 0.0,
-   "large blocks checked: 0 of 16054 kept, 0 pairs added": 1.02,
-   "households, golden records, outputs": 20.86
+   "large blocks checked: 0 of 16054 kept, 0 pairs added": 1.06,
+   "households, golden records, outputs": 15.56
   },
   "peak_by_stage": [
    {
     "stage": "load and profile",
-    "seconds": 6.5,
-    "peak_gb_so_far": 1.18
+    "seconds": 4.7,
+    "peak_gb_so_far": 1.13
    },
    {
     "stage": "blocking (46,927,205 candidate pairs)",
-    "seconds": 36.8,
-    "peak_gb_so_far": 7.34
+    "seconds": 24.9,
+    "peak_gb_so_far": 7.45
    },
    {
     "stage": "forest: cross-fitted clustered F1 98.71",
-    "seconds": 111.0,
-    "peak_gb_so_far": 9.2
+    "seconds": 84.2,
+    "peak_gb_so_far": 9.79
    },
    {
     "stage": "threshold (clustered, in-cluster precision check)",
-    "seconds": 111.0,
-    "peak_gb_so_far": 9.2
+    "seconds": 84.2,
+    "peak_gb_so_far": 9.79
    },
    {
     "stage": "large blocks checked: 0 of 16054 kept, 0 pairs added",
-    "seconds": 112.0,
-    "peak_gb_so_far": 9.2
+    "seconds": 85.3,
+    "peak_gb_so_far": 9.79
    }
   ],
-  "machine": "18 cores, darwin"
+  "machine": "18 cores, darwin",
+  "load_average": [
+   9.1,
+   7.6,
+   6.8
+  ]
  },
  "records_5000000/numpy": {
   "records": 5000000,
@@ -113,44 +123,49 @@
    "largest_cluster": 50,
    "adjusted_rand": 0.8624
   },
-  "peak_memory_gb": 27.46,
-  "seconds": 571.2,
+  "peak_memory_gb": 27.02,
+  "seconds": 439.4,
   "stage_seconds": {
-   "load and profile": 22.29,
-   "blocking (191,801,852 candidate pairs)": 122.19,
-   "forest: cross-fitted clustered F1 97.59": 341.43,
-   "threshold (clustered, in-cluster precision check)": 0.0,
-   "large blocks checked: 0 of 49560 kept, 0 pairs added": 3.41,
-   "households, golden records, outputs": 78.71
+   "load and profile": 16.36,
+   "blocking (191,801,852 candidate pairs)": 69.37,
+   "forest: cross-fitted clustered F1 97.59": 283.18,
+   "threshold (clustered, in-cluster precision check)": -0.0,
+   "large blocks checked: 0 of 49560 kept, 0 pairs added": 3.93,
+   "households, golden records, outputs": 63.35
   },
   "peak_by_stage": [
    {
     "stage": "load and profile",
-    "seconds": 22.3,
-    "peak_gb_so_far": 3.33
+    "seconds": 16.4,
+    "peak_gb_so_far": 3.26
    },
    {
     "stage": "blocking (191,801,852 candidate pairs)",
-    "seconds": 144.5,
-    "peak_gb_so_far": 27.46
+    "seconds": 85.7,
+    "peak_gb_so_far": 27.02
    },
    {
     "stage": "forest: cross-fitted clustered F1 97.59",
-    "seconds": 485.9,
-    "peak_gb_so_far": 27.46
+    "seconds": 368.9,
+    "peak_gb_so_far": 27.02
    },
    {
     "stage": "threshold (clustered, in-cluster precision check)",
-    "seconds": 485.9,
-    "peak_gb_so_far": 27.46
+    "seconds": 368.9,
+    "peak_gb_so_far": 27.02
    },
    {
     "stage": "large blocks checked: 0 of 49560 kept, 0 pairs added",
-    "seconds": 489.3,
-    "peak_gb_so_far": 27.46
+    "seconds": 372.8,
+    "peak_gb_so_far": 27.02
    }
   ],
-  "machine": "18 cores, darwin"
+  "machine": "18 cores, darwin",
+  "load_average": [
+   10.9,
+   14.3,
+   10.8
+  ]
  },
  "records_5000000/duckdb": {
   "records": 5000000,
@@ -164,44 +179,49 @@
    "largest_cluster": 50,
    "adjusted_rand": 0.8624
   },
-  "peak_memory_gb": 22.59,
-  "seconds": 566.5,
+  "peak_memory_gb": 21.39,
+  "seconds": 474.8,
   "stage_seconds": {
-   "load and profile": 22.32,
-   "blocking (191,801,852 candidate pairs)": 117.08,
-   "forest: cross-fitted clustered F1 97.59": 341.74,
-   "threshold (clustered, in-cluster precision check)": 0.0,
-   "large blocks checked: 0 of 49560 kept, 0 pairs added": 3.39,
-   "households, golden records, outputs": 78.82
+   "load and profile": 17.19,
+   "blocking (191,801,852 candidate pairs)": 115.4,
+   "forest: cross-fitted clustered F1 97.59": 274.08,
+   "threshold (clustered, in-cluster precision check)": -0.0,
+   "large blocks checked: 0 of 49560 kept, 0 pairs added": 3.66,
+   "households, golden records, outputs": 61.22
   },
   "peak_by_stage": [
    {
     "stage": "load and profile",
-    "seconds": 22.3,
-    "peak_gb_so_far": 3.32
+    "seconds": 17.2,
+    "peak_gb_so_far": 3.31
    },
    {
     "stage": "blocking (191,801,852 candidate pairs)",
-    "seconds": 139.4,
-    "peak_gb_so_far": 15.17
+    "seconds": 132.6,
+    "peak_gb_so_far": 15.23
    },
    {
     "stage": "forest: cross-fitted clustered F1 97.59",
-    "seconds": 481.1,
-    "peak_gb_so_far": 17.3
+    "seconds": 406.7,
+    "peak_gb_so_far": 21.39
    },
    {
     "stage": "threshold (clustered, in-cluster precision check)",
-    "seconds": 481.1,
-    "peak_gb_so_far": 17.3
+    "seconds": 406.7,
+    "peak_gb_so_far": 21.39
    },
    {
     "stage": "large blocks checked: 0 of 49560 kept, 0 pairs added",
-    "seconds": 484.5,
-    "peak_gb_so_far": 17.3
+    "seconds": 410.3,
+    "peak_gb_so_far": 21.39
    }
   ],
-  "machine": "18 cores, darwin"
+  "machine": "18 cores, darwin",
+  "load_average": [
+   8.7,
+   13.8,
+   12.2
+  ]
  },
  "records_1428005/numpy/before": {
   "records": 1428005,

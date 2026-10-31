@@ -111,16 +111,19 @@ on dirty and clean books with false links broken down by trap.
 deduplicated with an integer sort: `"fixed"` blocking at 200,000 people takes 6.3 s, from 9.7 s.
 The candidate pairs are the same.
 
-**Faster, and less memory:** on all 5,000,000 NCVR records a run takes 9.5 minutes against
-22.9, at a peak of 27.5 GB against 49 GB; at a million people 2.2 minutes against 6.0, at 7.3 GB
+**Faster, and less memory:** on all 5,000,000 NCVR records a run takes 7.3 minutes against
+22.9, at a peak of 27 GB against 49 GB; at a million people 1.7 minutes against 6.0, at 9.1 GB
 against 11.9. Every output is byte-for-byte the same. Candidate pairs are scored 8 million at a
 time (`core.SCORE_CHUNK`), all five forests of the cross-fitting in one pass, not from one array of
 every pair's features (20 GB on the full file); fields agree by comparing integer codes, made once
 per run, not strings; each string similarity is computed once per distinct pair of values, and
 each distinct feature row scored once (44% of rows repeat another). Blocking makes each pair as
 one integer code, sorts on every core instead of through `np.unique` (which numpy 2.4 made 12 to
-17 times slower), and maps soundex once per distinct name (docs/report/06-blocking-and-scale.md
-"Memory and time on one machine").
+17 times slower), maps soundex once per distinct name, and, where it switches to `"adaptive"`, no
+longer makes the default keys' pairs first. The threshold search clusters each fold once instead
+of once per threshold; `links.csv`'s bridge flags are found without networkx; the next block of
+features is made while the forests score this one (docs/report/06-blocking-and-scale.md "Memory
+and time on one machine").
 
 **Faster:** `custmatch sample` and each `sample --active` round keep the candidate pairs in a
 `.custmatch_cache` folder beside the labels, so a round does not block the file again: on a
@@ -131,7 +134,7 @@ it holds only the pairs, as a .npy array. `"cache_candidates": false` turns it o
 **Added:** `"blocking_engine": "duckdb"`, with the `duckdb` extra (`pip install
 "custmatch[duckdb]"`): the candidate pairs are made in DuckDB, which writes to disk past
 `"blocking_memory_limit"` (default `"2GB"`). Same pairs, same outputs; on the full NCVR file the
-peak is 22.6 GB against 27.5 GB.
+peak is 21.4 GB against 27 GB.
 
 ## 0.1.2 (2026-10-16)
 

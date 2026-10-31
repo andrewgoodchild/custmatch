@@ -143,8 +143,8 @@ split.
 pair before removing the duplicates. With the `duckdb` extra installed (Install below),
 `"blocking_engine": "duckdb"` makes the candidate pairs in DuckDB instead, which writes to disk
 past `"blocking_memory_limit"` (default `"2GB"`): the same pairs, so the same outputs. On all
-five million NCVR records the run took 9.5 minutes at a 27.5 GB peak with the default numpy
-blocking (22.9 minutes and 49 GB before this release) and 22.6 GB with DuckDB
+five million NCVR records the run took 7.3 minutes at a 27 GB peak with the default numpy
+blocking (22.9 minutes and 49 GB before this release) and 21.4 GB with DuckDB
 ([report/06-blocking-and-scale.md](report/06-blocking-and-scale.md) "Memory and time on one
 machine"). At a million records DuckDB saved nothing; the default fits easily.
 
