@@ -1110,6 +1110,11 @@ def test_head_to_head_and_home_data_claims():
                 f"{r['candidate_pairs_above_0.001'] / 1e6:.1f} M | {r['clustered']['precision']:.2f} | "
                 f"{r['clustered']['recall']:.2f} | {r['clustered']['f1']:.2f} |") in flat, key
     assert c["clustered"]["f1"] - max(v["clustered"]["f1"] for k, v in big.items() if k.startswith("splink_") and isinstance(v, dict)) > 15
+    old = h["copies_50_m1_pro_16gb"]                      # the same comparison on the earlier 16 GB laptop
+    runs = [v for k, v in old.items() if k.startswith("splink_") and isinstance(v, dict)]
+    gb, secs = sorted(r["peak_memory_gb"] for r in runs), sorted(r["splink_seconds"] for r in runs)
+    assert (f"peaked at {gb[0]:.1f} to {gb[-1]:.1f} GB" in flat and f"took {secs[0]:.0f} to {secs[-1]:.0f} seconds" in flat
+            and f"custmatch took {old['custmatch']['wall_seconds']:.0f} seconds and {old['custmatch']['peak_memory_gb']:.2f} GB there" in flat)
     d = small["dedupe"]
     assert (f"| {small['custmatch']['clustered']['f1']:.2f} / {small['custmatch']['wall_seconds']:.1f} / "
             f"{small['custmatch']['peak_memory_gb']:.2f} GB | dedupe: {d['clustered']['f1']:.2f} / "

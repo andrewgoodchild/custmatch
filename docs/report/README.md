@@ -13,10 +13,11 @@ and dropped; [chapter 12](12-the-service.md) covers the service; [chapter 13](13
 ([reproducing.md](../reproducing.md) has the commands), and the test suite checks every number
 here against `research/results/*.json`.
 
-**Where it ran.** An Apple M1 Pro laptop (16 GB) for most of it, and cloud machines on Modal for
-the runs of millions of records. Hosted language models (GPT-4o, GPT-4o-mini, GPT-6 Luna, the
-Jev router and decision model) ran through OpenRouter in September 2026 for $7.26 in total;
-GPT-4 is cited, not rerun (about $21). Hosted models are as served then (Jev: snapshot
+**Where it ran.** An Apple M1 Pro laptop (16 GB) for most of it, cloud machines on Modal for
+the runs of millions of records, and an 18-core, 64 GB Apple silicon laptop for the North Carolina
+voter runs of chapter 6 and the million-record comparison of chapter 9. Hosted language models
+(GPT-4o, GPT-4o-mini, GPT-6 Luna, the Jev router and decision model) ran through OpenRouter in
+September 2026 for $7.26 in total; GPT-4 is cited, not rerun (about $21). Hosted models are as served then (Jev: snapshot
 `typesafe/jev-1.13-20260917`) and may have changed since. Most experiments ran between
 September and October 2026; corrections are marked where a later check changed a result.
 
@@ -217,7 +218,7 @@ On a synthetic two-source customer file it reaches **97.3 clustered F1 from 1,00
 | For contacting people, `"min_precision": 0.97`: records sent to someone else's email, many / few sign-ups | **0.05% / 0.08%** | CDP tuned for precision: 0.58% / 0.94% - while finding about 6 to 10 points more matches |
 | Couples who separate: the leaver's new records merged with the ex | **0.4%** | CDP-style, tuned: 3.8% |
 | North Carolina voters (names and places only), 200,000 people, 3 draws: clustered F1 | **95.6 (94.7-96.2)** | Splink, given the same labels: 93.9 |
-| The synthetic file copied to 1,006,700 records, one laptop: clustered F1 / seconds / peak memory | **97.99** / 71.0 / **3.64 GB** | Splink 5, large blocks skipped: 78.88 / **21.6** / 5.96 GB |
+| The synthetic file copied to 1,006,700 records, one laptop: clustered F1 / seconds / peak memory | **97.99** / 40.4 / **3.60 GB** | Splink 5, large blocks skipped: 78.88 / **13.0** / 9.40 GB |
 | The synthetic file, 20,134 records: clustered F1 / seconds / peak memory | 97.38 / **5.4** / **0.35 GB** | dedupe: **97.75** / 499 / 8.5 GB |
 
 The advantage is largest where customer-data problems exist; on clean, name-only data such as

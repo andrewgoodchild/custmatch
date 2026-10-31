@@ -13,7 +13,7 @@ lacks a no-labels start and distributed scale.
 
 **At a million records, against Splink 5** (`research/scripts/head_to_head.py --copies 50`,
 `research/results/head_to_head.json`). The synthetic customer file copied 50 times (1,006,700 records),
-one laptop (Apple silicon, 16 GB), one tool at a time, the same 1,000 labels. Splink 5.0.0 on
+one laptop (Apple silicon, 18 cores, 64 GB), one tool at a time, the same 1,000 labels. Splink 5.0.0 on
 DuckDB, configured as its documentation recommends: blocking rules mirroring custmatch's keys,
 name and email comparisons with term-frequency adjustment, u by random sampling, m by EM or
 from half the labels, the threshold chosen on the labels, Splink's own clustering. Splink's time
@@ -21,17 +21,20 @@ is its own training, prediction and clustering, not loading or writing results:
 
 | 1,006,700 records | Seconds | Peak memory | Candidate pairs | Precision | Recall | Clustered F1 |
 | --- | --- | --- | --- | --- | --- | --- |
-| custmatch (the whole run: also households, golden records, outputs) | 71.0 | 3.64 GB | 2.4 M | 98.22 | 97.75 | **97.99** |
-| Splink, blocks over 60 records skipped, m from labels | **21.6** | 5.96 GB | 14.5 M | 79.75 | 78.03 | 78.88 |
-| Splink, blocks over 60 records skipped, EM | 37.0 | 5.70 GB | 14.5 M | 75.28 | 71.16 | 73.16 |
-| Splink, blocking as above with no cap, m from labels | 503.7 | 5.59 GB | 24.7 M | 66.47 | 78.03 | 71.79 |
-| Splink, blocking as above with no cap, EM | 531.5 | 5.33 GB | 24.8 M | 75.28 | 71.16 | 73.16 |
+| custmatch (the whole run: also households, golden records, outputs) | 40.4 | 3.60 GB | 2.4 M | 98.22 | 97.75 | **97.99** |
+| Splink, blocks over 60 records skipped, m from labels | **13.0** | 9.40 GB | 14.5 M | 79.75 | 78.03 | 78.88 |
+| Splink, blocks over 60 records skipped, EM | 20.7 | 12.07 GB | 14.5 M | 75.28 | 71.16 | 73.16 |
+| Splink, blocking as above with no cap, m from labels | 210.6 | 34.43 GB | 24.7 M | 66.47 | 78.03 | 71.79 |
+| Splink, blocking as above with no cap, EM | 220.0 | 32.98 GB | 24.8 M | 75.28 | 71.16 | 73.16 |
 
 Without a cap, placeholder contacts (`a@a.com`, `9999999999`, each on about 20,000 records)
-give Splink's email and phone rules 2.4 billion comparisons, and DuckDB spills to disk. Skipping
-those blocks - what checking Splink's `n_largest_blocks` suggests - makes it the faster tool:
-22 seconds against custmatch's 38 for loading, blocking and the forest (the rest of custmatch's
-71 is households, golden records and outputs, which Splink does not produce). custmatch is 19
+give Splink's email and phone rules 2.4 billion comparisons. Skipping those blocks - what
+checking Splink's `n_largest_blocks` suggests - makes it the faster tool: 13 seconds against
+custmatch's 18 for loading, blocking and the forest (the rest of custmatch's 40 is households,
+golden records and outputs, which Splink does not produce). Splink's memory follows the machine:
+DuckDB sizes its memory to the RAM, so on the earlier 16 GB laptop the same runs peaked at 5.3 to
+6.0 GB, spilling to disk without the cap, and took 22 to 532 seconds. custmatch took 71 seconds
+and 3.64 GB there, on older code. custmatch is 19
 points more accurate, on both precision and recall: Splink's model cannot discount shared
 household values and placeholders, which this file is full of. At 20,134 records (one copy) the
 gap was 13 points (97.38 against 84.19) and the two took 5.4 and 4.4 seconds.
