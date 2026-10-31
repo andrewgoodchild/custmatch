@@ -70,7 +70,7 @@ alone. Unless a table says otherwise, numbers are clustered F1 on a 0-100 scale.
    a tenth as many messages to the wrong person ([chapter 8](08-against-a-cdp.md)).
 8. **Against other tools,** it is the most accurate on customer data (97.99 against Splink's
    78.88 at a million records); Splink is faster once its large blocks are skipped, and dedupe
-   is as accurate but about 90 times slower ([chapter 9](09-against-other-tools.md)).
+   is as accurate but about 50 times slower ([chapter 9](09-against-other-tools.md)).
 9. **Published results mostly reproduce,** with one trap: Ditto can collapse silently to "every
    pair matches" when trained without warmup ([chapter 10](10-reproductions.md)).
 10. **A zero-shot language model is a good judge of hard pairs and a poor matcher in the
@@ -219,12 +219,12 @@ On a synthetic two-source customer file it reaches **97.3 clustered F1 from 1,00
 | Couples who separate: the leaver's new records merged with the ex | **0.4%** | CDP-style, tuned: 3.8% |
 | North Carolina voters (names and places only), 200,000 people, 3 draws: clustered F1 | **95.6 (94.7-96.2)** | Splink, given the same labels: 93.9 |
 | The synthetic file copied to 1,006,700 records, one laptop: clustered F1 / seconds / peak memory | **97.99** / 40.4 / **3.60 GB** | Splink 5, large blocks skipped: 78.88 / **13.0** / 9.40 GB |
-| The synthetic file, 20,134 records: clustered F1 / seconds / peak memory | 97.38 / **5.4** / **0.35 GB** | dedupe: **97.75** / 499 / 8.5 GB |
+| The synthetic file, 20,134 records: clustered F1 / seconds / peak memory | 97.38 / **4.3** / **0.34 GB** | dedupe: **97.65** / 204 / 27.8 GB |
 
 The advantage is largest where customer-data problems exist; on clean, name-only data such as
 the voter file the two are close, and Splink there learned from labels custmatch's own model
 chose. Splink is faster once its large blocks are skipped; dedupe matches custmatch's accuracy
-on the customer file but is about 90 times slower. On the other tools' own datasets custmatch
+on the customer file but is about 50 times slower. On the other tools' own datasets custmatch
 leads on noisy person data; on dedupe's organisation records dedupe wins one, and Splink the
 other unless custmatch's `max_block` is raised as its warning advises ([chapter 9](09-against-other-tools.md)). The Australian rows are three
 independently generated populations, against a CDP tuned on the truth - generous to it

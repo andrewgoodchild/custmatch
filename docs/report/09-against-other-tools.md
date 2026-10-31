@@ -37,7 +37,7 @@ DuckDB sizes its memory to the RAM, so on the earlier 16 GB laptop the same runs
 and 3.64 GB there, on older code. custmatch is 19
 points more accurate, on both precision and recall: Splink's model cannot discount shared
 household values and placeholders, which this file is full of. At 20,134 records (one copy) the
-gap was 13 points (97.38 against 84.19) and the two took 5.4 and 4.4 seconds.
+gap was 13 points (97.38 against 84.19) and the two took 4.3 and 2.9 seconds.
 
 **On each other's home data, with dedupe** (`research/scripts/home_data_benchmark.py`,
 `research/results/home_data_benchmark.json`). Splink's four bundled datasets and dedupe's two examples
@@ -78,9 +78,11 @@ sets. dedupe's errors are missed matches - its precision was 96.9 to 100 everywh
 as low as 33.0 at the default threshold.
 
 dedupe is the closest rival on accuracy and much the slowest: on the synthetic customer file at
-20,134 records it scored **97.75** against custmatch's 97.38, in 499 seconds and 8.5 GB
-against 5.4 seconds and 0.35 GB, and its peak memory was 4.0 to 9.2 GB on the six datasets of
-1,000 to 50,578 records. A million records was not attempted on a 16 GB laptop.
+20,134 records it scored **97.65** against custmatch's 97.38, in 204 seconds and 27.8 GB
+against 4.3 seconds and 0.34 GB. It runs a process per core and its memory follows: on the
+earlier 10-core, 16 GB laptop the same run took 499 seconds and 8.5 GB (scoring 97.75; it
+samples without a seed), and its peak memory there was 4.0 to 9.2 GB on the six datasets of
+1,000 to 50,578 records. A million records was not attempted.
 
 Caveats. The synthetic file was generated for this project, so its difficulties - placeholders,
 households, sparse records - are the ones custmatch was designed around. An expert could

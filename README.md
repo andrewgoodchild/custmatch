@@ -93,12 +93,12 @@ and households custmatch was built for - its home ground:
   97.99 clustered F1 where Splink scores 78.88, and against a CDP's exact-identifier matching it
   finds 22 to 26 more points of the true matches.
 - **It keeps going.** Accuracy holds as the file grows - 97.99 at a million records, 96.89 at
-  ten million, on one machine. [dedupe](https://github.com/dedupeio/dedupe), about as accurate on 20,134 records (97.75), took 499
-  seconds and 8.5 GB there against custmatch's 5.4 seconds and 0.35 GB, so a million records was
-  out of reach on the same 16 GB laptop.
+  ten million, on one machine. [dedupe](https://github.com/dedupeio/dedupe), about as accurate on 20,134 records (97.65), took 204
+  seconds and 27.8 GB there against custmatch's 4.3 seconds and 0.34 GB, so a million records was
+  out of reach on the same 64 GB laptop.
 - **Modest memory.** A million records peak at 3.60 GB on a laptop (Splink: 9.40 GB); ten million
   at 34.0 GB, about 3.4 GB per million, so a 16 GB laptop holds about four million. dedupe
-  needed 8.5 GB for 20,134 records.
+  needed 27.8 GB for 20,134 records, running a process per core (8.5 GB with 10 cores).
 - **An ensemble for hard files.** `"matcher_model": "forest_catboost"` averages the random forest
   with CatBoost: +0.41 clustered F1 on average over six datasets, +1.3 on dense genealogy records
   and +1.8 on sparse sign-ups, never more than 0.03 behind on any dataset, for runs about 30%
