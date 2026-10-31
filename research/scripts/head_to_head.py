@@ -21,6 +21,7 @@ Writes research/results/head_to_head.json.
 """
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -38,7 +39,14 @@ class Stopped(Exception):
     """A tool went over the memory or time limit and was stopped: (reason, seconds, peak GB)."""
 
 
-LIMIT_GB, LIMIT_SECONDS = 10, 3600         # a 16 GB laptop: past 10 GB the machine itself is at risk
+def _ram_gb():
+    import psutil
+    return psutil.virtual_memory().total / 2 ** 30
+
+
+# past 10 GB on a 16 GB laptop the machine itself is at risk; the same share of RAM elsewhere
+LIMIT_GB, LIMIT_SECONDS = round(_ram_gb() * 10 / 16), 3600
+MACHINE = f"one laptop (Apple silicon, {os.cpu_count()} cores, {_ram_gb():.0f} GB), both tools, one at a time"
 
 
 def run_measured(cmd):
@@ -309,7 +317,7 @@ def main():
     t0 = time.time()
     cfg, lp, n = prepare(a.copies, work)
     res = {"records": n, "copies": a.copies, "prepare_seconds": round(time.time() - t0, 1),
-           "machine": "one laptop (Apple silicon), both tools, one at a time"}
+           "machine": MACHINE}
     allres = json.loads(OUT.read_text()) if OUT.exists() else {}
     if a.splink_only or a.dedupe:
         res = allres[f"copies_{a.copies}"]

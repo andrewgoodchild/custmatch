@@ -120,18 +120,18 @@
  "copies_50": {
   "records": 1006700,
   "copies": 50,
-  "prepare_seconds": 17.7,
-  "machine": "one laptop (Apple silicon), both tools, one at a time",
+  "prepare_seconds": 14.8,
+  "machine": "one laptop (Apple silicon, 18 cores, 64 GB), both tools, one at a time",
   "custmatch": {
-   "wall_seconds": 71.0,
-   "peak_memory_gb": 3.64,
+   "wall_seconds": 40.4,
+   "peak_memory_gb": 3.6,
    "stage_seconds": {
-    "load and profile": 7.16,
-    "blocking (2,437,950 candidate pairs)": 3.32,
-    "forest: cross-fitted clustered F1 97.75": 27.14,
-    "threshold (clustered, in-cluster precision check)": -0.0,
-    "matcher chosen": -0.0,
-    "households, golden records, outputs": 31.48
+    "load and profile": 8.24,
+    "blocking (2,437,950 candidate pairs)": 1.97,
+    "forest: cross-fitted clustered F1 97.75": 7.22,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "large blocks checked: 0 of 600 kept, 0 pairs added": 0.1,
+    "households, golden records, outputs": 21.63
    },
    "clustered": {
     "precision": 98.22,
@@ -144,13 +144,13 @@
   },
   "splink_em": {
    "seconds": {
-    "train": 30.6,
-    "predict": 499.2,
-    "cluster": 1.7
+    "train": 16.0,
+    "predict": 203.0,
+    "cluster": 1.0
    },
-   "splink_seconds": 531.5,
-   "wall_seconds_with_loading_and_export": 534.3,
-   "peak_memory_gb": 5.33,
+   "splink_seconds": 220.0,
+   "wall_seconds_with_loading_and_export": 222.2,
+   "peak_memory_gb": 32.98,
    "candidate_pairs_above_0.001": 24753610,
    "threshold_match_weight": 34.0,
    "threshold_match_probability": 0.9999999999417923,
@@ -166,13 +166,13 @@
   },
   "splink_m_from_labels": {
    "seconds": {
-    "train": 13.2,
-    "predict": 489.1,
-    "cluster": 1.4
+    "train": 8.6,
+    "predict": 201.1,
+    "cluster": 0.9
    },
-   "splink_seconds": 503.7,
-   "wall_seconds_with_loading_and_export": 505.8,
-   "peak_memory_gb": 5.59,
+   "splink_seconds": 210.6,
+   "wall_seconds_with_loading_and_export": 212.9,
+   "peak_memory_gb": 34.43,
    "candidate_pairs_above_0.001": 24692128,
    "threshold_match_weight": 31.0,
    "threshold_match_probability": 0.9999999995343387,
@@ -188,13 +188,13 @@
   },
   "splink_em_capped": {
    "seconds": {
-    "train": 28.6,
-    "predict": 6.6,
-    "cluster": 1.8
+    "train": 16.9,
+    "predict": 2.8,
+    "cluster": 1.0
    },
-   "splink_seconds": 37.0,
-   "wall_seconds_with_loading_and_export": 38.9,
-   "peak_memory_gb": 5.7,
+   "splink_seconds": 20.7,
+   "wall_seconds_with_loading_and_export": 21.7,
+   "peak_memory_gb": 12.07,
    "candidate_pairs_above_0.001": 14491230,
    "threshold_match_weight": 34.0,
    "threshold_match_probability": 0.9999999999417923,
@@ -210,13 +210,13 @@
   },
   "splink_m_from_labels_capped": {
    "seconds": {
-    "train": 13.9,
-    "predict": 6.1,
-    "cluster": 1.6
+    "train": 9.2,
+    "predict": 2.8,
+    "cluster": 1.0
    },
-   "splink_seconds": 21.6,
-   "wall_seconds_with_loading_and_export": 23.4,
-   "peak_memory_gb": 5.96,
+   "splink_seconds": 13.0,
+   "wall_seconds_with_loading_and_export": 14.0,
+   "peak_memory_gb": 9.4,
    "candidate_pairs_above_0.001": 14504210,
    "threshold_match_weight": 31.0,
    "threshold_match_probability": 0.9999999995343387,
@@ -371,5 +371,123 @@
     "adjusted_rand": 0.9775
    }
   }
+ },
+ "copies_50_m1_pro_16gb": {
+  "records": 1006700,
+  "copies": 50,
+  "prepare_seconds": 17.7,
+  "machine": "one laptop (Apple M1 Pro, 16 GB), both tools, one at a time",
+  "custmatch": {
+   "wall_seconds": 71.0,
+   "peak_memory_gb": 3.64,
+   "stage_seconds": {
+    "load and profile": 7.16,
+    "blocking (2,437,950 candidate pairs)": 3.32,
+    "forest: cross-fitted clustered F1 97.75": 27.14,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "matcher chosen": -0.0,
+    "households, golden records, outputs": 31.48
+   },
+   "clustered": {
+    "precision": 98.22,
+    "recall": 97.75,
+    "f1": 97.99,
+    "clusters": 543907,
+    "largest_cluster": 7,
+    "adjusted_rand": 0.9799
+   }
+  },
+  "splink_em": {
+   "seconds": {
+    "train": 30.6,
+    "predict": 499.2,
+    "cluster": 1.7
+   },
+   "splink_seconds": 531.5,
+   "wall_seconds_with_loading_and_export": 534.3,
+   "peak_memory_gb": 5.33,
+   "candidate_pairs_above_0.001": 24753610,
+   "threshold_match_weight": 34.0,
+   "threshold_match_probability": 0.9999999999417923,
+   "clustered": {
+    "precision": 75.28,
+    "recall": 71.16,
+    "f1": 73.16,
+    "clusters": 632870,
+    "largest_cluster": 39,
+    "adjusted_rand": 0.7316
+   },
+   "clustered_check_connected_components": 73.16
+  },
+  "splink_m_from_labels": {
+   "seconds": {
+    "train": 13.2,
+    "predict": 489.1,
+    "cluster": 1.4
+   },
+   "splink_seconds": 503.7,
+   "wall_seconds_with_loading_and_export": 505.8,
+   "peak_memory_gb": 5.59,
+   "candidate_pairs_above_0.001": 24692128,
+   "threshold_match_weight": 31.0,
+   "threshold_match_probability": 0.9999999995343387,
+   "clustered": {
+    "precision": 66.47,
+    "recall": 78.03,
+    "f1": 71.79,
+    "clusters": 599850,
+    "largest_cluster": 200,
+    "adjusted_rand": 0.7179
+   },
+   "clustered_check_connected_components": 71.79
+  },
+  "splink_em_capped": {
+   "seconds": {
+    "train": 28.6,
+    "predict": 6.6,
+    "cluster": 1.8
+   },
+   "splink_seconds": 37.0,
+   "wall_seconds_with_loading_and_export": 38.9,
+   "peak_memory_gb": 5.7,
+   "candidate_pairs_above_0.001": 14491230,
+   "threshold_match_weight": 34.0,
+   "threshold_match_probability": 0.9999999999417923,
+   "clustered": {
+    "precision": 75.28,
+    "recall": 71.16,
+    "f1": 73.16,
+    "clusters": 632870,
+    "largest_cluster": 39,
+    "adjusted_rand": 0.7316
+   },
+   "clustered_check_connected_components": 73.16
+  },
+  "splink_m_from_labels_capped": {
+   "seconds": {
+    "train": 13.9,
+    "predict": 6.1,
+    "cluster": 1.6
+   },
+   "splink_seconds": 21.6,
+   "wall_seconds_with_loading_and_export": 23.4,
+   "peak_memory_gb": 5.96,
+   "candidate_pairs_above_0.001": 14504210,
+   "threshold_match_weight": 31.0,
+   "threshold_match_probability": 0.9999999995343387,
+   "clustered": {
+    "precision": 79.75,
+    "recall": 78.03,
+    "f1": 78.88,
+    "clusters": 602280,
+    "largest_cluster": 21,
+    "adjusted_rand": 0.7888
+   },
+   "clustered_check_connected_components": 78.88
+  },
+  "splink_version": [
+   "5.0.0",
+   "1.5.6"
+  ]
  }
 }
