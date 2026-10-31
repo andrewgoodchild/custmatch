@@ -19,8 +19,9 @@ import numpy as np
 import pandas as pd
 
 from . import explain, identity, incremental, io, monitor, schema
-from .core import components, features, profile_contacts, relay_records, service_records
-from .golden import build_golden
+from .core import (components, components_by_threshold, features, near_threshold, pair_slices, profile_contacts,
+                   relay_records, service_records, threshold_bands)
+from .golden import golden_table, set_golden
 
 THRESHOLDS = np.round(np.concatenate([np.arange(0.05, 0.96, 0.05), [0.97, 0.98, 0.99]]), 3)
 GOLDEN_FIELDS = ["first_name", "middle_initial", "last_name", "date_of_birth", "addr_number",
@@ -80,15 +81,16 @@ def _scores(tp, fp, fn):
             "f1": round(200 * tp / (2 * tp + fp + fn), 2) if tp else 0.0}
 
 
-def cluster_coherence(n, pairs, score, t, predict, seed=0, k=2000):
+def cluster_coherence(n, pairs, score, t, predict, seed=0, k=2000, cc=None):
     """Estimated precision of the clusters at threshold t, without labels: sample record pairs
     INSIDE the predicted clusters (weighted by the pairs each cluster implies, so big clusters
     count for what they claim) and return the share the model itself calls a match.
 
     Labelled pairs are drawn from blocking candidates, so they cannot see the false pairs that
     chaining creates between records that were never candidates. On historical_50k (~10 records
-    per person) that hid a 242-record false cluster behind a 91.9 labelled-pair F1."""
-    cc = components(n, pairs, score > t)
+    per person) that hid a 242-record false cluster behind a 91.9 labelled-pair F1.
+    cc: components(n, pairs, score > t) when already computed."""
+    cc = components(n, pairs, score > t) if cc is None else cc
     sizes = np.bincount(cc)
     implied = sizes * (sizes - 1) / 2
     if implied.sum() == 0:
@@ -104,6 +106,15 @@ def cluster_coherence(n, pairs, score, t, predict, seed=0, k=2000):
     return float(np.mean(predict(np.c_[np.minimum(i, j), np.maximum(i, j)].astype(np.int32)) > 0.5))
 
 
+def _fold_trees(model, cfg):
+    """A fold model with "fold_trees" trees, when set and the model is a random forest: the fold
+    models only choose the threshold. An experiment (research/scripts/fold_trees.py)."""
+    trees = cfg.get("fold_trees")
+    if trees and hasattr(model, "n_estimators"):
+        model.set_params(n_estimators=int(trees))
+    return model
+
+
 def _redact_keys(report):
     """The blocking report without key values (a block's key is a name, email or phone)."""
     if isinstance(report, dict):
@@ -114,19 +125,22 @@ def _redact_keys(report):
 
 
 def choose_threshold(n, pairs, lab_pairs, ly, fold_scores, grid, coherence=None, min_precision=None,
-                     rule="middle", weight=None):
+                     rule="middle", weight=None, banded=False):
     """Closure-aware threshold from cross-fitted scores: fold_scores = [(candidate scores from a
     model that did not see these labels, held-out mask)]. Ties go to the stricter threshold.
     coherence(t) -> estimated cluster precision; when given it replaces the labelled pairs'
     precision, which cannot see chaining between records that were never candidates.
     weight: the candidate pairs each labelled pair stands for (a stratified draw); None counts
-    every pair once."""
+    every pair once. banded: the fold scores are core.threshold_bands of the scores in this grid.
+    """
     w = np.ones(len(ly)) if weight is None else np.asarray(weight, dtype=float)
     counts = {t: np.zeros(3) for t in grid}
     for s, held in fold_scores:
         hi, hj, hy, hw = lab_pairs[held, 0], lab_pairs[held, 1], ly[held], w[held]
+        by_t = components_by_threshold(n, pairs, None, grid, band=s) if banded else \
+            components_by_threshold(n, pairs, s, grid)
         for t in grid:
-            cc = components(n, pairs, s > t)
+            cc = by_t.pop(t)
             same = cc[hi] == cc[hj]
             counts[t] += [hw[same & hy].sum(), hw[same & ~hy].sum(), hw[~same & hy].sum()]
     sweep = {t: _scores(*c) for t, c in counts.items()}
@@ -196,12 +210,24 @@ def recut_large(n, pairs, score, th, customers, max_cluster, grid):
 def confidence(n, pairs, score, labels):
     """Per record: the mean score of its links inside its customer; for a record on its own,
     one minus its strongest candidate link (how sure we are it has no match)."""
-    same = labels[pairs[:, 0]] == labels[pairs[:, 1]]
+    labels = np.asarray(labels)
+    if len(labels) and labels.min() >= 0 and labels.max() < 2 ** 31:
+        labels = labels.astype(np.int32)                # the two gathers at half the memory
+    slices = pair_slices(len(pairs))
+    same = np.empty(len(pairs), bool)
+    for lo, hi in slices:
+        same[lo:hi] = labels[pairs[lo:hi, 0]] == labels[pairs[lo:hi, 1]]
     tot, cnt, best = np.zeros(n), np.zeros(n), np.zeros(n)
+    # a slice of pairs at a time (192M pairs at five million records: each masked copy of every
+    # pair was 0.8-1.5 GB), in the order one pass over all of them takes - every first record,
+    # then every second - so the sums are the same to the bit
     for col in (0, 1):
-        np.add.at(tot, pairs[same, col], score[same])
-        np.add.at(cnt, pairs[same, col], 1)
-        np.maximum.at(best, pairs[~same, col], score[~same])
+        for lo, hi in slices:
+            m, s = same[lo:hi], score[lo:hi]
+            idx = pairs[lo:hi, col][m]
+            np.add.at(tot, idx, s[m])
+            np.add.at(cnt, idx, 1)
+            np.maximum.at(best, pairs[lo:hi, col][~m], s[~m])
     return np.where(cnt > 0, tot / np.maximum(cnt, 1), 1 - best)
 
 
@@ -285,44 +311,53 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         raise io.ConfigError("blocking produced no candidate pairs: no two records share a name, "
                              "address, contact or extra blocking key - check the column mapping")
 
-    from .models import factory, p_match
+    from .models import factory, p_match, score_pairs
     X_lab = features(df, lab_pairs, profiles, **fopts)
-    X_cand = features(df, pairs, profiles, **fopts)
     weight_scorer = None                         # "match_weight_feature": custmatch/matchweight.py
     # opt-in ("match_weight_feature": true); a reused model (--model) keeps whatever its run did
-    uses_weight = bool(cfg.get("match_weight_feature")) if saved is None else bool(saved.get("match_weight_model"))
-    if uses_weight and saved is not None:
+    if saved is not None and saved.get("match_weight_model"):
         from .matchweight import load_scorer
         weight_scorer = load_scorer(df, profiles, saved["match_weight_model"])
-        X_cand = np.column_stack([X_cand, weight_scorer.weights(pairs)])
-        uses_weight = False                      # scored above; no fitting below
-    if uses_weight:
-        from . import matchweight
-        (w_cand, w_lab), weight_scorer = matchweight.weights(df, profiles, [pairs, lab_pairs], cfg, seed,
-                                                             return_scorer=True)
-        X_cand, X_lab = np.column_stack([X_cand, w_cand]), np.column_stack([X_lab, w_lab])
+    elif saved is None and cfg.get("match_weight_feature"):
+        from . import matchweight                # m and u fitted on the candidate pairs
+        weight_scorer = matchweight.Scorer(df, profiles, matchweight.fit(df, profiles, pairs, cfg, seed))
+        X_lab = np.column_stack([X_lab, weight_scorer.weights(lab_pairs)])
+
+    def model_input(p, X):
+        return X if weight_scorer is None else np.column_stack([X, weight_scorer.weights(p)])
+
+    def score_all(models, p, keep=None):
+        return score_pairs(models, df, p, profiles, fopts, None if weight_scorer is None else model_input, keep)
+
     # pairs chosen by active learning are deliberately unrepresentative (the hard ones): they
     # train every fold but never choose the threshold, which must be judged on random pairs
     folds = np.where(active, -1, np.random.default_rng(seed).permutation(len(ly)) % FOLDS)
 
     def fit_matcher(make):
         """Cross-fitted fold scores, the final model, and the closure-aware threshold."""
-        fold_scores = [(p_match(make().fit(X_lab[folds != k], ly[folds != k]), X_cand), folds == k)
-                       for k in range(FOLDS)]
+        fold_models = [_fold_trees(make(), cfg).fit(X_lab[folds != k], ly[folds != k]) for k in range(FOLDS)]
         final = make().fit(X_lab, ly)
-        prob = p_match(final, X_cand)
+        # the fold models' scores only choose the threshold: kept as their bands in its grid
+        *fold_bands, prob = score_all(fold_models + [final], pairs,
+                                      keep=[lambda p: threshold_bands(p, THRESHOLDS)] * FOLDS + [None])
+        fold_scores = [(b, folds == k) for k, b in enumerate(fold_bands)]
         # the coherence check scores pairs inside predicted customers, most of which were never
         # candidates; the match weight scores any pair, so the full model judges them
 
         def predict(p):
-            X = features(df, p, profiles, **fopts)
-            if weight_scorer is not None:
-                X = np.column_stack([X, weight_scorer.weights(p)])
-            return p_match(final, X)
+            return p_match(final, model_input(p, features(df, p, profiles, **fopts)))
+        by_t = {}
+
+        def final_cc(t):
+            # the final model's components at every threshold, from one pass, when first asked
+            if not by_t:
+                by_t.update(components_by_threshold(n, pairs, prob, THRESHOLDS))
+            return by_t.pop(t, None)
         th, held_out = choose_threshold(n, pairs, lab_pairs, ly, fold_scores, THRESHOLDS,
-                                        coherence=lambda t: cluster_coherence(n, pairs, prob, t, predict, seed),
+                                        coherence=lambda t: cluster_coherence(n, pairs, prob, t, predict, seed,
+                                                                              cc=final_cc(t)),
                                         min_precision=cfg.get("min_precision"),
-                                        rule=cfg.get("threshold_rule", "middle"), weight=lw)
+                                        rule=cfg.get("threshold_rule", "middle"), weight=lw, banded=True)
         return {"final": final, "prob": prob, "predict": predict, "th": th, "held_out": held_out}
 
     if saved is None:                             # the saved model is reused, not refitted
@@ -334,20 +369,19 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         fit = fit_matcher(make)
         stage(f"{model_choice}: cross-fitted clustered F1 {fit['held_out']['f1']}")
         final_forest, prob, predict, th, held_out = (fit[k] for k in ("final", "prob", "predict", "th", "held_out"))
+        del fit
     else:
         final_forest, th = saved["forest"], float(saved["threshold"])
         model_choice = saved.get("matcher_model", "forest")
-        prob = p_match(final_forest, X_cand)
+        prob, = score_all([final_forest], pairs)
 
         def predict(p):
-            X = features(df, p, profiles, **fopts)
-            if weight_scorer is not None:
-                X = np.column_stack([X, weight_scorer.weights(p)])
-            return p_match(final_forest, X)
+            return p_match(final_forest, model_input(p, features(df, p, profiles, **fopts)))
         held_out = {}
 
     stage("threshold (clustered, in-cluster precision check)")
     score = prob
+    del prob                                      # one name for the scores: a step that changes them frees the old
     skipped = block_report.pop("_skipped", [])
     if blocking.large_block_check_on(cfg) and skipped:
         # oversized blocks that are one real entity (an organisation) are compared after all
@@ -356,14 +390,11 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             have = pairs[:, 0].astype(np.int64) * n + pairs[:, 1]
             extra = extra[~np.isin(extra[:, 0].astype(np.int64) * n + extra[:, 1], have)]
         if len(extra):
-            X_extra = features(df, extra, profiles, **fopts)
-            if weight_scorer is not None:
-                X_extra = np.column_stack([X_extra, weight_scorer.weights(extra)])
-            pairs, score = np.vstack([pairs, extra]), np.concatenate([score, p_match(final_forest, X_extra)])
-            X_cand = np.vstack([X_cand, X_extra])
+            pairs, score = np.vstack([pairs, extra]), np.concatenate([score, *score_all([final_forest], extra)])
         block_report["large_blocks_checked"] = rows
         block_report["large_block_pairs_added"] = int(len(extra))
         stage(f"large blocks checked: {sum(r['kept'] for r in rows)} of {len(rows)} kept, {len(extra):,} pairs added")
+    del skipped
     # decisions people made, and identifiers that settle a match, override the model
     keys = io.key(df)
     must, cannot = stewardship.load_overrides(cfg, Path(config_path).parent, keys)
@@ -374,14 +405,21 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         trusted = np.unique(np.vstack([trusted, cookie_pairs]), axis=0)
     if len(trusted):
         must = np.unique(np.vstack([must, trusted]), axis=0)
+    n_scored = len(pairs)                          # pairs after these are must-links blocking did not propose
     if len(must) or len(cannot):
-        n_before = len(pairs)
         pairs, score = stewardship.apply_decisions(pairs, score, must, cannot)
-        if len(pairs) > n_before:                  # must-links blocking did not propose
-            extra = features(df, pairs[n_before:], profiles, **fopts)
-            if X_cand.shape[1] > extra.shape[1]:
-                extra = np.column_stack([extra, np.zeros((len(extra), X_cand.shape[1] - extra.shape[1]))])
-            X_cand = np.vstack([X_cand, extra])
+
+    def pair_features(idx):
+        """The features of pairs[idx] for review.csv and links.csv, which need only those near or
+        above the threshold: recomputed, not kept for every candidate pair. A must-link's match
+        weight is 0, as it was never scored."""
+        X = features(df, pairs[idx], profiles, **fopts)
+        if weight_scorer is None:
+            return X
+        w = np.zeros(len(idx), np.float32)
+        scored = idx < n_scored
+        w[scored] = weight_scorer.weights(pairs[idx[scored]])
+        return np.column_stack([X, w])
     # stability as records arrive (docs/guide.md "Stable matches"): keep the previous decision
     # unless evidence moves by "stability_margin"; hold records between two people
     # measured (research/scripts/order_dependence.py): 0.05 halved partner changes and removed the
@@ -392,7 +430,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             prev_recs = pd.read_parquet(prev_state / "records.parquet", columns=["source", "record_id"])
             score = stewardship.hysteresis(pairs, score, keys, pd.read_parquet(prev_state / "links.parquet"),
                                            io.key(prev_recs), float(cfg.get("stability_margin", 0.05)))
-    twins = np.zeros(len(pairs), dtype=bool)
+    twins = None                                  # a byte a pair: made only when asked for
     if cfg.get("twin_guard"):                       # twins are kept apart; a steward's "same" still wins
         twins = stewardship.twin_pairs(df, pairs, hashed="first_name" in cfg.get("hash_fields", []))
         if len(must):
@@ -423,7 +461,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     households, _ = hh_mod.assign(df, customers, profiles, postcode_join=bool(cfg.get("household_postcode_join")))
     rank = {s: k for k, s in enumerate(cfg.get("source_priority", []))}
     fields = [f for f in cfg.get("golden_fields", GOLDEN_FIELDS) if f in df.columns]
-    golden = build_golden(df, customers, cfg.get("survivorship", "most_complete"), fields, rank)
+    golden = golden_table(df, customers, cfg.get("survivorship", "most_complete"), fields, rank)
 
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -437,30 +475,29 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         _, cust_id = np.unique(customers, return_inverse=True)
         events = stewardship.carry_ids(keys, customers, {})[1]
     stewardship.write_history(out, events, previous_dir)
+    if cfg.get("contact_confidence") is not None:
+        from .golden import safe_contacts
+        strong = (score >= float(cfg["contact_confidence"])) & (customers[pairs[:, 0]] == customers[pairs[:, 1]])
+        per_customer, per_record = safe_contacts(df, customers, pairs[strong], cfg.get("survivorship", "most_complete"),
+                                                 rank, classes=profiles)
+        set_golden(golden, per_customer)
+        if not cfg.get("minimal_outputs"):
+            pd.DataFrame({"source": df.source, "record_id": df.record_id, "customer_id": cust_id,
+                          **per_record}).to_csv(out / "contacts.csv", index=False)
+    first = pd.Series(np.arange(n)).groupby(customers).first()      # a record of each customer
+    golden.insert(0, "customer_id", cust_id[first.reindex(golden.index).to_numpy()])
+    minimal = bool(cfg.get("minimal_outputs"))        # no file that repeats personal data
+    if not minimal:
+        golden.sort_values("customer_id").to_csv(out / "golden_records.csv", index=False)
+    del golden, first                             # a row per customer: millions of rows
     band = float(cfg.get("review_band", 0.1))
-    stewardship.review_pairs(pairs, score, th, band, keys, X_cand, df, profiles).to_csv(out / "review.csv", index=False)
+    stewardship.review_pairs(pairs, score, th, band, keys, pair_features, df, profiles).to_csv(out / "review.csv", index=False)
     _, hh_id = np.unique(households, return_inverse=True)
     pd.DataFrame({"source": df.source, "record_id": df.record_id,
                   "customer_id": cust_id, "household_id": hh_id,
                   "confidence": np.round(confidence(n, pairs, score, customers), 4)}
                  ).to_csv(out / "clusters.csv", index=False)
     identity.write_cookies(out, cookie_table, cust_id, minimal=bool(cfg.get("minimal_outputs")))
-    if cfg.get("contact_confidence") is not None:
-        from .golden import safe_contacts
-        strong = (score >= float(cfg["contact_confidence"])) & (customers[pairs[:, 0]] == customers[pairs[:, 1]])
-        per_customer, per_record = safe_contacts(df, customers, pairs[strong], cfg.get("survivorship", "most_complete"),
-                                                 rank, classes=profiles)
-        for lab, vals in per_customer.items():
-            golden[lab].update({f: v for f, v in vals.items() if f in golden[lab]})
-        if not cfg.get("minimal_outputs"):
-            pd.DataFrame({"source": df.source, "record_id": df.record_id, "customer_id": cust_id,
-                          **per_record}).to_csv(out / "contacts.csv", index=False)
-    lab_to_id = dict(zip(customers.tolist(), cust_id.tolist()))
-    g = pd.DataFrame([{"customer_id": lab_to_id[lab], **vals}
-                      for lab, vals in golden.items()]).sort_values("customer_id")
-    minimal = bool(cfg.get("minimal_outputs"))        # no file that repeats personal data
-    if not minimal:
-        g.to_csv(out / "golden_records.csv", index=False)
     linked = score > th
     state_links = pd.DataFrame({"a": keys[pairs[linked, 0]], "b": keys[pairs[linked, 1]],
                                 "score": score[linked].astype(float)})
@@ -468,6 +505,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     incremental.save_state(out, df, cust_id, final_forest, th, cfg, rules,
                            match_weight_model=weight_scorer.model_json if weight_scorer is not None else None,
                            matcher_model=model_choice, links=state_links[same_customer])
+    del state_links, linked, same_customer
     from . import audit                           # pairs a person can label to audit this run (custmatch audit)
     audit.save_pool(out / incremental.STATE, keys, pairs, score, cust_id, seed)
     if cfg.get("minimal_outputs") or cfg.get("hash_fields"):
@@ -486,8 +524,9 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     if cfg.get("suspect_records", True) and not minimal:
         from . import suspect
         suspect.table(df, suspect_flags).to_csv(out / "suspect_records.csv", index=False)
-    link_table = explain.links(df, profiles, pairs, X_cand, score, th, io.key(df), cust_id)
-    link_table.to_csv(out / "links.csv", index=False)
+    n_links, n_bridges = explain.write_links(out / "links.csv", df, profiles, pairs, pair_features, score, th, keys,
+                                             cust_id)
+    clear_caches()                                  # the feature caches the review and links rebuilt
     if not minimal:
         pd.DataFrame([{"field": f, "value": v, "class": c, "weight": round(w, 3)}
                       for f, prof in profiles.items() for v, (c, w) in prof.items() if c != "personal"]
@@ -503,7 +542,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         "model_reused_from": str(model_dir) if model_dir is not None else None,
         "overrides": {"must_link": int(len(must)), "cannot_link": int(len(cannot)),
                       "trusted_id_links": int(len(trusted)), "links_cut_to_keep_cannot_links_apart": int(cut)},
-        "review_pairs": int(np.sum(np.abs(score - th) < band)),
+        "review_pairs": len(near_threshold(score, th, band)),
         **({"cookies": cookie_counts} if cookie_counts else {}),
         **({"same_source_pairs_split": split_by_source} if cfg.get("unique_sources") else {}),
         "twin_pairs_kept_apart": int((twins & (score > th * 0.99)).sum()) if cfg.get("twin_guard") else 0,
@@ -513,7 +552,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         "threshold_sweep": held_out.get("sweep"),
         "customers": int(len(sizes)), "largest_customer": int(sizes.max()),
         "households": int(len(np.unique(hh_id))),
-        "links": int(len(link_table)), "bridge_links": int(link_table.is_bridge.sum()),
+        "links": n_links, "bridge_links": n_bridges,
         "customers_recut": recut,
         "placeholder_names": int(fake_name.sum()), "placeholder_addresses": int(fake_addr.sum()),
         "placeholder_dates_of_birth": int(fake_dob.sum()),

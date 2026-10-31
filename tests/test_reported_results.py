@@ -1396,3 +1396,53 @@ def test_auto_adaptive_and_stratified_label_claims():
     h = load("home_data_benchmark.json")
     assert (f"the childcare sites from 86.95 to {h['dedupe_csv_example']['custmatch_1000']['f1']:.2f}, the patent "
             f"applicants from 75.88 to {h['dedupe_patent_example']['custmatch_1000']['f1']:.2f}") in text
+
+
+def test_ncvr_memory_claims():
+    """docs/report/06 "Memory and time on one machine", the guide and the changelog: peak memory and time of
+    one NCVR run before and after this release's changes, and with macOS's allocator cache off,
+    from ncvr_memory.json."""
+    r = load("ncvr_memory.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    flat = _flat(GUIDE + (ROOT / "CHANGELOG.md").read_text())
+    label = {"numpy/before": "Before", "numpy": "Now", "numpy/malloc_large_cache_0": "Now, `MallocLargeCache=0` (macOS)"}
+    gb = lambda x: f"{x['peak_memory_gb']:.1f}".removesuffix(".0")      # noqa: E731
+    for n in (1428005, 5000000):
+        runs = {k: r[f"records_{n}/{k}"] for k in label}
+        first = runs["numpy/before"]
+        assert runs["numpy"]["malloc_large_cache"] is None and runs["numpy/malloc_large_cache_0"]["malloc_large_cache"] == "0"
+        for k, x in runs.items():
+            assert x["clustered"] == first["clustered"] and x["candidate_pairs"] == first["candidate_pairs"], (n, k)
+            block = next(s for name, s in x["stage_seconds"].items() if name.startswith("blocking"))
+            assert (f"| {label[k]} | {x['peak_memory_gb']:.1f} GB | {block:.0f} s | {x['seconds'] / 60:.1f} min |") in text, (n, k)
+        off, on = runs["numpy/malloc_large_cache_0"], runs["numpy"]
+        assert off["peak_memory_gb"] < on["peak_memory_gb"] < first["peak_memory_gb"], n
+        # "the peak falls by a fifth to over a third, and the run takes 10 to 20% longer"
+        assert 0.195 <= 1 - off["peak_memory_gb"] / on["peak_memory_gb"] <= 0.40, n   # 20.0% at 5M
+        assert 1.10 <= off["seconds"] / on["seconds"] <= 1.20, n
+    full = {k: r[f"records_5000000/{k}"] for k in label}
+    one = {k: r[f"records_1428005/{k}"] for k in label}
+    assert (f"a run takes {full['numpy']['seconds'] / 60:.1f} minutes against {full['numpy/before']['seconds'] / 60:.1f}, "
+            f"at a peak of {gb(full['numpy'])} GB against {gb(full['numpy/before'])} GB") in flat
+    assert (f"lowers the peaks to {gb(full['numpy/malloc_large_cache_0'])} GB and "
+            f"{gb(one['numpy/malloc_large_cache_0'])} GB") in flat
+    assert (f"lowers those peaks to {gb(full['numpy/malloc_large_cache_0'])} GB and "
+            f"{gb(one['numpy/malloc_large_cache_0'])} GB") in flat
+    duck = r["records_5000000/duckdb"]
+    assert duck["peak_memory_gb"] > on["peak_memory_gb"]
+    assert f"peaked at {duck['peak_memory_gb']:.1f} GB on the full file" in text
+
+
+def test_fold_trees_claims():
+    """docs/report/06 "Fewer trees in the fold models": from fold_trees.json."""
+    r = load("fold_trees.json")
+    text = _flat((DOCS / "report" / "06-blocking-and-scale.md").read_text())
+    runs = [b for ds, seeds in r.items() if ds != "ncvr_1m" for s in seeds.values() for b in s.values()]
+    change = [b["100"]["f1"] - b["300"]["f1"] for b in runs]
+    same = sum(abs(c) < 1e-9 for c in change)
+    assert f"100 trees left {same} of the {len(runs)} runs' clustered F1 unchanged, the rest within " \
+           f"{min(change):.2f} to +{max(change):.2f}" in text
+    n = r["ncvr_1m"]["active_300_700"]
+    assert (f"({n['300']['forest_seconds']:.1f} s to {n['100']['forest_seconds']:.1f} s) but moved the threshold "
+            f"from {n['300']['threshold']:g} to {n['100']['threshold']:g} and cost "
+            f"{n['300']['f1'] - n['100']['f1']:.2f} points ({n['300']['f1']:.2f} to {n['100']['f1']:.2f})") in text

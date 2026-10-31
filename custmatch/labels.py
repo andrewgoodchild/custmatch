@@ -1,6 +1,9 @@
 """Training labels for the forest: candidate pairs drawn for a person to label, at random or by
 active learning."""
+import hashlib
 import json
+from functools import lru_cache
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -11,11 +14,62 @@ from .core import profile_contacts
 SHOWN = ["first_name", "middle_initial", "last_name", "date_of_birth", "ssn", "email", "phone"]
 
 
-def candidates(df, cfg=None):
-    """Candidate pairs before any labels exist: learned blocking falls back to fixed rules."""
+CACHE_DIR = ".custmatch_cache"
+
+
+def candidates(df, cfg=None, folder=None, profiles=None):
+    """Candidate pairs before any labels exist: learned blocking falls back to fixed rules.
+
+    folder: kept in folder/.custmatch_cache between calls, so each round of `sample --active`
+    does not block the file again (half a round's time on a million records). The file is named
+    by a hash of the loaded records, the config and custmatch's code, so a change to any of them
+    blocks afresh; it holds only the pairs (a .npy array, no pickle), and the round before's file
+    is removed. "cache_candidates": false turns it off."""
     from .blocking import candidates_for
-    profiles = {f: profile_contacts(df, f) for f in ("email", "phone")}
-    return candidates_for(df, profiles, cfg or {})[0]
+    cfg = cfg or {}
+    profiles = profiles or {f: profile_contacts(df, f) for f in ("email", "phone")}
+    if folder is None or cfg.get("cache_candidates") is False:
+        return candidates_for(df, profiles, cfg)[0]
+    import os
+    cache = Path(folder) / CACHE_DIR
+    path = cache / f"candidates-{_candidates_key(df, cfg)}.npy"
+    try:
+        pairs = np.load(path, allow_pickle=False)
+        if pairs.ndim == 2 and pairs.shape[1] == 2 and pairs.dtype == np.int32 and \
+                (not len(pairs) or int(pairs.max()) < len(df)):
+            return pairs
+    except (OSError, ValueError):
+        pass
+    pairs = candidates_for(df, profiles, cfg)[0]
+    try:
+        cache.mkdir(exist_ok=True)
+        part = path.with_name(path.name + ".part")
+        with open(part, "wb") as f:
+            np.save(f, pairs)
+        os.replace(part, path)
+        for old in cache.glob("candidates-*.npy"):
+            if old != path:
+                old.unlink(missing_ok=True)
+    except OSError:
+        pass                                    # a read-only folder: no cache, the same pairs
+    return pairs
+
+
+def _candidates_key(df, cfg):
+    """What blocking depends on: the loaded records, the config and custmatch's own code."""
+    h = hashlib.sha256(_code_hash().encode())
+    h.update(json.dumps(cfg, sort_keys=True, default=str).encode())
+    h.update(json.dumps([list(df.columns), [str(t) for t in df.dtypes]]).encode())
+    h.update(pd.util.hash_pandas_object(df, index=False).to_numpy().tobytes())
+    return h.hexdigest()[:24]
+
+
+@lru_cache(maxsize=1)
+def _code_hash():
+    h = hashlib.sha256()
+    for f in sorted(Path(__file__).parent.rglob("*.py")):
+        h.update(f.name.encode() + f.read_bytes())
+    return h.hexdigest()
 
 
 def record(r, fields=None):
@@ -107,7 +161,7 @@ def sample(config_path, n, out_path, seed=0, stratified=True):
     with the `weight` that keeps the threshold's estimates unbiased; True (the default) draws this
     way, False draws plainly, as every draw did before 0.1.3."""
     df, cfg = io.load(config_path)
-    pairs = candidates(df, cfg)
+    pairs = candidates(df, cfg, Path(out_path).parent)
     rng = np.random.default_rng(seed)
     if stratified and len(pairs) > n:
         pick, weight = stratified_pick(agreement(df, pairs, cfg), n, rng)
@@ -167,8 +221,7 @@ def sample_active(config_path, labels_path, n, out_path, seed=0, mix=0.0, strate
     from .pipeline import read_labels
     df, cfg = io.load(config_path)
     profiles = {f: profile_contacts(df, f) for f in ("email", "phone")}
-    from .blocking import candidates_for
-    pairs = candidates_for(df, profiles, cfg)[0]
+    pairs = candidates(df, cfg, Path(labels_path).parent, profiles)
     fopts = schema.feature_options_for(df, cfg)
     li, lj, ly = read_labels(labels_path, df)
     lab = np.c_[np.minimum(li, lj), np.maximum(li, lj)].astype(np.int32)
@@ -204,9 +257,8 @@ def sample_active(config_path, labels_path, n, out_path, seed=0, mix=0.0, strate
     rf = RandomForestClassifier(n_estimators=300, random_state=seed, n_jobs=-1,
                                 class_weight="balanced_subsample").fit(features(df, lab, profiles, **fopts), ly)
     # scored a chunk at a time: the full feature matrix of every candidate pair is never held
-    from .core import FEATURE_CHUNK
-    p = np.concatenate([p_match(rf, features(df, pairs[s:s + FEATURE_CHUNK], profiles, **fopts))
-                        for s in range(0, len(pairs), FEATURE_CHUNK)]) if len(pairs) else np.zeros(0)
+    from .models import score_pairs
+    p = score_pairs([rf], df, pairs, profiles, fopts)[0] if len(pairs) else np.zeros(0)
     n_random = int(round(n * mix))
     off_rows = np.zeros((0, 2), np.int64)
     if strategy == "disagreement":

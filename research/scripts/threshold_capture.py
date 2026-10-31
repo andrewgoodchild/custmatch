@@ -36,10 +36,10 @@ def _install_hooks():
     """Wrap choose_threshold and cluster_coherence to record their inputs."""
     orig_choose, orig_coh = pipeline.choose_threshold, pipeline.cluster_coherence
 
-    def coh(n, pairs, score, t, predict, seed=0, k=2000):
+    def coh(n, pairs, score, t, predict, seed=0, k=2000, **kw):
         CAP.setdefault("pairs", pairs)
         CAP.setdefault("prob", score)
-        v = orig_coh(n, pairs, score, t, predict, seed, k)
+        v = orig_coh(n, pairs, score, t, predict, seed, k, **kw)
         CAP.setdefault("coherence", {})[float(t)] = float(v)
         return v
 

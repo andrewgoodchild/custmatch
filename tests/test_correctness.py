@@ -62,24 +62,58 @@ def test_a_higher_threshold_only_splits_customers(seed):
 
 # ------------------------------------------------------------------ blocking
 @pytest.mark.parametrize("seed", range(10))
-def test_block_pairs_match_brute_force(seed):
-    from custmatch.blocking import _block_pairs
+def test_block_pairs_match_brute_force(seed, monkeypatch):
+    """generate()'s pairs from its block entries, made over many ranges of records (a small
+    core.PAIR_CHUNK): each pair once and sorted, with each rule's pairs and new pairs."""
+    import pandas as pd
+    from custmatch import core
+    from custmatch.blocking import _pairs_numpy
     rng = np.random.default_rng(seed)
+    monkeypatch.setattr(core, "PAIR_CHUNK", int(rng.integers(1, 50)))
     m = int(rng.integers(0, 600))
-    rule = rng.integers(0, 3, m)
-    key = rng.integers(0, 25, m)
-    rid = rng.permutation(200)[:m] if m <= 200 else rng.integers(0, 200, m)
-    rid = np.array([rid[k] for k in range(m)])
-    got = _block_pairs(rule.astype(np.int64), key.astype(np.int64), rid.astype(np.int64))
-    expected = set()
-    for r in range(3):
-        for k in range(25):
-            members = sorted(set(rid[(rule == r) & (key == k)]))
-            expected |= {(r, a, b) for a, b in combinations(members, 2)}
-    got_set = set(zip(got.rule, got.i, got.j))
-    # a record appearing twice in one block pairs with itself in the generator: never a candidate
-    got_set = {x for x in got_set if x[1] != x[2]}
-    assert got_set == expected
+    table = pd.DataFrame({"rule": rng.integers(0, 3, m), "key": rng.integers(0, 25, m),
+                          "rid": rng.integers(0, 200, m)}).drop_duplicates()
+    pairs, counts, new = _pairs_numpy(*(table[c].to_numpy() for c in ("rule", "key", "rid")), 3, 200)
+    by_rule = [set() for _ in range(3)]
+    for (r, _), g in table.groupby(["rule", "key"]):
+        by_rule[r] |= set(combinations(sorted(g.rid), 2))
+    assert [tuple(p) for p in pairs.tolist()] == sorted(set().union(*by_rule))
+    assert counts.tolist() == [len(s) for s in by_rule]
+    seen, expected_new = set(), []
+    for s in by_rule:
+        expected_new.append(len(s - seen))
+        seen |= s
+    assert new.tolist() == expected_new
+
+
+@pytest.mark.parametrize("seed", range(5))
+def test_link_bridges_match_networkx(seed):
+    """links.csv's is_bridge: the vectorised search finds networkx's bridges, on graphs with
+    trees, cycles, bridges between cycles and isolated records."""
+    from custmatch.explain import _bridges
+    rng = np.random.default_rng(seed)
+    for _ in range(60):
+        n = int(rng.integers(2, 40))
+        e = np.unique(np.sort(rng.integers(0, n, (int(rng.integers(1, 3 * n)), 2)), axis=1), axis=0)
+        e = e[e[:, 0] != e[:, 1]]
+        g = nx.Graph()
+        g.add_edges_from(map(tuple, e.tolist()))
+        bridges = {frozenset(x) for x in nx.bridges(g)}
+        assert _bridges(n, e).tolist() == [frozenset(x) in bridges for x in map(tuple, e.tolist())]
+
+
+def test_components_by_threshold_match_components():
+    from custmatch.core import components_by_threshold, threshold_bands
+    rng = np.random.default_rng(0)
+    for n in (2, 50, 3000):
+        pairs = np.sort(rng.integers(0, n, (3 * n, 2)), axis=1).astype(np.int32)
+        score = rng.random(len(pairs)).round(2)          # ties at the thresholds themselves
+        grid = np.round(np.arange(0.05, 0.96, 0.05), 2)
+        got = components_by_threshold(n, pairs, score, grid)
+        banded = components_by_threshold(n, pairs, None, grid, band=threshold_bands(score, grid))
+        for t in grid:
+            assert np.array_equal(got[t], components(n, pairs, score > t)), (n, t)
+            assert np.array_equal(banded[t], got[t]), (n, t)
 
 
 def test_fixed_rule_blocking_proposes_exactly_the_pairs_sharing_a_key():

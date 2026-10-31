@@ -10,7 +10,6 @@ bridges found 44 for the same effort - with about two records per customer most 
 bridges. On files with many records per customer (docs/report/02-whole-customers.md), bridges matter more,
 so the flag is kept.
 """
-import networkx as nx
 import numpy as np
 import pandas as pd
 
@@ -81,41 +80,79 @@ def _contacts(df, profiles, field, i, j):
 
 
 def _bridges(n_nodes, edges):
-    """Bridge flag per edge. A customer of two records is one link, trivially a bridge; only
-    larger customers need the graph search."""
+    """Bridge flag per edge: removing it would split its customer. From a breadth-first spanning
+    forest: a link outside the forest is on a cycle, so never a bridge; a forest link from p down to
+    c is a bridge unless some other link joins c's subtree to the rest. Each other link (x, y) adds
+    one at x and y and takes two at their lowest common ancestor, so a subtree's total counts the
+    links leaving it. Every step is vectorised, over depths that stay small (networkx's search,
+    used before, was 3.7 s of a million-record run). edges: distinct pairs, no self-links."""
     from scipy.sparse import coo_matrix
-    from scipy.sparse.csgraph import connected_components
-    flag = np.ones(len(edges), bool)
+    from scipy.sparse.csgraph import breadth_first_order, connected_components
+    edges = np.asarray(edges, dtype=np.int64)
     if not len(edges):
-        return flag
+        return np.ones(0, bool)
     g = coo_matrix((np.ones(len(edges)), (edges[:, 0], edges[:, 1])), shape=(n_nodes, n_nodes))
     _, comp = connected_components(g, directed=False)
-    size = np.bincount(comp)
-    # a component whose links form a tree (nodes - 1 edges) has every link a bridge; only those
-    # with a cycle need the graph search (networkx's was 6 s of a million-record run)
-    n_edges = np.bincount(comp[edges[:, 0]], minlength=len(size))
-    cyclic = n_edges > size - 1
-    big = (size[comp[edges[:, 0]]] > 2) & cyclic[comp[edges[:, 0]]]
-    if big.any():
-        gx = nx.Graph()
-        gx.add_edges_from(map(tuple, edges[big].tolist()))
-        br = {frozenset(e) for e in nx.bridges(gx)}
-        flag[big] = [frozenset(e) in br for e in map(tuple, edges[big].tolist())]
-    return flag
+    # one search from a virtual root joined to the first record of each component
+    root = n_nodes
+    first = np.full(comp.max() + 1, n_nodes, np.int64)
+    np.minimum.at(first, comp, np.arange(n_nodes))
+    both = np.r_[edges, np.c_[np.full(len(first), root), first]]
+    big = coo_matrix((np.ones(len(both)), (both[:, 0], both[:, 1])), shape=(n_nodes + 1, n_nodes + 1))
+    _, pred = breadth_first_order(big, root, directed=False, return_predecessors=True)
+    pred[root] = root
+    depth = np.zeros(n_nodes + 1, np.int64)
+    up = pred.copy()
+    while (moving := up != root).any():
+        depth[moving] += 1
+        up[moving] = pred[up[moving]]
+    a, b = edges[:, 0], edges[:, 1]
+    tree = (pred[a] == b) | (pred[b] == a)
+    child = np.where(pred[a] == b, a, b)              # a forest link's lower end
+    x, y = a[~tree], b[~tree]
+    # lowest common ancestor of each other link's ends: lift the deeper end, then both together
+    u, v = x.copy(), y.copy()
+    while (deeper := depth[u] > depth[v]).any():
+        u[deeper] = pred[u[deeper]]
+    while (deeper := depth[v] > depth[u]).any():
+        v[deeper] = pred[v[deeper]]
+    while (apart := u != v).any():
+        u[apart], v[apart] = pred[u[apart]], pred[v[apart]]
+    total = np.zeros(n_nodes + 1, np.int64)
+    np.add.at(total, x, 1)
+    np.add.at(total, y, 1)
+    np.add.at(total, u, -2)
+    nodes = np.arange(n_nodes)
+    for d in range(int(depth.max()), 1, -1):          # each subtree's total, deepest first
+        at = nodes[depth[:n_nodes] == d]
+        np.add.at(total, pred[at], total[at])
+    return tree & (total[child] == 0)
 
 
-def links(df, profiles, pairs, X, score, threshold, keys, customer_id):
-    """DataFrame of accepted links: a, b, customer_id, score, is_bridge, evidence."""
+LINK_SLICE = 1_000_000     # links.csv rows made and written at once
+
+
+def write_links(path, df, profiles, pairs, X, score, threshold, keys, customer_id):
+    """links.csv: a row per accepted link - a, b, customer_id, score, is_bridge, evidence - weakest
+    first, for review. X: the pairs' features, or a function giving the features of the pairs at
+    some row indices. Rows are made and written LINK_SLICE at a time, in order: millions of links
+    with their evidence text were gigabytes at once. Returns (links, bridges)."""
     keep = np.flatnonzero(score > threshold)
     e = pairs[keep].astype(np.int64)
-    i, j = e[:, 0], e[:, 1]
-    ce, cp = _contacts(df, profiles, "email", i, j), _contacts(df, profiles, "phone", i, j)
-    out = pd.DataFrame({
-        "a": keys[i], "b": keys[j], "customer_id": np.asarray(customer_id)[i].astype(int),
-        "score": np.round(score[keep].astype(float), 4),
-        "is_bridge": _bridges(len(df), e),
-        "evidence": evidence_many(X[keep], ce, cp, _both_streets(df, i, j))})
-    return out.sort_values("score", kind="stable").reset_index(drop=True)  # review weakest first
+    bridge = _bridges(len(df), e)
+    rounded = np.round(score[keep].astype(float), 4)
+    order = np.argsort(rounded, kind="stable")        # weakest first
+    customer_id = np.asarray(customer_id)
+    for s in range(0, max(len(order), 1), LINK_SLICE):
+        o = order[s:s + LINK_SLICE]
+        i, j = e[o, 0], e[o, 1]
+        ce, cp = _contacts(df, profiles, "email", i, j), _contacts(df, profiles, "phone", i, j)
+        pd.DataFrame({
+            "a": keys[i], "b": keys[j], "customer_id": customer_id[i].astype(int), "score": rounded[o],
+            "is_bridge": bridge[o],
+            "evidence": evidence_many(X(keep[o]) if callable(X) else X[keep[o]], ce, cp, _both_streets(df, i, j))}
+        ).to_csv(path, index=False, header=s == 0, mode="w" if s == 0 else "a")
+    return len(keep), int(bridge.sum())
 
 
 def _block_keys(df, i, profiles):

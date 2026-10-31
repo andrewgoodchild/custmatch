@@ -32,7 +32,8 @@ name ("smith, phd, cpa", "mba"; short ones such as "ma" only after a comma, as M
 bracketed text, a phone number in a name and trade-mark signs are taken out; "(nee brown)" becomes a
 surname alias where aliases can be used; an email address used as a name becomes the name it
 spells; fused titles ("assoc.prof.dr.jane") are split. `summary.json` says how many records
-changed. No name in the Australian files or the first address-book profile changes.
+changed. No name in the Australian files or the first address-book profile changes; on NCVR 8 distinct
+names do (below, with titles).
 
 **Added:** warnings for an extra field's value on a tenth or more of the records whose people share
 no surname or employer's domain ("Multiple Companies"; still compared - ignoring it changed nothing
@@ -52,7 +53,10 @@ pairs take up the labels. `add` reads such sources the same way.
 **Fixed:** with a country set, a title in the first-name field ("Dr John", "Prof. Jane") is
 dropped. It stopped "Dr John" agreeing with "John", and became the name's nickname root, so
 every "Dr" in a file shared a blocking key. `"normalise": {"titles": false}` keeps titles.
-No benchmark sets a country, so none moves.
+Of the benchmarks only NCVR sets a country: 27 of its 5,000,000 records have a title ("mrs george",
+"dr. beverly"), and with the name tidying (above; 8 distinct names such as "joseph (joe)") the full run
+makes 191,801,852 candidate pairs against 191,800,790 (913 from titles, 149 from tidying), at the
+same 86.24 clustered F1.
 
 **Fixed:** no-reply, notification and bounce addresses (`drive-shares-noreply@google.com`,
 `calendar-notification@...`, `notifications@...`, `mailer-daemon@...`) are junk on sight, not
@@ -106,6 +110,34 @@ on dirty and clean books with false links broken down by trap.
 **Faster:** oversized blocks are split with one sort, not a scan apiece, and pairs are
 deduplicated with an integer sort: `"fixed"` blocking at 200,000 people takes 6.3 s, from 9.7 s.
 The candidate pairs are the same.
+
+**Faster, and less memory:** on all 5,000,000 NCVR records a run takes 7.6 minutes against
+22.9, at a peak of 12.8 GB against 49 GB; at a million people 1.7 minutes against 6.0, at 7.1 GB
+against 11.9. Every output is byte-for-byte the same. On macOS, `MallocLargeCache=0` in the
+environment lowers the peaks to 10.2 GB and 4.5 GB, for 10 to 20% more time. Blocking makes its
+pairs one range of records at a time and removes repeats before the next, not every within-block
+pair at once; the fold models' scores are kept as their threshold band, a byte a pair. The steps
+over every candidate pair after scoring take 10M pairs at a time, `links.csv` is written a million
+rows at a time, blocking's entries are int32 and its country keys arrays rather than Python tuples,
+the feature caches no longer hold the records after a run, and golden records are built a column
+per field rather than a dict per customer. Candidate
+pairs are scored 8 million at a
+time (`core.SCORE_CHUNK`), all five forests of the cross-fitting in one pass, not from one array of
+every pair's features (20 GB on the full file); fields agree by comparing integer codes, made once
+per run, not strings; each string similarity is computed once per distinct pair of values, and
+each distinct feature row scored once (44% of rows repeat another). Blocking makes each pair as
+one integer code, sorts on every core instead of through `np.unique` (which numpy 2.4 made 12 to
+17 times slower), maps soundex once per distinct name, and, where it switches to `"adaptive"`, no
+longer makes the default keys' pairs first. The threshold search clusters each fold once instead
+of once per threshold; `links.csv`'s bridge flags are found without networkx; the next block of
+features is made while the forests score this one (docs/report/06-blocking-and-scale.md "Memory
+and time on one machine").
+
+**Faster:** `custmatch sample` and each `sample --active` round keep the candidate pairs in a
+`.custmatch_cache` folder beside the labels, so a round does not block the file again: on a
+million NCVR people a round takes 35 s against 53, the same batch. The file is named by a hash
+of the loaded records, the config and custmatch's code, so a change to any of them blocks afresh;
+it holds only the pairs, as a .npy array. `"cache_candidates": false` turns it off.
 
 ## 0.1.2 (2026-10-16)
 

@@ -133,8 +133,10 @@ def enforce_cannot(n, pairs, score, th, labels, cannot):
 
 # ------------------------------------------------------------------ the review band
 def review_pairs(pairs, score, th, band, keys, X=None, df=None, profiles=None):
-    """Pairs within `band` of the threshold, most uncertain first."""
-    near = np.flatnonzero(np.abs(score - th) < band)
+    """Pairs within `band` of the threshold, most uncertain first. X: the pairs' features, or a
+    function giving the features of the pairs at some row indices."""
+    from .core import near_threshold
+    near = near_threshold(score, th, band)
     rows = pd.DataFrame({"a": keys[pairs[near, 0]], "b": keys[pairs[near, 1]],
                          "score": np.round(score[near].astype(float), 4),
                          "linked": score[near] > th, "decision": ""})
@@ -142,7 +144,8 @@ def review_pairs(pairs, score, th, band, keys, X=None, df=None, profiles=None):
         from .explain import _both_streets, _contacts, evidence
         i, j = pairs[near, 0], pairs[near, 1]
         ce, cp = _contacts(df, profiles, "email", i, j), _contacts(df, profiles, "phone", i, j)
-        rows["evidence"] = [evidence(x, a_, b_, s) for x, a_, b_, s in zip(X[near], ce, cp, _both_streets(df, i, j))]
+        Xn = X(near) if callable(X) else X[near]
+        rows["evidence"] = [evidence(x, a_, b_, s) for x, a_, b_, s in zip(Xn, ce, cp, _both_streets(df, i, j))]
     return rows.iloc[np.argsort(np.abs(rows.score.to_numpy() - th), kind="stable")].reset_index(drop=True)
 
 
@@ -188,6 +191,13 @@ def carry_ids(keys, labels, previous, issued=-1):
     Returns (ids per record, history events)."""
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     labels = np.asarray(labels)
+    if not previous and np.issubdtype(labels.dtype, np.integer):
+        # a first run: every customer is new, numbered in label order (what the loop below does,
+        # without a vote per customer - a million of them at a million records)
+        uniq, inv, size = np.unique(labels, return_inverse=True, return_counts=True)
+        first = max(int(issued), -1) + 1
+        events = [[now, "new", first + k, "", c, ""] for k, c in enumerate(size.tolist())]
+        return (first + inv.reshape(-1)).astype(np.int64), events
     members = defaultdict(list)
     for k, lab in zip(keys, labels):
         members[lab].append(k)

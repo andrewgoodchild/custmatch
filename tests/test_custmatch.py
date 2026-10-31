@@ -713,6 +713,26 @@ def test_oversized_blocks_are_split_not_dropped(world):
     assert rep["candidate_pairs"] == len(pairs) and r["new_pairs"] == len(pairs)
 
 
+
+@pytest.mark.parametrize("blocking_mode", ["fixed", "adaptive"])
+def test_pairs_made_in_slices_are_the_same(world, blocking_mode, monkeypatch):
+    """Rule blocking makes its pairs core.PAIR_CHUNK at a time, by range of records: tiny slices
+    give the same pairs and per-rule counts as one, oversized blocks split into overlapping
+    pieces included."""
+    from custmatch import blocking, core
+    from custmatch.core import profile_contacts
+    tmp, *_ = world
+    df, cfg = io.load(tmp / "config.json")
+    prof = {f: profile_contacts(df, f) for f in ("email", "phone")}
+    base = cfg | {"blocking": blocking_mode, "max_block": 4}     # small blocks: many are split
+    a, _, rep_a, _ = blocking.candidates_for(df, prof, base)
+    monkeypatch.setattr(core, "PAIR_CHUNK", 7)
+    b, _, rep_b, _ = blocking.candidates_for(df, prof, base)
+    assert sum(r["oversized_blocks_split"] for r in rep_a["rules"]) > 0
+    assert np.array_equal(a, b) and b.dtype == np.int32
+    assert [(r["pairs"], r["new_pairs"]) for r in rep_a["rules"]] == [(r["pairs"], r["new_pairs"]) for r in rep_b["rules"]]
+
+
 def test_learned_rules_reach_their_coverage_target(world):
     from custmatch import blocking
     from custmatch.core import profile_contacts
@@ -1588,6 +1608,31 @@ def test_the_bundled_demo_runs(tmp_path):
     assert s["records"] == len(truth) and partition_scores(c.customer_id.to_numpy(), t, float(np.sum(n * (n - 1) / 2)))["f1"] > 70
 
 
+@pytest.mark.parametrize("match_weight", [False, True])
+def test_scoring_in_chunks_changes_no_output(tmp_path, monkeypatch, match_weight):
+    """Candidate pairs are made PAIR_CHUNK and scored FEATURE_CHUNK at a time, and review.csv /
+    links.csv recompute the features they show: a run with tiny chunks writes exactly what one
+    chunk writes."""
+    from custmatch import core
+    root = Path(__file__).resolve().parents[1] / "examples" / "demo"
+    cfg = json.loads((root / "config.json").read_text()) | {"match_weight_feature": match_weight}
+    for s in cfg["sources"]:
+        s["path"] = str(root / s["path"])
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    outs, whole = {}, core.FEATURE_CHUNK
+    for chunk in (whole, 37):
+        monkeypatch.setattr(core, "FEATURE_CHUNK", chunk)
+        monkeypatch.setattr(core, "SCORE_CHUNK", 3 * chunk + 5)          # several feature chunks a batch
+        monkeypatch.setattr(core, "PAIR_CHUNK", core.PAIR_CHUNK if chunk == whole else 50)
+        out = tmp_path / f"out_{chunk}"
+        s = pipeline.run(tmp_path / "config.json", root / "labels.csv", out, log=lambda *_: None)
+        s.pop("stage_seconds")
+        outs[chunk] = [s] + [(out / f).read_text() for f in ("clusters.csv", "links.csv", "review.csv",
+                                                              "golden_records.csv")]
+    assert s["candidate_pairs"] > 37 * 10
+    assert outs[whole] == outs[37]
+
+
 # ------------------------------------------------------------------------------ country profiles
 def _country_df(rows, cols=("first_name", "last_name", "addr_street", "date_of_birth", "phone", "ssn", "country")):
     base = {c: "" for c in ("record_id", "first_name", "middle_initial", "last_name", "date_of_birth", "addr_number",
@@ -2270,3 +2315,37 @@ def test_a_removed_matcher_model_is_a_clear_config_error(world, tmp_path):
     with pytest.raises(io.ConfigError, match="removed in 0.1.0"):
         pipeline.run(tmp / "config.json", tmp / "labels.csv", tmp / "out", log=lambda *_: None)
     assert any("auto_models" in w for w in io.unknown_keys({"auto_models": ["forest"]}))
+
+
+def test_labelling_rounds_reuse_the_candidate_pairs_until_something_changes(tmp_path, monkeypatch):
+    """`sample` keeps its candidate pairs in .custmatch_cache beside the labels: the next
+    `sample --active` round draws the same batch without blocking again, a changed config blocks
+    afresh (and removes the stale file), and "cache_candidates": false keeps nothing."""
+    root = Path(__file__).resolve().parents[1] / "examples" / "demo"
+    cfg = json.loads((root / "config.json").read_text())
+    for s in cfg["sources"]:
+        s["path"] = str(root / s["path"])
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    lab = tmp_path / "labels.csv"
+    lab.write_text((root / "labels.csv").read_text())
+    labels.sample_active(tmp_path / "config.json", lab, 20, tmp_path / "first.csv", seed=1)
+    cache = list((tmp_path / labels.CACHE_DIR).glob("candidates-*.npy"))
+    assert len(cache) == 1
+
+    def no_blocking(*a, **k):
+        raise AssertionError("blocked again")
+    monkeypatch.setattr(blocking, "candidates_for", no_blocking)
+    labels.sample_active(tmp_path / "config.json", lab, 20, tmp_path / "second.csv", seed=1)
+    assert (tmp_path / "first.csv").read_text() == (tmp_path / "second.csv").read_text()
+    monkeypatch.undo()
+
+    (tmp_path / "config.json").write_text(json.dumps(cfg | {"max_block": 40}))
+    labels.sample_active(tmp_path / "config.json", lab, 20, tmp_path / "third.csv", seed=1)
+    now = list((tmp_path / labels.CACHE_DIR).glob("candidates-*.npy"))
+    assert len(now) == 1 and now != cache
+
+    off = tmp_path / "off"
+    off.mkdir()
+    (off / "config.json").write_text(json.dumps(cfg | {"cache_candidates": False}))
+    labels.sample(off / "config.json", 20, off / "random.csv", seed=1)
+    assert not (off / labels.CACHE_DIR).exists()

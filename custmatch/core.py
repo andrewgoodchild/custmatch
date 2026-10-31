@@ -171,7 +171,37 @@ def name_and_address_diversity(n, first_names, surnames, with_surname, addrs, wi
 
 
 # ------------------------------------------------------------------------- stage 2: blocking
-def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, skipped=None, by_key=None, owner=None):
+def unique_ints(a, overwrite=False):
+    """np.unique of a 1-d integer array, as a sort and a mask: numpy 2.4's np.unique took 17 s on
+    48M int64 pair codes, which this sorts in 1.4. The same sorted values and dtype. overwrite:
+    a may be sorted in place (a temporary of the caller's)."""
+    s = sort_ints(a, overwrite)
+    return s[np.r_[True, s[1:] != s[:-1]]] if len(s) else s
+
+
+PARALLEL_SORT = 4_000_000
+
+
+def sort_ints(a, overwrite=False):
+    """np.sort(a) for a 1-d integer array, on every core when it is long: slices sorted in threads
+    (numpy's sort releases the GIL), then one stable sort, which merges the sorted runs. Half the
+    time of np.sort on 100M int64, with no more memory. overwrite: sort a itself, not a copy."""
+    import os
+    from concurrent.futures import ThreadPoolExecutor
+    workers = os.cpu_count() or 1
+    s = a if overwrite and isinstance(a, np.ndarray) else np.array(a, copy=True)
+    if len(s) < PARALLEL_SORT or workers < 2:
+        s.sort()
+        return s
+    edges = np.linspace(0, len(s), workers + 1).astype(np.int64).tolist()
+    with ThreadPoolExecutor(workers) as pool:
+        list(pool.map(lambda k: s[edges[k]:edges[k + 1]].sort(), range(workers)))
+    s.sort(kind="stable")
+    return s
+
+
+def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, skipped=None, by_key=None, owner=None,
+          stop_above=None):
     """Candidate pairs: records sharing any blocking key. Returns (pairs int32 (m, 2), i < j,
     sorted; number of blocks skipped as hubs).
 
@@ -181,7 +211,7 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
     config's `extra_blocking` - records sharing all of a tuple's (non-empty) values become
     candidates, under the same hub rule. A column may carry a transform, as blocking rules do:
     "first_name:first1", "last_name:soundex", "postcode:first3".
-    skipped: a list to fill with (key, record indices) for each skipped block whose values are all
+    skipped: a list to fill with (key, record index array) for each skipped block whose values are all
     set - a very common name, say - as opposed to blank ones (no address), which mean nothing.
     by_key: a list to fill with each key family's candidate pairs and how many of them no earlier
     family proposed (Splink's cumulative comparisons chart): exact up to BY_KEY_EXACT_PAIRS
@@ -196,9 +226,15 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
 
     owner: df holds alias views (alias_views) and owner[k] is the record of row k - keys are
     computed per view and entered once per record, so a block's size counts records and the pairs
-    are pairs of records."""
+    are pairs of records.
+
+    stop_above (with skipped): when more records than this are only in skipped blocks - compared
+    with no one - return (None, hubs, that number) before making any pair: the caller blocks
+    another way (blocking.AUTO_ADAPTIVE_SHARE). A record is compared exactly when a block it is in
+    is used."""
     n = len(df) if owner is None else int(owner.max()) + 1
     limit = (max_block or MAX_BLOCK) if aware else 400   # even the naive run needs some ceiling
+    from . import country
     fams = []                                           # (codes per entry, record per entry, key of a code)
     labels = []
     blank = []                                          # per family: a code's key has a blank part (or None)
@@ -209,6 +245,12 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
             codes, uniq = pd.factorize(pd.Series(list(keys), dtype=object))
             idx = np.asarray(idx, dtype=np.int64)
             fams.append((codes.astype(np.int64), idx if owner is None else owner[idx], lambda c, u=uniq: u[c]))
+            blank.append(None)
+        elif fam[0] == "country":
+            (tag, a, b), idx = fam[1], fam[2]
+            codes, uniq = _factorize_columns([tag, a, b])     # the codes a factorize of the key tuples gives
+            fams.append((codes.astype(np.int64), idx if owner is None else owner[idx],
+                         lambda c, u=uniq: country.key_tuple(*u[c])))
             blank.append(None)
         else:
             _, tag, arrays, idx = fam
@@ -228,7 +270,7 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
     offsets = np.cumsum([0] + sizes_by_fam[:-1])
     block_id = np.concatenate([c + o for (c, _, _), o in zip(fams, offsets)])
     rec = np.concatenate([i for _, i, _ in fams])
-    entry = np.unique(block_id * n + rec)
+    entry = unique_ints(block_id * n + rec, overwrite=True)
     block_id, rec = entry // n, entry % n
     sizes = np.bincount(block_id, minlength=int(offsets[-1] + sizes_by_fam[-1]))
     hubs = int(((sizes > limit) & (sizes >= 2)).sum()) if aware else 0
@@ -241,8 +283,15 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
             f = int(np.searchsorted(offsets, b, side="right") - 1)
             key = fams[f][2](int(b - offsets[f]))
             if all(str(v) for v in key[1:]):
-                skipped.append((key, rec[lo:hi].tolist()))
+                skipped.append((key, rec[lo:hi].copy()))      # an array: as a list, 695 MB at 5M records
     keep = (sizes[block_id] >= 2) & (sizes[block_id] <= limit)
+    if stop_above is not None and skipped is not None:
+        lonely = np.zeros(n, bool)
+        for _, idx in skipped:
+            lonely[idx] = True
+        lonely[rec[keep]] = False
+        if lonely.sum() > stop_above:
+            return None, hubs, int(lonely.sum())
     block_id, rec = block_id[keep], rec[keep]           # sorted by block, then record
     codes = _block_codes(block_id, rec, n)
     if by_key is not None:
@@ -258,7 +307,7 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
             if exact:
                 fc = _block_codes(block_id[m], rec[m], n)
                 new = np.setdiff1d(fc, seen, assume_unique=True)
-                seen = np.union1d(seen, new)
+                seen = np.sort(np.concatenate([seen, new]))   # np.union1d, as new is not in seen: 52 of 67 s at 1M
                 row |= {"pairs": int(len(fc)), "new": int(len(new)), "cumulative": int(len(seen))}
             else:                                   # within-block pairs, before removing overlap
                 row |= {"pairs": int((s[used] * (s[used] - 1) // 2).sum()), "new": None, "cumulative": None}
@@ -266,7 +315,7 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
                 k = used & blank[f]
                 row["pairs_with_a_blank_part"] = int((s[k] * (s[k] - 1) // 2).sum())
             by_key.append(row)
-    return np.column_stack([codes // n, codes % n]).astype(np.int32), hubs
+    return pairs_from_codes(codes, n), hubs
 
 
 BY_KEY_EXACT_PAIRS = 50_000_000
@@ -275,7 +324,7 @@ _KEY_LABELS = {"nm": "surname + first 3 letters", "ns": "surname + street", "ad"
 
 
 def _family_label(fam, k):
-    if fam[0] == "tuples":
+    if fam[0] in ("tuples", "country"):
         return "nickname, email user and name-skeleton keys" if k == 0 else "similarity (LSH)"
     tag = fam[1]
     return f"extra blocking {tag[1] + 1}" if tag[0] == "x" else _KEY_LABELS.get(tag[0], tag[0])
@@ -283,18 +332,80 @@ def _family_label(fam, k):
 
 def _block_codes(block_id, rec, n):
     """Distinct pairs (as i * n + j, i < j) of records sharing a block; entries sorted by block,
-    then record. Pairs are generated in vectorised steps: the k-th step pairs each entry with
-    the k-th entry after it while both are in one block."""
+    then record."""
     if not len(block_id):
         return np.zeros(0, np.int64)
-    end = np.repeat(np.r_[np.flatnonzero(np.diff(block_id)) + 1, len(block_id)],
-                    np.diff(np.r_[0, np.flatnonzero(np.diff(block_id)) + 1, len(block_id)]))
-    pos = np.arange(len(block_id))
-    out = []
-    for k in range(1, int((end - pos).max())):
-        a = pos[pos + k < end]
-        out.append(np.unique(rec[a] * n + rec[a + k]))  # rec ascending within a block: i < j
-    return np.unique(np.concatenate(out)) if out else np.zeros(0, np.int64)
+    return join_pieces(list(block_pair_codes(rec, block_ends(block_id), n)), np.zeros(0, np.int64))
+
+
+def join_pieces(pieces, empty):
+    """np.concatenate(pieces), each piece freed once it is copied: the output's pages are touched
+    only as they are filled, so the pieces and the whole are never held at once (pieces: a list
+    the caller gives up)."""
+    if len(pieces) < 2:
+        return pieces.pop() if pieces else empty
+    out = np.empty((sum(map(len, pieces)),) + pieces[0].shape[1:], np.result_type(*pieces))
+    at = 0
+    pieces.reverse()
+    while pieces:
+        p = pieces.pop()
+        out[at:at + len(p)] = p
+        at += len(p)
+        del p
+    return out
+
+
+def pairs_from_codes(codes, n):
+    """(i, j) int32 rows from pair codes i * n + j, filled column by column: no int64 copy of the
+    pairs."""
+    out = np.empty((len(codes), 2), np.int32)
+    out[:, 0] = codes // n
+    out[:, 1] = codes % n
+    return out
+
+
+def block_ends(block_id):
+    """For entries sorted by block, the end (one past the last entry) of each entry's block."""
+    starts = np.flatnonzero(np.r_[True, block_id[1:] != block_id[:-1]])
+    return np.repeat(np.r_[starts[1:], len(block_id)], np.diff(np.r_[starts, len(block_id)]))
+
+
+PAIR_CHUNK = 40_000_000     # within-block pairs made at once, before their repeats are removed
+
+
+def block_pair_codes(rec, end, n, tag=None, n_tags=1, chunk=None):
+    """The pairs of entries sharing a block, as sorted distinct codes (i * n + j) * n_tags + tag,
+    in pieces: each piece the pairs whose first record is in one range of records, the ranges in
+    order, so the pieces joined are sorted too. Entries are sorted by block, then record (rec
+    ascending within a block); end is block_ends; tag (per entry, < n_tags) is kept with each pair,
+    as the rule that made it.
+
+    Pairs are made in vectorised steps: the k-th step pairs each entry with the k-th entry after
+    it while both are in one block. A range holds about `chunk` pairs before their repeats are
+    removed: made all at once and then sorted, the repeats - one pair from several keys - set the
+    peak memory of blocking (391M codes, 27 GB, on five million NCVR records)."""
+    chunk = chunk or PAIR_CHUNK
+    later = end - 1 - np.arange(len(rec))
+    # each entry pairs with every later entry of its block, all with its record as the first
+    per_record = np.cumsum(np.bincount(rec, weights=later, minlength=n))
+    del later
+    cuts = np.searchsorted(per_record, np.arange(1, int(per_record[-1] // chunk) + 1) * chunk, side="right")
+    edges = np.unique(np.r_[0, cuts, n])
+    del per_record
+    for lo, hi in zip(edges[:-1].tolist(), edges[1:].tolist()):
+        a = np.flatnonzero((rec >= lo) & (rec < hi))
+        out = []
+        for k in range(1, int((end[a] - a).max()) if len(a) else 1):
+            a = a[a + k < end[a]]              # entries whose block still has a k-th one after them
+            code = rec[a].astype(np.int64) * n      # rec may be int32
+            code += rec[a + k]
+            if tag is not None:
+                code *= n_tags
+                code += tag[a]
+            out.append(code)
+        if out:
+            yield unique_ints(np.concatenate(out), overwrite=True)
+        del out
 
 
 def _factorize_columns(arrays):
@@ -303,7 +414,7 @@ def _factorize_columns(arrays):
     a MultiIndex factorize of the tuples, without building the tuples (a third of blocking)."""
     if len(arrays) == 1:
         codes, uniq = pd.factorize(arrays[0])
-        return codes, [(u,) for u in uniq]
+        return codes, _KeysAt([np.asarray(uniq, dtype=object)], None)
     parts = [pd.factorize(a) for a in arrays]
     combined = np.zeros(len(arrays[0]), dtype=np.int64)
     for codes, uniq in parts:
@@ -313,22 +424,33 @@ def _factorize_columns(arrays):
     codes, first = pd.factorize(combined)
     # each combined code's key: the column values of its first row
     rows = pd.Series(np.arange(len(combined))).groupby(codes).first().to_numpy() if len(combined) else np.zeros(0, int)
-    keys = list(zip(*(np.asarray(a, dtype=object)[rows] for a in arrays))) if len(rows) else []
-    return codes, keys
+    return codes, _KeysAt([np.asarray(a, dtype=object) for a in arrays], rows)
+
+
+class _KeysAt:
+    """keys[c]: code c's key, the tuple of its columns' values, made when asked - only skipped
+    blocks' keys ever are, and a tuple per key was gigabytes on five million records."""
+
+    def __init__(self, arrays, rows):
+        self.arrays, self.rows = arrays, rows
+
+    def __getitem__(self, c):
+        r = c if self.rows is None else self.rows[c]
+        return tuple(a[r] for a in self.arrays)
 
 
 def blocking_families(df, profiles, aware=True, extra_keys=(), lsh=None):
     """The default blocker's keys (block's docstring lists them), family by family - the one
     definition block and the real-time matcher (blocking_hashes) both use. Yields
-    ("tuples", [key tuple, ...], [record index, ...]) or ("columns", tag, [value arrays], record
-    indices): a column family's key is the tag plus the records' values in those columns."""
+    ("tuples", [key tuple, ...], [record index, ...]), ("country", [tag, a, b arrays], record
+    indices) - country.blocking_key_columns - or ("columns", tag, [value arrays], record indices):
+    a column family's key is the tag plus the records' values in those columns."""
     from . import country
     from .blocking import Keys
     n = len(df)
-    entries = country.blocking_keys(df, profiles if aware else None)
-    if entries:
-        keys, idx = zip(*entries)
-        yield "tuples", list(keys), list(idx)
+    *cols, idx = country.blocking_key_columns(df, profiles if aware else None)
+    if len(idx):
+        yield "country", cols, idx                      # country.key_tuple(tag, a, b) is a key
     if lsh:                                             # similarity keys (blocking.lsh_keys)
         from .blocking import lsh_keys
         entries = lsh_keys(df, lsh)
@@ -375,6 +497,10 @@ def blocking_hashes(df, profiles, extra_keys=(), lsh=None):
         if fam[0] == "tuples":
             h = _hash_strings(["\x1f".join(map(str, k)) for k in fam[1]])
             idx = np.asarray(fam[2], dtype=np.int64)
+        elif fam[0] == "country":
+            from .country import key_tuple
+            h = _hash_strings(["\x1f".join(map(str, key_tuple(*k))) for k in zip(*fam[1])])
+            idx = fam[2]
         else:
             _, tag, arrays, idx = fam
             h = np.full(len(idx), _hash_strings(["\x1f".join(map(str, tag))])[0], dtype=np.uint64)
@@ -398,16 +524,17 @@ _DATE_PATTERNS = [
 
 def parse_dates(values):
     """(year, month, day) int arrays, -1 where a value does not parse. Handles dates pandas
-    cannot (historical_50k has births before 1677)."""
-    out = np.full((len(values), 3), -1, dtype=np.int64)
-    for k, v in enumerate(values):
+    cannot (historical_50k has births before 1677). Each distinct value is parsed once."""
+    codes, uniq = pd.factorize(np.asarray(values, dtype=object), use_na_sentinel=False)
+    out = np.full((len(uniq), 3), -1, dtype=np.int64)
+    for k, v in enumerate(uniq):
         for pat, order in _DATE_PATTERNS:
             m = pat.match(v)
             if m:
                 g = m.groups()
                 out[k] = [int(g[order[0]]), int(g[order[1]]), int(g[order[2]])]
                 break
-    return out
+    return out[codes] if len(values) else np.full((0, 3), -1, dtype=np.int64)
 
 
 def record_arrays(df):
@@ -415,8 +542,13 @@ def record_arrays(df):
     normalised strings, name counts, first initials. Recomputing them on every features() call
     cost 44 s of a 155 s run at 500k records (the in-cluster check calls it once per threshold)."""
     dates = parse_dates(df.date_of_birth.to_numpy())
+    codes, uniq = pd.factorize(dates[:, 0] * 10_000 + dates[:, 1] * 100 + dates[:, 2])
+    first = np.zeros(len(uniq), np.int64)
+    first[codes[::-1]] = np.arange(len(codes) - 1, -1, -1)
+    # each distinct date's string once: "%04d%02d%02d", as before, "-001-1-1" for no date
+    strings = np.array([f"{y:04d}{m:02d}{d:02d}" for y, m, d in dates[first]])
     out = {"dates": dates,
-           "date_str": np.array([f"{y:04d}{m:02d}{d:02d}" for y, m, d in dates]),
+           "date_str": strings[codes] if len(codes) else np.array([]),
            "initial": df.first_name.str[:1].to_numpy()}
     for field in ("first_name", "last_name"):
         v = pd.Series(df[field].to_numpy())
@@ -438,16 +570,16 @@ def rich_features(df, pairs, rec=None):
     i, j = pairs[:, 0], pairs[:, 1]
     cols = []
     for field in ("first_name", "last_name"):
-        v = _object_column(df, field)
+        v = _code_column(df, field)
         counts = rec[f"{field}_count"]
-        agree = (v[i] == v[j]) & (v[i] != "")
+        agree = (v[i] == v[j]) & (v[i] >= 0)
         n_file = rec.get("n_records", len(v))     # the whole file's size when scoring a few records
-        cols.append(np.where(v[i] == "", -1.0, np.where(agree, np.log(n_file / counts[i]), 0.0)))
-    fn, ln = _object_column(df, "first_name"), _object_column(df, "last_name")
-    swap = np.maximum(cpdist(list(fn[i]), list(ln[j]), scorer=JaroWinkler.normalized_similarity, workers=-1),
-                      cpdist(list(ln[i]), list(fn[j]), scorer=JaroWinkler.normalized_similarity, workers=-1))
+        cols.append(np.where(v[i] < 0, -1.0, np.where(agree, np.log(n_file / counts[i]), 0.0)))
+    swap = np.maximum(_similarity(df, "first_name", "last_name", i, j, JaroWinkler.normalized_similarity),
+                      _similarity(df, "last_name", "first_name", i, j, JaroWinkler.normalized_similarity))
     cols.append(swap)
-    has = (fn[i] != "") & (fn[j] != "")
+    fc = _code_column(df, "first_name")
+    has = (fc[i] >= 0) & (fc[j] >= 0)
     cols.append(np.where(has, rec["initial"][i] == rec["initial"][j], -1.0))
     a, b = rec["dates"][i], rec["dates"][j]
     ok = (a[:, 0] >= 0) & (b[:, 0] >= 0)
@@ -456,13 +588,19 @@ def rich_features(df, pairs, rec=None):
     cols.append(np.where(ok, a[:, 0] == b[:, 0], -1.0))
     cols.append(np.where(ok, (a[:, 1] == b[:, 2]) & (a[:, 2] == b[:, 1]) & (a[:, 0] == b[:, 0]), -1.0))
     cols.append(np.where(ok, (a[:, 1] == b[:, 1]) & (a[:, 2] == b[:, 2]), -1.0))
-    sa, sb = rec["date_str"][i], rec["date_str"][j]
-    edits = cpdist(list(sa), list(sb), scorer=Levenshtein.distance, workers=-1) if len(sa) else np.zeros(0)
+    edits = np.zeros(len(pairs))                  # only where both dates parsed: elsewhere -1
+    if ok.any():
+        sa, sb = rec["date_str"][i[ok]], rec["date_str"][j[ok]]
+        edits[ok] = cpdist(list(sa), list(sb), scorer=Levenshtein.distance, workers=-1)
     cols.append(np.where(ok, edits <= 1, -1.0))
     return np.column_stack(cols).astype(np.float32) if len(pairs) else np.zeros((0, 9), np.float32)
 
 
 FEATURE_CHUNK = 2_000_000
+# pairs scored at once (about 0.8 GB of features): a forest predicts in threads of a fixed number
+# of rows, and on one FEATURE_CHUNK at a time the last wave of threads left most cores idle
+# (NCVR, 47M pairs: 198 s, against 163 s holding every pair's features)
+SCORE_CHUNK = 8_000_000
 
 
 def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None):
@@ -475,21 +613,28 @@ def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, recor
     stay bounded however many pairs there are.
 
     With alias fields ("aliases") each pair is compared through its best-agreeing views (best_views)."""
-    if alias_views(df)[1] is not None:
-        pairs = best_views(df, pairs)
-        records = _view_records(df) if rich else None
-        df = alias_views(df)[0]
+    chunks = feature_chunks(df, pairs, profiles, aware, extra_fields, rich, records)
     if len(pairs) <= FEATURE_CHUNK:
-        return _features(df, pairs, profiles, aware, extra_fields, rich, records)
-    if rich and records is None:
-        records = record_arrays(df)
+        return next(chunks)[1]
     X = None
-    for s in range(0, len(pairs), FEATURE_CHUNK):
-        part = _features(df, pairs[s:s + FEATURE_CHUNK], profiles, aware, extra_fields, rich, records)
+    for s, part in chunks:
         if X is None:
             X = np.empty((len(pairs), part.shape[1]), np.float32)
         X[s:s + len(part)] = part
     return X
+
+
+def feature_chunks(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None):
+    """features() FEATURE_CHUNK pairs at a time, as (first row, rows): for a caller that uses each
+    chunk and drops it, so the features of every pair are never held at once."""
+    if alias_views(df)[1] is not None:
+        pairs = best_views(df, pairs)
+        records = _view_records(df) if rich else None
+        df = alias_views(df)[0]
+    if rich and records is None and len(pairs) > FEATURE_CHUNK:
+        records = record_arrays(df)
+    for s in range(0, max(len(pairs), 1), FEATURE_CHUNK):
+        yield s, _features(df, pairs[s:s + FEATURE_CHUNK], profiles, aware, extra_fields, rich, records)
 
 
 def _features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None):
@@ -508,18 +653,19 @@ def _features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, reco
             gap = np.abs(yr[pairs[:, 0]] - yr[pairs[:, 1]])
             cols.append(np.where(np.isnan(gap), -1.0, gap))
             continue
-        v = df[name].to_numpy()
-        a, b = v[pairs[:, 0]], v[pairs[:, 1]]
-        both = (a != "") & (b != "")
+        c = _code_column(df, name)
+        ca, cb = c[pairs[:, 0]], c[pairs[:, 1]]
+        both = (ca >= 0) & (cb >= 0)
         if compare in ("similarity", "edit"):
             from rapidfuzz.distance import Levenshtein
-            from rapidfuzz.process import cpdist
             scorer = JaroWinkler.normalized_similarity if compare == "similarity" \
                 else Levenshtein.normalized_similarity
-            sim = cpdist(list(a), list(b), scorer=scorer, workers=-1)
-            cols.append(np.where(both, sim, -1.0))
+            sim = np.full(len(pairs), -1.0)       # compared only where both are filled
+            k = np.flatnonzero(both)
+            sim[k] = _similarity(df, name, name, pairs[k, 0], pairs[k, 1], scorer)
+            cols.append(sim)
         else:
-            cols.append(np.where(both, (a == b).astype(float), -1.0))
+            cols.append(np.where(both, (ca == cb).astype(float), -1.0))
     return np.hstack([X, np.column_stack(cols).astype(np.float32)])
 
 
@@ -686,15 +832,61 @@ def _object_column(df, c):
     are computed dozens of times on the same records, and converting Arrow strings each time cost
     about 8 s of a million-record run. Keyed by the frame's identity; a frame changed in place
     must not be reused (the pipeline makes new frames rather than changing them)."""
+    return _cached(df, c, lambda: df[c].fillna("").to_numpy(dtype=object))
+
+
+def _cached(df, key, make):
+    """make() once per frame: the per-record arrays the features read (object columns, codes)."""
     hit = _COLUMNS.get(id(df))
     if hit is None or hit[0] is not df:
         if len(_COLUMNS) > 4:
             _COLUMNS.clear()
         hit = _COLUMNS[id(df)] = (df, {})
-    cols = hit[1]
-    if c not in cols:
-        cols[c] = df[c].fillna("").to_numpy(dtype=object)
-    return cols[c]
+    if key not in hit[1]:
+        hit[1][key] = make()
+    return hit[1][key]
+
+
+def _coded(values):
+    """(codes, strings) of an object array of strings: integer codes, -1 for "", and each code's
+    string (strings[-1] is ""). Equal codes are equal strings, so a pair's agreement is an integer
+    comparison (on object arrays each comparison calls Python's string compare; this was most of the
+    feature time at a million records)."""
+    codes, uniq = pd.factorize(values)
+    codes = codes.astype(np.int32)
+    blank = np.flatnonzero(uniq == "")
+    if len(blank):
+        codes[codes == blank[0]] = -1
+    return codes, np.append(np.asarray(uniq, dtype=object), "")
+
+
+def _codes(values):
+    return _coded(values)[0]
+
+
+def _coded_column(df, c, values=None):
+    """_coded of df[c] (blanks for missing), or of values() under the name c, once per frame."""
+    return _cached(df, ("coded", c), lambda: _coded(values() if values else _object_column(df, c)))
+
+
+def _code_column(df, c):
+    return _coded_column(df, c)[0]
+
+
+def _similarity(df, a, b, i, j, scorer, values_a=None):
+    """scorer(df[a][i], df[b][j]) per pair, computed once per distinct pair of values."""
+    from rapidfuzz.process import cpdist
+    ca, sa = _coded_column(df, a, values_a)
+    cb, sb = (ca, sa) if b == a else _coded_column(df, b)
+    return per_value_pairs(ca[i], cb[j], lambda x, y: cpdist(list(sa[x]), list(sb[y]), scorer=scorer, workers=-1))
+
+
+def per_value_pairs(ca, cb, fn):
+    """fn(a, b) for each pair of codes, computed once per distinct pair: fn takes two code arrays and
+    returns one value per pair. Pairs of names or roots repeat thousands of times in a block."""
+    key = (ca.astype(np.int64) << 32) | (cb.astype(np.int64) & 0xFFFFFFFF)
+    inv, u = pd.factorize(key)                    # a hash table: 2 to 20 times faster than sorting
+    return np.asarray(fn((u >> 32).astype(np.int32), (u & 0xFFFFFFFF).astype(np.uint32).view(np.int32)))[inv]
 
 
 def _weight_series(profile):
@@ -714,18 +906,18 @@ def _standard_features(df, pairs, profiles, aware=True):
     of a blank the model could not use it, and it made sparse records worse.)
 
     Column by column with numpy and rapidfuzz's cpdist: the first version built each pair's row
-    in a Python loop - identical values, 2.8x slower at a million records (research/poc/vectorised_features.py)."""
-    from rapidfuzz.process import cpdist
+    in a Python loop - identical values, 2.8x slower at a million records (research/poc/vectorised_features.py).
+    Agreement compares integer codes, and each similarity is computed once per distinct pair of
+    values (_coded_column, _similarity)."""
     i, j = pairs[:, 0], pairs[:, 1]
     col = lambda c: _object_column(df, c)  # noqa: E731
-    fn, ln, mi, num, st, unit, em, ph, dob, ssn = (col(c) for c in (
-        "first_name", "last_name", "middle_initial", "addr_number", "addr_street", "addr_unit", "email", "phone",
-        "date_of_birth", "ssn"))
-    jw = lambda a, b: cpdist(list(a), list(b), scorer=JaroWinkler.similarity, workers=-1)  # noqa: E731
-    agree = lambda v: (v[i] != "") & (v[i] == v[j])  # noqa: E731
-    both = lambda v: (v[i] != "") & (v[j] != "")  # noqa: E731
-    full = (df.first_name.fillna("") + df.last_name.fillna("")).to_numpy(dtype=object)
-    e_match, p_match = agree(em), agree(ph)
+    em, ph = col("email"), col("phone")
+    jw = lambda c, values=None: _similarity(df, c, c, i, j, JaroWinkler.similarity, values)  # noqa: E731
+    code = lambda c: _code_column(df, c)  # noqa: E731
+    agree = lambda c: (code(c)[i] >= 0) & (code(c)[i] == code(c)[j])  # noqa: E731
+    both = lambda c: (code(c)[i] >= 0) & (code(c)[j] >= 0)  # noqa: E731
+    full = lambda: (df.first_name.fillna("") + df.last_name.fillna("")).to_numpy(dtype=object)  # noqa: E731
+    e_match, p_match = agree("email"), agree("phone")
 
     def weight(field, v, match):
         if not aware:
@@ -737,10 +929,11 @@ def _standard_features(df, pairs, profiles, aware=True):
     if not len(pairs):
         return np.zeros((0, 13), dtype=np.float32)
     return np.column_stack([
-        jw(fn[i], fn[j]), jw(ln[i], ln[j]), jw(full[i], full[j]),
-        agree(mi), agree(num), jw(st[i], st[j]), agree(unit),
+        jw("first_name"), jw("last_name"), jw("full_name", full),
+        agree("middle_initial"), agree("addr_number"), jw("addr_street"), agree("addr_unit"),
         e_match, weight("email", em, e_match), p_match, weight("phone", ph, p_match),
-        np.where(both(dob), agree(dob), -1.0), np.where(both(ssn), agree(ssn), -1.0)]).astype(np.float32)
+        np.where(both("date_of_birth"), agree("date_of_birth"), -1.0),
+        np.where(both("ssn"), agree("ssn"), -1.0)]).astype(np.float32)
 
 
 # -------------------------------------------------------------- stages 5/6: cluster + score
@@ -775,6 +968,59 @@ def components(n, pairs, keep):
     r, c = pairs[keep, 0], pairs[keep, 1]
     g = coo_matrix((np.ones(keep.sum()), (r, c)), shape=(n, n))
     return connected_components(g, directed=False)[1]
+
+
+def _first_seen_labels(cc):
+    """cc relabelled in order of each component's lowest record, as connected_components numbers them."""
+    return pd.factorize(cc)[0].astype(np.int32)           # codes in order of first appearance
+
+
+def threshold_bands(score, grid):
+    """Each pair's band in a threshold grid: how many thresholds lie below its score, so the pair
+    is kept at sorted(grid)[k] exactly when band > k (score > t). One byte a pair: the fold
+    models' scores are only ever compared with the grid, and as float64 the five of them were 7.7
+    GB of 192M pairs on all 5M NCVR records."""
+    grid = np.sort(np.asarray(grid, dtype=float))
+    return np.searchsorted(grid, score, side="left").astype(np.uint8 if len(grid) < 255 else np.int64)
+
+
+PAIR_SLICE = 10_000_000     # pairs a step over every candidate pair takes at once
+
+
+def pair_slices(n, size=None):
+    """(lo, hi) ranges covering n pairs, for a step whose temporaries would otherwise be the size
+    of every candidate pair (a float copy of 192M scores is 1.5 GB)."""
+    size = size or PAIR_SLICE
+    return [(lo, min(lo + size, n)) for lo in range(0, n, size)]
+
+
+def near_threshold(score, th, band):
+    """Indices of the pairs with abs(score - th) < band, a slice at a time."""
+    parts = [lo + np.flatnonzero(np.abs(score[lo:hi] - th) < band) for lo, hi in pair_slices(len(score))]
+    return np.concatenate(parts) if parts else np.zeros(0, np.int64)
+
+
+def components_by_threshold(n, pairs, score, grid, band=None):
+    """{t: components(n, pairs, score > t)} for each threshold in grid, the same labels, from one
+    pass over the pairs: from the strictest threshold down, each step joins the components already
+    found with only the pairs whose score lies between it and the stricter one (NCVR, 47M pairs:
+    clustering every pair afresh at each threshold was most of the threshold search).
+    band: threshold_bands(score, grid), given in place of score."""
+    grid = np.sort(np.asarray(grid, dtype=float))
+    if band is None:
+        band = threshold_bands(score, grid)
+    out, cc = {}, None
+    for k in range(len(grid) - 1, -1, -1):
+        new = np.flatnonzero(band == k + 1)        # kept at grid[k], not at the next threshold up
+        if cc is None:
+            keep = np.zeros(len(pairs), bool)
+            keep[new] = True
+            cc = components(n, pairs, keep)
+        elif len(new):
+            joined = components(int(cc.max()) + 1, cc[pairs[new]].astype(np.int64), np.ones(len(new), bool))
+            cc = _first_seen_labels(joined[cc])
+        out[grid[k].item()] = cc
+    return out
 
 
 def household_partition(df, profiles, identity_labels):

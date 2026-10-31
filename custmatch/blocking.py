@@ -21,6 +21,8 @@ same non-empty key.
 import numpy as np
 import pandas as pd
 
+from .core import block_ends, block_pair_codes, join_pieces, pair_slices, pairs_from_codes, sort_ints, unique_ints
+
 # predicate name -> (column, transform). Transforms map a cleaned string column to keys.
 _TRANSFORMS = {
     "exact": lambda s: s,
@@ -63,7 +65,9 @@ def soundex(word):
 
 
 def _soundex(s):
-    return s.map(lambda v: soundex(v) if v and v[0].isalpha() else "")
+    codes, uniq = pd.factorize(s, use_na_sentinel=False)     # each distinct name once
+    out = np.array([soundex(v) if v and v[0].isalpha() else "" for v in uniq], dtype=object)
+    return pd.Series(out[codes], index=s.index)
 
 
 def _yearmonth(s):
@@ -285,11 +289,15 @@ def _split(keys, idx_block, rule, max_block, refine=REFINEMENTS):
         # no birth year) stay together as their own piece rather than being lost. Pieces are
         # slices of one stable sort, in order of value, as a loop over np.unique(sub) gave them
         order = np.argsort(sub, kind="stable")
-        bounds = np.flatnonzero(np.diff(sub[order])) + 1
-        for part in np.split(idx_block[order], bounds):
-            if len(part) < 2:
+        ordered = idx_block[order]
+        edges = np.r_[0, np.flatnonzero(np.diff(sub[order])) + 1, len(ordered)].tolist()
+        for a, b in zip(edges[:-1], edges[1:]):
+            if b - a < 2:
                 continue
-            o, d = _split(keys, part, rule + (p,), max_block, refine)
+            if b - a <= max_block:             # small enough already: no need to recurse
+                out.append(ordered[a:b])
+                continue
+            o, d = _split(keys, ordered[a:b], rule + (p,), max_block, refine)
             out += o
             dropped += d
         return out, dropped
@@ -300,7 +308,7 @@ def generate(df, keys, rules, max_block=60, ways=1, refine=REFINEMENTS):
     """Candidate pairs for the rules (splitting oversized blocks), plus per-rule diagnostics.
     ways > 1 splits each oversized block on that many refinements at once (_split_ways).
     Returns (pairs int32 array sorted, report)."""
-    rows, report = [], []
+    keys_of, rids_of, report = [], [], []
     for n, r in enumerate(rules):
         k = keys.rule(r)
         has = np.flatnonzero(k >= 0)
@@ -325,70 +333,143 @@ def generate(df, keys, rules, max_block=60, ways=1, refine=REFINEMENTS):
                 extra_k.append(np.full(len(pidx), next_key, np.int64))
                 extra_i.append(pidx)
                 next_key += 1
-        rows.append(pd.DataFrame({"rule": n, "key": np.concatenate([rk] + extra_k) if extra_k else rk,
-                                  "rid": np.concatenate([ri] + extra_i) if extra_i else ri}))
+        # the block entries as int32 (a record, a key) per rule: as an int64 table they were
+        # 1.4 GB on five million NCVR records, held twice while it was joined
+        k = np.concatenate([rk] + extra_k) if extra_k else rk
+        keys_of.append(k.astype(np.int32) if len(k) and k.max() < 2 ** 31 else k)
+        rids_of.append((np.concatenate([ri] + extra_i) if extra_i else ri).astype(np.int32))
+        del k, rk, ri, extra_k, extra_i
         order = np.argsort(-sizes)[:5]
         report.append({"rule": list(r), "records_with_key": int(len(has)), "blocks": int((sizes > 0).sum()),
                        "largest_blocks": [{"key": keys.label(r, int(has[kk == c][0])), "size": int(sizes[c])}
                                           for c in order if sizes[c] > 0],
                        "oversized_blocks_split": split_blocks, "blocks_dropped_as_hubs": dropped})
-    table = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame({"rule": [], "key": [], "rid": []})
-    per_rule = _block_pairs(table.rule.to_numpy(np.int64), table.key.to_numpy(np.int64), table.rid.to_numpy(np.int64))
-    # each pair once, credited to the first rule that produced it: one sort of int64 codes
-    # (pair * rules + rule), not a pandas groupby and sort - those were half of blocking's time
-    # at a million records
-    nr, nrec = max(len(rules), 1), len(df)
-    code = np.unique((per_rule.i.to_numpy() * nrec + per_rule.j.to_numpy()) * nr + per_rule.rule.to_numpy())
-    del per_rule
-    # pairs per rule, each once: with "adaptive" a block's pieces overlap, so a pair can come
-    # from one rule more than once
-    counts = np.bincount(code % nr, minlength=len(rules))
-    pair = code // nr
-    first = np.r_[True, pair[1:] != pair[:-1]] if len(pair) else np.zeros(0, bool)
-    pair, new = pair[first], np.bincount(code[first] % nr, minlength=len(rules))
+    rule = np.repeat(np.arange(len(rules), dtype=np.int16), [len(k) for k in keys_of])
+    key = join_pieces(keys_of, np.zeros(0, np.int64))
+    rid = join_pieces(rids_of, np.zeros(0, np.int32))
+    pairs, counts, new = _pairs_numpy(rule, key, rid, len(rules), len(df))
+    del rule, key, rid
     for n, entry in enumerate(report):
         entry["pairs"] = int(counts[n])
         entry["new_pairs"] = int(new[n])      # not already produced by an earlier rule
-    pairs = np.column_stack([pair // nrec, pair % nrec]).astype(np.int32)
     return pairs, {"rules": report, "candidate_pairs": int(len(pairs)), "max_block": max_block}
 
 
-def _block_pairs(rule, key, rid):
-    """Every pair of records sharing a (rule, key) block: a DataFrame of rule, i < j. Sorted by
-    block, a record pairs with the k-th record after it while that one is still in its block;
-    blocks are capped at max_block, so k stays small and each step is one vectorised pass."""
+def _pairs_numpy(rule, key, rid, n_rules, nrec):
+    """generate()'s pairs (int32, i < j, sorted), pairs per rule and new pairs per rule from its
+    block entries: each a rule, a key and a record."""
+    # each pair once, credited to the first rule that produced it: one sort of int64 codes
+    # (pair * rules + rule) per range of records (core.block_pair_codes), not a pandas groupby
+    # and sort - those were half of blocking's time at a million records
+    nr = max(n_rules, 1)
+    counts, new = np.zeros(n_rules, np.int64), np.zeros(n_rules, np.int64)
     if not len(rid):
-        return pd.DataFrame({"rule": np.zeros(0, np.int64), "i": np.zeros(0, np.int64), "j": np.zeros(0, np.int64)})
-    order = np.lexsort((rid, key, rule))
-    rule, key, rid = rule[order], key[order], rid[order]
-    new = np.r_[True, (rule[1:] != rule[:-1]) | (key[1:] != key[:-1])]
-    starts = np.flatnonzero(new)
-    end = np.repeat(np.r_[starts[1:], len(rid)], np.diff(np.r_[starts, len(rid)]))   # block end per row
-    pos = np.arange(len(rid))
-    out_r, out_i, out_j = [], [], []
-    for k in range(1, int((end - pos).max())):
-        a = pos[pos + k < end]
-        b = a + k
-        out_r.append(rule[a]); out_i.append(np.minimum(rid[a], rid[b])); out_j.append(np.maximum(rid[a], rid[b]))
-    if not out_r:
-        return pd.DataFrame({"rule": np.zeros(0, np.int64), "i": np.zeros(0, np.int64), "j": np.zeros(0, np.int64)})
-    return pd.DataFrame({"rule": np.concatenate(out_r), "i": np.concatenate(out_i), "j": np.concatenate(out_j)})
+        return np.zeros((0, 2), np.int32), counts, new
+    nk = int(key.max()) + 1
+    if (int(rule.max()) + 1) * nk * nrec < 2 ** 62:
+        # sorted by rule, key, record as one integer each, on every core (core.sort_ints): the
+        # order np.lexsort gives, which sorted on one core was most of the time. Made in place:
+        # one int64 an entry
+        block = rule.astype(np.int64)
+        block *= nk
+        block += key
+        block *= nrec
+        block += rid
+        block = sort_ints(block, overwrite=True)
+        rid = (block % nrec).astype(np.int32)
+        block //= nrec
+    else:
+        order = np.lexsort((rid, key, rule))
+        rid, block = rid[order], (rule.astype(np.int64) * nk + key)[order]
+        del order
+    end = block_ends(block)
+    block //= nk
+    rule = block.astype(np.int16)
+    del block
+    pieces = []
+    for code in block_pair_codes(rid, end, nrec, tag=rule, n_tags=nr):
+        # pairs per rule, each once: with "adaptive" a block's pieces overlap, so a pair can come
+        # from one rule more than once
+        counts += np.bincount(code % nr, minlength=n_rules)
+        pair = code // nr
+        first = np.r_[True, pair[1:] != pair[:-1]]
+        new += np.bincount(code[first] % nr, minlength=n_rules)
+        pieces.append(pairs_from_codes(pair[first], nrec))
+        del code, pair, first
+    return join_pieces(pieces, np.zeros((0, 2), np.int32)), counts, new
+
+
+def union_pairs(*parts):
+    """The distinct rows of these (i, j) arrays of record indices, sorted, as np.unique(axis=0)
+    gives them. Each part is sorted and de-duplicated as int64 codes (core.unique_ints: on 48M
+    pairs 1.5 s, not 22) unless it already is, and the rest merged into the first by inserting
+    the pairs it lacks: as codes of every pair joined and sorted again, the first part (blocking's
+    192M pairs on five million NCVR records) was held four times over."""
+    parts = [p for p in parts if len(p)] or [parts[0]]
+    if not len(parts[0]):
+        return parts[0]
+    n = int(max(p.max() for p in parts)) + 1
+    out = _sorted_unique(parts[0], n)
+    for p in parts[1:]:
+        code = _codes(_sorted_unique(p, n), n)
+        at = np.full(len(code), len(out), np.int64)       # where each goes in out: past its end, unless
+        have = np.zeros(len(code), bool)
+        a = 0
+        for lo, hi in pair_slices(len(out)):
+            # the codes up to this slice's last that earlier slices did not take go here
+            c = _codes(out[lo:hi], n)
+            b = int(np.searchsorted(code, c[-1], side="right"))
+            if a < b:
+                k = np.searchsorted(c, code[a:b])
+                at[a:b] = lo + k
+                have[a:b] = c[np.minimum(k, len(c) - 1)] == code[a:b]
+            a = b
+        new = ~have
+        at, code = at[new], code[new]
+        # as np.insert(out, at, rows): each new row before the old one at its position; filled a
+        # slice at a time (np.insert's mask of old rows becomes an int64 index of every row)
+        merged = np.empty((len(out) + len(at), 2), out.dtype)
+        dest = at + np.arange(len(at))
+        merged[dest, 0], merged[dest, 1] = code // n, code % n
+        for lo, hi in pair_slices(len(out)):
+            old = np.arange(lo, hi)
+            merged[old + np.searchsorted(at, old, side="right")] = out[lo:hi]
+        out = merged
+    return out
+
+
+def _codes(p, n):
+    return p[:, 0].astype(np.int64) * n + p[:, 1]
+
+
+def _sorted_unique(p, n):
+    """p's distinct rows in order, p itself when it already is: checked a slice at a time."""
+    ordered = all((np.diff(_codes(p[max(lo - 1, 0):hi], n)) > 0).all() for lo, hi in pair_slices(len(p)))
+    if ordered:
+        return p
+    code = unique_ints(_codes(p, n), overwrite=True)
+    out = np.empty((len(code), 2), p.dtype)        # filled column by column: no int64 copy of it
+    out[:, 0] = code // n
+    out[:, 1] = code % n
+    return out
 
 
 def country_pairs(df, profiles, max_block):
     """Pairs from country.blocking_keys (first-name root + DOB or surname, email user name, name
     skeleton), blocks larger than max_block skipped - the same keys core.block uses."""
-    from collections import defaultdict
     from . import country
-    groups = defaultdict(list)
-    for k, i in country.blocking_keys(df, profiles):
-        groups[k].append(i)
-    out = set()
-    for idx in groups.values():
-        if 2 <= len(idx) <= max_block:
-            idx = sorted(set(idx))
-            out.update((a, b) for x, a in enumerate(idx) for b in idx[x + 1:])
-    return np.array(sorted(out), dtype=np.int32).reshape(-1, 2)
+    from .core import _block_codes, _factorize_columns
+    *cols, idx = country.blocking_key_columns(df, profiles)
+    if not len(idx):
+        return np.zeros((0, 2), np.int32)
+    # integer codes, as core.block: a Python set of pair tuples was about 100 bytes a pair
+    codes, _ = _factorize_columns(cols)
+    n = len(df)
+    entry = unique_ints(codes.astype(np.int64) * n + idx, overwrite=True)   # a record once per block
+    block, rec = entry // n, entry % n
+    sizes = np.bincount(block)
+    keep = (sizes[block] >= 2) & (sizes[block] <= max_block)
+    return pairs_from_codes(_block_codes(block[keep], rec[keep], n), n)
 
 
 def candidates_for(df, profiles, cfg, labelled_pos=None, rules=None):
@@ -409,18 +490,26 @@ def candidates_for(df, profiles, cfg, labelled_pos=None, rules=None):
     return pairs, hubs, report, used
 
 
-def _core_candidates(df, profiles, cfg, owner=None):
-    """core.block's pairs and report: the default keys, blocks over max_block skipped."""
+def _core_candidates(df, profiles, cfg, owner=None, stop_above=None):
+    """core.block's pairs and report: the default keys, blocks over max_block skipped.
+    stop_above: (None, hubs, the skipped blocks and records left out) without making the pairs
+    when more records than this would be compared with no one."""
     from .core import block
     from .schema import extra_keys, max_block as cfg_max_block
     skipped, by_key = [], []
-    pairs, hubs = block(df, profiles, extra_keys=extra_keys(cfg), max_block=cfg_max_block(cfg),
-                        lsh=cfg.get("lsh_blocking"), skipped=skipped, by_key=by_key, owner=owner)
+    pairs, hubs, *left_out = block(df, profiles, extra_keys=extra_keys(cfg), max_block=cfg_max_block(cfg),
+                                   lsh=cfg.get("lsh_blocking"), skipped=skipped, by_key=by_key, owner=owner,
+                                   stop_above=stop_above)
+    if pairs is None:
+        return None, hubs, {"_skipped": skipped, "records_only_in_skipped_blocks": left_out[0]}
     # records never compared with anyone because their only blocks were skipped - a record
     # whose broad block (postcode alone) was skipped but whose narrow one was used is fine
     compared = np.zeros(len(df), bool)
     compared[pairs.ravel()] = True
-    records = len({i for _, idx in skipped for i in idx if not compared[i]})
+    in_skipped = np.zeros(len(df), bool)
+    for _, idx in skipped:
+        in_skipped[idx] = True
+    records = int((in_skipped & ~compared).sum())
     top = sorted(skipped, key=lambda s: -len(s[1]))[:5]
     return pairs, hubs, {"mode": "core", "candidate_pairs": int(len(pairs)), "hubs_dropped": int(hubs),
                          "skipped_blocks_with_values": len(skipped), "records_only_in_skipped_blocks": records,
@@ -443,9 +532,12 @@ def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None
     mode = cfg.get("blocking")
     mb = cfg_max_block(cfg) or 60
     if rules is None and _core_mode(cfg):
-        pairs, hubs, report = _core_candidates(df, profiles, cfg, owner)
+        may_switch = not mode and owner is None and not cfg.get("lsh_blocking")
+        # a file that switches never makes the default keys' pairs: only their skipped blocks
+        pairs, hubs, report = _core_candidates(df, profiles, cfg, owner,
+                                               AUTO_ADAPTIVE_SHARE * len(df) if may_switch else None)
         records = report["records_only_in_skipped_blocks"]
-        if not mode and owner is None and not cfg.get("lsh_blocking") and records > AUTO_ADAPTIVE_SHARE * len(df):
+        if pairs is None:                             # more than the share left out: switch
             pairs, hubs, switched, used = _candidates_for(df, profiles, cfg | {"blocking": "adaptive"}, labelled_pos)
             switched["switched_from_core"] = {"records_only_in_skipped_blocks": records, "records": len(df),
                                               "share": round(records / len(df), 4)}
@@ -469,13 +561,12 @@ def _candidates_for(df, profiles, cfg, labelled_pos=None, rules=None, owner=None
                              refine=refinements(cfg) if adaptive else REFINEMENTS)
     extra = country_pairs(df, profiles, mb)        # country.py keys: nickname + DOB, email user...
     if len(extra):
-        allp = np.vstack([pairs, extra]) if len(pairs) else extra
-        pairs = np.unique(allp, axis=0)
+        pairs = union_pairs(pairs, extra)
     report.update(mode=mode or "saved", learned=learn, country_key_pairs=int(len(extra)))
     if cfg.get("_blocking_switched"):
         # a run that switched (a saved state's config): the default keys' skipped blocks, so the
         # large-block check sees what it saw in the run
-        report["_skipped"] = _core_candidates(df, profiles, cfg, owner)[2]["_skipped"]
+        report["_skipped"] = _core_candidates(df, profiles, cfg, owner, stop_above=-1)[2]["_skipped"]
     hubs = sum(r["blocks_dropped_as_hubs"] for r in report["rules"])
     return pairs, hubs, report, [list(r) for r in rules]
 
@@ -545,7 +636,7 @@ def saved_run_large_blocks(cfg, report, predict, th, pairs):
     if not (large_block_check_on(cfg) and skipped):
         return pairs
     extra, _ = check_large_blocks(skipped, predict, th, budget=max(1_000_000, len(pairs)))
-    return np.unique(np.vstack([pairs, extra]), axis=0).astype(np.int32) if len(extra) else pairs
+    return union_pairs(pairs, extra).astype(np.int32) if len(extra) else pairs
 
 
 def check_large_blocks(skipped, predict, th, budget, seed=0, share=LARGE_BLOCK_MATCH_SHARE):

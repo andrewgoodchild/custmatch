@@ -125,20 +125,25 @@ def _is_forest(model):
     return isinstance(model, RandomForestClassifier) and list(model.classes_) == [0, 1]
 
 
-def p_match(model, X):
+def p_match(model, X, rows=None):
     """P(class 1). A model whose training fold held one class has a single probability column.
+    rows: P(class 1) of X[rows], gathered a chunk at a time rather than copied whole first.
 
     Predicted PREDICT_CHUNK rows at a time: a random forest's predict_proba has every worker
     thread build a rows x 2 float64 array per tree, which at 69 million candidate pairs and 16
     threads was gigabytes per thread. Chunking bounds it; the probabilities are the same."""
     import numpy as np
-    if not len(X):
+    n = len(X) if rows is None else len(rows)
+
+    def take(a, b):
+        return X[a:b] if rows is None else X[rows[a:b]]
+    if not n:
         return np.zeros(0)
     if list(model.classes_) != [0, 1] and len(model.classes_) == 1:
-        return np.full(len(X), float(list(model.classes_)[0] == 1))
+        return np.full(n, float(list(model.classes_)[0] == 1))
     if _is_forest(model):
-        if len(X) <= SMALL_BATCH:
-            return _forest_proba(model, X)
+        if n <= SMALL_BATCH:
+            return _forest_proba(model, take(0, n))
         # sklearn's predict_proba adds the trees' votes from several threads in whatever order
         # they finish, so a probability can differ in its last bit between runs - enough to
         # reorder tied pairs in active learning and change which pairs are asked. Threads over
@@ -148,11 +153,98 @@ def p_match(model, X):
         leaves = _leaf_p(model)
         workers = (os.cpu_count() or 1) if (model.n_jobs or 1) < 0 else (model.n_jobs or 1)
         with ThreadPoolExecutor(workers) as pool:
-            parts = list(pool.map(lambda s: _forest_proba(model, X[s:s + PREDICT_CHUNK_THREAD], leaves),
-                                  range(0, len(X), PREDICT_CHUNK_THREAD)))
+            parts = list(pool.map(lambda s: _forest_proba(model, take(s, s + PREDICT_CHUNK_THREAD), leaves),
+                                  range(0, n, PREDICT_CHUNK_THREAD)))
         return np.concatenate(parts)
-    out = np.empty(len(X))
-    for s in range(0, len(X), PREDICT_CHUNK):
-        proba = model.predict_proba(X[s:s + PREDICT_CHUNK])
+    out = np.empty(n)
+    for s in range(0, n, PREDICT_CHUNK):
+        proba = model.predict_proba(take(s, s + PREDICT_CHUNK))
         out[s:s + len(proba)] = proba[:, 1] if proba.shape[1] == 2 else float(list(model.classes_)[0] == 1)
     return out
+
+
+def distinct_rows(X, check=500_000):
+    """(rows, inverse): indices of X's distinct rows, bit for bit, and each row's position among
+    them, so X[rows][inverse] is X. A model scores equal rows equally, and among candidate pairs
+    about 44% of feature rows repeat another (NCVR, a million people), so each is scored once.
+    Rows are grouped by a hash of their bits and each checked against its group's first row; one
+    whose hash collides with a different row's is kept as a row of its own."""
+    import os
+    from concurrent.futures import ThreadPoolExecutor
+
+    import numpy as np
+    import pandas as pd
+    w = np.ascontiguousarray(X).reshape(len(X), -1).view(np.uint32)
+    h = np.zeros(len(w), np.uint64)
+    starts = range(0, len(w), check)
+
+    def hash_rows(s):                                    # slices on every core: numpy frees the GIL
+        part = h[s:s + check]
+        for k in range(w.shape[1]):
+            part *= np.uint64(0x9E3779B97F4A7C15)        # wraps: uint64 arithmetic is modulo 2**64
+            part += w[s:s + check, k]
+    with ThreadPoolExecutor(os.cpu_count() or 1) as pool:
+        list(pool.map(hash_rows, starts))
+        inverse, keys = pd.factorize(h)
+        rows = np.empty(len(keys), np.int64)
+        rows[inverse[::-1]] = np.arange(len(w) - 1, -1, -1)  # each group's first row
+        odd = list(pool.map(lambda s: s + np.flatnonzero((w[s:s + check] != w[rows[inverse[s:s + check]]]).any(axis=1)),
+                            starts))
+    odd = np.concatenate(odd) if odd else np.zeros(0, np.int64)
+    if len(odd):
+        inverse[odd] = len(rows) + np.arange(len(odd))
+        rows = np.concatenate([rows, odd])
+    return rows, inverse
+
+
+def p_match_rows(models, X):
+    """p_match(m, X) for each model, each distinct row of X scored once (distinct_rows)."""
+    if len(X) <= SMALL_BATCH:
+        return [p_match(m, X) for m in models]
+    rows, inverse = distinct_rows(X)
+    return [p_match(m, X, rows)[inverse] for m in models]      # no copy of the distinct rows
+
+
+def score_pairs(models, df, pairs, profiles, fopts, transform=None, keep=None):
+    """Each model's P(match) for every pair, from features made core.SCORE_CHUNK pairs at a time,
+    so the features of every pair are never held at once (on all 5M NCVR records, 192M pairs, they
+    were the largest thing in memory). transform(pair rows, X) adds columns (the match weight).
+    The next block's features are made in a second thread while the models score this one:
+    features run mostly on one core, the forests on all of them.
+    keep: for each model, None (its probabilities) or a function of a block's probabilities giving
+    what to keep instead (core.threshold_bands: a byte a pair, not eight)."""
+    import numpy as np
+    from concurrent.futures import ThreadPoolExecutor
+
+    from .core import SCORE_CHUNK, feature_chunks, join_pieces
+    keep = keep or [None] * len(models)
+    out = [None] * len(models)
+
+    def gathered():
+        # feature chunks gathered to SCORE_CHUNK rows, so the forest's threads are kept busy;
+        # joined freeing each chunk as it is copied (core.join_pieces), not held twice
+        start, parts = 0, []
+        for s, X in feature_chunks(df, pairs, profiles, **fopts):
+            if parts and sum(map(len, parts)) + len(X) > SCORE_CHUNK:
+                yield start, join_pieces(parts, None)
+                start, parts = s, []
+            parts.append(X)
+            del X
+        yield start, join_pieces(parts, None)
+
+    blocks = gathered()
+    with ThreadPoolExecutor(1) as ahead:
+        pending = ahead.submit(next, blocks, None)
+        while (block := pending.result()) is not None:
+            pending = ahead.submit(next, blocks, None)
+            s, X = block
+            if transform is not None:
+                X = transform(pairs[s:s + len(X)], X)
+            for m, prob in enumerate(p_match_rows(models, X)):
+                if keep[m] is not None:
+                    prob = keep[m](prob)
+                if out[m] is None:
+                    out[m] = np.empty(len(pairs), prob.dtype)
+                out[m][s:s + len(X)] = prob
+            del block, X
+    return [np.empty(0) if o is None else o for o in out]

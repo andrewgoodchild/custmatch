@@ -341,6 +341,82 @@ in place of a scan per oversized block, and an integer sort in place of a pandas
 `"fixed"` blocking at 200,000 people went from 9.7 to 6.3 seconds, and `"adaptive"` on the full
 file from 555 to 274 seconds at a 26 GB peak.
 
+**Memory and time on one machine** (`research/scripts/ncvr_memory.py`, `research/results/ncvr_memory.json`).
+The full run's peak footprint was 49 GB, against the 33.6 GB the run recorded: the resident memory a
+run records reads low on macOS, which compresses pages under pressure, and high once a stage has
+freed memory the allocator keeps, so the script measures the process's lifetime maximum footprint
+(what Activity Monitor shows). Profiling the run found these, each changed with every output
+kept the same:
+
+- **Blocking held every rule's pairs at once**, as a table of rule, i and j, before removing the
+  duplicates, and sorted through `np.unique`, which numpy 2.4 makes 12 to 17 times slower than
+  sorting. It now makes each pair as one integer code and sorts on every core (`core.sort_ints`:
+  slices in threads, then one merging sort). A file that switches to `"adaptive"` no longer makes
+  the default keys' pairs only to count the records they leave out.
+- **The matcher built every candidate pair's features at once** to score them, 26 columns of 192
+  million pairs, 20 GB of floats. It now scores them 8 million pairs at a time
+  (`core.SCORE_CHUNK`), all five forests of the cross-fitting in one pass, while a second thread
+  makes the next block's features.
+- **Most of the feature time was string comparison** in Python: whether two names, emails or
+  phones agree, one pair at a time. Each column is now coded as integers once per run, so agreement
+  is an integer comparison, and each string similarity is computed once per distinct pair of values
+  (`core._similarity`): pairs of names repeat thousands of times in a block.
+- **44% of the feature rows repeat another** exactly, and a forest scores equal rows equally: each
+  distinct row is now scored once (`models.distinct_rows`).
+- **The threshold search clustered every candidate pair 110 times**, once per threshold for each
+  fold and for the in-cluster check. Lowering the threshold only adds pairs, so each fold is now
+  clustered once, from the strictest threshold down, joining the components already found with
+  only the pairs in each band (`core.components_by_threshold`).
+- **Smaller steps**: `links.csv`'s bridge flags from a vectorised spanning-forest count instead of
+  networkx (3.75 s to 0.14 s on 886,000 links), a first run's customer IDs without a vote per
+  customer, and normalisation, soundex and dates of birth once per distinct value.
+- **Less held at once.** Blocking made every within-block pair of every key (391M on the full
+  file, most of them one pair from several keys) and sorted them in one piece; it now makes them
+  for one range of records at a time, about 40M pairs, and removes the repeats before the next
+  (`core.block_pair_codes`). The five fold models' scores only choose the threshold, so each is
+  kept as its band in the threshold grid, a byte a pair instead of eight (`core.threshold_bands`).
+  Every step over all the candidate pairs after scoring - the review band, the per-record
+  confidence, the audit pool, the monitor's histogram - takes 10M pairs at a time
+  (`core.pair_slices`), in an order that leaves sums the same to the bit; `links.csv` is made and
+  written a million rows at a time. Blocking keeps its entries as int32, sorts in place, merges the
+  country keys' pairs into the rest instead of sorting all of them again, and makes the country keys
+  as arrays instead of a Python tuple each (about 4 GB on the full file). The feature caches,
+  rebuilt by the review and links, are dropped once `links.csv` is written: they held the records
+  after the run returned. Golden records are built as a table, a column per field, not a dict per
+  customer and a table made from millions of dicts.
+
+The same file, config and labels (300 random, drawn stratified, and 700 active) on the 18-core,
+64 GB laptop, one run each. Other work shared the machine for the runs after the changes (a
+load average of 10 to 15, kept in the results file), so their times are if anything long:
+
+| NCVR | Code | Peak memory | Blocking | Whole run |
+| --- | --- | --- | --- | --- |
+| 1,428,005 records of 1,000,000 people, 46.9M candidate pairs | Before | 11.9 GB | 162 s | 6.0 min |
+| | Now | 7.1 GB | 18 s | 1.7 min |
+| | Now, `MallocLargeCache=0` (macOS) | 4.5 GB | 20 s | 2.0 min |
+| All 5,000,000 records, 191.8M candidate pairs | Before | 49.0 GB | 455 s | 22.9 min |
+| | Now | 12.8 GB | 80 s | 7.6 min |
+| | Now, `MallocLargeCache=0` (macOS) | 10.2 GB | 82 s | 8.6 min |
+
+Every output file is byte-for-byte the same in all of them, and so the clustered F1 (91.67 and
+86.24). The forest stage, most of the run, went from 804 to 293 seconds on the full file. The
+peak is macOS's lifetime peak footprint, and macOS's allocator keeps freed large blocks in the
+process for reuse, so it counts what was ever allocated at once, not what was in use.
+`MallocLargeCache=0` in the environment makes it hand them back as they are freed: the peak falls
+by a fifth to over a third, and the run takes 10 to 20% longer, as fresh memory is mapped for each
+block of features. On Linux, glibc maps blocks this large on their own and unmaps them when freed;
+not measured here. A DuckDB engine for the pairs, tried during this release, peaked at 21.4 GB on
+the full file (115 s of blocking) and was removed once numpy went below it. These are single runs.
+
+**Fewer trees in the fold models: tried, not adopted** (`research/scripts/fold_trees.py`,
+`research/results/fold_trees.json`). The four fold models of the cross-fitting only score the
+candidate pairs to choose the threshold, and scoring is most of a large run, so they were given
+100 or 50 trees instead of 300 (`"fold_trees"`), on the same labels. On the five small benchmarks,
+three draws each of 1,000 random and of 300 random + 700 active labels, 100 trees left 26 of the 30
+runs' clustered F1 unchanged, the rest within -0.05 to +0.60. On a million NCVR people it cut the
+forest stage by a third (63.5 s to 42.3 s) but moved the threshold from 0.5 to 0.55 and cost 0.73
+points (91.67 to 90.94), on the one file where the time matters, so the fold models keep 300.
+
 **Splitting when it is needed, by default.** The default blocker now switches to `"adaptive"`
 by itself when its keys would leave more than 1% of the records only in skipped blocks
 (`blocking.AUTO_ADAPTIVE_SHARE`), and `summary.json` says so. Measured with the default keys:

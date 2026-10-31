@@ -1,0 +1,595 @@
+{
+ "records_1428005/numpy": {
+  "records": 1428005,
+  "candidate_pairs": 46927205,
+  "engine": "numpy",
+  "clustered": {
+   "precision": 93.53,
+   "recall": 89.87,
+   "f1": 91.67,
+   "clusters": 1006553,
+   "largest_cluster": 30,
+   "adjusted_rand": 0.9167
+  },
+  "peak_memory_gb": 7.06,
+  "seconds": 102.4,
+  "stage_seconds": {
+   "load and profile": 5.05,
+   "blocking (46,927,205 candidate pairs)": 17.95,
+   "forest: cross-fitted clustered F1 98.71": 62.55,
+   "threshold (clustered, in-cluster precision check)": -0.0,
+   "large blocks checked: 0 of 16054 kept, 0 pairs added": 1.15,
+   "households, golden records, outputs": 14.97
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 5.0,
+    "peak_gb_so_far": 1.19
+   },
+   {
+    "stage": "blocking (46,927,205 candidate pairs)",
+    "seconds": 23.0,
+    "peak_gb_so_far": 4.54
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 98.71",
+    "seconds": 85.5,
+    "peak_gb_so_far": 7.06
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 85.5,
+    "peak_gb_so_far": 7.06
+   },
+   {
+    "stage": "large blocks checked: 0 of 16054 kept, 0 pairs added",
+    "seconds": 86.7,
+    "peak_gb_so_far": 7.06
+   }
+  ],
+  "machine": "18 cores, darwin",
+  "load_average": [
+   12.4,
+   14.7,
+   14.3
+  ],
+  "malloc_large_cache": null
+ },
+ "records_1428005/duckdb": {
+  "records": 1428005,
+  "candidate_pairs": 46927205,
+  "engine": "duckdb",
+  "clustered": {
+   "precision": 93.53,
+   "recall": 89.87,
+   "f1": 91.67,
+   "clusters": 1006553,
+   "largest_cluster": 30,
+   "adjusted_rand": 0.9167
+  },
+  "peak_memory_gb": 9.79,
+  "seconds": 101.6,
+  "stage_seconds": {
+   "load and profile": 4.7,
+   "blocking (46,927,205 candidate pairs)": 20.21,
+   "forest: cross-fitted clustered F1 98.71": 59.33,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 16054 kept, 0 pairs added": 1.06,
+   "households, golden records, outputs": 15.56
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 4.7,
+    "peak_gb_so_far": 1.13
+   },
+   {
+    "stage": "blocking (46,927,205 candidate pairs)",
+    "seconds": 24.9,
+    "peak_gb_so_far": 7.45
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 98.71",
+    "seconds": 84.2,
+    "peak_gb_so_far": 9.79
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 84.2,
+    "peak_gb_so_far": 9.79
+   },
+   {
+    "stage": "large blocks checked: 0 of 16054 kept, 0 pairs added",
+    "seconds": 85.3,
+    "peak_gb_so_far": 9.79
+   }
+  ],
+  "machine": "18 cores, darwin",
+  "load_average": [
+   9.1,
+   7.6,
+   6.8
+  ],
+  "note": "\"blocking_engine\": \"duckdb\", removed before release: the numpy blocking now peaks lower"
+ },
+ "records_5000000/numpy": {
+  "records": 5000000,
+  "candidate_pairs": 191801852,
+  "engine": "numpy",
+  "clustered": {
+   "precision": 87.66,
+   "recall": 84.86,
+   "f1": 86.24,
+   "clusters": 3528160,
+   "largest_cluster": 50,
+   "adjusted_rand": 0.8624
+  },
+  "peak_memory_gb": 12.81,
+  "seconds": 456.6,
+  "stage_seconds": {
+   "load and profile": 17.94,
+   "blocking (191,801,852 candidate pairs)": 79.73,
+   "forest: cross-fitted clustered F1 97.59": 293.28,
+   "threshold (clustered, in-cluster precision check)": -0.0,
+   "large blocks checked: 0 of 49560 kept, 0 pairs added": 3.86,
+   "households, golden records, outputs": 58.72
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 17.9,
+    "peak_gb_so_far": 3.27
+   },
+   {
+    "stage": "blocking (191,801,852 candidate pairs)",
+    "seconds": 97.7,
+    "peak_gb_so_far": 12.21
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 97.59",
+    "seconds": 390.9,
+    "peak_gb_so_far": 12.81
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 390.9,
+    "peak_gb_so_far": 12.81
+   },
+   {
+    "stage": "large blocks checked: 0 of 49560 kept, 0 pairs added",
+    "seconds": 394.8,
+    "peak_gb_so_far": 12.81
+   }
+  ],
+  "machine": "18 cores, darwin",
+  "load_average": [
+   10.5,
+   14.7,
+   13.0
+  ],
+  "malloc_large_cache": null
+ },
+ "records_5000000/duckdb": {
+  "records": 5000000,
+  "candidate_pairs": 191801852,
+  "engine": "duckdb",
+  "clustered": {
+   "precision": 87.66,
+   "recall": 84.86,
+   "f1": 86.24,
+   "clusters": 3528160,
+   "largest_cluster": 50,
+   "adjusted_rand": 0.8624
+  },
+  "peak_memory_gb": 21.39,
+  "seconds": 474.8,
+  "stage_seconds": {
+   "load and profile": 17.19,
+   "blocking (191,801,852 candidate pairs)": 115.4,
+   "forest: cross-fitted clustered F1 97.59": 274.08,
+   "threshold (clustered, in-cluster precision check)": -0.0,
+   "large blocks checked: 0 of 49560 kept, 0 pairs added": 3.66,
+   "households, golden records, outputs": 61.22
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 17.2,
+    "peak_gb_so_far": 3.31
+   },
+   {
+    "stage": "blocking (191,801,852 candidate pairs)",
+    "seconds": 132.6,
+    "peak_gb_so_far": 15.23
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 97.59",
+    "seconds": 406.7,
+    "peak_gb_so_far": 21.39
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 406.7,
+    "peak_gb_so_far": 21.39
+   },
+   {
+    "stage": "large blocks checked: 0 of 49560 kept, 0 pairs added",
+    "seconds": 410.3,
+    "peak_gb_so_far": 21.39
+   }
+  ],
+  "machine": "18 cores, darwin",
+  "load_average": [
+   8.7,
+   13.8,
+   12.2
+  ],
+  "note": "\"blocking_engine\": \"duckdb\", removed before release: the numpy blocking now peaks lower"
+ },
+ "records_1428005/numpy/before": {
+  "records": 1428005,
+  "candidate_pairs": 46927205,
+  "engine": "numpy",
+  "clustered": {
+   "precision": 93.53,
+   "recall": 89.87,
+   "f1": 91.67,
+   "clusters": 1006553,
+   "largest_cluster": 30,
+   "adjusted_rand": 0.9167
+  },
+  "peak_memory_gb": 11.89,
+  "seconds": 357.9,
+  "stage_seconds": {
+   "load and profile": 6.78,
+   "blocking (46,927,205 candidate pairs)": 162.38,
+   "forest: cross-fitted clustered F1 98.71": 163.9,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 16054 kept, 0 pairs added": 2.75,
+   "households, golden records, outputs": 21.27
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 6.8,
+    "peak_gb_so_far": 1.18
+   },
+   {
+    "stage": "blocking (46,927,205 candidate pairs)",
+    "seconds": 169.2,
+    "peak_gb_so_far": 11.89
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 98.71",
+    "seconds": 333.1,
+    "peak_gb_so_far": 11.89
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 333.1,
+    "peak_gb_so_far": 11.89
+   },
+   {
+    "stage": "large blocks checked: 0 of 16054 kept, 0 pairs added",
+    "seconds": 335.8,
+    "peak_gb_so_far": 11.89
+   }
+  ],
+  "machine": "18 cores, darwin"
+ },
+ "records_5000000/numpy/before": {
+  "records": 5000000,
+  "candidate_pairs": 191801852,
+  "engine": "numpy",
+  "clustered": {
+   "precision": 87.66,
+   "recall": 84.86,
+   "f1": 86.24,
+   "clusters": 3528160,
+   "largest_cluster": 50,
+   "adjusted_rand": 0.8624
+  },
+  "peak_memory_gb": 48.96,
+  "seconds": 1375.1,
+  "stage_seconds": {
+   "load and profile": 22.31,
+   "blocking (191,801,852 candidate pairs)": 455.14,
+   "forest: cross-fitted clustered F1 97.59": 803.81,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 49560 kept, 0 pairs added": 10.16,
+   "households, golden records, outputs": 80.12
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 22.3,
+    "peak_gb_so_far": 3.32
+   },
+   {
+    "stage": "blocking (191,801,852 candidate pairs)",
+    "seconds": 477.5,
+    "peak_gb_so_far": 48.96
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 97.59",
+    "seconds": 1281.3,
+    "peak_gb_so_far": 48.96
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 1281.3,
+    "peak_gb_so_far": 48.96
+   },
+   {
+    "stage": "large blocks checked: 0 of 49560 kept, 0 pairs added",
+    "seconds": 1291.4,
+    "peak_gb_so_far": 48.96
+   }
+  ],
+  "machine": "18 cores, darwin"
+ },
+ "records_1428005/splink": {
+  "records": 1428005,
+  "candidate_pairs": 423099610,
+  "engine": "splink 4.0.17",
+  "clustered": {
+   "precision": 80.62,
+   "recall": 94.32,
+   "f1": 86.93,
+   "clusters": 947602,
+   "largest_cluster": 56,
+   "adjusted_rand": 0.8693,
+   "match_weight": 4.0
+  },
+  "p_0.99": {
+   "precision": 94.0,
+   "recall": 85.95,
+   "f1": 89.8,
+   "clusters": 1020094,
+   "largest_cluster": 15,
+   "adjusted_rand": 0.898
+  },
+  "best_in_hindsight": {
+   "precision": 92.23,
+   "recall": 87.98,
+   "f1": 90.05,
+   "clusters": 1006236,
+   "largest_cluster": 18,
+   "adjusted_rand": 0.9005,
+   "match_weight": 6.0
+  },
+  "peak_memory_gb": 75.7,
+  "peak_after_loading_gb": 1.32,
+  "peak_after_predict_gb": 51.67,
+  "seconds": 110.4,
+  "machine": "18 cores, darwin",
+  "note": "candidate_pairs: Splink's predictions above p = 0.0001, not every pair it compared"
+ },
+ "records_1428005/splink/run2": {
+  "records": 1428005,
+  "candidate_pairs": 423091980,
+  "engine": "splink 4.0.17",
+  "clustered": {
+   "precision": 92.28,
+   "recall": 88.12,
+   "f1": 90.15,
+   "clusters": 1006069,
+   "largest_cluster": 18,
+   "adjusted_rand": 0.9015,
+   "match_weight": 6.0
+  },
+  "p_0.99": {
+   "precision": 94.03,
+   "recall": 85.95,
+   "f1": 89.81,
+   "clusters": 1020380,
+   "largest_cluster": 15,
+   "adjusted_rand": 0.8981
+  },
+  "best_in_hindsight": {
+   "precision": 92.28,
+   "recall": 88.12,
+   "f1": 90.15,
+   "clusters": 1006069,
+   "largest_cluster": 18,
+   "adjusted_rand": 0.9015,
+   "match_weight": 6.0
+  },
+  "peak_memory_gb": 75.88,
+  "peak_after_loading_gb": 1.31,
+  "peak_after_predict_gb": 51.58,
+  "seconds": 121.4,
+  "machine": "18 cores, darwin",
+  "note": "candidate_pairs: Splink's predictions above p = 0.0001, not every pair it compared"
+ },
+ "records_1428005/splink/run3": {
+  "records": 1428005,
+  "candidate_pairs": 423089734,
+  "engine": "splink 4.0.17",
+  "clustered": {
+   "precision": 78.52,
+   "recall": 94.44,
+   "f1": 85.75,
+   "clusters": 945063,
+   "largest_cluster": 57,
+   "adjusted_rand": 0.8575,
+   "match_weight": 4.0
+  },
+  "p_0.99": {
+   "precision": 93.7,
+   "recall": 86.32,
+   "f1": 89.86,
+   "clusters": 1018478,
+   "largest_cluster": 18,
+   "adjusted_rand": 0.8986
+  },
+  "best_in_hindsight": {
+   "precision": 91.69,
+   "recall": 88.22,
+   "f1": 89.92,
+   "clusters": 1004870,
+   "largest_cluster": 28,
+   "adjusted_rand": 0.8992,
+   "match_weight": 6.0
+  },
+  "peak_memory_gb": 76.07,
+  "peak_after_loading_gb": 1.28,
+  "peak_after_predict_gb": 51.71,
+  "seconds": 98.6,
+  "machine": "18 cores, darwin",
+  "note": "candidate_pairs: Splink's predictions above p = 0.0001, not every pair it compared"
+ },
+ "records_1428005/splink/memory_8gb": {
+  "records": 1428005,
+  "candidate_pairs": 423074271,
+  "engine": "splink 4.0.17",
+  "clustered": {
+   "precision": 80.25,
+   "recall": 94.26,
+   "f1": 86.69,
+   "clusters": 948719,
+   "largest_cluster": 56,
+   "adjusted_rand": 0.8669,
+   "match_weight": 4.0
+  },
+  "p_0.99": {
+   "precision": 94.05,
+   "recall": 83.34,
+   "f1": 88.37,
+   "clusters": 1028877,
+   "largest_cluster": 15,
+   "adjusted_rand": 0.8837
+  },
+  "best_in_hindsight": {
+   "precision": 92.13,
+   "recall": 87.97,
+   "f1": 90.01,
+   "clusters": 1006499,
+   "largest_cluster": 25,
+   "adjusted_rand": 0.9001,
+   "match_weight": 6.0
+  },
+  "peak_memory_gb": 37.41,
+  "duckdb_memory_limit": "8GB",
+  "peak_after_loading_gb": 1.31,
+  "peak_after_predict_gb": 8.97,
+  "seconds": 97.2,
+  "machine": "18 cores, darwin",
+  "note": "candidate_pairs: Splink's predictions above p = 0.0001, not every pair it compared"
+ },
+ "records_1428005/numpy/malloc_large_cache_0": {
+  "records": 1428005,
+  "candidate_pairs": 46927205,
+  "engine": "numpy",
+  "clustered": {
+   "precision": 93.53,
+   "recall": 89.87,
+   "f1": 91.67,
+   "clusters": 1006553,
+   "largest_cluster": 30,
+   "adjusted_rand": 0.9167
+  },
+  "peak_memory_gb": 4.52,
+  "seconds": 120.6,
+  "stage_seconds": {
+   "load and profile": 5.16,
+   "blocking (46,927,205 candidate pairs)": 19.72,
+   "forest: cross-fitted clustered F1 98.71": 76.92,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 16054 kept, 0 pairs added": 1.37,
+   "households, golden records, outputs": 16.6
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 5.2,
+    "peak_gb_so_far": 1.07
+   },
+   {
+    "stage": "blocking (46,927,205 candidate pairs)",
+    "seconds": 24.9,
+    "peak_gb_so_far": 3.26
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 98.71",
+    "seconds": 101.8,
+    "peak_gb_so_far": 4.52
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 101.8,
+    "peak_gb_so_far": 4.52
+   },
+   {
+    "stage": "large blocks checked: 0 of 16054 kept, 0 pairs added",
+    "seconds": 103.2,
+    "peak_gb_so_far": 4.52
+   }
+  ],
+  "machine": "18 cores, darwin",
+  "load_average": [
+   14.1,
+   14.8,
+   14.4
+  ],
+  "malloc_large_cache": "0"
+ },
+ "records_5000000/numpy/malloc_large_cache_0": {
+  "records": 5000000,
+  "candidate_pairs": 191801852,
+  "engine": "numpy",
+  "clustered": {
+   "precision": 87.66,
+   "recall": 84.86,
+   "f1": 86.24,
+   "clusters": 3528160,
+   "largest_cluster": 50,
+   "adjusted_rand": 0.8624
+  },
+  "peak_memory_gb": 10.25,
+  "seconds": 516.5,
+  "stage_seconds": {
+   "load and profile": 17.58,
+   "blocking (191,801,852 candidate pairs)": 81.61,
+   "forest: cross-fitted clustered F1 97.59": 346.08,
+   "threshold (clustered, in-cluster precision check)": 0.0,
+   "large blocks checked: 0 of 49560 kept, 0 pairs added": 4.42,
+   "households, golden records, outputs": 63.2
+  },
+  "peak_by_stage": [
+   {
+    "stage": "load and profile",
+    "seconds": 17.6,
+    "peak_gb_so_far": 2.93
+   },
+   {
+    "stage": "blocking (191,801,852 candidate pairs)",
+    "seconds": 99.2,
+    "peak_gb_so_far": 8.74
+   },
+   {
+    "stage": "forest: cross-fitted clustered F1 97.59",
+    "seconds": 445.3,
+    "peak_gb_so_far": 10.25
+   },
+   {
+    "stage": "threshold (clustered, in-cluster precision check)",
+    "seconds": 445.3,
+    "peak_gb_so_far": 10.25
+   },
+   {
+    "stage": "large blocks checked: 0 of 49560 kept, 0 pairs added",
+    "seconds": 449.7,
+    "peak_gb_so_far": 10.25
+   }
+  ],
+  "machine": "18 cores, darwin",
+  "load_average": [
+   10.1,
+   15.2,
+   14.4
+  ],
+  "malloc_large_cache": "0"
+ }
+}

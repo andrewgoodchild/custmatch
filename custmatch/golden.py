@@ -70,17 +70,18 @@ def survive(values, sources, strategy, source_rank=None, dates=None):
     raise ValueError(strategy)
 
 
-def build_golden(df, labels, strategy, fields, source_rank=None):
+def build_golden(df, labels, strategy, fields, source_rank=None, table=False):
     """{cluster label: {field: surviving value}}. strategy: one strategy for every field, or a
     config "survivorship" dict - {"default": "most_complete", "email": "most_recent",
     "address": "most_recent", "phone": {"prefer": ["app", "store"]}} - where "address" covers
-    the address parts, chosen together from one record. most_recent reads `updated_at`."""
+    the address parts, chosen together from one record. most_recent reads `updated_at`.
+    table: the same as a DataFrame instead (golden_table)."""
     if not isinstance(strategy, dict):
         # one rule for every field: as {"default": rule, "address": rule}, so most_recent sees the
         # dates and an address is never assembled from parts of different records
         strategy = {"default": strategy, "address": strategy}
     if isinstance(strategy, dict):
-        return _build_by_field(df, labels, strategy, fields, source_rank)
+        return _build_by_field(df, labels, strategy, fields, source_rank, table)
     out = {}
     src = df.source.to_numpy()
     arrays = {f: df[f].to_numpy() for f in fields}
@@ -100,12 +101,13 @@ def build_golden(df, labels, strategy, fields, source_rank=None):
 def _most_complete(labels, values, src, source_rank):
     """survive(..., "most_complete") for every cluster at once: the cluster's most common
     non-blank value; ties to the most trusted source, then the longest value, then the first
-    record. Returns (cluster label -> winning row, or absent when the cluster has no value).
-    The per-cluster loop took 29 s of a million-record run."""
+    record. Returns a Series: cluster label -> winning row, absent when the cluster has no value
+    (as a dict, millions of entries a field). The per-cluster loop took 29 s of a million-record
+    run."""
     as_str = pd.Series(np.asarray(values, dtype=object), dtype=object).astype(str)
     rows = np.flatnonzero((as_str.str.strip() != "").to_numpy(dtype=bool))
     if not len(rows):
-        return {}
+        return pd.Series(np.zeros(0, np.int64), dtype=np.int64)
     v = as_str.iloc[rows]
     f = pd.DataFrame({"lab": np.asarray(labels)[rows], "v": v.to_numpy(dtype=object), "row": rows,
                       "rank": pd.Series(np.asarray(src)[rows], dtype=object).map(source_rank).fillna(9).to_numpy(),
@@ -113,10 +115,33 @@ def _most_complete(labels, values, src, source_rank):
     f["cnt"] = f.groupby(["lab", "v"], sort=False).v.transform("size")
     f = f.sort_values(["lab", "cnt", "rank", "len", "row"], ascending=[True, False, True, False, True], kind="stable")
     first = f.drop_duplicates("lab")
-    return dict(zip(first.lab.tolist(), first.row.tolist()))
+    return pd.Series(first.row.to_numpy(np.int64), index=first.lab.to_numpy())
 
 
-def _build_by_field(df, labels, rules, fields, source_rank):
+def golden_table(df, labels, strategy, fields, source_rank=None):
+    """build_golden as a DataFrame: a row per cluster, indexed by its label, in the same order and
+    with the same columns as its dicts. Built column by column: a dict per customer was 2 GB on
+    five million NCVR records, and the table made from those dicts 4 GB more."""
+    return build_golden(df, labels, strategy, fields, source_rank, table=True)
+
+
+def set_golden(table, per_customer):
+    """Each {label: {field: value}} written into golden_table's rows, as dict.update would, for
+    the fields the table has."""
+    updates = {}
+    for row, vals in zip(table.index.get_indexer(list(per_customer)).tolist(), per_customer.values()):
+        for f, v in vals.items():
+            if f in table.columns:
+                updates.setdefault(f, ([], []))
+                updates[f][0].append(row)
+                updates[f][1].append(v)
+    for f, (rows, vals) in updates.items():
+        col = table[f].to_numpy(dtype=object, copy=True)
+        col[rows] = vals
+        table[f] = col.tolist()
+
+
+def _build_by_field(df, labels, rules, fields, source_rank, table=False):
     default = rules.get("default", "most_complete")
     source_rank = source_rank or {}
     src = df.source.to_numpy()
@@ -131,12 +156,16 @@ def _build_by_field(df, labels, rules, fields, source_rank):
     for g, members in GROUPS.items():
         members = [m for m in members if m in fields]
         if g in rules and members and rules[g] == "most_complete":
-            joined = np.array([" ".join(str(arrays[m][k]) for m in members).strip() for k in range(len(df))], dtype=object)
+            parts = [pd.Series(arrays[m], dtype=object).map(str) for m in members]
+            joined = parts[0].str.cat(parts[1:], sep=" ").str.strip().to_numpy(dtype=object) if len(df) \
+                else np.zeros(0, dtype=object)        # " ".join(str(...)).strip(), column by column
             win = _most_complete(labels, joined, src, source_rank)
-            # the first record (in record order) holding the winning joined value
-            first = pd.DataFrame({"lab": labels, "j": joined}).reset_index().drop_duplicates(["lab", "j"])
-            first_row = dict(zip(zip(first.lab.tolist(), first.j.tolist()), first["index"].tolist()))
-            group_fast[g] = (members, {lab: first_row[(lab, joined[r])] for lab, r in win.items()})
+            # the first record (in record order) of its cluster holding the winning joined value
+            w = win.reindex(labels).to_numpy()
+            ok = ~np.isnan(w)
+            ok[ok] = joined[ok] == joined[w[ok].astype(np.int64)]
+            at = np.flatnonzero(ok)
+            group_fast[g] = (members, pd.Series(at, dtype=np.int64).groupby(labels[at]).first())
     slow_groups = [g for g, members in GROUPS.items()
                    if g in rules and g not in group_fast and any(m in fields for m in members)]
     if not slow_groups and all(f in fast or f in grouped for f in fields):
@@ -159,6 +188,8 @@ def _build_by_field(df, labels, rules, fields, source_rank):
         # the loop's key order: grouped fields (address) first, then the rest in field order
         order = [m for members, _ in group_fast.values() for m in members] + \
                 [f for f in fields if f not in grouped and f in cols]
+        if table:
+            return pd.DataFrame({f: cols.pop(f) for f in order}, index=labs)
         return {lab: dict(zip(order, vals)) for lab, vals in zip(labs, zip(*(cols[f] for f in order)))}
     out = {}
     order = np.argsort(labels, kind="stable")
@@ -189,7 +220,7 @@ def _build_by_field(df, labels, rules, fields, source_rank):
                 continue
             rec[f] = survive(arrays[f][idx], src[idx], rules.get(f, default), source_rank, dates[idx])
         out[lab] = rec
-    return out
+    return pd.DataFrame(list(out.values()), index=list(out)) if table else out
 
 
 # ------------------------------------------------------------------ contact safety

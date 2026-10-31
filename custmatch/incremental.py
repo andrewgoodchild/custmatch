@@ -23,7 +23,7 @@ import pandas as pd
 
 from . import explain, identity, io, monitor, schema
 from .core import features, profile_contacts
-from .golden import build_golden
+from .golden import golden_table, set_golden
 from .models import load_model
 
 STATE = "state"
@@ -247,7 +247,7 @@ def add(state_dir, new_config, out_dir, delete=None):
     rank = {s: k for k, s in enumerate(cfg.get("source_priority", []))}
     from .pipeline import GOLDEN_FIELDS
     fields = [f for f in cfg.get("golden_fields", GOLDEN_FIELDS) if f in df.columns]
-    golden = build_golden(df, customer, cfg.get("survivorship", "most_complete"), fields, rank)
+    golden = golden_table(df, customer, cfg.get("survivorship", "most_complete"), fields, rank)
 
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -267,7 +267,7 @@ def add(state_dir, new_config, out_dir, delete=None):
         out / "merges.csv", index=False)
     pd.DataFrame(refused, columns=["a", "b", "score", "reason"]).to_csv(out / "refused_links.csv", index=False)
     stewardship.write_history(out, events, state_dir)
-    explain.links(df, profiles, pairs, X, score, th, keys, customer).to_csv(out / "links.csv", index=False)
+    explain.write_links(out / "links.csv", df, profiles, pairs, X, score, th, keys, customer)
     kept_links = sl[sl.a.isin(pos) & sl.b.isin(pos)]
     added = pd.DataFrame({"a": keys[pairs[new_links, 0]], "b": keys[pairs[new_links, 1]], "score": score[new_links]})
     forced = np.array([*must, *trusted], dtype=int).reshape(-1, 2)
@@ -280,14 +280,13 @@ def add(state_dir, new_config, out_dir, delete=None):
         sp = np.c_[sure.a.map(pos).to_numpy(), sure.b.map(pos).to_numpy()]
         per_customer, per_record = safe_contacts(df, customer, sp, cfg.get("survivorship", "most_complete"), rank,
                                                  classes=hh_profiles)
-        for c, vals in per_customer.items():
-            golden[c].update({f: v for f, v in vals.items() if f in golden[c]})
+        set_golden(golden, per_customer)
         if not cfg.get("minimal_outputs"):
             pd.DataFrame({"source": df.source, "record_id": df.record_id, "customer_id": customer,
                           **per_record}).to_csv(out / "contacts.csv", index=False)
     if not cfg.get("minimal_outputs"):
-        pd.DataFrame([{"customer_id": c, **v} for c, v in golden.items()]).sort_values(
-            "customer_id").to_csv(out / "golden_records.csv", index=False)
+        golden.rename_axis("customer_id").reset_index().sort_values("customer_id").to_csv(
+            out / "golden_records.csv", index=False)
     save_state(out, df, customer, model["forest"], th, cfg, model.get("rules"),
                model.get("match_weight_model"), model.get("matcher_model", "forest"), all_links[same])
     summary = {"existing_records": n_old, "new_records": n - n_old - len(updated),

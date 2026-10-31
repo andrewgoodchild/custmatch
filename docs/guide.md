@@ -139,6 +139,15 @@ files switch, and score 89.08 and 77.37 against 86.95 and 75.88. `add` and runs 
 block the way the run did. Set `"blocking": "core"` to always skip instead; `"adaptive"` to always
 split.
 
+**Big files: memory.** On all five million NCVR records a run takes 7.6 minutes at a 12.8 GB
+peak (22.9 minutes and 49 GB before this release); at a million people 1.7 minutes at 7.1 GB. On
+macOS, `MallocLargeCache=0 custmatch run ...` lowers those peaks to 10.2 GB and 4.5 GB for 10 to
+20% more time: otherwise the system's allocator keeps freed large blocks in the process
+([report/06-blocking-and-scale.md](report/06-blocking-and-scale.md) "Memory and time on one
+machine"). custmatch sets no memory limit of its own; to cap a run use the system's, such as
+`docker run --memory 16g` or, on Linux, `systemd-run --scope -p MemoryMax=16G custmatch run ...`.
+A run that reaches the cap is stopped, not slowed.
+
 **Similarity blocking** (`"lsh_blocking"`) finds pairs no exact key would: it hashes the names'
 letter pairs (MinHash, locality-sensitive hashing) so that names with typos in both records still
 land in a shared bucket.
@@ -182,7 +191,10 @@ non-matches are required.
   those near the threshold - 100 at a time. These teach the model far more per label, especially
   on sparse records. Actively chosen pairs train the model but never judge the threshold,
   because they are deliberately unrepresentative. The recommended mix: 300 random, then active
-  batches up to about 1,000.
+  batches up to about 1,000. The candidate pairs are kept between rounds in a `.custmatch_cache`
+  folder beside the labels, so a round does not block the file again (on a million NCVR people
+  35 s a round against 53); a change to the records, the config or custmatch makes it block
+  afresh, and `"cache_candidates": false` keeps nothing.
 - **No language model.** custmatch does not use a language model to label: we tried one on synthetic data to see what the
   hype was about, and dropped it - it added little over active learning with hand labels, and
   sending customer records to a third party is a security risk (report/04-labels.md).
