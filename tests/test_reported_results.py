@@ -1209,9 +1209,12 @@ def test_realtime_coherence_claims():
 def test_readme_headline_tiles():
     """README "Results": the headline tiles and "Where it is stronger", from the results files."""
     readme = _flat((ROOT / "README.md").read_text())
-    big = load("scale_large.json")["scale_10m_tier2"]
+    big = load("scale_large.json")["scale_10m_local"]
     assert big["result"]["records"] > 10_000_000
-    assert f"{big['result']['full_run_seconds'] / 60:.0f} minutes on one 16-core machine, {big['result']['clustered_f1']:.2f} clustered F1" in readme
+    assert f"{big['result']['full_run_seconds'] / 60:.0f} minutes on an 18-core laptop, {big['result']['clustered_f1']:.2f} clustered F1" in readme
+    cloud = load("scale_large.json")["scale_10m_tier2"]
+    assert (f"On a 16-core cloud machine ten million took {cloud['result']['full_run_seconds'] / 60:.0f} minutes and "
+            f"{cloud['peak_memory_gb']:.1f} GB on earlier code") in readme
     assert f"{big['result']['clustered_f1']:.2f} at ten million" in readme
     h = load("head_to_head.json")
     m, s = h["copies_50"]["custmatch"], h["copies_50"]["splink_m_from_labels_capped"]
@@ -1247,10 +1250,23 @@ def test_readme_memory_claims():
     readme = _flat((ROOT / "README.md").read_text())
     h = load("head_to_head.json")
     m, s = h["copies_50"]["custmatch"], h["copies_50"]["splink_m_from_labels_capped"]
-    big = load("scale_large.json")["scale_10m_tier2"]
+    r = load("scale_large.json")
+    big, cache_on = r["scale_10m_local_malloc_large_cache_0"], r["scale_10m_local"]
     per_million = big["peak_memory_gb"] / big["result"]["records"] * 1e6
     assert f"A million records peak at {m['peak_memory_gb']:.2f} GB on a laptop (Splink: {s['peak_memory_gb']:.2f} GB)" in readme
-    assert f"at {big['peak_memory_gb']:.1f} GB, about {per_million:.1f} GB per million" in readme
+    assert (f"at {big['peak_memory_gb']:.1f} GB with macOS's large-block cache off ({cache_on['peak_memory_gb']:.1f} GB "
+            f"with it on), about {per_million:.1f} GB per million") in readme
+    assert f"about {per_million:.1f} GB per million records" in readme
+    flat = _flat(GUIDE)                                    # chapter 6: the same run, and main's
+    main = r["scale_10m_local_main_malloc_large_cache_0"]
+    last = next(v for k, v in cache_on["result"]["stage_seconds"].items() if k.startswith("households"))
+    assert (f"{cache_on['result']['full_run_seconds'] / 60:.1f} minutes, the same {cache_on['result']['clustered_f1']:.2f} "
+            f"clustered F1, the last stage {last:.0f} s") in flat
+    assert (f"Peak memory was {cache_on['peak_memory_gb']:.1f} GB, or {big['peak_memory_gb']:.1f} GB with macOS's "
+            f"large-block cache off") in flat
+    assert (f"measured the same there ({main['peak_memory_gb']:.1f} GB, {main['result']['full_run_seconds'] / 60:.1f} "
+            f"minutes)") in flat
+    assert all(x["result"]["clustered_f1"] == r["scale_10m_tier2"]["result"]["clustered_f1"] for x in (big, cache_on, main))
     assert f"needed {h['copies_1']['dedupe']['peak_memory_gb']:.1f} GB for 20,134 records" in readme
 
 

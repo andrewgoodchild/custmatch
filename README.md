@@ -80,11 +80,11 @@ and households custmatch was built for - its home ground:
 
 | 10 million records | 1 million records | Messy customer data | Ensemble option |
 | :---: | :---: | :---: | :---: |
-| **31 minutes** on one 16-core machine, **96.89** clustered F1 | **40 seconds** on a laptop, **97.99** clustered F1 | **97.3** clustered F1, against [Splink](https://github.com/moj-analytical-services/splink)'s 84.4 | **+0.41** F1 on average, **+1.8** on sparse records |
+| **7 minutes** on an 18-core laptop, **96.89** clustered F1 | **40 seconds** on a laptop, **97.99** clustered F1 | **97.3** clustered F1, against [Splink](https://github.com/moj-analytical-services/splink)'s 84.4 | **+0.41** F1 on average, **+1.8** on sparse records |
 
-<sub>The two sizes ran on different machines: ten million on a 16-core cloud machine, a million on an
-18-core, 64 GB laptop. On one machine, time per million records rose by about a quarter from 2 to
-10 million, most of it in the household and golden-record stage.</sub>
+<sub>Both sizes ran on one 18-core, 64 GB laptop, shared with other work. On a 16-core cloud machine
+ten million took 31 minutes and 34.0 GB on earlier code; there, time per million records rose by
+about a quarter from 2 to 10 million, most of it in the household and golden-record stage.</sub>
 
 **Where it is stronger**
 
@@ -97,7 +97,8 @@ and households custmatch was built for - its home ground:
   seconds and 27.8 GB there against custmatch's 4.3 seconds and 0.34 GB, so a million records was
   out of reach on the same 64 GB laptop.
 - **Modest memory.** A million records peak at 3.60 GB on a laptop (Splink: 9.40 GB); ten million
-  at 34.0 GB, about 3.4 GB per million, so a 16 GB laptop holds about four million. dedupe
+  at 37.8 GB with macOS's large-block cache off (41.3 GB with it on), about 3.8 GB per million, so
+  a 16 GB laptop holds about four million. dedupe
   needed 27.8 GB for 20,134 records, running a process per core (8.5 GB with 10 cores).
 - **An ensemble for hard files.** `"matcher_model": "forest_catboost"` averages the random forest
   with CatBoost: +0.41 clustered F1 on average over six datasets, +1.3 on dense genealogy records
@@ -108,7 +109,7 @@ and households custmatch was built for - its home ground:
 you by active learning (within 1.6 points of 1,000 on five of six datasets; with none, no
 cut-off held across datasets - [chapter 4](docs/report/04-labels.md)). Splink is also faster once its large blocks are skipped
 (13.0 seconds at a million records), and it can run on Spark across a cluster: its developers
-matched a billion records that way. custmatch runs on one machine - about 3.4 GB per million
+matched a billion records that way. custmatch runs on one machine - about 3.8 GB per million
 records, so tens of millions, not hundreds. On clean records with names and places only, the tools
 are close.
 

@@ -701,5 +701,93 @@
    }
   },
   "machine": "arm64 laptop, 18 cores, 64 GiB"
+ },
+ "scale_10m_local": {
+  "command": "research/scripts/custmatch_scale.py 500",
+  "wall_seconds": 762.9,
+  "peak_memory_gb": 41.34,
+  "machine": "arm64 laptop, 18 cores, 64 GiB",
+  "log_tail": [
+   "{\"copies\": 500, \"records\": 10067000, \"blocking\": \"core\", \"run_candidate_pairs\": 24379500, \"stage_seconds\": {\"load and profile\": 95.99, \"blocking (24,379,500 candidate pairs)\": 24.24, \"forest: cross-fitted clustered F1 97.35\": 48.74, \"threshold (clustered, in-cluster precision check)\": -0.0, \"large blocks checked: 0 of 6000 kept, 0 pairs added\": 0.68, \"households, golden records, outputs\": 268.32}, \"candidate_pairs\": 24379500, \"load_seconds\": 14.01, \"profile_seconds\": 47.4, \"block_seconds\": 16.87, \"features_seconds\": 19.32, \"full_run_seconds\": 440.78, \"clustered_f1\": 96.89}"
+  ],
+  "result": {
+   "copies": 500,
+   "records": 10067000,
+   "blocking": "core",
+   "run_candidate_pairs": 24379500,
+   "stage_seconds": {
+    "load and profile": 95.99,
+    "blocking (24,379,500 candidate pairs)": 24.24,
+    "forest: cross-fitted clustered F1 97.35": 48.74,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "large blocks checked: 0 of 6000 kept, 0 pairs added": 0.68,
+    "households, golden records, outputs": 268.32
+   },
+   "candidate_pairs": 24379500,
+   "load_seconds": 14.01,
+   "profile_seconds": 47.4,
+   "block_seconds": 16.87,
+   "features_seconds": 19.32,
+   "full_run_seconds": 440.78,
+   "clustered_f1": 96.89
+  }
+ },
+ "scale_10m_local_malloc_large_cache_0": {
+  "command": "research/scripts/custmatch_scale.py 500",
+  "wall_seconds": 792.9,
+  "peak_memory_gb": 37.83,
+  "machine": "arm64 laptop, 18 cores, 64 GiB",
+  "log_tail": [
+   "{\"copies\": 500, \"records\": 10067000, \"blocking\": \"core\", \"run_candidate_pairs\": 24379500, \"stage_seconds\": {\"load and profile\": 95.68, \"blocking (24,379,500 candidate pairs)\": 26.07, \"forest: cross-fitted clustered F1 97.35\": 54.93, \"threshold (clustered, in-cluster precision check)\": -0.0, \"large blocks checked: 0 of 6000 kept, 0 pairs added\": 0.72, \"households, golden records, outputs\": 272.27}, \"candidate_pairs\": 24379500, \"load_seconds\": 15.21, \"profile_seconds\": 52.13, \"block_seconds\": 18.84, \"features_seconds\": 22.15, \"full_run_seconds\": 452.54, \"clustered_f1\": 96.89}"
+  ],
+  "result": {
+   "copies": 500,
+   "records": 10067000,
+   "blocking": "core",
+   "run_candidate_pairs": 24379500,
+   "stage_seconds": {
+    "load and profile": 95.68,
+    "blocking (24,379,500 candidate pairs)": 26.07,
+    "forest: cross-fitted clustered F1 97.35": 54.93,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "large blocks checked: 0 of 6000 kept, 0 pairs added": 0.72,
+    "households, golden records, outputs": 272.27
+   },
+   "candidate_pairs": 24379500,
+   "load_seconds": 15.21,
+   "profile_seconds": 52.13,
+   "block_seconds": 18.84,
+   "features_seconds": 22.15,
+   "full_run_seconds": 452.54,
+   "clustered_f1": 96.89
+  }
+ },
+ "scale_10m_local_main_malloc_large_cache_0": {
+  "command": "research/scripts/custmatch_scale.py 500",
+  "wall_seconds": 780.4,
+  "peak_memory_gb": 37.84,
+  "machine": "arm64 laptop, 18 cores, 64 GiB",
+  "result": {
+   "copies": 500,
+   "records": 10067000,
+   "blocking": "core",
+   "run_candidate_pairs": 24379500,
+   "stage_seconds": {
+    "load and profile": 94.12,
+    "blocking (24,379,500 candidate pairs)": 25.72,
+    "forest: cross-fitted clustered F1 97.35": 54.78,
+    "threshold (clustered, in-cluster precision check)": 0.0,
+    "large blocks checked: 0 of 6000 kept, 0 pairs added": 0.71,
+    "households, golden records, outputs": 266.16
+   },
+   "candidate_pairs": 24379500,
+   "load_seconds": 15.08,
+   "profile_seconds": 50.58,
+   "block_seconds": 18.53,
+   "features_seconds": 21.91,
+   "full_run_seconds": 444.41,
+   "clustered_f1": 96.89
+  },
+  "code": "main at 0376fa7, before the memory work"
  }
 }

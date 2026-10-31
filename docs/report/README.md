@@ -248,5 +248,6 @@ Australian files were generated for this project, so their errors are ones the t
 around - see the caveats in each chapter. On five benchmarks (four public, plus that synthetic file),
 averaged over three label draws, it beats Splink's unsupervised result on four and is 0.3 behind
 on febrl3 (measured before 0.1.0's threshold rule). A million records take about 1.7 minutes on a laptop (94 s with `"blocking":
-"fixed"`), and ten million 37 to 57 minutes and 34 GB on a 16-core cloud machine - measured
+"fixed"`), and ten million 37 to 57 minutes and 34 GB on a 16-core cloud machine (7 minutes and 38 GB on
+an 18-core laptop) - measured
 on copies of a 20,000-record file, so blocks grew less than they would in a real file of that size.
