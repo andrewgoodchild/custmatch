@@ -797,8 +797,11 @@ class Matcher:
         out = self.explain(a, b)
         mini = self._rows([ia, ib])
         shared = []
+        from custmatch.country import key_tuple
         for k, fam in enumerate(blocking_families(mini, self.profiles, True, self.extra, self.lsh)):
             label = _family_label(fam, k)
+            if fam[0] == "country":                 # as key tuples: two records' keys
+                fam = ("tuples", [key_tuple(*kk) for kk in zip(*fam[1])], fam[2].tolist())
             if fam[0] == "tuples":
                 keys, idx = fam[1], fam[2]
                 ka = {kk for kk, ii in zip(keys, idx) if ii == 0}

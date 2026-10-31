@@ -111,12 +111,15 @@ on dirty and clean books with false links broken down by trap.
 deduplicated with an integer sort: `"fixed"` blocking at 200,000 people takes 6.3 s, from 9.7 s.
 The candidate pairs are the same.
 
-**Faster, and less memory:** on all 5,000,000 NCVR records a run takes 7.1 minutes against
-22.9, at a peak of 17.3 GB against 49 GB; at a million people 1.6 minutes against 6.0, at 8.1 GB
+**Faster, and less memory:** on all 5,000,000 NCVR records a run takes 7.4 minutes against
+22.9, at a peak of 12.9 GB against 49 GB; at a million people 1.7 minutes against 6.0, at 7.2 GB
 against 11.9. Every output is byte-for-byte the same. On macOS, `MallocLargeCache=0` in the
-environment lowers the peaks to 12.5 GB and 5.5 GB, for 10 to 20% more time. Blocking makes its
+environment lowers the peaks to 10.2 GB and 4.5 GB, for 10 to 20% more time. Blocking makes its
 pairs one range of records at a time and removes repeats before the next, not every within-block
-pair at once; the fold models' scores are kept as their threshold band, a byte a pair. Candidate
+pair at once; the fold models' scores are kept as their threshold band, a byte a pair. The steps
+over every candidate pair after scoring take 10M pairs at a time, `links.csv` is written a million
+rows at a time, blocking's entries are int32 and its country keys arrays rather than Python tuples,
+and the feature caches no longer hold the records after a run. Candidate
 pairs are scored 8 million at a
 time (`core.SCORE_CHUNK`), all five forests of the cross-fitting in one pass, not from one array of
 every pair's features (20 GB on the full file); fields agree by comparing integer codes, made once

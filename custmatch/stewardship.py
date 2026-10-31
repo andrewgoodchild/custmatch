@@ -135,7 +135,8 @@ def enforce_cannot(n, pairs, score, th, labels, cannot):
 def review_pairs(pairs, score, th, band, keys, X=None, df=None, profiles=None):
     """Pairs within `band` of the threshold, most uncertain first. X: the pairs' features, or a
     function giving the features of the pairs at some row indices."""
-    near = np.flatnonzero(np.abs(score - th) < band)
+    from .core import near_threshold
+    near = near_threshold(score, th, band)
     rows = pd.DataFrame({"a": keys[pairs[near, 0]], "b": keys[pairs[near, 1]],
                          "score": np.round(score[near].astype(float), 4),
                          "linked": score[near] > th, "decision": ""})

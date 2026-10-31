@@ -19,7 +19,8 @@ import numpy as np
 import pandas as pd
 
 from . import explain, identity, incremental, io, monitor, schema
-from .core import components, components_by_threshold, features, threshold_bands, profile_contacts, relay_records, service_records
+from .core import (components, components_by_threshold, features, near_threshold, pair_slices, profile_contacts,
+                   relay_records, service_records, threshold_bands)
 from .golden import build_golden
 
 THRESHOLDS = np.round(np.concatenate([np.arange(0.05, 0.96, 0.05), [0.97, 0.98, 0.99]]), 3)
@@ -212,21 +213,21 @@ def confidence(n, pairs, score, labels):
     labels = np.asarray(labels)
     if len(labels) and labels.min() >= 0 and labels.max() < 2 ** 31:
         labels = labels.astype(np.int32)                # the two gathers at half the memory
-    same = labels[pairs[:, 0]] == labels[pairs[:, 1]]
+    slices = pair_slices(len(pairs))
+    same = np.empty(len(pairs), bool)
+    for lo, hi in slices:
+        same[lo:hi] = labels[pairs[lo:hi, 0]] == labels[pairs[lo:hi, 1]]
     tot, cnt, best = np.zeros(n), np.zeros(n), np.zeros(n)
-    # each masked copy made once and one column at a time (pairs[mask, col] copies both
-    # columns first): 192M pairs at five million records
-    inside = score[same]
+    # a slice of pairs at a time (192M pairs at five million records: each masked copy of every
+    # pair was 0.8-1.5 GB), in the order one pass over all of them takes - every first record,
+    # then every second - so the sums are the same to the bit
     for col in (0, 1):
-        idx = pairs[:, col][same]
-        np.add.at(tot, idx, inside)
-        np.add.at(cnt, idx, 1)
-        del idx
-    del inside
-    np.logical_not(same, out=same)
-    outside = score[same]
-    for col in (0, 1):
-        np.maximum.at(best, pairs[:, col][same], outside)
+        for lo, hi in slices:
+            m, s = same[lo:hi], score[lo:hi]
+            idx = pairs[lo:hi, col][m]
+            np.add.at(tot, idx, s[m])
+            np.add.at(cnt, idx, 1)
+            np.maximum.at(best, pairs[lo:hi, col][~m], s[~m])
     return np.where(cnt > 0, tot / np.maximum(cnt, 1), 1 - best)
 
 
@@ -368,6 +369,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         fit = fit_matcher(make)
         stage(f"{model_choice}: cross-fitted clustered F1 {fit['held_out']['f1']}")
         final_forest, prob, predict, th, held_out = (fit[k] for k in ("final", "prob", "predict", "th", "held_out"))
+        del fit
     else:
         final_forest, th = saved["forest"], float(saved["threshold"])
         model_choice = saved.get("matcher_model", "forest")
@@ -379,6 +381,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
 
     stage("threshold (clustered, in-cluster precision check)")
     score = prob
+    del prob                                      # one name for the scores: a step that changes them frees the old
     skipped = block_report.pop("_skipped", [])
     if blocking.large_block_check_on(cfg) and skipped:
         # oversized blocks that are one real entity (an organisation) are compared after all
@@ -391,6 +394,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         block_report["large_blocks_checked"] = rows
         block_report["large_block_pairs_added"] = int(len(extra))
         stage(f"large blocks checked: {sum(r['kept'] for r in rows)} of {len(rows)} kept, {len(extra):,} pairs added")
+    del skipped
     # decisions people made, and identifiers that settle a match, override the model
     keys = io.key(df)
     must, cannot = stewardship.load_overrides(cfg, Path(config_path).parent, keys)
@@ -426,7 +430,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
             prev_recs = pd.read_parquet(prev_state / "records.parquet", columns=["source", "record_id"])
             score = stewardship.hysteresis(pairs, score, keys, pd.read_parquet(prev_state / "links.parquet"),
                                            io.key(prev_recs), float(cfg.get("stability_margin", 0.05)))
-    twins = np.zeros(len(pairs), dtype=bool)
+    twins = None                                  # a byte a pair: made only when asked for
     if cfg.get("twin_guard"):                       # twins are kept apart; a steward's "same" still wins
         twins = stewardship.twin_pairs(df, pairs, hashed="first_name" in cfg.get("hash_fields", []))
         if len(must):
@@ -471,14 +475,6 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         _, cust_id = np.unique(customers, return_inverse=True)
         events = stewardship.carry_ids(keys, customers, {})[1]
     stewardship.write_history(out, events, previous_dir)
-    band = float(cfg.get("review_band", 0.1))
-    stewardship.review_pairs(pairs, score, th, band, keys, pair_features, df, profiles).to_csv(out / "review.csv", index=False)
-    _, hh_id = np.unique(households, return_inverse=True)
-    pd.DataFrame({"source": df.source, "record_id": df.record_id,
-                  "customer_id": cust_id, "household_id": hh_id,
-                  "confidence": np.round(confidence(n, pairs, score, customers), 4)}
-                 ).to_csv(out / "clusters.csv", index=False)
-    identity.write_cookies(out, cookie_table, cust_id, minimal=bool(cfg.get("minimal_outputs")))
     if cfg.get("contact_confidence") is not None:
         from .golden import safe_contacts
         strong = (score >= float(cfg["contact_confidence"])) & (customers[pairs[:, 0]] == customers[pairs[:, 1]])
@@ -495,7 +491,15 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     minimal = bool(cfg.get("minimal_outputs"))        # no file that repeats personal data
     if not minimal:
         g.to_csv(out / "golden_records.csv", index=False)
-    del golden, g                                 # a dict and a table per customer: millions of rows
+    del golden, g, lab_to_id                      # a dict and a table per customer: millions of rows
+    band = float(cfg.get("review_band", 0.1))
+    stewardship.review_pairs(pairs, score, th, band, keys, pair_features, df, profiles).to_csv(out / "review.csv", index=False)
+    _, hh_id = np.unique(households, return_inverse=True)
+    pd.DataFrame({"source": df.source, "record_id": df.record_id,
+                  "customer_id": cust_id, "household_id": hh_id,
+                  "confidence": np.round(confidence(n, pairs, score, customers), 4)}
+                 ).to_csv(out / "clusters.csv", index=False)
+    identity.write_cookies(out, cookie_table, cust_id, minimal=bool(cfg.get("minimal_outputs")))
     linked = score > th
     state_links = pd.DataFrame({"a": keys[pairs[linked, 0]], "b": keys[pairs[linked, 1]],
                                 "score": score[linked].astype(float)})
@@ -522,8 +526,9 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     if cfg.get("suspect_records", True) and not minimal:
         from . import suspect
         suspect.table(df, suspect_flags).to_csv(out / "suspect_records.csv", index=False)
-    link_table = explain.links(df, profiles, pairs, pair_features, score, th, io.key(df), cust_id)
-    link_table.to_csv(out / "links.csv", index=False)
+    n_links, n_bridges = explain.write_links(out / "links.csv", df, profiles, pairs, pair_features, score, th, keys,
+                                             cust_id)
+    clear_caches()                                  # the feature caches the review and links rebuilt
     if not minimal:
         pd.DataFrame([{"field": f, "value": v, "class": c, "weight": round(w, 3)}
                       for f, prof in profiles.items() for v, (c, w) in prof.items() if c != "personal"]
@@ -539,7 +544,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         "model_reused_from": str(model_dir) if model_dir is not None else None,
         "overrides": {"must_link": int(len(must)), "cannot_link": int(len(cannot)),
                       "trusted_id_links": int(len(trusted)), "links_cut_to_keep_cannot_links_apart": int(cut)},
-        "review_pairs": int(np.sum(np.abs(score - th) < band)),
+        "review_pairs": len(near_threshold(score, th, band)),
         **({"cookies": cookie_counts} if cookie_counts else {}),
         **({"same_source_pairs_split": split_by_source} if cfg.get("unique_sources") else {}),
         "twin_pairs_kept_apart": int((twins & (score > th * 0.99)).sum()) if cfg.get("twin_guard") else 0,
@@ -549,7 +554,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         "threshold_sweep": held_out.get("sweep"),
         "customers": int(len(sizes)), "largest_customer": int(sizes.max()),
         "households": int(len(np.unique(hh_id))),
-        "links": int(len(link_table)), "bridge_links": int(link_table.is_bridge.sum()),
+        "links": n_links, "bridge_links": n_bridges,
         "customers_recut": recut,
         "placeholder_names": int(fake_name.sum()), "placeholder_addresses": int(fake_addr.sum()),
         "placeholder_dates_of_birth": int(fake_dob.sum()),

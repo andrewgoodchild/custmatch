@@ -21,7 +21,7 @@ same non-empty key.
 import numpy as np
 import pandas as pd
 
-from .core import block_ends, block_pair_codes, pairs_from_codes, sort_ints, unique_ints
+from .core import block_ends, block_pair_codes, join_pieces, pair_slices, pairs_from_codes, sort_ints, unique_ints
 
 # predicate name -> (column, transform). Transforms map a cleaned string column to keys.
 _TRANSFORMS = {
@@ -308,7 +308,7 @@ def generate(df, keys, rules, max_block=60, ways=1, refine=REFINEMENTS):
     """Candidate pairs for the rules (splitting oversized blocks), plus per-rule diagnostics.
     ways > 1 splits each oversized block on that many refinements at once (_split_ways).
     Returns (pairs int32 array sorted, report)."""
-    rows, report = [], []
+    keys_of, rids_of, report = [], [], []
     for n, r in enumerate(rules):
         k = keys.rule(r)
         has = np.flatnonzero(k >= 0)
@@ -333,44 +333,59 @@ def generate(df, keys, rules, max_block=60, ways=1, refine=REFINEMENTS):
                 extra_k.append(np.full(len(pidx), next_key, np.int64))
                 extra_i.append(pidx)
                 next_key += 1
-        rows.append(pd.DataFrame({"rule": n, "key": np.concatenate([rk] + extra_k) if extra_k else rk,
-                                  "rid": np.concatenate([ri] + extra_i) if extra_i else ri}))
+        # the block entries as int32 (a record, a key) per rule: as an int64 table they were
+        # 1.4 GB on five million NCVR records, held twice while it was joined
+        k = np.concatenate([rk] + extra_k) if extra_k else rk
+        keys_of.append(k.astype(np.int32) if len(k) and k.max() < 2 ** 31 else k)
+        rids_of.append((np.concatenate([ri] + extra_i) if extra_i else ri).astype(np.int32))
+        del k, rk, ri, extra_k, extra_i
         order = np.argsort(-sizes)[:5]
         report.append({"rule": list(r), "records_with_key": int(len(has)), "blocks": int((sizes > 0).sum()),
                        "largest_blocks": [{"key": keys.label(r, int(has[kk == c][0])), "size": int(sizes[c])}
                                           for c in order if sizes[c] > 0],
                        "oversized_blocks_split": split_blocks, "blocks_dropped_as_hubs": dropped})
-    table = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame({"rule": [], "key": [], "rid": []})
-    pairs, counts, new = _pairs_numpy(table, len(rules), len(df))
+    rule = np.repeat(np.arange(len(rules), dtype=np.int16), [len(k) for k in keys_of])
+    key = join_pieces(keys_of, np.zeros(0, np.int64))
+    rid = join_pieces(rids_of, np.zeros(0, np.int32))
+    pairs, counts, new = _pairs_numpy(rule, key, rid, len(rules), len(df))
+    del rule, key, rid
     for n, entry in enumerate(report):
         entry["pairs"] = int(counts[n])
         entry["new_pairs"] = int(new[n])      # not already produced by an earlier rule
     return pairs, {"rules": report, "candidate_pairs": int(len(pairs)), "max_block": max_block}
 
 
-def _pairs_numpy(table, n_rules, nrec):
+def _pairs_numpy(rule, key, rid, n_rules, nrec):
     """generate()'s pairs (int32, i < j, sorted), pairs per rule and new pairs per rule from its
-    (rule, key, rid) block entries."""
+    block entries: each a rule, a key and a record."""
     # each pair once, credited to the first rule that produced it: one sort of int64 codes
     # (pair * rules + rule) per range of records (core.block_pair_codes), not a pandas groupby
     # and sort - those were half of blocking's time at a million records
     nr = max(n_rules, 1)
     counts, new = np.zeros(n_rules, np.int64), np.zeros(n_rules, np.int64)
-    if not len(table):
+    if not len(rid):
         return np.zeros((0, 2), np.int32), counts, new
-    rule, key, rid = (table[c].to_numpy(np.int64) for c in ("rule", "key", "rid"))
     nk = int(key.max()) + 1
     if (int(rule.max()) + 1) * nk * nrec < 2 ** 62:
         # sorted by rule, key, record as one integer each, on every core (core.sort_ints): the
-        # order np.lexsort gives, which sorted on one core was most of the time
-        c = sort_ints((rule * nk + key) * nrec + rid)
-        rid, block = c % nrec, c // nrec
-        del c
+        # order np.lexsort gives, which sorted on one core was most of the time. Made in place:
+        # one int64 an entry
+        block = rule.astype(np.int64)
+        block *= nk
+        block += key
+        block *= nrec
+        block += rid
+        block = sort_ints(block, overwrite=True)
+        rid = (block % nrec).astype(np.int32)
+        block //= nrec
     else:
         order = np.lexsort((rid, key, rule))
-        rid, block = rid[order], (rule * nk + key)[order]
-    rule, end = block // nk, block_ends(block)
-    del block, key
+        rid, block = rid[order], (rule.astype(np.int64) * nk + key)[order]
+        del order
+    end = block_ends(block)
+    block //= nk
+    rule = block.astype(np.int16)
+    del block
     pieces = []
     for code in block_pair_codes(rid, end, nrec, tag=rule, n_tags=nr):
         # pairs per rule, each once: with "adaptive" a block's pieces overlap, so a pair can come
@@ -381,18 +396,59 @@ def _pairs_numpy(table, n_rules, nrec):
         new += np.bincount(code[first] % nr, minlength=n_rules)
         pieces.append(pairs_from_codes(pair[first], nrec))
         del code, pair, first
-    return (np.concatenate(pieces) if pieces else np.zeros((0, 2), np.int32)), counts, new
+    return join_pieces(pieces, np.zeros((0, 2), np.int32)), counts, new
 
 
 def union_pairs(*parts):
     """The distinct rows of these (i, j) arrays of record indices, sorted, as np.unique(axis=0)
-    gives them - by one sort of int64 codes (core.unique_ints): on 48M pairs 1.5 s, not 22."""
+    gives them. Each part is sorted and de-duplicated as int64 codes (core.unique_ints: on 48M
+    pairs 1.5 s, not 22) unless it already is, and the rest merged into the first by inserting
+    the pairs it lacks: as codes of every pair joined and sorted again, the first part (blocking's
+    192M pairs on five million NCVR records) was held four times over."""
     parts = [p for p in parts if len(p)] or [parts[0]]
     if not len(parts[0]):
         return parts[0]
     n = int(max(p.max() for p in parts)) + 1
-    code = unique_ints(np.concatenate([p[:, 0].astype(np.int64) * n + p[:, 1] for p in parts]))
-    out = np.empty((len(code), 2), parts[0].dtype)        # filled column by column: no int64 copy of it
+    out = _sorted_unique(parts[0], n)
+    for p in parts[1:]:
+        code = _codes(_sorted_unique(p, n), n)
+        at = np.full(len(code), len(out), np.int64)       # where each goes in out: past its end, unless
+        have = np.zeros(len(code), bool)
+        a = 0
+        for lo, hi in pair_slices(len(out)):
+            # the codes up to this slice's last that earlier slices did not take go here
+            c = _codes(out[lo:hi], n)
+            b = int(np.searchsorted(code, c[-1], side="right"))
+            if a < b:
+                k = np.searchsorted(c, code[a:b])
+                at[a:b] = lo + k
+                have[a:b] = c[np.minimum(k, len(c) - 1)] == code[a:b]
+            a = b
+        new = ~have
+        at, code = at[new], code[new]
+        # as np.insert(out, at, rows): each new row before the old one at its position; filled a
+        # slice at a time (np.insert's mask of old rows becomes an int64 index of every row)
+        merged = np.empty((len(out) + len(at), 2), out.dtype)
+        dest = at + np.arange(len(at))
+        merged[dest, 0], merged[dest, 1] = code // n, code % n
+        for lo, hi in pair_slices(len(out)):
+            old = np.arange(lo, hi)
+            merged[old + np.searchsorted(at, old, side="right")] = out[lo:hi]
+        out = merged
+    return out
+
+
+def _codes(p, n):
+    return p[:, 0].astype(np.int64) * n + p[:, 1]
+
+
+def _sorted_unique(p, n):
+    """p's distinct rows in order, p itself when it already is: checked a slice at a time."""
+    ordered = all((np.diff(_codes(p[max(lo - 1, 0):hi], n)) > 0).all() for lo, hi in pair_slices(len(p)))
+    if ordered:
+        return p
+    code = unique_ints(_codes(p, n), overwrite=True)
+    out = np.empty((len(code), 2), p.dtype)        # filled column by column: no int64 copy of it
     out[:, 0] = code // n
     out[:, 1] = code % n
     return out
@@ -402,15 +458,14 @@ def country_pairs(df, profiles, max_block):
     """Pairs from country.blocking_keys (first-name root + DOB or surname, email user name, name
     skeleton), blocks larger than max_block skipped - the same keys core.block uses."""
     from . import country
-    from .core import _block_codes
-    found = list(country.blocking_keys(df, profiles))
-    if not found:
+    from .core import _block_codes, _factorize_columns
+    *cols, idx = country.blocking_key_columns(df, profiles)
+    if not len(idx):
         return np.zeros((0, 2), np.int32)
     # integer codes, as core.block: a Python set of pair tuples was about 100 bytes a pair
-    keys, idx = zip(*found)
-    codes, _ = pd.factorize(pd.Series(keys, dtype=object))
+    codes, _ = _factorize_columns(cols)
     n = len(df)
-    entry = unique_ints(codes.astype(np.int64) * n + np.asarray(idx, np.int64))   # a record once per block
+    entry = unique_ints(codes.astype(np.int64) * n + idx, overwrite=True)   # a record once per block
     block, rec = entry // n, entry % n
     sizes = np.bincount(block)
     keep = (sizes[block] >= 2) & (sizes[block] <= max_block)

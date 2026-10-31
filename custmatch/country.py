@@ -51,6 +51,7 @@ import csv
 import re
 from collections import defaultdict
 from functools import lru_cache
+from itertools import chain
 from pathlib import Path
 
 import numpy as np
@@ -478,30 +479,51 @@ def features(df, pairs, profiles=None):
 def blocking_keys(df, profiles=None):
     """(key, record index) for sparse records: first-name root + date of birth, first-name root
     + surname (Bill and William Jones), and the email user name when it is long enough to be
-    distinctive."""
-    keys = []
+    distinctive. blocking_key_columns gives the same keys as arrays."""
+    tag, a, b, idx = blocking_key_columns(df, profiles)
+    return [(key_tuple(t, x, y), i) for t, x, y, i in zip(tag, a, b, idx.tolist())]
+
+
+ONE_VALUE = ("eu", "sk")        # keys of one value: the email user name and the name skeleton
+
+
+def key_tuple(tag, a, b):
+    return (tag, a) if tag in ONE_VALUE else (tag, a, b)
+
+
+def blocking_key_columns(df, profiles=None):
+    """blocking_keys as (tag, a, b, record index) arrays, in the same order: each key is
+    key_tuple(tag, a, b), b "" for a key of one value. As a Python tuple a key, they were about
+    4 GB on five million records."""
+    tags, first, second, recs = [], [], [], []
     if "first_roots" in df.columns:
         split = {}                                 # each distinct list of roots split once
-        for i, (roots, dob, ln) in enumerate(zip(df.first_roots.to_numpy(dtype=object),
-                                                 df.date_of_birth.to_numpy(dtype=object),
-                                                 df.last_name.to_numpy(dtype=object))):
-            if roots not in split:
-                split[roots] = roots.split("|") if roots else []
-            for r in split[roots]:
-                if dob:
-                    keys.append((("fd", r, dob), i))
-                if ln:
-                    keys.append((("fl", r, ln), i))
-    if "email_user" in df.columns:
-        junk = _junk_email(df, profiles)
-        for i, u in enumerate(df.email_user.to_numpy(dtype=object)):
-            if len(u) >= 5 and not junk[i]:
-                keys.append((("eu", u), i))
-    if "name_skeleton" in df.columns:
-        for i, k in enumerate(df.name_skeleton.to_numpy(dtype=object)):
-            if len(k) >= 5:
-                keys.append((("sk", k), i))
-    return keys
+        lists = [split[r] if r in split else split.setdefault(r, r.split("|") if r else [])
+                 for r in df.first_roots.to_numpy(dtype=object)]
+        rec = np.repeat(np.arange(len(df)), np.fromiter(map(len, lists), np.int64, len(lists)))
+        root = np.fromiter(chain.from_iterable(lists), object, len(rec))
+        del lists
+        # for each record and root: the date-of-birth key, then the surname key, where set
+        both = len(rec) * 2
+        tag, a, b, i, ok = (np.empty(both, object), np.repeat(root, 2), np.empty(both, object),
+                            np.repeat(rec, 2), np.empty(both, bool))
+        tag[0::2], tag[1::2] = "fd", "fl"
+        for k, col in enumerate(("date_of_birth", "last_name")):
+            v = df[col].to_numpy(dtype=object)[rec]
+            b[k::2], ok[k::2] = v, v.astype(bool)
+        tags.append(tag[ok]), first.append(a[ok]), second.append(b[ok]), recs.append(i[ok])
+    for tag, col in (("eu", "email_user"), ("sk", "name_skeleton")):
+        if col in df.columns:
+            v = df[col].to_numpy(dtype=object)
+            ok = np.fromiter(map(len, v), np.int64, len(v)) >= 5
+            if tag == "eu":
+                ok &= ~_junk_email(df, profiles)
+            k = np.flatnonzero(ok)
+            tags.append(np.full(len(k), tag, object)), first.append(v[k])
+            second.append(np.full(len(k), "", object)), recs.append(k)
+    if not recs:
+        return (np.zeros(0, object),) * 3 + (np.zeros(0, np.int64),)
+    return tuple(np.concatenate(x) for x in (tags, first, second, recs))
 
 
 skeleton = consonants      # the name the tests and docs use

@@ -125,20 +125,25 @@ def _is_forest(model):
     return isinstance(model, RandomForestClassifier) and list(model.classes_) == [0, 1]
 
 
-def p_match(model, X):
+def p_match(model, X, rows=None):
     """P(class 1). A model whose training fold held one class has a single probability column.
+    rows: P(class 1) of X[rows], gathered a chunk at a time rather than copied whole first.
 
     Predicted PREDICT_CHUNK rows at a time: a random forest's predict_proba has every worker
     thread build a rows x 2 float64 array per tree, which at 69 million candidate pairs and 16
     threads was gigabytes per thread. Chunking bounds it; the probabilities are the same."""
     import numpy as np
-    if not len(X):
+    n = len(X) if rows is None else len(rows)
+
+    def take(a, b):
+        return X[a:b] if rows is None else X[rows[a:b]]
+    if not n:
         return np.zeros(0)
     if list(model.classes_) != [0, 1] and len(model.classes_) == 1:
-        return np.full(len(X), float(list(model.classes_)[0] == 1))
+        return np.full(n, float(list(model.classes_)[0] == 1))
     if _is_forest(model):
-        if len(X) <= SMALL_BATCH:
-            return _forest_proba(model, X)
+        if n <= SMALL_BATCH:
+            return _forest_proba(model, take(0, n))
         # sklearn's predict_proba adds the trees' votes from several threads in whatever order
         # they finish, so a probability can differ in its last bit between runs - enough to
         # reorder tied pairs in active learning and change which pairs are asked. Threads over
@@ -148,12 +153,12 @@ def p_match(model, X):
         leaves = _leaf_p(model)
         workers = (os.cpu_count() or 1) if (model.n_jobs or 1) < 0 else (model.n_jobs or 1)
         with ThreadPoolExecutor(workers) as pool:
-            parts = list(pool.map(lambda s: _forest_proba(model, X[s:s + PREDICT_CHUNK_THREAD], leaves),
-                                  range(0, len(X), PREDICT_CHUNK_THREAD)))
+            parts = list(pool.map(lambda s: _forest_proba(model, take(s, s + PREDICT_CHUNK_THREAD), leaves),
+                                  range(0, n, PREDICT_CHUNK_THREAD)))
         return np.concatenate(parts)
-    out = np.empty(len(X))
-    for s in range(0, len(X), PREDICT_CHUNK):
-        proba = model.predict_proba(X[s:s + PREDICT_CHUNK])
+    out = np.empty(n)
+    for s in range(0, n, PREDICT_CHUNK):
+        proba = model.predict_proba(take(s, s + PREDICT_CHUNK))
         out[s:s + len(proba)] = proba[:, 1] if proba.shape[1] == 2 else float(list(model.classes_)[0] == 1)
     return out
 
@@ -197,8 +202,7 @@ def p_match_rows(models, X):
     if len(X) <= SMALL_BATCH:
         return [p_match(m, X) for m in models]
     rows, inverse = distinct_rows(X)
-    Xd = X[rows]
-    return [p_match(m, Xd)[inverse] for m in models]
+    return [p_match(m, X, rows)[inverse] for m in models]      # no copy of the distinct rows
 
 
 def score_pairs(models, df, pairs, profiles, fopts, transform=None, keep=None):
@@ -212,19 +216,21 @@ def score_pairs(models, df, pairs, profiles, fopts, transform=None, keep=None):
     import numpy as np
     from concurrent.futures import ThreadPoolExecutor
 
-    from .core import SCORE_CHUNK, feature_chunks
+    from .core import SCORE_CHUNK, feature_chunks, join_pieces
     keep = keep or [None] * len(models)
     out = [None] * len(models)
 
     def gathered():
-        # feature chunks gathered to SCORE_CHUNK rows, so the forest's threads are kept busy
+        # feature chunks gathered to SCORE_CHUNK rows, so the forest's threads are kept busy;
+        # joined freeing each chunk as it is copied (core.join_pieces), not held twice
         start, parts = 0, []
         for s, X in feature_chunks(df, pairs, profiles, **fopts):
             if parts and sum(map(len, parts)) + len(X) > SCORE_CHUNK:
-                yield start, np.vstack(parts) if len(parts) > 1 else parts[0]
+                yield start, join_pieces(parts, None)
                 start, parts = s, []
             parts.append(X)
-        yield start, np.vstack(parts) if len(parts) > 1 else parts[0]
+            del X
+        yield start, join_pieces(parts, None)
 
     blocks = gathered()
     with ThreadPoolExecutor(1) as ahead:

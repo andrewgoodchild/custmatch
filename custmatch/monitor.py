@@ -18,6 +18,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from .core import near_threshold, pair_slices
+
 BINS = np.linspace(0, 1, 11)
 MATCH_RATE_POINTS = 5.0
 FILL_POINTS = 10.0
@@ -36,7 +38,10 @@ def snapshot(df, customer, score, th):
     fill = {c: round(100 * float((df[c].astype(str) != "").mean()), 2) for c in fields}
     by_source = {s: round(100 * float(matched[(df.source == s).to_numpy()].mean()), 2)
                  for s in sorted(df.source.unique())}
-    hist = np.histogram(np.clip(score, 0, 1), BINS)[0] if len(score) else np.zeros(len(BINS) - 1, int)
+    score = np.asarray(score)
+    hist = np.zeros(len(BINS) - 1, int)
+    for lo, hi in pair_slices(len(score)):           # a slice at a time: no float copy of every score
+        hist += np.histogram(np.clip(score[lo:hi], 0, 1), BINS)[0]
     return {"records": int(len(df)), "customers": int(len(counts)),
             "match_rate": round(100 * float(matched.mean()), 2) if len(df) else 0.0,
             "match_rate_by_source": by_source,
@@ -44,7 +49,7 @@ def snapshot(df, customer, score, th):
             "largest_customer": int(counts.max()) if len(counts) else 0,
             "threshold": float(th),
             "pairs_scored": int(len(score)),
-            "pairs_near_threshold": int(np.sum(np.abs(np.asarray(score) - th) < 0.1)),
+            "pairs_near_threshold": len(near_threshold(score, th, 0.1)),
             "score_histogram": hist.tolist(),
             "fill_rate": fill}
 

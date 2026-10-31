@@ -129,19 +129,30 @@ def _bridges(n_nodes, edges):
     return tree & (total[child] == 0)
 
 
-def links(df, profiles, pairs, X, score, threshold, keys, customer_id):
-    """DataFrame of accepted links: a, b, customer_id, score, is_bridge, evidence. X: the pairs'
-    features, or a function giving the features of the pairs at some row indices."""
+LINK_SLICE = 1_000_000     # links.csv rows made and written at once
+
+
+def write_links(path, df, profiles, pairs, X, score, threshold, keys, customer_id):
+    """links.csv: a row per accepted link - a, b, customer_id, score, is_bridge, evidence - weakest
+    first, for review. X: the pairs' features, or a function giving the features of the pairs at
+    some row indices. Rows are made and written LINK_SLICE at a time, in order: millions of links
+    with their evidence text were gigabytes at once. Returns (links, bridges)."""
     keep = np.flatnonzero(score > threshold)
     e = pairs[keep].astype(np.int64)
-    i, j = e[:, 0], e[:, 1]
-    ce, cp = _contacts(df, profiles, "email", i, j), _contacts(df, profiles, "phone", i, j)
-    out = pd.DataFrame({
-        "a": keys[i], "b": keys[j], "customer_id": np.asarray(customer_id)[i].astype(int),
-        "score": np.round(score[keep].astype(float), 4),
-        "is_bridge": _bridges(len(df), e),
-        "evidence": evidence_many(X(keep) if callable(X) else X[keep], ce, cp, _both_streets(df, i, j))})
-    return out.sort_values("score", kind="stable").reset_index(drop=True)  # review weakest first
+    bridge = _bridges(len(df), e)
+    rounded = np.round(score[keep].astype(float), 4)
+    order = np.argsort(rounded, kind="stable")        # weakest first
+    customer_id = np.asarray(customer_id)
+    for s in range(0, max(len(order), 1), LINK_SLICE):
+        o = order[s:s + LINK_SLICE]
+        i, j = e[o, 0], e[o, 1]
+        ce, cp = _contacts(df, profiles, "email", i, j), _contacts(df, profiles, "phone", i, j)
+        pd.DataFrame({
+            "a": keys[i], "b": keys[j], "customer_id": customer_id[i].astype(int), "score": rounded[o],
+            "is_bridge": bridge[o],
+            "evidence": evidence_many(X(keep[o]) if callable(X) else X[keep[o]], ce, cp, _both_streets(df, i, j))}
+        ).to_csv(path, index=False, header=s == 0, mode="w" if s == 0 else "a")
+    return len(keep), int(bridge.sum())
 
 
 def _block_keys(df, i, profiles):

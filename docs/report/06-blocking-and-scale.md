@@ -375,27 +375,34 @@ kept the same:
   for one range of records at a time, about 40M pairs, and removes the repeats before the next
   (`core.block_pair_codes`). The five fold models' scores only choose the threshold, so each is
   kept as its band in the threshold grid, a byte a pair instead of eight (`core.threshold_bands`).
-  The audit pool and the per-record confidence make one large copy at a time.
+  Every step over all the candidate pairs after scoring - the review band, the per-record
+  confidence, the audit pool, the monitor's histogram - takes 10M pairs at a time
+  (`core.pair_slices`), in an order that leaves sums the same to the bit; `links.csv` is made and
+  written a million rows at a time. Blocking keeps its entries as int32, sorts in place, merges the
+  country keys' pairs into the rest instead of sorting all of them again, and makes the country keys
+  as arrays instead of a Python tuple each (about 4 GB on the full file). The feature caches,
+  rebuilt by the review and links, are dropped once `links.csv` is written: they held the records
+  after the run returned.
 
 The same file, config and labels (300 random, drawn stratified, and 700 active) on the 18-core,
 64 GB laptop, one run each. Other work shared the machine for the runs after the changes (a
-load average of 6 to 14, kept in the results file), so their times are if anything long:
+load average of 13 to 18, kept in the results file), so their times are if anything long:
 
 | NCVR | Code | Peak memory | Blocking | Whole run |
 | --- | --- | --- | --- | --- |
 | 1,428,005 records of 1,000,000 people, 46.9M candidate pairs | Before | 11.9 GB | 162 s | 6.0 min |
-| | Now | 8.1 GB | 17 s | 1.6 min |
-| | Now, `MallocLargeCache=0` (macOS) | 5.5 GB | 19 s | 1.9 min |
+| | Now | 7.2 GB | 18 s | 1.7 min |
+| | Now, `MallocLargeCache=0` (macOS) | 4.5 GB | 20 s | 2.0 min |
 | All 5,000,000 records, 191.8M candidate pairs | Before | 49.0 GB | 455 s | 22.9 min |
-| | Now | 17.3 GB | 73 s | 7.1 min |
-| | Now, `MallocLargeCache=0` (macOS) | 12.5 GB | 77 s | 7.9 min |
+| | Now | 12.9 GB | 75 s | 7.4 min |
+| | Now, `MallocLargeCache=0` (macOS) | 10.2 GB | 83 s | 8.6 min |
 
 Every output file is byte-for-byte the same in all of them, and so the clustered F1 (91.67 and
-86.24). The forest stage, most of the run, went from 804 to 271 seconds on the full file. The
+86.24). The forest stage, most of the run, went from 804 to 282 seconds on the full file. The
 peak is macOS's lifetime peak footprint, and macOS's allocator keeps freed large blocks in the
 process for reuse, so it counts what was ever allocated at once, not what was in use.
 `MallocLargeCache=0` in the environment makes it hand them back as they are freed: the peak falls
-by a quarter to a third, and the run takes 10 to 20% longer, as fresh memory is mapped for each
+by a fifth to over a third, and the run takes 10 to 20% longer, as fresh memory is mapped for each
 block of features. On Linux, glibc maps blocks this large on their own and unmaps them when freed;
 not measured here. A DuckDB engine for the pairs, tried during this release, peaked at 21.4 GB on
 the full file (115 s of blocking) and was removed once numpy went below it. These are single runs.

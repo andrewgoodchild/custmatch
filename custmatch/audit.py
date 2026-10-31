@@ -56,34 +56,76 @@ def save_pool(state_dir, keys, pairs, score, customer, seed=0):
     """The run's audit pool: per stratum (score band x linked or not), up to POOL_PER_STRATUM
     candidate pairs at random, and the stratum's size. keys: 'source:record_id' per record;
     pairs, score: every scored candidate pair; customer: each record's customer."""
+    from .core import pair_slices
     rng = np.random.default_rng(seed)
     score = np.asarray(score)
-    band = band_of(score)
     customer = np.asarray(customer)
     if len(customer) and customer.max() < 2 ** 31:
-        customer = customer.astype(np.int32)      # half the memory of the two gathers below
-    linked = customer[pairs[:, 0]] == customer[pairs[:, 1]]
+        customer = customer.astype(np.int32)      # half the memory of the gathers below
+    # a slice of pairs at a time: all 5M NCVR records have 192M pairs, most of them in one
+    # stratum, whose indices and scores as whole arrays were 3 GB
+    slices = pair_slices(len(score))
+    band, linked = np.empty(len(score), np.uint8), np.empty(len(score), bool)
+    for lo, hi in slices:
+        band[lo:hi] = band_of(score[lo:hi])
+        linked[lo:hi] = customer[pairs[lo:hi, 0]] == customer[pairs[lo:hi, 1]]
     keep, totals, score_sum = [], {}, {}
     for b in range(len(BANDS) - 1):
         for li in (True, False):
-            # one stratum's pairs at a time, as a mask (all 5M NCVR records: 192M pairs, most of
-            # them in one stratum, whose indices and scores together were 3 GB)
             m = (band == b) & (linked == li)
-            count = int(m.sum())
+            per_slice = np.array([np.count_nonzero(m[lo:hi]) for lo, hi in slices], np.int64)
+            count = int(per_slice.sum())
             if not count:
                 continue
+            first = np.r_[0, np.cumsum(per_slice)]       # rank of each slice's first pair in the stratum
             totals[stratum(b, li)] = count
-            score_sum[stratum(b, li)] = float(score[m].sum())
-            idx = np.flatnonzero(m)
+            score_sum[stratum(b, li)] = float(_masked_sum(score, m, slices, first, 0, count))
+            ranks = np.arange(count) if count <= POOL_PER_STRATUM else \
+                np.sort(rng.choice(count, POOL_PER_STRATUM, replace=False))   # as rng.choice of the indices
+            keep.append(_at_ranks(m, slices, first, ranks))
             del m
-            if len(idx) > POOL_PER_STRATUM:
-                idx = np.sort(rng.choice(idx, POOL_PER_STRATUM, replace=False))
-            keep.append(idx)
     keep = np.concatenate(keep) if keep else np.zeros(0, np.int64)
     pd.DataFrame({"a": keys[pairs[keep, 0]], "b": keys[pairs[keep, 1]], "score": score[keep],
                   "stratum": [stratum(b, li) for b, li in zip(band[keep], linked[keep])]}
                  ).to_parquet(Path(state_dir) / POOL, index=False)
     (Path(state_dir) / TOTALS).write_text(json.dumps({"bands": list(BANDS), "pairs": totals, "score_sum": score_sum}))
+
+
+SUM_LEAF = 1 << 22
+
+
+def _masked(score, m, slices, first, r0, r1):
+    """score[m][r0:r1], from the slices that hold those ranks."""
+    k = int(np.searchsorted(first, r0, side="right")) - 1
+    parts = []
+    while r0 < r1:
+        lo, hi = slices[k]
+        a, b = r0 - first[k], min(r1, first[k + 1]) - first[k]
+        parts.append(score[lo:hi][m[lo:hi]][a:b])
+        r0 = first[k] + b
+        k += 1
+    return np.concatenate(parts) if parts else score[:0]
+
+
+def _masked_sum(score, m, slices, first, r0, r1):
+    """score[m][r0:r1].sum() to the bit, without the copy: numpy sums by halving (pairwise, cut
+    at a multiple of 8), so the halves are summed the same way, each from its slices."""
+    n = r1 - r0
+    if n <= SUM_LEAF:
+        return _masked(score, m, slices, first, r0, r1).sum()
+    half = n // 2
+    half -= half % 8
+    return _masked_sum(score, m, slices, first, r0, r0 + half) + _masked_sum(score, m, slices, first, r0 + half, r1)
+
+
+def _at_ranks(m, slices, first, ranks):
+    """np.flatnonzero(m)[ranks] for sorted ranks, a slice at a time."""
+    out = []
+    for k, (lo, hi) in enumerate(slices):
+        r = ranks[(ranks >= first[k]) & (ranks < first[k + 1])] - first[k]
+        if len(r):
+            out.append(lo + np.flatnonzero(m[lo:hi])[r])
+    return np.concatenate(out) if out else np.zeros(0, np.int64)
 
 
 def _state(state_dir):

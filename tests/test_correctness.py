@@ -73,7 +73,7 @@ def test_block_pairs_match_brute_force(seed, monkeypatch):
     m = int(rng.integers(0, 600))
     table = pd.DataFrame({"rule": rng.integers(0, 3, m), "key": rng.integers(0, 25, m),
                           "rid": rng.integers(0, 200, m)}).drop_duplicates()
-    pairs, counts, new = _pairs_numpy(table, 3, 200)
+    pairs, counts, new = _pairs_numpy(*(table[c].to_numpy() for c in ("rule", "key", "rid")), 3, 200)
     by_rule = [set() for _ in range(3)]
     for (r, _), g in table.groupby(["rule", "key"]):
         by_rule[r] |= set(combinations(sorted(g.rid), 2))

@@ -1417,8 +1417,8 @@ def test_ncvr_memory_claims():
             assert (f"| {label[k]} | {x['peak_memory_gb']:.1f} GB | {block:.0f} s | {x['seconds'] / 60:.1f} min |") in text, (n, k)
         off, on = runs["numpy/malloc_large_cache_0"], runs["numpy"]
         assert off["peak_memory_gb"] < on["peak_memory_gb"] < first["peak_memory_gb"], n
-        # "the peak falls by a quarter to a third, and the run takes 10 to 20% longer"
-        assert 0.25 <= 1 - off["peak_memory_gb"] / on["peak_memory_gb"] <= 1 / 3 + 0.01, n
+        # "the peak falls by a fifth to over a third, and the run takes 10 to 20% longer"
+        assert 0.20 <= 1 - off["peak_memory_gb"] / on["peak_memory_gb"] <= 0.40, n
         assert 1.10 <= off["seconds"] / on["seconds"] <= 1.20, n
     full = {k: r[f"records_5000000/{k}"] for k in label}
     one = {k: r[f"records_1428005/{k}"] for k in label}

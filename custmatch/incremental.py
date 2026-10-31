@@ -267,7 +267,7 @@ def add(state_dir, new_config, out_dir, delete=None):
         out / "merges.csv", index=False)
     pd.DataFrame(refused, columns=["a", "b", "score", "reason"]).to_csv(out / "refused_links.csv", index=False)
     stewardship.write_history(out, events, state_dir)
-    explain.links(df, profiles, pairs, X, score, th, keys, customer).to_csv(out / "links.csv", index=False)
+    explain.write_links(out / "links.csv", df, profiles, pairs, X, score, th, keys, customer)
     kept_links = sl[sl.a.isin(pos) & sl.b.isin(pos)]
     added = pd.DataFrame({"a": keys[pairs[new_links, 0]], "b": keys[pairs[new_links, 1]], "score": score[new_links]})
     forced = np.array([*must, *trusted], dtype=int).reshape(-1, 2)
