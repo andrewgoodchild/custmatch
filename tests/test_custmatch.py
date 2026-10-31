@@ -715,21 +715,23 @@ def test_oversized_blocks_are_split_not_dropped(world):
 
 
 @pytest.mark.parametrize("blocking_mode", ["fixed", "adaptive"])
-def test_duckdb_blocking_engine_makes_the_same_pairs(world, blocking_mode):
-    """"blocking_engine": "duckdb" makes the pairs from the same blocks in DuckDB: the same pairs,
-    the same per-rule counts, oversized blocks split into overlapping pieces included."""
-    pytest.importorskip("duckdb")
-    from custmatch import blocking
+def test_pairs_made_in_slices_are_the_same(world, blocking_mode, monkeypatch):
+    """Rule blocking makes its pairs core.PAIR_CHUNK at a time, by range of records: tiny slices
+    give the same pairs and per-rule counts as one, oversized blocks split into overlapping
+    pieces included."""
+    from custmatch import blocking, core
     from custmatch.core import profile_contacts
     tmp, *_ = world
     df, cfg = io.load(tmp / "config.json")
     prof = {f: profile_contacts(df, f) for f in ("email", "phone")}
     base = cfg | {"blocking": blocking_mode, "max_block": 4}     # small blocks: many are split
     a, _, rep_a, _ = blocking.candidates_for(df, prof, base)
-    b, _, rep_b, _ = blocking.candidates_for(df, prof, base | {"blocking_engine": "duckdb"})
+    monkeypatch.setattr(core, "PAIR_CHUNK", 7)
+    b, _, rep_b, _ = blocking.candidates_for(df, prof, base)
     assert sum(r["oversized_blocks_split"] for r in rep_a["rules"]) > 0
     assert np.array_equal(a, b) and b.dtype == np.int32
     assert [(r["pairs"], r["new_pairs"]) for r in rep_a["rules"]] == [(r["pairs"], r["new_pairs"]) for r in rep_b["rules"]]
+
 
 def test_learned_rules_reach_their_coverage_target(world):
     from custmatch import blocking
@@ -1608,8 +1610,9 @@ def test_the_bundled_demo_runs(tmp_path):
 
 @pytest.mark.parametrize("match_weight", [False, True])
 def test_scoring_in_chunks_changes_no_output(tmp_path, monkeypatch, match_weight):
-    """Candidate pairs are scored FEATURE_CHUNK at a time and review.csv / links.csv recompute the
-    features they show: a run with tiny chunks writes exactly what one chunk writes."""
+    """Candidate pairs are made PAIR_CHUNK and scored FEATURE_CHUNK at a time, and review.csv /
+    links.csv recompute the features they show: a run with tiny chunks writes exactly what one
+    chunk writes."""
     from custmatch import core
     root = Path(__file__).resolve().parents[1] / "examples" / "demo"
     cfg = json.loads((root / "config.json").read_text()) | {"match_weight_feature": match_weight}
@@ -1620,6 +1623,7 @@ def test_scoring_in_chunks_changes_no_output(tmp_path, monkeypatch, match_weight
     for chunk in (whole, 37):
         monkeypatch.setattr(core, "FEATURE_CHUNK", chunk)
         monkeypatch.setattr(core, "SCORE_CHUNK", 3 * chunk + 5)          # several feature chunks a batch
+        monkeypatch.setattr(core, "PAIR_CHUNK", core.PAIR_CHUNK if chunk == whole else 50)
         out = tmp_path / f"out_{chunk}"
         s = pipeline.run(tmp_path / "config.json", root / "labels.csv", out, log=lambda *_: None)
         s.pop("stage_seconds")

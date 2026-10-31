@@ -40,7 +40,12 @@ POOL, TOTALS = "audit_pool.parquet", "audit_strata.json"
 
 
 def band_of(score):
-    return np.clip(np.searchsorted(BANDS, score, side="right") - 1, 0, len(BANDS) - 2)
+    b = np.searchsorted(BANDS, score, side="right")
+    if not np.ndim(b):
+        return np.clip(b - 1, 0, len(BANDS) - 2)
+    np.clip(b, 1, len(BANDS) - 1, out=b)           # in place, one byte a pair: 192M pairs at 5M records
+    b -= 1
+    return b.astype(np.uint8)
 
 
 def stratum(band, linked):
@@ -52,22 +57,30 @@ def save_pool(state_dir, keys, pairs, score, customer, seed=0):
     candidate pairs at random, and the stratum's size. keys: 'source:record_id' per record;
     pairs, score: every scored candidate pair; customer: each record's customer."""
     rng = np.random.default_rng(seed)
-    band = band_of(np.asarray(score))
+    score = np.asarray(score)
+    band = band_of(score)
     customer = np.asarray(customer)
+    if len(customer) and customer.max() < 2 ** 31:
+        customer = customer.astype(np.int32)      # half the memory of the two gathers below
     linked = customer[pairs[:, 0]] == customer[pairs[:, 1]]
     keep, totals, score_sum = [], {}, {}
     for b in range(len(BANDS) - 1):
         for li in (True, False):
-            idx = np.flatnonzero((band == b) & (linked == li))
-            if not len(idx):
+            # one stratum's pairs at a time, as a mask (all 5M NCVR records: 192M pairs, most of
+            # them in one stratum, whose indices and scores together were 3 GB)
+            m = (band == b) & (linked == li)
+            count = int(m.sum())
+            if not count:
                 continue
-            totals[stratum(b, li)] = int(len(idx))
-            score_sum[stratum(b, li)] = float(np.asarray(score)[idx].sum())
+            totals[stratum(b, li)] = count
+            score_sum[stratum(b, li)] = float(score[m].sum())
+            idx = np.flatnonzero(m)
+            del m
             if len(idx) > POOL_PER_STRATUM:
                 idx = np.sort(rng.choice(idx, POOL_PER_STRATUM, replace=False))
             keep.append(idx)
     keep = np.concatenate(keep) if keep else np.zeros(0, np.int64)
-    pd.DataFrame({"a": keys[pairs[keep, 0]], "b": keys[pairs[keep, 1]], "score": np.asarray(score)[keep],
+    pd.DataFrame({"a": keys[pairs[keep, 0]], "b": keys[pairs[keep, 1]], "score": score[keep],
                   "stratum": [stratum(b, li) for b, li in zip(band[keep], linked[keep])]}
                  ).to_parquet(Path(state_dir) / POOL, index=False)
     (Path(state_dir) / TOTALS).write_text(json.dumps({"bands": list(BANDS), "pairs": totals, "score_sum": score_sum}))

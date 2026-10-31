@@ -1,14 +1,15 @@
-"""Peak memory and time of a full custmatch run on NCVR, by blocking engine.
+"""Peak memory and time of a full custmatch run on NCVR, or of Splink on the same folder.
 
-    python research/scripts/ncvr_memory.py --people 1000000 --work data/ncvr_memory_1m [--engine duckdb]
-    python research/scripts/ncvr_memory.py --work data/ncvr_full_local/current_default [--engine duckdb]
+    python research/scripts/ncvr_memory.py --people 1000000 --work data/ncvr_memory_1m
+    python research/scripts/ncvr_memory.py --work data/ncvr_full_local/current_default
+    MallocLargeCache=0 python research/scripts/ncvr_memory.py --work ... --tag malloc_large_cache_0
     python research/scripts/ncvr_memory.py --work data/ncvr_memory_1m --engine splink
 
 --work holds the run's config.json, sources and labels.csv. With --people and no labels there yet,
 it is built first: that many people with all their records, the "current_default" config of
 ncvr_leipzig.py, 300 random labels drawn stratified, then 700 by active learning (as a user
 would label). The full five-million-record folder is the one research/scripts/modal_ncvr_full.py
-leaves. Every later call reuses the folder, so runs differ only in the code and engine.
+leaves. Every later call reuses the folder, so runs differ only in the code and the allocator.
 
 --engine splink runs Splink on DuckDB instead, set up as ncvr_leipzig.py's comparison: blocking
 rules mirroring the config's keys (not its adaptive splits), name comparisons with term-frequency
@@ -19,7 +20,8 @@ Peak memory is the process's lifetime maximum physical footprint on macOS (proc_
 Activity Monitor shows): resident memory reads low under memory pressure, as macOS compresses
 pages, and high after a stage frees memory that the allocator keeps for reuse. Elsewhere it is
 the peak resident memory (getrusage). Each result keeps the machine's load average at the end,
-as other work on it slows the run. Writes research/results/ncvr_memory.json.
+as other work on it slows the run, and the MallocLargeCache setting: macOS's allocator keeps
+freed large blocks in the process unless it is 0. Writes research/results/ncvr_memory.json.
 """
 import argparse
 import ctypes
@@ -93,7 +95,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--work", required=True, help="folder with config.json, sources and labels.csv")
     ap.add_argument("--people", type=int, help="build the folder from this many NCVR people if it has no labels")
-    ap.add_argument("--engine", choices=["numpy", "duckdb", "splink"], default="numpy")
+    ap.add_argument("--engine", choices=["numpy", "splink"], default="numpy")
     ap.add_argument("--splink-memory", help="DuckDB's memory limit for Splink, such as 8GB (default 80%% of RAM)")
     ap.add_argument("--tag", default="", help="kept as KEY/TAG beside the plain runs")
     a = ap.parse_args()
@@ -103,7 +105,7 @@ def main():
         build(work, a.people)
     if a.engine == "splink":
         return splink(work, a.tag, a.splink_memory)
-    cfg = json.loads((work / "config.json").read_text()) | {"blocking_engine": a.engine}
+    cfg = json.loads((work / "config.json").read_text())
     cp = work / f"config_{a.engine}.json"                # beside the sources: their relative paths hold
     cp.write_text(json.dumps(cfg))
     stages, t0 = [], time.time()
@@ -119,7 +121,8 @@ def main():
            "clustered": partition_scores(c.customer_id.to_numpy(), pid, float((sz * (sz - 1) / 2).sum())),
            "peak_memory_gb": round(peak_gb(), 2), "seconds": seconds, "stage_seconds": s["stage_seconds"],
            "peak_by_stage": stages, "machine": f"{os.cpu_count()} cores, {sys.platform}",
-           "load_average": [round(x, 1) for x in os.getloadavg()]}   # other work on the machine, 1/5/15 min
+           "load_average": [round(x, 1) for x in os.getloadavg()],   # other work on the machine, 1/5/15 min
+           "malloc_large_cache": os.environ.get("MallocLargeCache")}
     save(f"records_{len(c)}/{a.engine}" + (f"/{a.tag}" if a.tag else ""), res)
 
 

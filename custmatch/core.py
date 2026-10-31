@@ -306,7 +306,7 @@ def block(df, profiles, aware=True, extra_keys=(), max_block=None, lsh=None, ski
                 k = used & blank[f]
                 row["pairs_with_a_blank_part"] = int((s[k] * (s[k] - 1) // 2).sum())
             by_key.append(row)
-    return np.column_stack([codes // n, codes % n]).astype(np.int32), hubs
+    return pairs_from_codes(codes, n), hubs
 
 
 BY_KEY_EXACT_PAIRS = 50_000_000
@@ -323,18 +323,58 @@ def _family_label(fam, k):
 
 def _block_codes(block_id, rec, n):
     """Distinct pairs (as i * n + j, i < j) of records sharing a block; entries sorted by block,
-    then record. Pairs are generated in vectorised steps: the k-th step pairs each entry with
-    the k-th entry after it while both are in one block."""
+    then record."""
     if not len(block_id):
         return np.zeros(0, np.int64)
-    end = np.repeat(np.r_[np.flatnonzero(np.diff(block_id)) + 1, len(block_id)],
-                    np.diff(np.r_[0, np.flatnonzero(np.diff(block_id)) + 1, len(block_id)]))
-    a = np.arange(len(block_id))
-    out = []
-    for k in range(1, int((end - a).max())):
-        a = a[a + k < end[a]]                  # entries whose block still has a k-th one after them
-        out.append(unique_ints(rec[a] * n + rec[a + k]))  # rec ascending within a block: i < j
-    return unique_ints(np.concatenate(out)) if out else np.zeros(0, np.int64)
+    return np.concatenate(list(block_pair_codes(rec, block_ends(block_id), n)) or [np.zeros(0, np.int64)])
+
+
+def pairs_from_codes(codes, n):
+    """(i, j) int32 rows from pair codes i * n + j, filled column by column: no int64 copy of the
+    pairs."""
+    out = np.empty((len(codes), 2), np.int32)
+    out[:, 0] = codes // n
+    out[:, 1] = codes % n
+    return out
+
+
+def block_ends(block_id):
+    """For entries sorted by block, the end (one past the last entry) of each entry's block."""
+    starts = np.flatnonzero(np.r_[True, block_id[1:] != block_id[:-1]])
+    return np.repeat(np.r_[starts[1:], len(block_id)], np.diff(np.r_[starts, len(block_id)]))
+
+
+PAIR_CHUNK = 40_000_000     # within-block pairs made at once, before their repeats are removed
+
+
+def block_pair_codes(rec, end, n, tag=None, n_tags=1, chunk=None):
+    """The pairs of entries sharing a block, as sorted distinct codes (i * n + j) * n_tags + tag,
+    in pieces: each piece the pairs whose first record is in one range of records, the ranges in
+    order, so the pieces joined are sorted too. Entries are sorted by block, then record (rec
+    ascending within a block); end is block_ends; tag (per entry, < n_tags) is kept with each pair,
+    as the rule that made it.
+
+    Pairs are made in vectorised steps: the k-th step pairs each entry with the k-th entry after
+    it while both are in one block. A range holds about `chunk` pairs before their repeats are
+    removed: made all at once and then sorted, the repeats - one pair from several keys - set the
+    peak memory of blocking (391M codes, 27 GB, on five million NCVR records)."""
+    chunk = chunk or PAIR_CHUNK
+    pos = np.arange(len(rec))
+    # each entry pairs with every later entry of its block, all with its record as the first
+    per_record = np.cumsum(np.bincount(rec, weights=end - pos - 1, minlength=n))
+    cuts = np.searchsorted(per_record, np.arange(1, int(per_record[-1] // chunk) + 1) * chunk, side="right")
+    edges = np.unique(np.r_[0, cuts, n])
+    del per_record
+    for lo, hi in zip(edges[:-1].tolist(), edges[1:].tolist()):
+        a = np.flatnonzero((rec >= lo) & (rec < hi))
+        out = []
+        for k in range(1, int((end[a] - a).max()) if len(a) else 1):
+            a = a[a + k < end[a]]              # entries whose block still has a k-th one after them
+            code = rec[a] * n + rec[a + k]
+            out.append(code if tag is None else code * n_tags + tag[a])
+        if out:
+            yield unique_ints(np.concatenate(out))
+        del out
 
 
 def _factorize_columns(arrays):
@@ -889,20 +929,27 @@ def _first_seen_labels(cc):
     return pd.factorize(cc)[0].astype(np.int32)           # codes in order of first appearance
 
 
-def components_by_threshold(n, pairs, score, grid):
+def threshold_bands(score, grid):
+    """Each pair's band in a threshold grid: how many thresholds lie below its score, so the pair
+    is kept at sorted(grid)[k] exactly when band > k (score > t). One byte a pair: the fold
+    models' scores are only ever compared with the grid, and as float64 the five of them were 7.7
+    GB of 192M pairs on all 5M NCVR records."""
+    grid = np.sort(np.asarray(grid, dtype=float))
+    return np.searchsorted(grid, score, side="left").astype(np.uint8 if len(grid) < 255 else np.int64)
+
+
+def components_by_threshold(n, pairs, score, grid, band=None):
     """{t: components(n, pairs, score > t)} for each threshold in grid, the same labels, from one
     pass over the pairs: from the strictest threshold down, each step joins the components already
     found with only the pairs whose score lies between it and the stricter one (NCVR, 47M pairs:
-    clustering every pair afresh at each threshold was most of the threshold search)."""
+    clustering every pair afresh at each threshold was most of the threshold search).
+    band: threshold_bands(score, grid), given in place of score."""
     grid = np.sort(np.asarray(grid, dtype=float))
-    # each pair's band: how many thresholds lie below its score, so it is kept at grid[k] exactly
-    # when band > k (score > t). One pass, and the pairs grouped by band with one small-int sort
-    band = np.searchsorted(grid, score, side="left").astype(np.uint8 if len(grid) < 255 else np.int64)
-    order = np.argsort(band, kind="stable")
-    edges = np.searchsorted(band[order], np.arange(len(grid) + 2))
+    if band is None:
+        band = threshold_bands(score, grid)
     out, cc = {}, None
     for k in range(len(grid) - 1, -1, -1):
-        new = order[edges[k + 1]:edges[k + 2]]        # kept at grid[k], not at the next threshold up
+        new = np.flatnonzero(band == k + 1)        # kept at grid[k], not at the next threshold up
         if cc is None:
             keep = np.zeros(len(pairs), bool)
             keep[new] = True

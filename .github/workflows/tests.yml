@@ -30,8 +30,6 @@ jobs:
         run: pytest -q
       - name: The opt-in forest + CatBoost model, with its extra installed
         run: pip install -e '.[catboost]' && pytest -q -k "forest_catboost"
-      - name: The opt-in DuckDB blocking engine, with its extra installed
-        run: pip install -e '.[duckdb]' && pytest -q -k "duckdb"
 
   server:
     runs-on: ubuntu-24.04

@@ -111,9 +111,13 @@ on dirty and clean books with false links broken down by trap.
 deduplicated with an integer sort: `"fixed"` blocking at 200,000 people takes 6.3 s, from 9.7 s.
 The candidate pairs are the same.
 
-**Faster, and less memory:** on all 5,000,000 NCVR records a run takes 7.3 minutes against
-22.9, at a peak of 27 GB against 49 GB; at a million people 1.7 minutes against 6.0, at 9.1 GB
-against 11.9. Every output is byte-for-byte the same. Candidate pairs are scored 8 million at a
+**Faster, and less memory:** on all 5,000,000 NCVR records a run takes 7.1 minutes against
+22.9, at a peak of 17.3 GB against 49 GB; at a million people 1.6 minutes against 6.0, at 8.1 GB
+against 11.9. Every output is byte-for-byte the same. On macOS, `MallocLargeCache=0` in the
+environment lowers the peaks to 12.5 GB and 5.5 GB, for 10 to 20% more time. Blocking makes its
+pairs one range of records at a time and removes repeats before the next, not every within-block
+pair at once; the fold models' scores are kept as their threshold band, a byte a pair. Candidate
+pairs are scored 8 million at a
 time (`core.SCORE_CHUNK`), all five forests of the cross-fitting in one pass, not from one array of
 every pair's features (20 GB on the full file); fields agree by comparing integer codes, made once
 per run, not strings; each string similarity is computed once per distinct pair of values, and
@@ -130,11 +134,6 @@ and time on one machine").
 million NCVR people a round takes 35 s against 53, the same batch. The file is named by a hash
 of the loaded records, the config and custmatch's code, so a change to any of them blocks afresh;
 it holds only the pairs, as a .npy array. `"cache_candidates": false` turns it off.
-
-**Added:** `"blocking_engine": "duckdb"`, with the `duckdb` extra (`pip install
-"custmatch[duckdb]"`): the candidate pairs are made in DuckDB, which writes to disk past
-`"blocking_memory_limit"` (default `"2GB"`). Same pairs, same outputs; on the full NCVR file the
-peak is 21.4 GB against 27 GB.
 
 ## 0.1.2 (2026-10-16)
 

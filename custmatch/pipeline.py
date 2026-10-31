@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from . import explain, identity, incremental, io, monitor, schema
-from .core import components, components_by_threshold, features, profile_contacts, relay_records, service_records
+from .core import components, components_by_threshold, features, threshold_bands, profile_contacts, relay_records, service_records
 from .golden import build_golden
 
 THRESHOLDS = np.round(np.concatenate([np.arange(0.05, 0.96, 0.05), [0.97, 0.98, 0.99]]), 3)
@@ -124,18 +124,20 @@ def _redact_keys(report):
 
 
 def choose_threshold(n, pairs, lab_pairs, ly, fold_scores, grid, coherence=None, min_precision=None,
-                     rule="middle", weight=None):
+                     rule="middle", weight=None, banded=False):
     """Closure-aware threshold from cross-fitted scores: fold_scores = [(candidate scores from a
     model that did not see these labels, held-out mask)]. Ties go to the stricter threshold.
     coherence(t) -> estimated cluster precision; when given it replaces the labelled pairs'
     precision, which cannot see chaining between records that were never candidates.
     weight: the candidate pairs each labelled pair stands for (a stratified draw); None counts
-    every pair once."""
+    every pair once. banded: the fold scores are core.threshold_bands of the scores in this grid.
+    """
     w = np.ones(len(ly)) if weight is None else np.asarray(weight, dtype=float)
     counts = {t: np.zeros(3) for t in grid}
     for s, held in fold_scores:
         hi, hj, hy, hw = lab_pairs[held, 0], lab_pairs[held, 1], ly[held], w[held]
-        by_t = components_by_threshold(n, pairs, s, grid)
+        by_t = components_by_threshold(n, pairs, None, grid, band=s) if banded else \
+            components_by_threshold(n, pairs, s, grid)
         for t in grid:
             cc = by_t.pop(t)
             same = cc[hi] == cc[hj]
@@ -207,12 +209,24 @@ def recut_large(n, pairs, score, th, customers, max_cluster, grid):
 def confidence(n, pairs, score, labels):
     """Per record: the mean score of its links inside its customer; for a record on its own,
     one minus its strongest candidate link (how sure we are it has no match)."""
+    labels = np.asarray(labels)
+    if len(labels) and labels.min() >= 0 and labels.max() < 2 ** 31:
+        labels = labels.astype(np.int32)                # the two gathers at half the memory
     same = labels[pairs[:, 0]] == labels[pairs[:, 1]]
     tot, cnt, best = np.zeros(n), np.zeros(n), np.zeros(n)
+    # each masked copy made once and one column at a time (pairs[mask, col] copies both
+    # columns first): 192M pairs at five million records
+    inside = score[same]
     for col in (0, 1):
-        np.add.at(tot, pairs[same, col], score[same])
-        np.add.at(cnt, pairs[same, col], 1)
-        np.maximum.at(best, pairs[~same, col], score[~same])
+        idx = pairs[:, col][same]
+        np.add.at(tot, idx, inside)
+        np.add.at(cnt, idx, 1)
+        del idx
+    del inside
+    np.logical_not(same, out=same)
+    outside = score[same]
+    for col in (0, 1):
+        np.maximum.at(best, pairs[:, col][same], outside)
     return np.where(cnt > 0, tot / np.maximum(cnt, 1), 1 - best)
 
 
@@ -311,8 +325,8 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     def model_input(p, X):
         return X if weight_scorer is None else np.column_stack([X, weight_scorer.weights(p)])
 
-    def score_all(models, p):
-        return score_pairs(models, df, p, profiles, fopts, None if weight_scorer is None else model_input)
+    def score_all(models, p, keep=None):
+        return score_pairs(models, df, p, profiles, fopts, None if weight_scorer is None else model_input, keep)
 
     # pairs chosen by active learning are deliberately unrepresentative (the hard ones): they
     # train every fold but never choose the threshold, which must be judged on random pairs
@@ -322,8 +336,10 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         """Cross-fitted fold scores, the final model, and the closure-aware threshold."""
         fold_models = [_fold_trees(make(), cfg).fit(X_lab[folds != k], ly[folds != k]) for k in range(FOLDS)]
         final = make().fit(X_lab, ly)
-        *fold_probs, prob = score_all(fold_models + [final], pairs)
-        fold_scores = [(s, folds == k) for k, s in enumerate(fold_probs)]
+        # the fold models' scores only choose the threshold: kept as their bands in its grid
+        *fold_bands, prob = score_all(fold_models + [final], pairs,
+                                      keep=[lambda p: threshold_bands(p, THRESHOLDS)] * FOLDS + [None])
+        fold_scores = [(b, folds == k) for k, b in enumerate(fold_bands)]
         # the coherence check scores pairs inside predicted customers, most of which were never
         # candidates; the match weight scores any pair, so the full model judges them
 
@@ -340,7 +356,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
                                         coherence=lambda t: cluster_coherence(n, pairs, prob, t, predict, seed,
                                                                               cc=final_cc(t)),
                                         min_precision=cfg.get("min_precision"),
-                                        rule=cfg.get("threshold_rule", "middle"), weight=lw)
+                                        rule=cfg.get("threshold_rule", "middle"), weight=lw, banded=True)
         return {"final": final, "prob": prob, "predict": predict, "th": th, "held_out": held_out}
 
     if saved is None:                             # the saved model is reused, not refitted
@@ -479,6 +495,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     minimal = bool(cfg.get("minimal_outputs"))        # no file that repeats personal data
     if not minimal:
         g.to_csv(out / "golden_records.csv", index=False)
+    del golden, g                                 # a dict and a table per customer: millions of rows
     linked = score > th
     state_links = pd.DataFrame({"a": keys[pairs[linked, 0]], "b": keys[pairs[linked, 1]],
                                 "score": score[linked].astype(float)})
@@ -486,6 +503,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     incremental.save_state(out, df, cust_id, final_forest, th, cfg, rules,
                            match_weight_model=weight_scorer.model_json if weight_scorer is not None else None,
                            matcher_model=model_choice, links=state_links[same_customer])
+    del state_links, linked, same_customer
     from . import audit                           # pairs a person can label to audit this run (custmatch audit)
     audit.save_pool(out / incremental.STATE, keys, pairs, score, cust_id, seed)
     if cfg.get("minimal_outputs") or cfg.get("hash_fields"):

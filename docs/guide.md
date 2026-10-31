@@ -139,14 +139,14 @@ files switch, and score 89.08 and 77.37 against 86.95 and 75.88. `add` and runs 
 block the way the run did. Set `"blocking": "core"` to always skip instead; `"adaptive"` to always
 split.
 
-**Big files: memory.** Blocking sets a large run's peak memory, as it holds every within-block
-pair before removing the duplicates. With the `duckdb` extra installed (Install below),
-`"blocking_engine": "duckdb"` makes the candidate pairs in DuckDB instead, which writes to disk
-past `"blocking_memory_limit"` (default `"2GB"`): the same pairs, so the same outputs. On all
-five million NCVR records the run took 7.3 minutes at a 27 GB peak with the default numpy
-blocking (22.9 minutes and 49 GB before this release) and 21.4 GB with DuckDB
+**Big files: memory.** On all five million NCVR records a run takes 7.1 minutes at a 17.3 GB
+peak (22.9 minutes and 49 GB before this release); at a million people 1.6 minutes at 8.1 GB. On
+macOS, `MallocLargeCache=0 custmatch run ...` lowers those peaks to 12.5 GB and 5.5 GB for 10 to
+20% more time: otherwise the system's allocator keeps freed large blocks in the process
 ([report/06-blocking-and-scale.md](report/06-blocking-and-scale.md) "Memory and time on one
-machine"). At a million records DuckDB saved nothing; the default fits easily.
+machine"). custmatch sets no memory limit of its own; to cap a run use the system's, such as
+`docker run --memory 16g` or, on Linux, `systemd-run --scope -p MemoryMax=16G custmatch run ...`.
+A run that reaches the cap is stopped, not slowed.
 
 **Similarity blocking** (`"lsh_blocking"`) finds pairs no exact key would: it hashes the names'
 letter pairs (MinHash, locality-sensitive hashing) so that names with typos in both records still
@@ -385,8 +385,6 @@ uv pip install --python .venv/bin/python -e .
 
 One opt-in model needs an extra: `uv pip install --python .venv/bin/python -e ".[catboost]"`
 for `"matcher_model": "forest_catboost"` (report/03-which-matcher.md "Which classifier").
-`".[duckdb]"` adds DuckDB for `"blocking_engine": "duckdb"`, which lowers the peak memory of a
-file of several million records ("Big files: memory" above).
 
 custmatch ships no third-party data. The first run downloads the US nickname list
 (carltonnorthern/nicknames, Apache 2.0; 78 KB, pinned and checksum-checked) into
