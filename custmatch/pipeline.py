@@ -21,7 +21,7 @@ import pandas as pd
 from . import explain, identity, incremental, io, monitor, schema
 from .core import (components, components_by_threshold, features, near_threshold, pair_slices, profile_contacts,
                    relay_records, service_records, threshold_bands)
-from .golden import build_golden
+from .golden import golden_table, set_golden
 
 THRESHOLDS = np.round(np.concatenate([np.arange(0.05, 0.96, 0.05), [0.97, 0.98, 0.99]]), 3)
 GOLDEN_FIELDS = ["first_name", "middle_initial", "last_name", "date_of_birth", "addr_number",
@@ -461,7 +461,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     households, _ = hh_mod.assign(df, customers, profiles, postcode_join=bool(cfg.get("household_postcode_join")))
     rank = {s: k for k, s in enumerate(cfg.get("source_priority", []))}
     fields = [f for f in cfg.get("golden_fields", GOLDEN_FIELDS) if f in df.columns]
-    golden = build_golden(df, customers, cfg.get("survivorship", "most_complete"), fields, rank)
+    golden = golden_table(df, customers, cfg.get("survivorship", "most_complete"), fields, rank)
 
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -480,18 +480,16 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         strong = (score >= float(cfg["contact_confidence"])) & (customers[pairs[:, 0]] == customers[pairs[:, 1]])
         per_customer, per_record = safe_contacts(df, customers, pairs[strong], cfg.get("survivorship", "most_complete"),
                                                  rank, classes=profiles)
-        for lab, vals in per_customer.items():
-            golden[lab].update({f: v for f, v in vals.items() if f in golden[lab]})
+        set_golden(golden, per_customer)
         if not cfg.get("minimal_outputs"):
             pd.DataFrame({"source": df.source, "record_id": df.record_id, "customer_id": cust_id,
                           **per_record}).to_csv(out / "contacts.csv", index=False)
-    lab_to_id = dict(zip(customers.tolist(), cust_id.tolist()))
-    g = pd.DataFrame([{"customer_id": lab_to_id[lab], **vals}
-                      for lab, vals in golden.items()]).sort_values("customer_id")
+    first = pd.Series(np.arange(n)).groupby(customers).first()      # a record of each customer
+    golden.insert(0, "customer_id", cust_id[first.reindex(golden.index).to_numpy()])
     minimal = bool(cfg.get("minimal_outputs"))        # no file that repeats personal data
     if not minimal:
-        g.to_csv(out / "golden_records.csv", index=False)
-    del golden, g, lab_to_id                      # a dict and a table per customer: millions of rows
+        golden.sort_values("customer_id").to_csv(out / "golden_records.csv", index=False)
+    del golden, first                             # a row per customer: millions of rows
     band = float(cfg.get("review_band", 0.1))
     stewardship.review_pairs(pairs, score, th, band, keys, pair_features, df, profiles).to_csv(out / "review.csv", index=False)
     _, hh_id = np.unique(households, return_inverse=True)

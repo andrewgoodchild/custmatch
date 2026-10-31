@@ -382,23 +382,24 @@ kept the same:
   country keys' pairs into the rest instead of sorting all of them again, and makes the country keys
   as arrays instead of a Python tuple each (about 4 GB on the full file). The feature caches,
   rebuilt by the review and links, are dropped once `links.csv` is written: they held the records
-  after the run returned.
+  after the run returned. Golden records are built as a table, a column per field, not a dict per
+  customer and a table made from millions of dicts.
 
 The same file, config and labels (300 random, drawn stratified, and 700 active) on the 18-core,
 64 GB laptop, one run each. Other work shared the machine for the runs after the changes (a
-load average of 13 to 18, kept in the results file), so their times are if anything long:
+load average of 10 to 15, kept in the results file), so their times are if anything long:
 
 | NCVR | Code | Peak memory | Blocking | Whole run |
 | --- | --- | --- | --- | --- |
 | 1,428,005 records of 1,000,000 people, 46.9M candidate pairs | Before | 11.9 GB | 162 s | 6.0 min |
-| | Now | 7.2 GB | 18 s | 1.7 min |
+| | Now | 7.1 GB | 18 s | 1.7 min |
 | | Now, `MallocLargeCache=0` (macOS) | 4.5 GB | 20 s | 2.0 min |
 | All 5,000,000 records, 191.8M candidate pairs | Before | 49.0 GB | 455 s | 22.9 min |
-| | Now | 12.9 GB | 75 s | 7.4 min |
-| | Now, `MallocLargeCache=0` (macOS) | 10.2 GB | 83 s | 8.6 min |
+| | Now | 12.8 GB | 80 s | 7.6 min |
+| | Now, `MallocLargeCache=0` (macOS) | 10.2 GB | 82 s | 8.6 min |
 
 Every output file is byte-for-byte the same in all of them, and so the clustered F1 (91.67 and
-86.24). The forest stage, most of the run, went from 804 to 282 seconds on the full file. The
+86.24). The forest stage, most of the run, went from 804 to 293 seconds on the full file. The
 peak is macOS's lifetime peak footprint, and macOS's allocator keeps freed large blocks in the
 process for reuse, so it counts what was ever allocated at once, not what was in use.
 `MallocLargeCache=0` in the environment makes it hand them back as they are freed: the peak falls

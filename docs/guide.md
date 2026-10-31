@@ -139,8 +139,8 @@ files switch, and score 89.08 and 77.37 against 86.95 and 75.88. `add` and runs 
 block the way the run did. Set `"blocking": "core"` to always skip instead; `"adaptive"` to always
 split.
 
-**Big files: memory.** On all five million NCVR records a run takes 7.4 minutes at a 12.9 GB
-peak (22.9 minutes and 49 GB before this release); at a million people 1.7 minutes at 7.2 GB. On
+**Big files: memory.** On all five million NCVR records a run takes 7.6 minutes at a 12.8 GB
+peak (22.9 minutes and 49 GB before this release); at a million people 1.7 minutes at 7.1 GB. On
 macOS, `MallocLargeCache=0 custmatch run ...` lowers those peaks to 10.2 GB and 4.5 GB for 10 to
 20% more time: otherwise the system's allocator keeps freed large blocks in the process
 ([report/06-blocking-and-scale.md](report/06-blocking-and-scale.md) "Memory and time on one
