@@ -2373,6 +2373,41 @@ def test_name_words_is_saved_with_the_model_and_a_wrong_feature_count_is_an_erro
         models.p_match(forest, np.zeros((3, forest.n_features_in_ - 1), np.float32))
 
 
+def test_dob_key_is_on_for_small_files_and_saved_with_the_model(world, tmp_path):
+    """Date of birth alone is a blocking key on files of up to DOB_KEY_MAX_RECORDS records with
+    dates of birth, unless the config says otherwise; the run saves the choice, so `add` blocks
+    the same way, and a state saved before the key (no "dob_key") keeps it off."""
+    from custmatch import blocking, incremental, schema
+    from custmatch.core import profile_contacts
+    tmp, _ = _world_copy(world, tmp_path)
+    df, cfg = io.load(tmp / "config.json")
+    assert cfg["dob_key"] is True and ("date_of_birth",) in schema.extra_keys(cfg)
+    assert schema.with_dob_key(df, {"dob_key": False})["dob_key"] is False
+    assert schema.with_dob_key(df.assign(date_of_birth=""), {})["dob_key"] is False
+    big = pd.concat([df] * (schema.DOB_KEY_MAX_RECORDS // len(df) + 1), ignore_index=True)
+    assert schema.with_dob_key(big, {})["dob_key"] is False
+    two = df.iloc[[0, 0]].reset_index(drop=True)          # one date of birth, nothing else shared
+    two[["first_name", "last_name", "email", "phone", "addr_number", "addr_street"]] = ""
+    for col, v in {"record_id": ["1", "2"], "first_name": ["ann", "bea"], "last_name": ["cole", "dunn"],
+                   "addr_number": ["1", "2"], "addr_street": ["elm st", "oak rd"]}.items():
+        two[col] = v
+    prof = {f: profile_contacts(two, f) for f in ("email", "phone")}
+    assert len(blocking.candidates_for(two, prof, cfg)[0]) == 1
+    assert len(blocking.candidates_for(two, prof, cfg | {"dob_key": False})[0]) == 0
+    (tmp_path / "ran").mkdir()
+    tmp, _, _, _ = _ran(world, tmp_path / "ran", {})
+    state = tmp / "run" / "state" / "config.json"
+    assert json.loads(state.read_text())["dob_key"] is True
+    saved = json.loads(state.read_text())
+    saved.pop("dob_key")                                   # as a state saved by 0.1.3
+    state.write_text(json.dumps(saved))
+    incremental.add(tmp / "run", tmp / "config.json", tmp / "added")
+    assert "dob_key" not in json.loads((tmp / "added" / "state" / "config.json").read_text())
+    (tmp / "on.json").write_text(json.dumps(json.loads((tmp / "config.json").read_text()) | {"dob_key": True}))
+    with pytest.raises(io.ConfigError, match="dob_key"):   # the add config cannot change it
+        incremental.add(tmp / "run", tmp / "on.json", tmp / "added2")
+
+
 def test_blocking_report_and_skeleton_hold_no_plain_text_when_asked(world, tmp_path, monkeypatch):
     monkeypatch.setenv("CUSTMATCH_SALT", "k")
     tmp, truth, _, _ = _ran(world, tmp_path, {"blocking": "fixed", "minimal_outputs": True})

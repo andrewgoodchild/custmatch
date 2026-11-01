@@ -52,10 +52,10 @@ comparisons on dedupe's, which document none. custmatch uses its defaults. Clust
 
 | Dataset | Records | custmatch | Splink | dedupe (3 runs) |
 | --- | --- | --- | --- | --- |
-| fake_1000 (Splink's) | 1,000 | 87.11 | 58.36; **92.52** with its tutorial's looser blocking | 70.26 (70.12-70.53) |
+| fake_1000 (Splink's) | 1,000 | **93.72**; 87.11 without the date-of-birth key | 58.36; 92.52 with its tutorial's looser blocking | 70.26 (70.12-70.53) |
 | febrl3 (Splink's) | 5,000 | 99.42 | **99.63** | 98.11 |
 | febrl4 (Splink's) | 10,000 | **99.84** | 99.83 | 99.11 |
-| historical_50k (Splink's) | 50,578 | **87.01** | 76.82; 82.79 at its documented threshold | 80.02 (77.51-81.43) |
+| historical_50k (Splink's) | 50,578 | **86.90**; 87.01 without the date-of-birth key | 76.82; 82.79 at its documented threshold | 80.02 (77.51-81.43) |
 | csv_example (dedupe's: childcare sites) | 3,337 | 89.08 | 64.59 | **91.37** (86.72-93.70) |
 | patent_example (dedupe's: patent applicants) | 2,379 | 77.37; with `"blocking": "core"` 75.88 (6.93 without the large-block check); **87.26** with `"max_block": 300` | 80.19 | 49.66 |
 
@@ -68,11 +68,18 @@ compares them: 75.88. The default now also splits oversized blocks when the defa
 over 1% of the records compared with no one ([chapter 6](06-blocking-and-scale.md), "Where the
 rest of the gap is"), which both of dedupe's files do: the patent file scores 77.37 and the
 childcare sites 89.08, against 75.88 and 86.95 skipping them (`research/scripts/home_data_benchmark.py`,
-rerun on the current code; historical_50k there gives 87.01, against 87.02 before). Its run also warned about the blocks it still skipped ("... raise
+rerun on 0.1.3's code; historical_50k there gave 87.01, against 87.02 before). Its run also warned about the blocks it still skipped ("... raise
 "max_block" if these values are legitimately common"); following that, `"max_block": 300`
 scored 87.26, ahead of Splink and dedupe. Splitting the oversized blocks instead (`"blocking": "fixed"`) reached only 14.12: this
 file has no second key to split them by. Splink compares every pair in its blocks, whatever
 their size. dedupe wins on its childcare sites.
+
+On fake_1000 custmatch scored 87.11 before date of birth became a blocking key of its own (the
+default from 0.1.4 on files of up to 500,000 records; [chapter 6](06-blocking-and-scale.md), "Date
+of birth alone"). Its keys compared 66.1% of the true pairs, and it found almost all it could:
+precision 97.79, recall 78.53. With the key it scores 93.72, ahead of Splink's 92.52 with the
+looser blocking its tutorial gives this file; febrl3 and febrl4 do not change, and historical_50k
+gives 86.90 against 87.01.
 On people, custmatch leads on the noisy and dense files and the three are close on the febrl
 sets. dedupe's errors are missed matches - its precision was 96.9 to 100 everywhere, its recall
 as low as 33.0 at the default threshold.
@@ -373,7 +380,8 @@ stratified folds, the threshold chosen on the training folds, three draws.
   Contriever, proposed 71.1% at 10 million in 33 minutes on a GPU instance; with the first
   address only the keys found 71.89%, and with 0.1.2's date reading 70.18%.
 
-`"name_words"` on the other datasets, clustered F1 with it off and on:
+`"name_words"` on the other datasets, clustered F1 with it off and on (before the date-of-birth
+key; `research/scripts/beat_splink.py`, `au_validate.py` and `ncvr_leipzig.py` run them with it off):
 
 | Dataset | Off | On | Change |
 | --- | --- | --- | --- |

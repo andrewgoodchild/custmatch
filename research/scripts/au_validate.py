@@ -45,7 +45,10 @@ VARIANTS = {"baseline": {},
             # names in Chinese / Arabic script (--data au_customer_script): transliteration off vs on
             "country_au_active_no_script": {"country": "AU", "normalise": {"script": False}, "_active": True},
             # the opt-in name-words feature (core.name_words_feature, found on BPID)
-            "country_au_active_name_words": {"country": "AU", "_active": True, "name_words": True},
+            "country_au_active_name_words": {"country": "AU", "_active": True, "name_words": True, "dob_key": False},
+            # date of birth alone as a blocking key (found on fake_1000)
+            "country_au_active_dob_key": {"country": "AU", "_active": True, "dob_key": True},
+            "country_au_active_no_dob_key": {"country": "AU", "_active": True, "dob_key": False},
             # leave-one-out with active learning, where runs are stable: what each step is worth
             **{f"active_without_{step}": {"country": "AU", "normalise": {step: False}, "_active": True}
                for step in ("phone", "dates", "email", "nicknames", "local_nicknames",

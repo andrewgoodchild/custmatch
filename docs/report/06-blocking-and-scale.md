@@ -110,6 +110,45 @@ weight per field as well did not help. So the weight stays opt-in: use it when l
 mostly random and your records are full; leave it off where web sign-ups with a first name and
 an email are common.
 
+## Date of birth alone: a key for small and mid-sized files
+
+On Splink's fake_1000 custmatch scored 87.11 with its default config, at 97.79 precision: its keys
+compared 66.1% of the true pairs, and accepting every true one among them would have reached
+79.7% (`research/scripts/dob_key_blocking.py`, `research/results/dob_key.json`). Of the 688
+true pairs it missed, 626 differ in both names and 461 have a name blank on one side, so no
+name key brings them together. Splink's tutorial loosens
+its blocking on this file for that reason, and its examples block on date of birth alone on
+three of its four datasets, all but the dense historical_50k. As a key of its own, date of birth compares 81.3% of the true pairs
+(94.1% reachable) for 325 more candidate pairs, and custmatch scores 93.72, against Splink's
+92.52 with the tutorial's blocking ([chapter 9](09-against-other-tools.md)).
+
+A date of birth is shared by more strangers the larger the file: about 30 to a date at a
+million people. So the key is on by default only for files of up to 500,000 records with dates
+of birth (`"dob_key"`, decided when the run loads its records and saved with the model;
+`"dob_key": false` or `true` overrides it). On the generated Australian file, where only some
+records carry a date of birth, built at four sizes (`research/scripts/au_customer_data.py
+--households N`; 300 random + 700 active labels, three draws, clustered F1):
+
+| Records | Without the key | With it | Candidate pairs added |
+| --- | --- | --- | --- |
+| 18,478 | 81.69 | 82.33 | 1% |
+| 91,953 | 77.18 | 77.47 | 5% |
+| 183,646 | 74.21 | 76.20 | 11% |
+| 424,530 | 72.79 | 73.79 | 40% |
+
+On the other benchmarks (`research/scripts/beat_splink.py`, two draws of random and active
+labels) historical_50k moved from 87.00 to 87.26 and the synthetic customers from 98.10 to
+98.14; febrl3 and febrl4 did not change, nor did fake_1000's tuned config, which already blocks
+on date of birth. With one random draw (`research/scripts/home_data_benchmark.py`) historical_50k
+gave 86.90 against 87.01. NCVR has no dates of birth. On BPID's million records, above the
+limit, the key would raise the share of true pairs compared from 79.41% to 84.14% but take the
+candidates from 13.5 to 24.9 million.
+
+A file made of disjoint copies of the synthetic file (`research/scripts/custmatch_scale.py`) is
+no test of this key: each person's copies share a first name and date of birth and differ only
+in a tag on the surname, so the key compares them, and they look like one person whose surname
+changed. With the key on, that file lost 1.8 points at 100,000 records and 11 at 500,000.
+
 ## Dense files: why historical_50k scores lower
 
 historical_50k is the hardest benchmark here: about ten records per person, half of them without

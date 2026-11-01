@@ -536,6 +536,59 @@ def test_name_words_claims():
     assert f"cost {loss:.2f} on the sparse Australian file" in guide and f"cost {loss:.2f} on the sparse" in changelog
 
 
+def test_dob_key_claims():
+    """docs/report/06-blocking-and-scale.md "Date of birth alone", the guide and chapter 9: the key's
+    blocking on fake_1000, its results at four sizes of the Australian file and on the benchmarks."""
+    from custmatch.schema import DOB_KEY_MAX_RECORDS
+    flat, guide = _flat(REPORT), _flat((DOCS / "guide.md").read_text())
+    k = load("dob_key.json")["fake_1000"]
+    off, on, miss = k["without"], k["with"], k["missed_by_default_keys"]
+    assert f"compared {off['true_pairs_compared_pct']}% of the true pairs" in flat + guide
+    assert f"would have reached {off['reachable_after_closure_pct']}%" in flat
+    assert (f"Of the {miss['true_pairs']} true pairs it missed, {miss['both_names_differ']} differ in both "
+            f"names and {miss['a_name_blank']} have a name blank") in flat
+    assert (f"compares {on['true_pairs_compared_pct']}% of the true pairs ({on['reachable_after_closure_pct']}% "
+            f"reachable) for {on['candidate_pairs'] - off['candidate_pairs']} more candidate pairs") in flat
+    h = load("home_data_benchmark.json")
+    f_on, f_off = h["fake_1000"]["custmatch_1000"], h["fake_1000"]["custmatch_1000_no_dob_key"]
+    assert (f"and scored {f_off['f1']:.2f}; with date of birth as a key they compare "
+            f"{on['true_pairs_compared_pct']}% and score {f_on['f1']:.2f}") in guide
+    assert f"custmatch scores {f_on['f1']:.2f}" in flat and f"custmatch scored {f_off['f1']:.2f}" in flat
+    assert f"precision {f_off['precision']:.2f}, recall {f_off['recall']:.2f}" in flat
+    hist = h["historical_50k"]
+    assert f"gives {hist['custmatch_1000']['f1']:.2f} against {hist['custmatch_1000_no_dob_key']['f1']:.2f}" in flat
+    assert f"gave {hist['custmatch_1000']['f1']:.2f} against {hist['custmatch_1000_no_dob_key']['f1']:.2f}" in flat
+    gains, sizes = [], []
+    for name in ("au_validation.json", "au_validation_h26000.json", "au_validation_h52000.json",
+                 "au_validation_h120000.json"):
+        r = load(name)
+        # the base file's run without the key is country_au_active, made before the key existed
+        a, b = r[next(v for v in ("country_au_active_no_dob_key", "country_au_active") if v in r)], r["country_au_active_dob_key"]
+        n = a["runs"][0]["summary"]["records"]
+        added = b["runs"][0]["summary"]["candidate_pairs"] / a["runs"][0]["summary"]["candidate_pairs"] - 1
+        row = f"| {n:,} | {a['mean']['all_records']['f1']:.2f} | {b['mean']['all_records']['f1']:.2f} | {100 * added:.0f}% |"
+        assert row in flat, name
+        gains.append(b["mean"]["all_records"]["f1"] - a["mean"]["all_records"]["f1"])
+        sizes.append(n)
+    assert min(gains) > 0 and max(sizes) < DOB_KEY_MAX_RECORDS
+    assert f"up to {max(sizes):,} records it added {min(gains):.2f} to {max(gains):.2f} points" in guide
+    assert f"{DOB_KEY_MAX_RECORDS:,} records" in guide and f"{DOB_KEY_MAX_RECORDS:,} records" in flat
+    bs = load("beat_splink.json")
+
+    def mean(variant, ds):
+        return fsum(bs[f"{variant}{s}"][ds][x] for s in ("", "/seed2") for x in ("random_1000", "active_300_700")) / 4
+    m = {ds: (mean("rich_no_name_words", ds), mean("rich_dob_key", ds))
+         for ds in ("historical_50k", "synthetic", "febrl3", "febrl4", "fake_1000")}
+    assert (f"historical_50k moved from {m['historical_50k'][0]:.2f} to {m['historical_50k'][1]:.2f} and the "
+            f"synthetic customers from {m['synthetic'][0]:.2f} to {m['synthetic'][1]:.2f}") in flat
+    assert all(m[ds][0] == m[ds][1] for ds in ("febrl3", "febrl4", "fake_1000"))
+    b = load("bpid.json")
+    bo, bk = b["all_addresses"]["blocking"], b["all_addresses_dob_key"]["blocking"]
+    assert b["all_addresses_dob_key"]["records"] > DOB_KEY_MAX_RECORDS
+    assert (f"from {100 * bo['recall']:.2f}% to {100 * bk['recall']:.2f}% but take the candidates from "
+            f"{bo['candidate_pairs'] / 1e6:.1f} to {bk['candidate_pairs'] / 1e6:.1f} million") in flat
+
+
 def test_audit_claims():
     a = load("audit_check.json")
     flat = " ".join(GUIDE.split())
@@ -559,7 +612,7 @@ def test_sparse_australian_claims():
     """docs/report/ "Sparse records": every figure comes from au_validation.json."""
     flat = " ".join(GUIDE.replace("**", "").split())
     r = load("au_validation.json")
-    for name in ("baseline", "baseline_active", "country_au", "country_au_active"):
+    for name in ("baseline", "baseline_active", "country_au", "country_au_active", "country_au_active_dob_key"):
         m = r[name]["mean"]
         assert (f"{m['all_records']['f1']:.2f} +- {r[name]['f1_sd']:.2f} | {m['no_surname_records']['f1']:.2f} | "
                 f"{m['households']['f1']:.2f}") in flat, name
@@ -1185,6 +1238,9 @@ def test_head_to_head_and_home_data_claims():
         for key, v in r[ds].items():
             if key.startswith("custmatch_1000_max_block"):        # the config the run's warning advised
                 assert f"{v['f1']:.2f} with `\"max_block\": {v['config']['max_block']}`" in row.replace("**", ""), key
+            elif key == "custmatch_1000_no_dob_key":               # as before 0.1.4, where it differs
+                assert (v["f1"] == r[ds]["custmatch_1000"]["f1"]
+                        or f"{v['f1']:.2f} without the date-of-birth key" in row), (ds, row)
             elif key.startswith("custmatch_1000_"):                # other configs, in the text below the table
                 assert f"`{json.dumps(v['config'])[1:-1]}`) reached only {v['f1']:.2f}" in flat, key
         splink = r[ds] if ds.startswith("dedupe_") else load("splink_datasets_benchmark.json")[ds]

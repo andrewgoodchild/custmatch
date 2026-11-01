@@ -31,7 +31,7 @@ STATE = "state"
 
 # settings the trained model and its blocking depend on: an add must use the saved run's
 MODEL_KEYS = ("country", "normalise", "extra_fields", "record_dates", "rich_features", "name_words", "match_weight_feature",
-              "blocking", "extra_blocking", "max_block", "hash_fields", "hash_salt_env", "placeholders", "aliases")
+              "blocking", "extra_blocking", "dob_key", "max_block", "hash_fields", "hash_salt_env", "placeholders", "aliases")
 # settings an add's config may change: how links are accepted and what is written
 ADD_OPTIONS = ("twin_guard", "unique_sources", "contact_confidence", "cookie_max_identities", "cookie_max_records", "cookie_name_check", "max_cluster", "minimal_outputs", "parquet_outputs", "survivorship", "golden_fields",
                "source_priority", "household_postcode_join", "trusted_ids", "trusted_max")

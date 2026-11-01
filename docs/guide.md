@@ -104,6 +104,7 @@ proposes are the **candidate pairs**. custmatch's default keys include:
 - surname + street; house number + street; first name + street
 - email; phone (when not junk)
 - a nickname root + birth date, from the country profile
+- date of birth alone, on files of up to 500,000 records (below)
 
 and you can add keys of your own (`"extra_blocking"`), using **transforms**: `first1` (first
 letter), `first3`, `year`, `soundex`.
@@ -118,6 +119,16 @@ S530. As a blocking key it lets a misspelt surname still meet the right one.
 produce a huge block whose pairs are mostly strangers. Blocks over `"max_block"` records (60 by
 default) are skipped; a summary warning names common values that were, so you can raise the
 limit if they are legitimate.
+
+**Date of birth alone, on small and mid-sized files.** Two records of one person whose names
+are both misspelt, or blank, share no name key; a date of birth brings them together. On Splink's
+noisy fake_1000 the default keys compared 66.1% of the true pairs and scored 87.11; with date of
+birth as a key they compare 81.3% and score 93.72, ahead of Splink's 92.52 with its tutorial's
+looser blocking. In a large file a date of birth is shared by dozens of strangers, so the key is
+on only when the file has up to 500,000 records with dates of birth. The run saves the choice, so
+`add` blocks the same way, and `"dob_key": false` or `true` overrides it. On the generated
+Australian file at four sizes up to 424,530 records it added 0.29 to 1.99 points
+([chapter 6](report/06-blocking-and-scale.md), "Date of birth alone").
 
 **Half-blank keys.** A two-field key with one field blank blocks on the other alone: first name
 + street is first name alone where there is no street. That keeps recall where addresses are
