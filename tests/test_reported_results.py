@@ -491,6 +491,49 @@ def test_bpid_claims():
             f"to {f1(new):.2f}, and its blocking recall from {pct(bl_first['recall'])}% to {pct(bl['recall'])}%" in changelog)
 
 
+def test_name_words_claims():
+    """The opt-in name-words feature: BPID's rows, and each other dataset's change with it on."""
+    flat = " ".join(REPORT.split())
+    guide = " ".join(GUIDE.split())
+    changelog = " ".join((ROOT / "CHANGELOG.md").read_text().split())
+    b = load("bpid.json")
+    on, off = b["all_addresses_name_words"], b["all_addresses"]
+    for n in (300, 1000, 8000):
+        m = on[f"matching_{n}"]
+        assert (f'| And `"name_words"`, {n:,} labels | {100 * m["f1"]:.2f} | {100 * m["precision"]:.2f} | '
+                f'{100 * m["recall"]:.2f} |') in flat
+        assert m["precision"] > off[f"matching_{n}"]["precision"]
+    gain = lambda n: 100 * (on[f"matching_{n}"]["f1"] - off[f"matching_{n}"]["f1"])
+    for text in (flat, guide):
+        assert f"added {gain(8000):.2f} points" in text and f"{gain(300):.2f} with 300" in text
+    f1 = 100 * on["matching_8000"]["f1"]
+    assert f"custmatch to {f1:.2f}, {100 * b['paper']['sudowoodo'] - f1:.2f} below Sudowoodo" in flat
+    assert f"from {100 * off['matching_8000']['f1']:.2f} to {f1:.2f} with 8,000 labels" in changelog
+    fm = (off["errors"]["false_matches"]["count"], on["errors"]["false_matches"]["count"])
+    assert f"false matches {fm[0]:,} to {fm[1]:,}" in flat
+    bs = load("beat_splink.json")
+    row = lambda name, off, on: f"| {name} | {off:.2f} | {on:.2f} | {on - off:+.2f} |".replace("+-", "-")
+    names = {"historical_50k": "historical_50k", "febrl3": "febrl3", "synthetic": "Synthetic customers",
+             "febrl4": "febrl4", "fake_1000": "fake_1000"}
+    for ds, name in names.items():
+        on, off = ([bs[f"{v}{s}"][ds][k] for s in ("", "/seed2") for k in ("random_1000", "active_300_700")]
+                   for v in ("rich_name_words", "rich_no_name_words"))
+        assert row(f"{name} (2 draws, random and active labels)", sum(off) / 4, sum(on) / 4) in flat, ds
+        assert abs(sum(on) - sum(off)) / 4 < 0.34
+    nc = load("ncvr_leipzig.json")
+    mean = lambda runs: sum(r["clustered"]["f1"] for r in runs) / len(runs)
+    assert row("NCVR Leipzig, 20,000 people (3 draws)", mean(nc["current_default/people_20000"]["runs"]),
+               mean(nc["current_default_name_words/people_20000"]["runs"])) in flat
+    au = load("au_validation.json")
+    a_on = [r["all_records"]["f1"] for r in au["country_au_active_name_words"]["runs"]]
+    a_off = [r["all_records"]["f1"] for r in au["country_au_active"]["runs"]]
+    loss = (sum(a_off) - sum(a_on)) / 3
+    assert row("Sparse Australian file (3 draws)", sum(a_off) / 3, sum(a_on) / 3) in flat
+    assert f"cost the sparse Australian file {loss:.2f}, where no draw gained" in flat
+    assert all(x <= y for x, y in zip(a_on, a_off))
+    assert f"cost {loss:.2f} on the sparse Australian file" in guide and f"cost {loss:.2f} on the sparse" in changelog
+
+
 def test_audit_claims():
     a = load("audit_check.json")
     flat = " ".join(GUIDE.split())

@@ -55,6 +55,8 @@ VARIANTS = {
     "shipped": {"country": "US"},
     # the date of birth also compared by edit distance, as the guide suggests for messy dates
     "dob_edit": {"country": "US", "extra_fields": [{"name": "date_of_birth", "compare": "edit"}]},
+    # names in either order, or missing a part: the worst-matched part compared in any order
+    "name_words": {"country": "US", "name_words": True},
 }
 
 

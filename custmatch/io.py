@@ -137,7 +137,7 @@ def load(config_path):
 # every top-level config key custmatch reads; anything else is most likely a typo
 KNOWN_KEYS = {
     "sources", "country", "date_order", "normalise", "extra_fields", "extra_blocking", "max_block", "blocking", "cache_candidates", "fold_trees",
-    "blocking_recall", "lsh_blocking", "check_large_blocks", "rich_features", "record_dates", "matcher_model",
+    "blocking_recall", "lsh_blocking", "check_large_blocks", "rich_features", "name_words", "record_dates", "matcher_model",
     "match_weight_feature", "max_cluster", "min_precision", "review_band", "overrides", "trusted_ids", "trusted_max", "twin_guard",
     "unique_sources", "stability_margin", "identity_events",
     "cookie_max_identities", "cookie_max_records", "cookie_name_check", "household_postcode_join", "placeholders", "suspect_records",

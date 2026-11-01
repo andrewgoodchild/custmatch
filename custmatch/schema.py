@@ -46,7 +46,8 @@ def feature_options(cfg):
     name-swap / graded-date features - on by default ("rich_features": false turns them off).
     They lifted historical_50k from 82.1 to 87.0 and fake_1000 from 88.2 to 92.5 clustered F1,
     and cost at most 0.3 on the febrl sets (research/scripts/beat_splink.py)."""
-    return {"extra_fields": extra_fields(cfg), "rich": bool(cfg.get("rich_features", True))}
+    return {"extra_fields": extra_fields(cfg), "rich": bool(cfg.get("rich_features", True)),
+            "name_words": bool(cfg.get("name_words", False))}
 
 
 def feature_options_for(df, cfg):

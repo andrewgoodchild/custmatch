@@ -321,6 +321,9 @@ stratified folds, the threshold chosen on the training folds, three draws.
 | With phones cut and every address, 300 labels | 70.83 | 60.32 | 85.87 |
 | With phones cut and every address, 1,000 labels | 74.37 | 64.95 | 86.98 |
 | With phones cut and every address, 8,000 labels | 77.16 | 70.73 | 84.87 |
+| And `"name_words"`, 300 labels | 72.56 | 63.12 | 85.50 |
+| And `"name_words"`, 1,000 labels | 75.32 | 68.83 | 83.18 |
+| And `"name_words"`, 8,000 labels | 77.99 | 72.96 | 83.79 |
 | Paper: random forest | 62.9 | 65.3 | 60.9 |
 | Paper: Ditto | 75.2 | 74.6 | 80.4 |
 | Paper: Sudowoodo | 78.8 | 77.4 | 80.2 |
@@ -346,6 +349,16 @@ stratified folds, the threshold chosen on the training folds, three draws.
     each split as the address is and compared as a whole. With every address, F1 rose a further
     1.88 points to 77.16; precision and recall both rose with 1,000 and 8,000 labels, and with
     300 precision rose and recall fell 1.6 points.
+- **Names in either order: an opt-in feature.** In a sample of the false matches, many pairs
+  shared a surname and a contact but not a first name ("colten figueroa" and "vincent
+  figueroa": a family), or had their names in different orders. The swapped-name feature takes
+  the better of the two cross comparisons, so "kamden horner" against "horner sariah" scored 1
+  on horner alone. `"name_words": true` adds how well the worse-met part of a name is met by
+  either part of the other, in any order (0.44 there). It added 0.83 points with 8,000 labels
+  and 1.73 with 300, all of it precision (false matches 1,526 to 1,399 on one draw), bringing
+  custmatch to 77.99, 0.81 below Sudowoodo. On the other datasets, on and off on the same code
+  (the table below), it moved clustered F1 by a third of a point or less, and cost the sparse
+  Australian file 0.43, where no draw gained. So it is off by default.
 - **Between Ditto and Sudowoodo.** custmatch now scores 77.16: 14.3 points above the paper's
   random forest and above every LLM it tried, 1.96 above Ditto and 1.64 below Sudowoodo, on a
   laptop CPU with no pretraining. Comparing the date also by edit distance (`"extra_fields"`)
@@ -359,6 +372,18 @@ stratified folds, the threshold chosen on the training folds, three draws.
   79.41% of the matches at 13.5 million candidates in about 24 seconds. The paper's best,
   Contriever, proposed 71.1% at 10 million in 33 minutes on a GPU instance; with the first
   address only the keys found 71.89%, and with 0.1.2's date reading 70.18%.
+
+`"name_words"` on the other datasets, clustered F1 with it off and on:
+
+| Dataset | Off | On | Change |
+| --- | --- | --- | --- |
+| historical_50k (2 draws, random and active labels) | 87.00 | 87.31 | +0.31 |
+| febrl3 (2 draws, random and active labels) | 99.81 | 99.91 | +0.10 |
+| Synthetic customers (2 draws, random and active labels) | 98.10 | 98.19 | +0.09 |
+| febrl4 (2 draws, random and active labels) | 99.94 | 99.95 | +0.02 |
+| fake_1000 (2 draws, random and active labels) | 96.64 | 96.44 | -0.19 |
+| NCVR Leipzig, 20,000 people (3 draws) | 99.18 | 99.24 | +0.05 |
+| Sparse Australian file (3 draws) | 81.69 | 81.26 | -0.43 |
 
 ---
 

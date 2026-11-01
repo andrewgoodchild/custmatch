@@ -4072,5 +4072,192 @@
    }
   },
   "f1_sd": 0.75
+ },
+ "country_au_active_name_words": {
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "runs": [
+   {
+    "all_records": {
+     "precision": 89.62,
+     "recall": 75.02,
+     "f1": 81.67,
+     "clusters": 11565,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.8167
+    },
+    "no_surname_records": {
+     "precision": 91.23,
+     "recall": 70.75,
+     "f1": 79.7,
+     "clusters": 5762,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.797
+    },
+    "pairs_with_a_sign_up": {
+     "precision": 91.53,
+     "recall": 68.5,
+     "f1": 78.36,
+     "true_pairs": 7365
+    },
+    "households": {
+     "precision": 90.52,
+     "recall": 38.41,
+     "f1": 53.93,
+     "clusters": 10380,
+     "largest_cluster": 13,
+     "adjusted_rand": 0.5393
+    },
+    "native_script_people": {
+     "precision": 87.61,
+     "recall": 67.5,
+     "f1": 76.25,
+     "clusters": 333,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.7619
+    },
+    "summary": {
+     "records": 18478,
+     "candidate_pairs": 185907,
+     "threshold": 0.45,
+     "customers": 11565,
+     "largest_customer": 9,
+     "junk_contact_values": 17,
+     "shared_contact_values": 56
+    },
+    "labelled_matches": 389
+   },
+   {
+    "all_records": {
+     "precision": 96.49,
+     "recall": 70.08,
+     "f1": 81.19,
+     "clusters": 12106,
+     "largest_cluster": 8,
+     "adjusted_rand": 0.8119
+    },
+    "no_surname_records": {
+     "precision": 96.07,
+     "recall": 69.33,
+     "f1": 80.54,
+     "clusters": 5821,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.8054
+    },
+    "pairs_with_a_sign_up": {
+     "precision": 96.57,
+     "recall": 65.69,
+     "f1": 78.19,
+     "true_pairs": 7365
+    },
+    "households": {
+     "precision": 94.72,
+     "recall": 36.63,
+     "f1": 52.83,
+     "clusters": 10742,
+     "largest_cluster": 12,
+     "adjusted_rand": 0.5283
+    },
+    "native_script_people": {
+     "precision": 97.92,
+     "recall": 64.32,
+     "f1": 77.64,
+     "clusters": 348,
+     "largest_cluster": 5,
+     "adjusted_rand": 0.7759
+    },
+    "summary": {
+     "records": 18478,
+     "candidate_pairs": 185907,
+     "threshold": 0.7,
+     "customers": 12106,
+     "largest_customer": 8,
+     "junk_contact_values": 17,
+     "shared_contact_values": 192
+    },
+    "labelled_matches": 403
+   },
+   {
+    "all_records": {
+     "precision": 88.46,
+     "recall": 74.56,
+     "f1": 80.92,
+     "clusters": 11627,
+     "largest_cluster": 25,
+     "adjusted_rand": 0.8092
+    },
+    "no_surname_records": {
+     "precision": 82.82,
+     "recall": 71.67,
+     "f1": 76.84,
+     "clusters": 5743,
+     "largest_cluster": 16,
+     "adjusted_rand": 0.7684
+    },
+    "pairs_with_a_sign_up": {
+     "precision": 88.12,
+     "recall": 68.17,
+     "f1": 76.87,
+     "true_pairs": 7365
+    },
+    "households": {
+     "precision": 89.66,
+     "recall": 38.23,
+     "f1": 53.6,
+     "clusters": 10416,
+     "largest_cluster": 25,
+     "adjusted_rand": 0.5359
+    },
+    "native_script_people": {
+     "precision": 90.24,
+     "recall": 67.27,
+     "f1": 77.08,
+     "clusters": 336,
+     "largest_cluster": 9,
+     "adjusted_rand": 0.7703
+    },
+    "summary": {
+     "records": 18478,
+     "candidate_pairs": 185907,
+     "threshold": 0.55,
+     "customers": 11627,
+     "largest_customer": 25,
+     "junk_contact_values": 17,
+     "shared_contact_values": 77
+    },
+    "labelled_matches": 371
+   }
+  ],
+  "mean": {
+   "all_records": {
+    "precision": 91.52,
+    "recall": 73.22,
+    "f1": 81.26
+   },
+   "no_surname_records": {
+    "precision": 90.04,
+    "recall": 70.58,
+    "f1": 79.03
+   },
+   "pairs_with_a_sign_up": {
+    "precision": 92.07,
+    "recall": 67.45,
+    "f1": 77.81
+   },
+   "households": {
+    "precision": 91.63,
+    "recall": 37.76,
+    "f1": 53.45
+   },
+   "native_script_people": {
+    "precision": 91.92,
+    "recall": 66.36,
+    "f1": 76.99
+   }
+  },
+  "f1_sd": 0.31
  }
 }

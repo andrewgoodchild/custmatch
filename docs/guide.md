@@ -548,13 +548,22 @@ merge joined two different people with the same first name and surname, whom not
 apart (`tests/test_custmatch.py`, test_previous_surnames_find_people_who_changed_their_name;
 library versions move these by a point or two).
 
-**Three matcher options.**
+**Four matcher options.**
 
 - `"rich_features"` (on by default): nine more comparisons for names and dates that drift -
   how rare an agreeing name is, first and last name swapped, matching initials, and graded dates
   (days apart, same year, day and month swapped, a one-character typo). They lifted
   historical_50k from 82.1 to 87.0 clustered F1 and fake_1000 from 88.2 to 92.5, and cost at
   most 0.3 on the febrl sets. `"rich_features": false` turns them off.
+- `"name_words": true` (opt-in, with `"rich_features"`): one more name comparison, for files
+  whose names come in either order or with a part missing: how well the worse-met part of a
+  name (first name, surname) is met by either part of the other, in any order. "kamden horner"
+  and "horner sariah" share only a surname and score 0.44; "monk" and "hester monk" score 1.
+  On BPID it added 0.83 points of pairwise F1 with 8,000 labels and 1.73 with 300, all of it
+  precision. Elsewhere it moved clustered F1 by a third of a point or less either way, and cost
+  0.43 on the sparse Australian file, so it is off by default
+  ([report/09-against-other-tools.md](report/09-against-other-tools.md) "A public benchmark of personal identities: BPID"). It is saved with
+  the model: `custmatch add` uses the run's setting.
 - `"match_weight_feature": true` (opt-in): a Fellegi-Sunter match weight, fitted without labels
   on all the candidate pairs, as one more input for the forest (see [report/06-blocking-and-scale.md](report/06-blocking-and-scale.md) "A match weight of
   custmatch's own"). It helps most where labels are thin, but costs the web-sign-up

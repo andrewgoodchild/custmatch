@@ -13,6 +13,16 @@ record's own address. On BPID, keeping every profile's addresses (it kept only t
 pairwise F1 from 75.28 to 77.16, and its blocking recall from 71.89% to 79.41%
 (docs/report/09-against-other-tools.md "BPID").
 
+**Added:** `"name_words": true` (opt-in): how well the worse-met part of a name is met by either
+part of the other, in any order. On BPID, whose names come in either order, pairwise F1 rose
+from 77.16 to 77.99 with 8,000 labels, all of it precision; on six other datasets it moved
+clustered F1 by a third of a point or less either way, and cost 0.43 on the sparse Australian
+file, so it is off by default.
+
+**Fixed:** a model scored on features it was not trained on now raises an error. custmatch's own
+forest scorer looks up each tree's leaves directly, which does not check the number of columns,
+so a mismatch would have been scored silently on misread columns.
+
 **Fixed:** a phone extension joined the number ("8980408493 x 11399" read as 898040849311399),
 so it never met the number written plainly; extensions (`x`, `ext`, `#`) are now dropped. And a
 number that cannot be valid in its country keeps no more than the country's longest national
