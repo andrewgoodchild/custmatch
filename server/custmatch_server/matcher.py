@@ -298,7 +298,8 @@ class Matcher:
 
     def feature_names(self):
         from custmatch.core import feature_names
-        return feature_names(self.cols, self.fopts["extra_fields"], self.fopts["rich"])
+        return feature_names(self.cols, self.fopts["extra_fields"], self.fopts["rich"],
+                             name_words=self.fopts["name_words"])
 
     def explain(self, a, b):
         """Why two records score what they score: the features, and each one's share of the score."""

@@ -2352,6 +2352,27 @@ def test_parquet_outputs_match_the_csvs_in_a_run_and_an_add(world, tmp_path, mon
     assert not list((tmp_path / "plain" / "run").glob("*.parquet"))
 
 
+def test_name_words_is_saved_with_the_model_and_a_wrong_feature_count_is_an_error(world, tmp_path):
+    """"name_words" is a model setting: add and explain use the saved run's, whatever the add
+    config says. A model scored on features it was not trained on raises (tree.apply would
+    misread the columns) rather than scoring them."""
+    from custmatch import explain, incremental, models
+    from custmatch.core import NAME_WORDS_FEATURE, feature_names
+    tmp, _, _, cust = _ran(world, tmp_path, {"name_words": True})
+    assert json.loads((tmp / "run" / "state" / "config.json").read_text())["name_words"] is True
+    forest = models.load_model(tmp / "run" / "state")["forest"]
+    names = feature_names(["first_name"], rich=True, name_words=True)
+    assert NAME_WORDS_FEATURE in names and forest.n_features_in_ == len(names)
+    plain = json.loads((tmp / "config.json").read_text())
+    plain.pop("name_words")
+    (tmp / "plain.json").write_text(json.dumps(plain))
+    incremental.add(tmp / "run", tmp / "plain.json", tmp / "added")       # the saved setting wins
+    a, b = sorted(cust)[:2]
+    assert 0 <= explain.why(tmp / "added", a, b)["score"] <= 1
+    with pytest.raises(ValueError, match="trained on"):
+        models.p_match(forest, np.zeros((3, forest.n_features_in_ - 1), np.float32))
+
+
 def test_blocking_report_and_skeleton_hold_no_plain_text_when_asked(world, tmp_path, monkeypatch):
     monkeypatch.setenv("CUSTMATCH_SALT", "k")
     tmp, truth, _, _ = _ran(world, tmp_path, {"blocking": "fixed", "minimal_outputs": True})

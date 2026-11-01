@@ -53,6 +53,8 @@ VARIANTS = {"default_keys": dict(CONFIG, blocking="core"), "postcode_initial_key
             # nothing set: blocking switches to "adaptive" itself and random labels are drawn
             # stratified (labels.sample's default)
             "current_default": CONFIG_KEYS,
+            # the opt-in name-words feature (core.name_words_feature, found on BPID)
+            "current_default_name_words": dict(CONFIG_KEYS, name_words=True),
             "lsh_blocking": dict(CONFIG, lsh_blocking=LSH),
             "lsh_blocking_unique_sources": dict(CONFIG, lsh_blocking=LSH, unique_sources=True)}
 

@@ -44,6 +44,8 @@ VARIANTS = {"baseline": {},
             "country_au_active_match_weight": {"country": "AU", "_active": True, "match_weight_feature": True},
             # names in Chinese / Arabic script (--data au_customer_script): transliteration off vs on
             "country_au_active_no_script": {"country": "AU", "normalise": {"script": False}, "_active": True},
+            # the opt-in name-words feature (core.name_words_feature, found on BPID)
+            "country_au_active_name_words": {"country": "AU", "_active": True, "name_words": True},
             # leave-one-out with active learning, where runs are stable: what each step is worth
             **{f"active_without_{step}": {"country": "AU", "normalise": {step: False}, "_active": True}
                for step in ("phone", "dates", "email", "nicknames", "local_nicknames",

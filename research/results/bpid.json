@@ -271,5 +271,67 @@
     "shared_address_not_both_first": 0.2087
    }
   }
+ },
+ "all_addresses_name_words": {
+  "load_seconds": 64.7,
+  "records": 1000000,
+  "features": 25,
+  "matching_300": {
+   "precision": 0.6312,
+   "recall": 0.855,
+   "f1": 0.7256,
+   "f1_per_seed": [
+    0.7268,
+    0.7314,
+    0.7185
+   ],
+   "train_pairs": 300
+  },
+  "matching_1000": {
+   "precision": 0.6883,
+   "recall": 0.8318,
+   "f1": 0.7532,
+   "f1_per_seed": [
+    0.7584,
+    0.751,
+    0.7503
+   ],
+   "train_pairs": 1000
+  },
+  "matching_8000": {
+   "precision": 0.7296,
+   "recall": 0.8379,
+   "f1": 0.7799,
+   "f1_per_seed": [
+    0.7812,
+    0.7777,
+    0.7808
+   ],
+   "train_pairs": 8000
+  },
+  "errors": {
+   "false_matches": {
+    "count": 1399,
+    "shared_email_or_phone": 0.5168,
+    "shared_contact_names_differ": 0.2981,
+    "a_name_blank": 0.3009,
+    "phone_agrees_only_in_last_10_digits": 0.1051,
+    "shared_address_not_both_first": 0.0643
+   },
+   "missed_matches": {
+    "count": 667,
+    "shared_email_or_phone": 0.4198,
+    "shared_contact_names_differ": 0.2474,
+    "a_name_blank": 0.2804,
+    "phone_agrees_only_in_last_10_digits": 0.0855,
+    "shared_address_not_both_first": 0.0735
+   }
+  },
+  "blocking": {
+   "recall": 0.7941,
+   "candidate_pairs": 13505536,
+   "seconds": 29.2,
+   "blocks_skipped": 532
+  }
  }
 }

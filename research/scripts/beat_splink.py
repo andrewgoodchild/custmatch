@@ -50,6 +50,10 @@ VARIANTS = {                         # config overrides; "_mix" / "_jev" change 
     "rich_learned_disagree": {"blocking": "learned", "max_block": 60, "_strategy": "disagreement"},
     # re-cut customers over 30 records at stricter thresholds (dedupe); 30 is a fixed guess
     "rich_recut30": {"max_cluster": 30},
+    # the opt-in worst-matched name part, in any order (core.name_words_feature, found on BPID),
+    # and the same code without it
+    "rich_name_words": {"rich_features": True, "name_words": True},
+    "rich_no_name_words": {"rich_features": True},
 }
 
 

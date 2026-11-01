@@ -596,6 +596,35 @@ def rich_features(df, pairs, rec=None):
     return np.column_stack(cols).astype(np.float32) if len(pairs) else np.zeros((0, 9), np.float32)
 
 
+def name_words_feature(df, pairs):
+    """How well the worse-met part of a name (first name, surname) is met by either part of the
+    other name, in any order, from the side where that is best: "kamden horner" and "horner
+    sariah" share a surname but kamden meets nothing (0.4), where the swapped-name feature
+    scores them 1 on horner alone; "monk" meets "hester monk" fully (1). -1 when either name is
+    blank. Jaro-Winkler. On BPID it added 0.8 points of pairwise F1, nearly all precision: names
+    there come in either order, and a family shares contacts but not first names."""
+    from rapidfuzz.distance import JaroWinkler as JW
+    i, j = pairs[:, 0], pairs[:, 1]
+    fc, lc = _code_column(df, "first_name"), _code_column(df, "last_name")
+    has_a = {"f": fc[i] >= 0, "l": lc[i] >= 0}
+    has_b = {"f": fc[j] >= 0, "l": lc[j] >= 0}
+    col = {"f": "first_name", "l": "last_name"}
+    sim = {(x, z): _similarity(df, col[x], col[z], i, j, JW.normalized_similarity) for x in "fl" for z in "fl"}
+    neg = -np.inf
+
+    def direction(has_x, has_z, s):
+        """min over x's parts of its best match among z's parts; inf where x has none."""
+        out = np.full(len(pairs), np.inf)
+        for x in "fl":
+            best = np.maximum(np.where(has_z["f"], s(x, "f"), neg), np.where(has_z["l"], s(x, "l"), neg))
+            out = np.where(has_x[x], np.minimum(out, best), out)
+        return out
+    a = direction(has_a, has_b, lambda x, z: sim[(x, z)])
+    b = direction(has_b, has_a, lambda z, x: sim[(x, z)])
+    some_a, some_b = has_a["f"] | has_a["l"], has_b["f"] | has_b["l"]
+    return np.where(some_a & some_b, np.maximum(a, b), -1.0).astype(np.float32)
+
+
 FEATURE_CHUNK = 2_000_000
 # pairs scored at once (about 0.8 GB of features): a forest predicts in threads of a fixed number
 # of rows, and on one FEATURE_CHUNK at a time the last wave of threads left most cores idle
@@ -603,7 +632,7 @@ FEATURE_CHUNK = 2_000_000
 SCORE_CHUNK = 8_000_000
 
 
-def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None):
+def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None, name_words=False):
     """13 standard features, then one per extra field: `exact` -> 1 / 0 / -1 (missing),
     `similarity` -> Jaro-Winkler, `edit` -> normalised Levenshtein (dates, codes); -1 when missing.
     An extra field may name a standard column (e.g. date_of_birth) to compare it fuzzily too.
@@ -613,7 +642,7 @@ def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, recor
     stay bounded however many pairs there are.
 
     With alias fields ("aliases") each pair is compared through its best-agreeing views (best_views)."""
-    chunks = feature_chunks(df, pairs, profiles, aware, extra_fields, rich, records)
+    chunks = feature_chunks(df, pairs, profiles, aware, extra_fields, rich, records, name_words)
     if len(pairs) <= FEATURE_CHUNK:
         return next(chunks)[1]
     X = None
@@ -624,7 +653,7 @@ def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, recor
     return X
 
 
-def feature_chunks(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None):
+def feature_chunks(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None, name_words=False):
     """features() FEATURE_CHUNK pairs at a time, as (first row, rows): for a caller that uses each
     chunk and drops it, so the features of every pair are never held at once."""
     if alias_views(df)[1] is not None:
@@ -634,14 +663,16 @@ def feature_chunks(df, pairs, profiles, aware=True, extra_fields=(), rich=False,
     if rich and records is None and len(pairs) > FEATURE_CHUNK:
         records = record_arrays(df)
     for s in range(0, max(len(pairs), 1), FEATURE_CHUNK):
-        yield s, _features(df, pairs[s:s + FEATURE_CHUNK], profiles, aware, extra_fields, rich, records)
+        yield s, _features(df, pairs[s:s + FEATURE_CHUNK], profiles, aware, extra_fields, rich, records, name_words)
 
 
-def _features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None):
+def _features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None, name_words=False):
     from . import country
     X = _standard_features(df, pairs, profiles, aware)
     if rich:
         X = np.hstack([X, rich_features(df, pairs, records)])
+        if name_words:
+            X = np.hstack([X, name_words_feature(df, pairs)[:, None]])
     X = np.hstack([X, country.features(df, pairs, profiles)])
     if not extra_fields or not len(pairs):
         return X if not extra_fields else np.zeros((0, X.shape[1] + len(extra_fields)), np.float32)
@@ -675,12 +706,14 @@ STANDARD_FEATURES = ["first name similarity", "surname similarity", "full name s
 RICH_FEATURES = ["first name rarity (agreeing)", "surname rarity (agreeing)", "first/last name swapped",
                  "first initial agrees", "date gap (log days)", "birth year agrees", "day and month swapped",
                  "day and month agree", "dates one edit apart"]
+NAME_WORDS_FEATURE = "worst-matched name part (any order)"
 
 
-def feature_names(columns, extra_fields=(), rich=False, match_weight=False):
+def feature_names(columns, extra_fields=(), rich=False, match_weight=False, name_words=False):
     """The features' names, in the order core.features builds them, for a record frame with these
     columns - for explaining a score (which feature moved it, and by how much)."""
-    names = list(STANDARD_FEATURES) + (list(RICH_FEATURES) if rich else [])
+    names = list(STANDARD_FEATURES) + (list(RICH_FEATURES) if rich else []) + \
+        ([NAME_WORDS_FEATURE] if rich and name_words else [])
     columns = set(columns)
     names += [n for col, n in (("first_roots", "first names share a root"), ("email_user", "email user names agree"),
                                ("name_skeleton", "name skeletons agree (across scripts)")) if col in columns]

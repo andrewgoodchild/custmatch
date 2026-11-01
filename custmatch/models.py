@@ -112,6 +112,8 @@ def _forest_proba(model, X, leaves=None):
     million-record run, from hundreds of small calls in cross-fitting and the threshold search).
     The service's real-time matcher does the same."""
     import numpy as np
+    if X.shape[1] != model.n_features_in_:        # tree.apply does not check: the columns would be misread
+        raise ValueError(f"the model was trained on {model.n_features_in_} features and was given {X.shape[1]}")
     leaves = leaves or _leaf_p(model)
     X = np.ascontiguousarray(X, dtype=np.float32)
     total = np.zeros(len(X))
