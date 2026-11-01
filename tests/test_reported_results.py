@@ -5,6 +5,7 @@ result, these fail until the prose is updated - which is the failure mode that l
 about a section that did not exist survive in this repo.
 """
 import json
+from math import fsum
 from pathlib import Path
 from statistics import fmean
 
@@ -511,6 +512,7 @@ def test_name_words_claims():
     assert f"from {100 * off['matching_8000']['f1']:.2f} to {f1:.2f} with 8,000 labels" in changelog
     fm = (off["errors"]["false_matches"]["count"], on["errors"]["false_matches"]["count"])
     assert f"false matches {fm[0]:,} to {fm[1]:,}" in flat
+    # fsum: sum() of floats is compensated from Python 3.12, and febrl4's change is 0.015 to a hair
     bs = load("beat_splink.json")
     row = lambda name, off, on: f"| {name} | {off:.2f} | {on:.2f} | {on - off:+.2f} |".replace("+-", "-")
     names = {"historical_50k": "historical_50k", "febrl3": "febrl3", "synthetic": "Synthetic customers",
@@ -518,17 +520,17 @@ def test_name_words_claims():
     for ds, name in names.items():
         on, off = ([bs[f"{v}{s}"][ds][k] for s in ("", "/seed2") for k in ("random_1000", "active_300_700")]
                    for v in ("rich_name_words", "rich_no_name_words"))
-        assert row(f"{name} (2 draws, random and active labels)", sum(off) / 4, sum(on) / 4) in flat, ds
-        assert abs(sum(on) - sum(off)) / 4 < 0.34
+        assert row(f"{name} (2 draws, random and active labels)", fsum(off) / 4, fsum(on) / 4) in flat, ds
+        assert abs(fsum(on) - fsum(off)) / 4 < 0.34
     nc = load("ncvr_leipzig.json")
-    mean = lambda runs: sum(r["clustered"]["f1"] for r in runs) / len(runs)
+    mean = lambda runs: fsum(r["clustered"]["f1"] for r in runs) / len(runs)
     assert row("NCVR Leipzig, 20,000 people (3 draws)", mean(nc["current_default/people_20000"]["runs"]),
                mean(nc["current_default_name_words/people_20000"]["runs"])) in flat
     au = load("au_validation.json")
     a_on = [r["all_records"]["f1"] for r in au["country_au_active_name_words"]["runs"]]
     a_off = [r["all_records"]["f1"] for r in au["country_au_active"]["runs"]]
-    loss = (sum(a_off) - sum(a_on)) / 3
-    assert row("Sparse Australian file (3 draws)", sum(a_off) / 3, sum(a_on) / 3) in flat
+    loss = (fsum(a_off) - fsum(a_on)) / 3
+    assert row("Sparse Australian file (3 draws)", fsum(a_off) / 3, fsum(a_on) / 3) in flat
     assert f"cost the sparse Australian file {loss:.2f}, where no draw gained" in flat
     assert all(x <= y for x, y in zip(a_on, a_off))
     assert f"cost {loss:.2f} on the sparse Australian file" in guide and f"cost {loss:.2f} on the sparse" in changelog

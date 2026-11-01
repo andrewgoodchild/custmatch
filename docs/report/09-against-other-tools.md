@@ -380,7 +380,7 @@ stratified folds, the threshold chosen on the training folds, three draws.
 | historical_50k (2 draws, random and active labels) | 87.00 | 87.31 | +0.31 |
 | febrl3 (2 draws, random and active labels) | 99.81 | 99.91 | +0.10 |
 | Synthetic customers (2 draws, random and active labels) | 98.10 | 98.19 | +0.09 |
-| febrl4 (2 draws, random and active labels) | 99.94 | 99.95 | +0.02 |
+| febrl4 (2 draws, random and active labels) | 99.94 | 99.95 | +0.01 |
 | fake_1000 (2 draws, random and active labels) | 96.64 | 96.44 | -0.19 |
 | NCVR Leipzig, 20,000 people (3 draws) | 99.18 | 99.24 | +0.05 |
 | Sparse Australian file (3 draws) | 81.69 | 81.26 | -0.43 |
