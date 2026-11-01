@@ -309,41 +309,56 @@ profiles holding all 20,000 of the pairs' records, scored by how many of the 4,3
 blocking proposes and at how many candidates. The million have no ground truth, so there is no
 clustered F1. `research/scripts/bpid_benchmark.py` reshapes each profile into custmatch's columns
 (first word of the name the first name, last word the surname; second and third emails and
-phones as aliases; addresses after the first dropped) and computes the pairs' features with
+phones, and second to fifth addresses, as aliases) and computes the pairs' features with
 contacts profiled over all million profiles. The paper gives no train/test split; here five
 stratified folds, the threshold chosen on the training folds, three draws.
 
 | | Pairwise F1 | Precision | Recall |
 | --- | --- | --- | --- |
 | custmatch 0.1.2, 8,000 labels | 67.48 | 57.88 | 80.91 |
-| custmatch with dates read in more forms, 300 labels | 69.18 | 56.40 | 89.56 |
-| custmatch with dates read in more forms, 1,000 labels | 72.01 | 62.92 | 84.23 |
-| custmatch with dates read in more forms, 8,000 labels | 74.45 | 65.78 | 85.78 |
+| custmatch 0.1.3 (dates read in more forms; first address only), 8,000 labels | 74.45 | 65.78 | 85.78 |
+| With phones cut to their last digits, 8,000 labels | 75.28 | 68.05 | 84.23 |
+| With phones cut and every address, 300 labels | 70.83 | 60.32 | 85.87 |
+| With phones cut and every address, 1,000 labels | 74.37 | 64.95 | 86.98 |
+| With phones cut and every address, 8,000 labels | 77.16 | 70.73 | 84.87 |
 | Paper: random forest | 62.9 | 65.3 | 60.9 |
 | Paper: Ditto | 75.2 | 74.6 | 80.4 |
 | Paper: Sudowoodo | 78.8 | 77.4 | 80.2 |
 | Paper: Claude 3 Sonnet / Llama 3 70B / GPT-4 Turbo | 65.8 / 72.9 / 68.7 | | |
 
-- **It found a gap.** Until now custmatch read a date of birth only with `/`, `.` or `-` between
-  its parts; "1953 11 09", "09 nov 1953" and "19531109" stayed as written and disagreed with
-  "1953-11-09". Dates with a space, the month in words (a weekday stuck to the day is dropped) or
-  no separators now read as ISO dates. That added 7.0 points of F1 here and changed no value
-  in any other dataset in this repository. Partial dates ("may 2008", "22 november") are still
-  kept as written.
-- **Between the forest and the transformers.** With the fix custmatch scores 74.45: 11.6 points
-  above the paper's random forest and above every LLM it tried, 0.75 below Ditto and 4.35 below
-  Sudowoodo, on a laptop CPU with no pretraining. Comparing the date also by edit distance
-  (`"extra_fields"`) added 0.15.
-- **Its weakness is precision.** Of one draw's 1,976 false matches, 49.5% share an email or
-  phone - 31.4% while their names differ, which the annotators were told means two people - and
-  27.5% have no name on one side. Names come in either order ("weinstein journey"), so the first
-  word is not always the first name. Of the 597 missed matches, 29.8% share a phone only once a
-  stray prefix is dropped ("80 579 443 4394" against "5794434394"), 21.3% share an address that
-  is not each record's first (the adapter keeps only the first; aliases do not cover addresses),
-  and 39.9% have no name on one side.
-- **Blocking ties the paper's best.** custmatch's default keys proposed 71.89% of the matches at
-  13.1 million candidates in about 15 seconds. The paper's best, Contriever, proposed 71.1% at 10
-  million in 33 minutes on a GPU instance; with 0.1.2's date reading the keys found 70.18%.
+- **It found three gaps.** Each is fixed in custmatch itself, not in the adapter, and changes
+  no value in any other dataset in this repository.
+  - *Dates.* custmatch read a date of birth only with `/`, `.` or `-` between its parts;
+    "1953 11 09", "09 nov 1953" and "19531109" stayed as written and disagreed with
+    "1953-11-09". Dates with a space, the month in words (a weekday stuck to the day is
+    dropped) or no separators now read as ISO dates (0.1.3). That added 7.0 points of F1.
+    Partial dates ("may 2008", "22 november") are still kept as written.
+  - *Phones.* 77% of the labelled profiles' phone numbers are not valid ones (area codes such as 149 do not
+    exist), so they were kept as written, and a stray prefix ("80 579 443 4394") or an
+    extension ("8980408493 x 11399") kept a number from meeting the same number written
+    plainly. Extensions are now dropped, and a number that cannot be valid keeps no more than
+    the country's longest national number of its last digits (10 in the US). That added 0.83.
+    Dropping the extension alone changed little (74.28), and cutting only where what remains
+    is a valid number did nothing (74.43): most of these numbers are never valid.
+  - *Addresses.* Aliases covered surnames, emails and phones, so the adapter kept only each
+    profile's first address, and 1,062 of the 4,333 matching pairs share an address but only
+    671 share their first. Addresses can now be aliases too (`"aliases": {"address": [...]}`),
+    each split as the address is and compared as a whole. With every address, F1 rose a further
+    1.88 points to 77.16; precision and recall both rose with 1,000 and 8,000 labels, and with
+    300 precision rose and recall fell 1.6 points.
+- **Between Ditto and Sudowoodo.** custmatch now scores 77.16: 14.3 points above the paper's
+  random forest and above every LLM it tried, 1.96 above Ditto and 1.64 below Sudowoodo, on a
+  laptop CPU with no pretraining. Comparing the date also by edit distance (`"extra_fields"`)
+  added 0.15 before these changes.
+- **Its weakness is still precision.** Of one draw's 1,526 false matches, 55.4% share an email
+  or phone - 35.9% while their names differ, which the annotators were told means two people -
+  and 27.0% have no name on one side. Names come in either order ("weinstein journey"), so the
+  first word is not always the first name. Of the 643 missed matches, 36.4% share an email or
+  phone, and 30.8% have no name on one side.
+- **Blocking beats the paper's best.** custmatch's default keys, with every address, proposed
+  79.41% of the matches at 13.5 million candidates in about 24 seconds. The paper's best,
+  Contriever, proposed 71.1% at 10 million in 33 minutes on a GPU instance; with the first
+  address only the keys found 71.89%, and with 0.1.2's date reading 70.18%.
 
 ---
 

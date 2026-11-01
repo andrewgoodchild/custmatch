@@ -33,7 +33,7 @@ STATE = "state"
 MODEL_KEYS = ("country", "normalise", "extra_fields", "record_dates", "rich_features", "match_weight_feature",
               "blocking", "extra_blocking", "max_block", "hash_fields", "hash_salt_env", "placeholders", "aliases")
 # settings an add's config may change: how links are accepted and what is written
-ADD_OPTIONS = ("twin_guard", "unique_sources", "contact_confidence", "cookie_max_identities", "cookie_max_records", "cookie_name_check", "max_cluster", "minimal_outputs", "survivorship", "golden_fields",
+ADD_OPTIONS = ("twin_guard", "unique_sources", "contact_confidence", "cookie_max_identities", "cookie_max_records", "cookie_name_check", "max_cluster", "minimal_outputs", "parquet_outputs", "survivorship", "golden_fields",
                "source_priority", "household_postcode_join", "trusted_ids", "trusted_max")
 
 
@@ -253,8 +253,8 @@ def add(state_dir, new_config, out_dir, delete=None):
     out.mkdir(parents=True, exist_ok=True)
     keys = io.key(df)
     _, hh_id = np.unique(households, return_inverse=True)
-    pd.DataFrame({"source": df.source, "record_id": df.record_id, "customer_id": customer,
-                  "household_id": hh_id}).to_csv(out / "clusters.csv", index=False)
+    io.write_table(pd.DataFrame({"source": df.source, "record_id": df.record_id, "customer_id": customer,
+                                 "household_id": hh_id}), out / "clusters.csv", cfg)
     joined = set(customer[:n_old])
     changes = [{"record": keys[i], "customer_id": int(customer[i]),
                 "action": ("updated" if keys[i] in updated else
@@ -267,7 +267,8 @@ def add(state_dir, new_config, out_dir, delete=None):
         out / "merges.csv", index=False)
     pd.DataFrame(refused, columns=["a", "b", "score", "reason"]).to_csv(out / "refused_links.csv", index=False)
     stewardship.write_history(out, events, state_dir)
-    explain.write_links(out / "links.csv", df, profiles, pairs, X, score, th, keys, customer)
+    explain.write_links(out / "links.csv", df, profiles, pairs, X, score, th, keys, customer,
+                        parquet=bool(cfg.get("parquet_outputs")))
     kept_links = sl[sl.a.isin(pos) & sl.b.isin(pos)]
     added = pd.DataFrame({"a": keys[pairs[new_links, 0]], "b": keys[pairs[new_links, 1]], "score": score[new_links]})
     forced = np.array([*must, *trusted], dtype=int).reshape(-1, 2)
@@ -285,8 +286,8 @@ def add(state_dir, new_config, out_dir, delete=None):
             pd.DataFrame({"source": df.source, "record_id": df.record_id, "customer_id": customer,
                           **per_record}).to_csv(out / "contacts.csv", index=False)
     if not cfg.get("minimal_outputs"):
-        golden.rename_axis("customer_id").reset_index().sort_values("customer_id").to_csv(
-            out / "golden_records.csv", index=False)
+        io.write_table(golden.rename_axis("customer_id").reset_index().sort_values("customer_id"),
+                       out / "golden_records.csv", cfg)
     save_state(out, df, customer, model["forest"], th, cfg, model.get("rules"),
                model.get("match_weight_model"), model.get("matcher_model", "forest"), all_links[same])
     summary = {"existing_records": n_old, "new_records": n - n_old - len(updated),

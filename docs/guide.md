@@ -443,7 +443,9 @@ records the way those countries write them:
 | `CA` | day first (`"date_order": "mdy"` to change) | Canadian postcode (K1M 1M4) | none | English list |
 | any other ISO code | day first | none | none | English list |
 
-Every country also gets its phone numbering plan (`phonenumbers` knows them all), email
+Every country also gets its phone numbering plan (`phonenumbers` knows them all; an extension
+is dropped, and a number that cannot be valid keeps no more than the country's longest national
+number of its last digits, so a stray prefix still meets the number written plainly), email
 cleaning, names across languages and in other scripts, and blocking keys for records with no
 surname. **SSN, checked:** a number the US never issues (area 000 or 666, group 00, serial 0000)
 or a well-known placeholder (123-45-6789, 078-05-1120, one digit repeated) is blanked rather
@@ -521,13 +523,19 @@ field - a maiden or previous surname, a second email, a work phone. Map each as 
 own and list it under its field:
 
 ```json
-"aliases": {"last_name": ["maiden_name", "previous_surname"], "email": ["email_2"], "phone": ["mobile", "work_phone"]}
+"aliases": {"last_name": ["maiden_name", "previous_surname"], "email": ["email_2"], "phone": ["mobile", "work_phone"],
+            "address": ["postal_address", "previous_address"]}
 ```
 
-Surnames, emails and phones can have aliases. Each alias value is blocked like the field's own
-value - a woman's maiden name meets the surname on her records from before she married - and a
-pair is compared through its best-agreeing values: surname by similarity, email and phone
-exactly, each field on its own, so a record's maiden name and its second email can both count
+Surnames, emails, phones and addresses can have aliases. An address alias is one string, split
+into house number, street and unit as `"address"` is, and replaces the whole address (the
+postcode, households and golden records stay with the record's own address). On the test file
+with a quarter of one source's people moved (new address, email and phone; the old address
+kept as `previous_address`), clustered F1 rose from 92.64 to 100
+(test_previous_addresses_find_people_who_moved). Each alias value
+is blocked like the field's own value - a woman's maiden name meets the surname on her records
+from before she married - and a pair is compared through its best-agreeing values: surname and
+address by similarity, email and phone exactly, each field on its own, so a record's maiden name and its second email can both count
 for one pair. Alias values are normalised as their field is, hashed with it under
 `"hash_fields"`, profiled with it (a junk second email is still junk), and shown to labellers
 ("last_name (maiden_name)"). Outputs stay one row per record. Works with the default blocking
@@ -657,6 +665,10 @@ custmatch run config.json --labels labels.csv --out results/
 | `summary.json` | counts, the chosen threshold, its cross-fitted quality, and warnings |
 | `manifest.json` | what produced the run: the SHA-256 of the config's settings, every source file and the labels, the seed, the versions of custmatch, Python and the libraries that decide the numbers, and the SHA-256 of every output file (below) |
 | `state/` | the records, trained forest and threshold, for `custmatch add` |
+
+`"parquet_outputs": true` also writes `clusters.parquet`, `links.parquet` and
+`golden_records.parquet` beside their CSVs, with the same rows and columns, for files of millions
+of records: they load faster and take less space. `custmatch add` writes them too.
 
 **Review `links.csv` from the top.** In one check on the synthetic file (not saved to
 `results/`), the weakest 10% of links held most of the false merges (160 of 187), so review

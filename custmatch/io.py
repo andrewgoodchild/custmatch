@@ -96,6 +96,15 @@ def unicode_form(s):
     return s
 
 
+PHONE_EXTENSION = re.compile(r"(?i)\s*(?:x|ext\.?|extension|#)\s*\d+\s*$")   # "555 0123 x 22", "ext. 4"
+
+
+def phone_digits(series):
+    """A phone column's digits, without an extension: "8980408493 x 11399" -> "8980408493" (the
+    extension's digits had joined the number, so it never equalled the same number written plain)."""
+    return series.str.replace(PHONE_EXTENSION, "", regex=True).str.replace(r"\D", "", regex=True)
+
+
 def _clean(series):
     """Strings, lower-cased and trimmed, "" for missing, in one Unicode form (unicode_form). Typed
     Parquet columns are turned into the text a CSV would have held: a date column as YYYY-MM-DD, a
@@ -133,7 +142,7 @@ KNOWN_KEYS = {
     "unique_sources", "stability_margin", "identity_events",
     "cookie_max_identities", "cookie_max_records", "cookie_name_check", "household_postcode_join", "placeholders", "suspect_records",
     "survivorship", "golden_fields", "source_priority", "contact_confidence", "hash_fields", "hash_salt_env",
-    "minimal_outputs", "_name_skeleton", "_blocking_switched", "threshold_rule", "aliases"}
+    "minimal_outputs", "parquet_outputs", "_name_skeleton", "_blocking_switched", "threshold_rule", "aliases"}
 
 
 # options removed in 0.1.0 because measurement showed they did not earn their place
@@ -218,10 +227,15 @@ def load_config(cfg, base_dir, data=None, whole_config=True):
             if name not in out.columns:
                 out[name] = _clean(raw[cols[name]]) if name in cols else ""
         for field, name in aliases:            # other values of a field: "last_name@maiden_name"
+            if field == "address":             # split as the address is: "addr_street@address_2", ...
+                parts = _clean(raw[cols[name]]).map(split_address) if name in cols else None
+                for i, c in enumerate(("addr_number", "addr_street", "addr_unit")):
+                    out[f"{c}@{name}"] = parts.str[i] if parts is not None else ""
+                continue
             out[f"{field}@{name}"] = _clean(raw[cols[name]]) if name in cols else ""
             if field == "phone":
-                out[f"{field}@{name}"] = out[f"{field}@{name}"].str.replace(r"\D", "", regex=True)
-        out["phone"] = out.phone.str.replace(r"\D", "", regex=True)
+                out[f"{field}@{name}"] = phone_digits(out[f"{field}@{name}"])
+        out["phone"] = phone_digits(out.phone)
         out["middle_initial"] = out.middle_initial.str[:1]
         if src.get("group_rows"):
             out, more = group_rows(out)
@@ -338,12 +352,22 @@ def _normalise_aliases(raw, df, aliases, cfg):
         return df
     df = df.copy()
     for field, name in aliases:
+        if field == "address":                 # addresses are split, not normalised (the postcode stays the record's)
+            continue
         col = f"{field}@{name}"
         rows = (raw[col] != "").to_numpy()
         if rows.any():
             tmp = raw.loc[rows].assign(**{field: raw.loc[rows, col]})
             df.loc[rows, col] = country.normalise(tmp, cfg)[field].to_numpy()
     return df
+
+
+def write_table(table, path, cfg):
+    """table as CSV at path and, under "parquet_outputs", as Parquet beside it: the same rows and
+    columns, quicker to load and a fraction of the size for millions of records."""
+    table.to_csv(path, index=False)
+    if cfg.get("parquet_outputs"):
+        table.to_parquet(Path(path).with_suffix(".parquet"), index=False)
 
 
 def key(df):

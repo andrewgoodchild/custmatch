@@ -387,6 +387,7 @@ def _split(tmp, frac=0.2):
 def _alias_config(tmp, rows, aliases):
     pd.DataFrame(rows).to_csv(tmp / "al.csv", index=False)
     cols = {"record_id": "id", "first_name": "fn", "last_name": "ln", "date_of_birth": "dob", "email": "em",
+            **({"address": "addr"} if "addr" in rows[0] else {}),
             **{name: name for names in aliases.values() for name in names}}
     (tmp / "al.json").write_text(json.dumps({"sources": [{"name": "s", "path": "al.csv", "columns": cols}],
                                              "aliases": aliases}))
@@ -411,6 +412,38 @@ def test_alias_values_are_compared_through_the_best_pair_of_values(tmp_path):
     assert x["surname similarity"] == 1.0 and x["email agrees"] == 1.0   # both alias values at once
     plain = df.drop(columns=[c for c in df.columns if "@" in c])
     assert dict(zip(STANDARD_FEATURES, features(plain, np.array([[0, 1]]), profiles)[0]))["surname similarity"] < 0.5
+
+
+def test_a_second_address_is_blocked_and_compared_as_a_whole(tmp_path):
+    from custmatch import blocking, core
+    df, cfg = _alias_config(tmp_path, [
+        {"id": "1", "fn": "ann", "ln": "lee", "dob": "", "em": "", "addr": "12 main st apt 4", "address_2": "9 oak rd"},
+        {"id": "2", "fn": "anne", "ln": "leigh", "dob": "", "em": "", "addr": "9 oak rd", "address_2": ""},
+        {"id": "3", "fn": "bob", "ln": "ray", "dob": "", "em": "", "addr": "5 elm st", "address_2": "5 elm st"}],
+        {"address": ["address_2"]})
+    assert df.loc[0, ["addr_number@address_2", "addr_street@address_2", "addr_unit@address_2"]].tolist() == \
+        ["9", "oak rd", ""]
+    views, owner = core.alias_views(df)
+    assert owner.tolist() == [0, 1, 2, 0]                          # the repeated address makes no view
+    assert views.iloc[3][["addr_number", "addr_street", "addr_unit"]].tolist() == ["9", "oak rd", ""]
+    profiles = {f: core.profile_contacts(df, f) for f in ("email", "phone")}
+    pairs, *_ = blocking.candidates_for(df, profiles, cfg)
+    assert [0, 1] in pairs.tolist()                                # house number + street, through the alias
+    x = dict(zip(core.STANDARD_FEATURES, core.features(df, np.array([[0, 1]]), profiles)[0]))
+    assert x["house number agrees"] == 1 and x["street similarity"] == 1.0 and x["unit agrees"] != 1
+
+
+def test_phone_extensions_are_dropped():
+    s = pd.Series(["8980408493 x 11399", "555-0123 ext. 4", "(02) 9876 5432", "+1 579 443 4394"])
+    assert io.phone_digits(s).tolist() == ["8980408493", "5550123", "0298765432", "15794434394"]
+
+
+def test_a_number_that_cannot_be_valid_keeps_its_last_national_digits():
+    from custmatch import country
+    assert country.phone("805794434394", "US") == country.phone("5794434394", "US") == "15794434394"
+    assert country.phone("801498652460", "US") == "1498652460" == country.phone("1498652460", "US")  # 149: no such area
+    assert country.phone("447400123456", "US") == "447400123456"     # valid with its own country code: kept
+    assert country.phone("12345", "US") == "12345"                   # short: kept as given
 
 
 def test_alias_views_count_once_in_a_block(tmp_path):
@@ -483,6 +516,53 @@ def test_long_format_rows_with_one_id_are_one_record_with_aliases(world, tmp_pat
     for _, r in added.iterrows():                 # each added person joins their crm record
         crm = together[(together.pid == r.pid) & (together.source == "crm")]
         assert (crm.customer_id == r.customer_id).all(), r.record_id
+
+
+def test_previous_addresses_find_people_who_moved(world, tmp_path):
+    """A quarter of the billing people moved: a new address, email and phone, the old address kept
+    as previous_address. Only the address alias still connects them - in a run and in `add`."""
+    from custmatch import incremental
+    tmp, truth, _ = world
+    rng = random.Random(2)
+    billing = pd.read_csv(tmp / "billing.csv", dtype=str)
+    moved = np.array([rng.random() < 0.25 for _ in range(len(billing))])
+    k = np.arange(len(billing))
+    billing["previous_address"] = np.where(moved, billing["street_address"], "")
+    billing["street_address"] = np.where(moved, [f"{900 + i} new rd" for i in k], billing["street_address"])
+    billing["mail"] = np.where(moved, [f"new{i}@mail.com" for i in k], billing["mail"])
+    billing["tel"] = np.where(moved, [f"(425) 555-{1000 + i}" for i in k], billing["tel"])
+    billing.iloc[:-6].to_csv(tmp_path / "billing.csv", index=False)
+    billing.iloc[-6:].to_csv(tmp_path / "billing_new.csv", index=False)
+    cfg = json.loads((tmp / "config.json").read_text())
+    for s in cfg["sources"]:
+        s["path"] = str((tmp / s["path"]).resolve()) if s["name"] == "crm" else "billing.csv"
+    cfg["sources"][1]["columns"]["previous_address"] = "previous_address"
+    scores = {}
+    for tag, extra in (("plain", {}), ("alias", {"aliases": {"address": ["previous_address"]}})):
+        c = tmp_path / f"{tag}.json"
+        c.write_text(json.dumps(cfg | extra))
+        df, _ = io.load(c)
+        keys = io.key(df)
+        pd.DataFrame([{"a": keys[i], "b": keys[j], "label": int(truth[keys[i]] == truth[keys[j]])}
+                      for i, j in labels.candidates(df, cfg | extra)]).to_csv(tmp_path / f"{tag}_labels.csv", index=False)
+        pipeline.run(c, tmp_path / f"{tag}_labels.csv", tmp_path / tag, log=lambda *_: None)
+        out = pd.read_csv(tmp_path / tag / "clusters.csv", dtype=str)
+        pid = np.array([truth[f"{a}:{b}"] for a, b in zip(out.source, out.record_id)])
+        _, sizes = np.unique(pid, return_counts=True)
+        scores[tag] = partition_scores(out.customer_id.to_numpy(), pid, float(np.sum(sizes * (sizes - 1) / 2)))
+    assert scores["alias"]["recall"] > scores["plain"]["recall"] + 5, scores
+    assert scores["alias"]["f1"] > scores["plain"]["f1"], scores
+    new_cfg = {"sources": [cfg["sources"][1] | {"path": "billing_new.csv"}]}
+    (tmp_path / "new.json").write_text(json.dumps(new_cfg))
+    incremental.add(tmp_path / "alias", tmp_path / "new.json", tmp_path / "added")
+    c2 = pd.read_csv(tmp_path / "added" / "clusters.csv", dtype=str)
+    together = c2.assign(pid=[truth[f"{a}:{b}"] for a, b in zip(c2.source, c2.record_id)])
+    tail = billing.iloc[-6:]
+    assert moved[-6:].any()
+    for acct in tail.acct[moved[-6:]]:              # a moved person added later joins their crm record
+        r = together[(together.source == "billing") & (together.record_id == acct)].iloc[0]
+        crm = together[(together.pid == r.pid) & (together.source == "crm")]
+        assert (crm.customer_id == r.customer_id).all(), acct
 
 
 def test_previous_surnames_find_people_who_changed_their_name(world, tmp_path):
@@ -2252,6 +2332,24 @@ def test_an_add_configs_override_holds_for_later_adds(world, tmp_path):
     c = pd.read_csv(tmp / "a2" / "clusters.csv", dtype=str)
     got = dict(zip(c.source + ":" + c.record_id, c.customer_id))
     assert got[f"crm:{x['id']}"] != got["crm:d1"], "the first add's decision was forgotten"
+
+
+def test_parquet_outputs_match_the_csvs_in_a_run_and_an_add(world, tmp_path, monkeypatch):
+    from custmatch import explain, incremental
+    monkeypatch.setattr(explain, "LINK_SLICE", 7)          # links.parquet written over many slices
+    tmp, _, _, _ = _ran(world, tmp_path, {"parquet_outputs": True})
+    incremental.add(tmp / "run", tmp / "config.json", tmp / "add")
+    for out in ("run", "add"):
+        for name in ("clusters", "links", "golden_records"):
+            csv = pd.read_csv(tmp / out / f"{name}.csv", dtype=str, keep_default_na=False)
+            pq = pd.read_parquet(tmp / out / f"{name}.parquet")
+            assert list(pq.columns) == list(csv.columns) and len(pq) == len(csv), (out, name)
+            if name == "links":
+                assert len(pq) > 7 and pq.customer_id.dtype == "int64" and pq.is_bridge.dtype == bool
+                assert (pq.a.tolist(), pq.b.tolist()) == (csv.a.tolist(), csv.b.tolist())
+    (tmp_path / "plain").mkdir()
+    _ran(world, tmp_path / "plain")                          # off by default
+    assert not list((tmp_path / "plain" / "run").glob("*.parquet"))
 
 
 def test_blocking_report_and_skeleton_hold_no_plain_text_when_asked(world, tmp_path, monkeypatch):

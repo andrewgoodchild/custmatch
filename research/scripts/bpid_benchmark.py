@@ -3,7 +3,7 @@ deduplication from AWS. Synthetic profiles - SSA first names, Census surnames, U
 with variations written by trained annotators and by program, and three annotators' unanimous
 match / no-match on each labelled pair. Someone else wrote its errors, which is the point.
 
-    python research/scripts/bpid_benchmark.py [--variant shipped] [--skip-blocking] [--tag NAME]
+    python research/scripts/bpid_benchmark.py [--variant shipped] [--all-addresses] [--skip-blocking] [--tag NAME]
 
 Download (Apache 2.0, 58 MB) into the gitignored data/bpid/ and unzip it there:
     https://zenodo.org/records/13932202
@@ -23,8 +23,9 @@ would. There is no ground truth for the million, so no clustered F1.
 Each profile is a full name, lists of emails, phones and addresses, and a date of birth in one of
 dozens of forms. The adapter only reshapes: the name's first word is the first name, its last the
 surname, a middle word's initial the middle initial; the first email, phone and address are the
-fields, further emails and phones their aliases; further addresses are dropped (aliases cover
-surnames, emails and phones). The date of birth goes in as written.
+fields, further emails and phones their aliases; further addresses are dropped, or with
+--all-addresses (the reported "all_addresses" result) are address aliases too. The date of birth
+goes in as written.
 Writes research/results/bpid.json.
 """
 import argparse
@@ -44,6 +45,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data/bpid/data_release"
 OUT = ROOT / "research/results/bpid.json"
 N_ALIAS = 3            # 3 emails and 3 phones cover every profile
+N_ADDR = 5             # and 5 addresses
 GRID = np.round(np.arange(0.05, 0.96, 0.01), 2)
 PAPER = {"random_forest": 0.629, "ditto": 0.752, "sudowoodo": 0.788, "claude3_sonnet": 0.658,
          "llama3_70b": 0.729, "mistral_large": 0.604, "gpt4_turbo": 0.687,
@@ -65,7 +67,9 @@ def to_row(i, p):
     row = {"id": str(i), "first_name": words[0] if words else "",
            "middle": words[1][:1] if len(words) > 2 else "",
            "last_name": words[-1] if len(words) > 1 else "",
-           "dob": p["dob"], "address": p["addr"][0] if p["addr"] else ""}
+           "dob": p["dob"]}
+    for k in range(N_ADDR):
+        row["address" if k == 0 else f"address_{k + 1}"] = p["addr"][k] if k < len(p["addr"]) else ""
     for f, vals in (("email", p["email"]), ("phone", p["phone"])):
         for k in range(N_ALIAS):
             row[f if k == 0 else f"{f}_{k + 1}"] = vals[k] if k < len(vals) else ""
@@ -94,10 +98,12 @@ def build(tmp):
     return csv, np.c_[np.minimum(a, b), np.maximum(a, b)].astype(np.int32), np.array(y)
 
 
-def config(csv, extra):
+def config(csv, extra, all_addresses=False):
     cols = {"record_id": "id", "first_name": "first_name", "middle_initial": "middle", "last_name": "last_name",
             "date_of_birth": "dob", "address": "address", "email": "email", "phone": "phone"}
     alias = {f: [f"{f}_{k}" for k in range(2, N_ALIAS + 1)] for f in ("email", "phone")}
+    if all_addresses:
+        alias["address"] = [f"address_{k}" for k in range(2, N_ADDR + 1)]
     for names in alias.values():
         cols.update({n: n for n in names})
     return {"sources": [{"name": "bpid", "path": csv.name, "columns": cols}], "aliases": alias} | extra
@@ -179,6 +185,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--variant", default="shipped", choices=sorted(VARIANTS))
     ap.add_argument("--skip-blocking", action="store_true")
+    ap.add_argument("--all-addresses", action="store_true", help="every address, the later ones as aliases")
     ap.add_argument("--seeds", default="1,2,3")
     ap.add_argument("--tag", help="the result's name (default: the variant's)")
     a = ap.parse_args()
@@ -190,7 +197,7 @@ def main():
         t0 = time.time()
         csv, lab, y = build(tmp)
         cfg_path = tmp / "config.json"
-        cfg_path.write_text(json.dumps(config(csv, VARIANTS[a.variant])))
+        cfg_path.write_text(json.dumps(config(csv, VARIANTS[a.variant], a.all_addresses)))
         df, cfg = io.load(cfg_path)
         profiles = {f: profile_contacts(df, f) for f in ("email", "phone")}
         X = features(df, lab, profiles, **schema.feature_options_for(df, cfg))

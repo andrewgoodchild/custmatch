@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+**Added:** `"parquet_outputs": true` writes `clusters.parquet`, `links.parquet` and
+`golden_records.parquet` beside their CSVs, in `custmatch run` and `custmatch add`.
+`links.parquet` is written a slice at a time, as `links.csv` is.
+
+**Added:** addresses can have aliases: `"aliases": {"address": ["postal_address", "previous_address"]}`.
+Each is split into house number, street and unit as `"address"` is, blocked like the record's
+own address and compared as a whole; the postcode, households and golden records stay with the
+record's own address. On BPID, keeping every profile's addresses (it kept only the first) raised
+pairwise F1 from 75.28 to 77.16, and its blocking recall from 71.89% to 79.41%
+(docs/report/09-against-other-tools.md "BPID").
+
+**Fixed:** a phone extension joined the number ("8980408493 x 11399" read as 898040849311399),
+so it never met the number written plainly; extensions (`x`, `ext`, `#`) are now dropped. And a
+number that cannot be valid in its country keeps no more than the country's longest national
+number of its last digits, so a stray prefix ("80 579 443 4394") still meets "5794434394". That
+moved BPID's pairwise F1 from 74.45 to 75.28 with 8,000 labels. No phone in any other dataset in
+this repository reads differently.
+
 ## 0.1.3 (2026-11-01)
 
 Runs on large files are several times faster and hold far less memory: all 5,000,000 NCVR

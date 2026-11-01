@@ -488,15 +488,15 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
     golden.insert(0, "customer_id", cust_id[first.reindex(golden.index).to_numpy()])
     minimal = bool(cfg.get("minimal_outputs"))        # no file that repeats personal data
     if not minimal:
-        golden.sort_values("customer_id").to_csv(out / "golden_records.csv", index=False)
+        io.write_table(golden.sort_values("customer_id"), out / "golden_records.csv", cfg)
     del golden, first                             # a row per customer: millions of rows
     band = float(cfg.get("review_band", 0.1))
     stewardship.review_pairs(pairs, score, th, band, keys, pair_features, df, profiles).to_csv(out / "review.csv", index=False)
     _, hh_id = np.unique(households, return_inverse=True)
-    pd.DataFrame({"source": df.source, "record_id": df.record_id,
-                  "customer_id": cust_id, "household_id": hh_id,
-                  "confidence": np.round(confidence(n, pairs, score, customers), 4)}
-                 ).to_csv(out / "clusters.csv", index=False)
+    io.write_table(pd.DataFrame({"source": df.source, "record_id": df.record_id,
+                                 "customer_id": cust_id, "household_id": hh_id,
+                                 "confidence": np.round(confidence(n, pairs, score, customers), 4)}),
+                   out / "clusters.csv", cfg)
     identity.write_cookies(out, cookie_table, cust_id, minimal=bool(cfg.get("minimal_outputs")))
     linked = score > th
     state_links = pd.DataFrame({"a": keys[pairs[linked, 0]], "b": keys[pairs[linked, 1]],
@@ -525,7 +525,7 @@ def run(config_path, labels_path, out_dir, seed=0, log=print, model_dir=None, pr
         from . import suspect
         suspect.table(df, suspect_flags).to_csv(out / "suspect_records.csv", index=False)
     n_links, n_bridges = explain.write_links(out / "links.csv", df, profiles, pairs, pair_features, score, th, keys,
-                                             cust_id)
+                                             cust_id, parquet=bool(cfg.get("parquet_outputs")))
     clear_caches()                                  # the feature caches the review and links rebuilt
     if not minimal:
         pd.DataFrame([{"field": f, "value": v, "class": c, "weight": round(w, 3)}
