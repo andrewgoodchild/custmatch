@@ -701,5 +701,125 @@
    }
   },
   "machine": "arm64 laptop, 18 cores, 64 GiB"
+ },
+ "scale_10m_local": {
+  "command": "research/scripts/custmatch_scale.py 500",
+  "wall_seconds": 762.9,
+  "peak_memory_gb": 41.34,
+  "machine": "arm64 laptop, 18 cores, 64 GiB",
+  "log_tail": [
+   "{\"copies\": 500, \"records\": 10067000, \"blocking\": \"core\", \"run_candidate_pairs\": 24379500, \"stage_seconds\": {\"load and profile\": 95.99, \"blocking (24,379,500 candidate pairs)\": 24.24, \"forest: cross-fitted clustered F1 97.35\": 48.74, \"threshold (clustered, in-cluster precision check)\": -0.0, \"large blocks checked: 0 of 6000 kept, 0 pairs added\": 0.68, \"households, golden records, outputs\": 268.32}, \"candidate_pairs\": 24379500, \"load_seconds\": 14.01, \"profile_seconds\": 47.4, \"block_seconds\": 16.87, \"features_seconds\": 19.32, \"full_run_seconds\": 440.78, \"clustered_f1\": 96.89}"
+  ],
+  "result": {
+   "copies": 500,
+   "records": 10067000,
+   "blocking": "core",
+   "run_candidate_pairs": 24379500,
+   "stage_seconds": {
+    "load and profile": 95.99,
+    "blocking (24,379,500 candidate pairs)": 24.24,
+    "forest: cross-fitted clustered F1 97.35": 48.74,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "large blocks checked: 0 of 6000 kept, 0 pairs added": 0.68,
+    "households, golden records, outputs": 268.32
+   },
+   "candidate_pairs": 24379500,
+   "load_seconds": 14.01,
+   "profile_seconds": 47.4,
+   "block_seconds": 16.87,
+   "features_seconds": 19.32,
+   "full_run_seconds": 440.78,
+   "clustered_f1": 96.89
+  }
+ },
+ "scale_10m_local_malloc_large_cache_0": {
+  "command": "research/scripts/custmatch_scale.py 500",
+  "wall_seconds": 792.9,
+  "peak_memory_gb": 37.83,
+  "machine": "arm64 laptop, 18 cores, 64 GiB",
+  "log_tail": [
+   "{\"copies\": 500, \"records\": 10067000, \"blocking\": \"core\", \"run_candidate_pairs\": 24379500, \"stage_seconds\": {\"load and profile\": 95.68, \"blocking (24,379,500 candidate pairs)\": 26.07, \"forest: cross-fitted clustered F1 97.35\": 54.93, \"threshold (clustered, in-cluster precision check)\": -0.0, \"large blocks checked: 0 of 6000 kept, 0 pairs added\": 0.72, \"households, golden records, outputs\": 272.27}, \"candidate_pairs\": 24379500, \"load_seconds\": 15.21, \"profile_seconds\": 52.13, \"block_seconds\": 18.84, \"features_seconds\": 22.15, \"full_run_seconds\": 452.54, \"clustered_f1\": 96.89}"
+  ],
+  "result": {
+   "copies": 500,
+   "records": 10067000,
+   "blocking": "core",
+   "run_candidate_pairs": 24379500,
+   "stage_seconds": {
+    "load and profile": 95.68,
+    "blocking (24,379,500 candidate pairs)": 26.07,
+    "forest: cross-fitted clustered F1 97.35": 54.93,
+    "threshold (clustered, in-cluster precision check)": -0.0,
+    "large blocks checked: 0 of 6000 kept, 0 pairs added": 0.72,
+    "households, golden records, outputs": 272.27
+   },
+   "candidate_pairs": 24379500,
+   "load_seconds": 15.21,
+   "profile_seconds": 52.13,
+   "block_seconds": 18.84,
+   "features_seconds": 22.15,
+   "full_run_seconds": 452.54,
+   "clustered_f1": 96.89
+  }
+ },
+ "scale_10m_local_footprint": {
+  "command": "MallocLargeCache=0 research/scripts/scale_memory.py 500 [--no-diagnostics]",
+  "machine": "arm64 laptop, 18 cores, 64 GiB, shared with other work",
+  "measure": "lifetime peak physical footprint (proc_pid_rusage); one run each",
+  "records": 10067000,
+  "after": {
+   "code": "after the memory work (0376fa7)",
+   "run_seconds": 460.3,
+   "peak_footprint_gb": 28.31,
+   "step_peaks_gb": {
+    "start": 0.12,
+    "scaled": 0.83,
+    "load": 5.28,
+    "diag profile": 10.33,
+    "diag block": 13.64,
+    "diag features": 13.57,
+    "labels": 25.07,
+    "run: start": 23.87,
+    "run: [   95.2s] load and profile done": 27.64,
+    "run: [  122.9s] blocking (24,379,500 candidate pairs) done": 28.16,
+    "run: [  179.4s] threshold (clustered, in-cluster precision check) done": 26.53,
+    "run: [  180.2s] large blocks checked: 0 of 6000 kept, 0 pairs added done": 27.52
+   }
+  },
+  "before": {
+   "code": "before it (b1d004b)",
+   "run_seconds": 661.2,
+   "peak_footprint_gb": 30.35,
+   "step_peaks_gb": {
+    "start": 0.13,
+    "scaled": 0.84,
+    "load": 4.87,
+    "diag profile": 10.21,
+    "diag block": 16.43,
+    "diag features": 13.52,
+    "labels": 27.22,
+    "run: start": 22.82,
+    "run: [  106.9s] load and profile done": 28.59,
+    "run: [  240.4s] blocking (24,379,500 candidate pairs) done": 28.55,
+    "run: [  371.2s] threshold (clustered, in-cluster precision check) done": 27.59,
+    "run: [  372.7s] large blocks checked: 0 of 6000 kept, 0 pairs added done": 30.31
+   }
+  },
+  "after_plain_run": {
+   "code": "after it, no timing pass",
+   "run_seconds": 515.2,
+   "peak_footprint_gb": 21.17,
+   "step_peaks_gb": {
+    "start": 0.12,
+    "scaled": 0.85,
+    "load": 5.17,
+    "labels": 15.59,
+    "run: start": 14.32,
+    "run: [   95.2s] load and profile done": 18.24,
+    "run: [  122.8s] blocking (24,379,500 candidate pairs) done": 18.68,
+    "run: [  179.3s] threshold (clustered, in-cluster precision check) done": 17.06,
+    "run: [  180.1s] large blocks checked: 0 of 6000 kept, 0 pairs added done": 21.01
+   }
+  }
  }
 }

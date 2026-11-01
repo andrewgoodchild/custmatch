@@ -1110,6 +1110,11 @@ def test_head_to_head_and_home_data_claims():
                 f"{r['candidate_pairs_above_0.001'] / 1e6:.1f} M | {r['clustered']['precision']:.2f} | "
                 f"{r['clustered']['recall']:.2f} | {r['clustered']['f1']:.2f} |") in flat, key
     assert c["clustered"]["f1"] - max(v["clustered"]["f1"] for k, v in big.items() if k.startswith("splink_") and isinstance(v, dict)) > 15
+    old = h["copies_50_m1_pro_16gb"]                      # the same comparison on the earlier 16 GB laptop
+    runs = [v for k, v in old.items() if k.startswith("splink_") and isinstance(v, dict)]
+    gb, secs = sorted(r["peak_memory_gb"] for r in runs), sorted(r["splink_seconds"] for r in runs)
+    assert (f"peaked at {gb[0]:.1f} to {gb[-1]:.1f} GB" in flat and f"took {secs[0]:.0f} to {secs[-1]:.0f} seconds" in flat
+            and f"custmatch took {old['custmatch']['wall_seconds']:.0f} seconds and {old['custmatch']['peak_memory_gb']:.2f} GB there" in flat)
     d = small["dedupe"]
     assert (f"| {small['custmatch']['clustered']['f1']:.2f} / {small['custmatch']['wall_seconds']:.1f} / "
             f"{small['custmatch']['peak_memory_gb']:.2f} GB | dedupe: {d['clustered']['f1']:.2f} / "
@@ -1204,9 +1209,12 @@ def test_realtime_coherence_claims():
 def test_readme_headline_tiles():
     """README "Results": the headline tiles and "Where it is stronger", from the results files."""
     readme = _flat((ROOT / "README.md").read_text())
-    big = load("scale_large.json")["scale_10m_tier2"]
+    big = load("scale_large.json")["scale_10m_local"]
     assert big["result"]["records"] > 10_000_000
-    assert f"{big['result']['full_run_seconds'] / 60:.0f} minutes on one 16-core machine, {big['result']['clustered_f1']:.2f} clustered F1" in readme
+    assert f"{big['result']['full_run_seconds'] / 60:.0f} minutes on an 18-core laptop, {big['result']['clustered_f1']:.2f} clustered F1" in readme
+    cloud = load("scale_large.json")["scale_10m_tier2"]
+    assert (f"On a 16-core cloud machine ten million took {cloud['result']['full_run_seconds'] / 60:.0f} minutes and "
+            f"{cloud['peak_memory_gb']:.1f} GB on earlier code") in readme
     assert f"{big['result']['clustered_f1']:.2f} at ten million" in readme
     h = load("head_to_head.json")
     m, s = h["copies_50"]["custmatch"], h["copies_50"]["splink_m_from_labels_capped"]
@@ -1242,10 +1250,28 @@ def test_readme_memory_claims():
     readme = _flat((ROOT / "README.md").read_text())
     h = load("head_to_head.json")
     m, s = h["copies_50"]["custmatch"], h["copies_50"]["splink_m_from_labels_capped"]
-    big = load("scale_large.json")["scale_10m_tier2"]
-    per_million = big["peak_memory_gb"] / big["result"]["records"] * 1e6
+    r = load("scale_large.json")
+    f = r["scale_10m_local_footprint"]
+    plain = f["after_plain_run"]["peak_footprint_gb"]
+    per_million = plain / f["records"] * 1e6
     assert f"A million records peak at {m['peak_memory_gb']:.2f} GB on a laptop (Splink: {s['peak_memory_gb']:.2f} GB)" in readme
-    assert f"at {big['peak_memory_gb']:.1f} GB, about {per_million:.1f} GB per million" in readme
+    assert f"at {plain:.1f} GB, about {per_million:.1f} GB per million (macOS's large-block cache off)" in readme
+    assert f"about {per_million:.1f} GB per million records" in readme
+    assert f"{plain:.0f} GB on an 18-core laptop" in _flat(REPORT)
+    flat = _flat(GUIDE)                                    # chapter 6: the laptop run and its footprint
+    run = r["scale_10m_local"]
+    last = next(v for k, v in run["result"]["stage_seconds"].items() if k.startswith("households"))
+    assert (f"{run['result']['full_run_seconds'] / 60:.1f} minutes, the same {run['result']['clustered_f1']:.2f} "
+            f"clustered F1, the last stage {last:.0f} s") in flat
+    assert f"Its peak resident memory, {run['peak_memory_gb']:.1f} GB" in flat
+    after, before = f["after"], f["before"]
+    assert (f"peaked at {after['peak_footprint_gb']:.1f} GB with the memory work below, while scoring, and "
+            f"{before['peak_footprint_gb']:.1f} GB before it, in the last stage") in flat
+    top = {k: max(x["step_peaks_gb"], key=x["step_peaks_gb"].get) for k, x in f.items() if isinstance(x, dict)}
+    assert "blocking" in top["after"]                     # labelled by the line before: the forest ran next
+    assert "large blocks checked" in top["before"] and "large blocks checked" in top["after_plain_run"]
+    assert f"peaked at {plain:.1f} GB, about {per_million:.1f} GB per million" in flat
+    assert run["result"]["clustered_f1"] == r["scale_10m_tier2"]["result"]["clustered_f1"]
     assert f"needed {h['copies_1']['dedupe']['peak_memory_gb']:.1f} GB for 20,134 records" in readme
 
 

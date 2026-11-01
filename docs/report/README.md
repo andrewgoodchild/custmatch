@@ -13,10 +13,11 @@ and dropped; [chapter 12](12-the-service.md) covers the service; [chapter 13](13
 ([reproducing.md](../reproducing.md) has the commands), and the test suite checks every number
 here against `research/results/*.json`.
 
-**Where it ran.** An Apple M1 Pro laptop (16 GB) for most of it, and cloud machines on Modal for
-the runs of millions of records. Hosted language models (GPT-4o, GPT-4o-mini, GPT-6 Luna, the
-Jev router and decision model) ran through OpenRouter in September 2026 for $7.26 in total;
-GPT-4 is cited, not rerun (about $21). Hosted models are as served then (Jev: snapshot
+**Where it ran.** An Apple M1 Pro laptop (16 GB) for most of it, cloud machines on Modal for
+the runs of millions of records, and an 18-core, 64 GB Apple silicon laptop for the North Carolina
+voter runs of chapter 6 and the million-record comparison of chapter 9. Hosted language models
+(GPT-4o, GPT-4o-mini, GPT-6 Luna, the Jev router and decision model) ran through OpenRouter in
+September 2026 for $7.26 in total; GPT-4 is cited, not rerun (about $21). Hosted models are as served then (Jev: snapshot
 `typesafe/jev-1.13-20260917`) and may have changed since. Most experiments ran between
 September and October 2026; corrections are marked where a later check changed a result.
 
@@ -69,7 +70,7 @@ alone. Unless a table says otherwise, numbers are clustered F1 on a 0-100 scale.
    a tenth as many messages to the wrong person ([chapter 8](08-against-a-cdp.md)).
 8. **Against other tools,** it is the most accurate on customer data (97.99 against Splink's
    78.88 at a million records); Splink is faster once its large blocks are skipped, and dedupe
-   is as accurate but about 90 times slower ([chapter 9](09-against-other-tools.md)).
+   is as accurate but about 50 times slower ([chapter 9](09-against-other-tools.md)).
 9. **Published results mostly reproduce,** with one trap: Ditto can collapse silently to "every
    pair matches" when trained without warmup ([chapter 10](10-reproductions.md)).
 10. **A zero-shot language model is a good judge of hard pairs and a poor matcher in the
@@ -217,13 +218,13 @@ On a synthetic two-source customer file it reaches **97.3 clustered F1 from 1,00
 | For contacting people, `"min_precision": 0.97`: records sent to someone else's email, many / few sign-ups | **0.05% / 0.08%** | CDP tuned for precision: 0.58% / 0.94% - while finding about 6 to 10 points more matches |
 | Couples who separate: the leaver's new records merged with the ex | **0.4%** | CDP-style, tuned: 3.8% |
 | North Carolina voters (names and places only), 200,000 people, 3 draws: clustered F1 | **95.6 (94.7-96.2)** | Splink, given the same labels: 93.9 |
-| The synthetic file copied to 1,006,700 records, one laptop: clustered F1 / seconds / peak memory | **97.99** / 71.0 / **3.64 GB** | Splink 5, large blocks skipped: 78.88 / **21.6** / 5.96 GB |
-| The synthetic file, 20,134 records: clustered F1 / seconds / peak memory | 97.38 / **5.4** / **0.35 GB** | dedupe: **97.75** / 499 / 8.5 GB |
+| The synthetic file copied to 1,006,700 records, one laptop: clustered F1 / seconds / peak memory | **97.99** / 40.4 / **3.60 GB** | Splink 5, large blocks skipped: 78.88 / **13.0** / 9.40 GB |
+| The synthetic file, 20,134 records: clustered F1 / seconds / peak memory | 97.38 / **4.3** / **0.34 GB** | dedupe: **97.65** / 204 / 27.8 GB |
 
 The advantage is largest where customer-data problems exist; on clean, name-only data such as
 the voter file the two are close, and Splink there learned from labels custmatch's own model
 chose. Splink is faster once its large blocks are skipped; dedupe matches custmatch's accuracy
-on the customer file but is about 90 times slower. On the other tools' own datasets custmatch
+on the customer file but is about 50 times slower. On the other tools' own datasets custmatch
 leads on noisy person data; on dedupe's organisation records dedupe wins one, and Splink the
 other unless custmatch's `max_block` is raised as its warning advises ([chapter 9](09-against-other-tools.md)). The Australian rows are three
 independently generated populations, against a CDP tuned on the truth - generous to it
@@ -247,5 +248,6 @@ Australian files were generated for this project, so their errors are ones the t
 around - see the caveats in each chapter. On five benchmarks (four public, plus that synthetic file),
 averaged over three label draws, it beats Splink's unsupervised result on four and is 0.3 behind
 on febrl3 (measured before 0.1.0's threshold rule). A million records take about 1.7 minutes on a laptop (94 s with `"blocking":
-"fixed"`), and ten million 37 to 57 minutes and 34 GB on a 16-core cloud machine - measured
+"fixed"`), and ten million 37 to 57 minutes and 34 GB on a 16-core cloud machine (7 minutes and 21 GB on
+an 18-core laptop) - measured
 on copies of a 20,000-record file, so blocks grew less than they would in a real file of that size.

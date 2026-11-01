@@ -80,11 +80,11 @@ and households custmatch was built for - its home ground:
 
 | 10 million records | 1 million records | Messy customer data | Ensemble option |
 | :---: | :---: | :---: | :---: |
-| **31 minutes** on one 16-core machine, **96.89** clustered F1 | **71 seconds** on a laptop, **97.99** clustered F1 | **97.3** clustered F1, against [Splink](https://github.com/moj-analytical-services/splink)'s 84.4 | **+0.41** F1 on average, **+1.8** on sparse records |
+| **7 minutes** on an 18-core laptop, **96.89** clustered F1 | **40 seconds** on a laptop, **97.99** clustered F1 | **97.3** clustered F1, against [Splink](https://github.com/moj-analytical-services/splink)'s 84.4 | **+0.41** F1 on average, **+1.8** on sparse records |
 
-<sub>The two sizes ran on different machines: per record the laptop was about 2 to 2.6 times faster than
-the cloud machine. On one machine, time per million records rose by about a quarter from 2 to
-10 million, most of it in the household and golden-record stage.</sub>
+<sub>Both sizes ran on one 18-core, 64 GB laptop, shared with other work. On a 16-core cloud machine
+ten million took 31 minutes and 34.0 GB on earlier code; there, time per million records rose by
+about a quarter from 2 to 10 million, most of it in the household and golden-record stage.</sub>
 
 **Where it is stronger**
 
@@ -93,12 +93,13 @@ the cloud machine. On one machine, time per million records rose by about a quar
   97.99 clustered F1 where Splink scores 78.88, and against a CDP's exact-identifier matching it
   finds 22 to 26 more points of the true matches.
 - **It keeps going.** Accuracy holds as the file grows - 97.99 at a million records, 96.89 at
-  ten million, on one machine. [dedupe](https://github.com/dedupeio/dedupe), about as accurate on 20,134 records (97.75), took 499
-  seconds and 8.5 GB there against custmatch's 5.4 seconds and 0.35 GB, so a million records was
-  out of reach on the same 16 GB laptop.
-- **Modest memory.** A million records peak at 3.64 GB on a laptop (Splink: 5.96 GB); ten million
-  at 34.0 GB, about 3.4 GB per million, so a 16 GB laptop holds about four million. dedupe
-  needed 8.5 GB for 20,134 records.
+  ten million, on one machine. [dedupe](https://github.com/dedupeio/dedupe), about as accurate on 20,134 records (97.65), took 204
+  seconds and 27.8 GB there against custmatch's 4.3 seconds and 0.34 GB, so a million records was
+  out of reach on the same 64 GB laptop.
+- **Modest memory.** A million records peak at 3.60 GB on a laptop (Splink: 9.40 GB); ten million
+  at 21.2 GB, about 2.1 GB per million (macOS's large-block cache off), so a 16 GB laptop holds
+  about five million. dedupe
+  needed 27.8 GB for 20,134 records, running a process per core (8.5 GB with 10 cores).
 - **An ensemble for hard files.** `"matcher_model": "forest_catboost"` averages the random forest
   with CatBoost: +0.41 clustered F1 on average over six datasets, +1.3 on dense genealogy records
   and +1.8 on sparse sign-ups, never more than 0.03 behind on any dataset, for runs about 30%
@@ -107,8 +108,8 @@ the cloud machine. On one machine, time per million records rose by about a quar
 **Where others win.** Splink needs no labels; custmatch needs about 300, most of them picked for
 you by active learning (within 1.6 points of 1,000 on five of six datasets; with none, no
 cut-off held across datasets - [chapter 4](docs/report/04-labels.md)). Splink is also faster once its large blocks are skipped
-(21.6 seconds at a million records), and it can run on Spark across a cluster: its developers
-matched a billion records that way. custmatch runs on one machine - about 3.4 GB per million
+(13.0 seconds at a million records), and it can run on Spark across a cluster: its developers
+matched a billion records that way. custmatch runs on one machine - about 2.1 GB per million
 records, so tens of millions, not hundreds. On clean records with names and places only, the tools
 are close.
 
