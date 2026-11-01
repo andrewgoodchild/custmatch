@@ -10,6 +10,8 @@ bridges found 44 for the same effort - with about two records per customer most 
 bridges. On files with many records per customer (docs/report/02-whole-customers.md), bridges matter more,
 so the flag is kept.
 """
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -132,27 +134,44 @@ def _bridges(n_nodes, edges):
 LINK_SLICE = 1_000_000     # links.csv rows made and written at once
 
 
-def write_links(path, df, profiles, pairs, X, score, threshold, keys, customer_id):
+def write_links(path, df, profiles, pairs, X, score, threshold, keys, customer_id, parquet=False):
     """links.csv: a row per accepted link - a, b, customer_id, score, is_bridge, evidence - weakest
     first, for review. X: the pairs' features, or a function giving the features of the pairs at
     some row indices. Rows are made and written LINK_SLICE at a time, in order: millions of links
-    with their evidence text were gigabytes at once. Returns (links, bridges)."""
+    with their evidence text were gigabytes at once. parquet: also write links.parquet beside it,
+    a slice at a time too. Returns (links, bridges)."""
     keep = np.flatnonzero(score > threshold)
     e = pairs[keep].astype(np.int64)
     bridge = _bridges(len(df), e)
     rounded = np.round(score[keep].astype(float), 4)
     order = np.argsort(rounded, kind="stable")        # weakest first
     customer_id = np.asarray(customer_id)
+    writer = None
     for s in range(0, max(len(order), 1), LINK_SLICE):
         o = order[s:s + LINK_SLICE]
         i, j = e[o, 0], e[o, 1]
         ce, cp = _contacts(df, profiles, "email", i, j), _contacts(df, profiles, "phone", i, j)
-        pd.DataFrame({
+        rows = pd.DataFrame({
             "a": keys[i], "b": keys[j], "customer_id": customer_id[i].astype(int), "score": rounded[o],
             "is_bridge": bridge[o],
-            "evidence": evidence_many(X(keep[o]) if callable(X) else X[keep[o]], ce, cp, _both_streets(df, i, j))}
-        ).to_csv(path, index=False, header=s == 0, mode="w" if s == 0 else "a")
+            "evidence": evidence_many(X(keep[o]) if callable(X) else X[keep[o]], ce, cp, _both_streets(df, i, j))})
+        rows.to_csv(path, index=False, header=s == 0, mode="w" if s == 0 else "a")
+        if parquet:
+            import pyarrow as pa
+            import pyarrow.parquet as pq
+            t = pa.Table.from_pandas(rows, preserve_index=False, schema=_link_schema())
+            writer = writer or pq.ParquetWriter(Path(path).with_suffix(".parquet"), t.schema)
+            writer.write_table(t)
+    if writer is not None:
+        writer.close()
     return len(keep), int(bridge.sum())
+
+
+def _link_schema():
+    """links.parquet's columns: fixed, so every slice (and an empty file) has the same types."""
+    import pyarrow as pa
+    return pa.schema([("a", pa.string()), ("b", pa.string()), ("customer_id", pa.int64()),
+                      ("score", pa.float64()), ("is_bridge", pa.bool_()), ("evidence", pa.string())])
 
 
 def _block_keys(df, i, profiles):

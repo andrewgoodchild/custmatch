@@ -450,36 +450,45 @@ def test_unicode_form_claims():
 def test_bpid_claims():
     b = load("bpid.json")
     flat = " ".join(REPORT.split())
-    changelog = " ".join((ROOT / "CHANGELOG.md").read_text().split())
-    old, new, paper = b["shipped_0.1.2"], b["shipped"], b["paper"]
+    old, dates, phones, new, paper = b["shipped_0.1.2"], b["shipped"], b["phone_tail"], b["all_addresses"], b["paper"]
     pct = lambda v: f"{100 * v:.2f}"  # noqa: E731
     pct1 = lambda v: f"{100 * v:.1f}"  # noqa: E731
-    assert f"| custmatch 0.1.2, 8,000 labels | {pct(old['matching_8000']['f1'])} |" in flat
+    row = lambda m: f"| {pct(m['f1'])} | {pct(m['precision'])} | {pct(m['recall'])} |"
+    f1 = lambda r: 100 * r["matching_8000"]["f1"]
+    assert f"| custmatch 0.1.2, 8,000 labels {row(old['matching_8000'])}" in flat
+    assert f"| custmatch 0.1.3 (dates read in more forms; first address only), 8,000 labels {row(dates['matching_8000'])}" in flat
+    assert f"| With phones cut to their last digits, 8,000 labels {row(phones['matching_8000'])}" in flat
     for n in (300, 1000, 8000):
-        m = new[f"matching_{n}"]
-        assert (f"| custmatch with dates read in more forms, {n:,} labels | {pct(m['f1'])} | {pct(m['precision'])} | "
-                f"{pct(m['recall'])} |") in flat
-    f1 = 100 * new["matching_8000"]["f1"]
-    assert f"That added {f1 - 100 * old['matching_8000']['f1']:.1f} points of F1" in flat
-    assert f"custmatch scores {f1:.2f}: {f1 - 100 * paper['random_forest']:.1f} points" in flat
-    assert f"{100 * paper['ditto'] - f1:.2f} below Ditto and {100 * paper['sudowoodo'] - f1:.2f} below" in flat
-    assert f1 > 100 * max(paper[k] for k in ("claude3_sonnet", "llama3_70b", "mistral_large", "gpt4_turbo"))
-    assert f"added {100 * (b['dob_edit']['matching_8000']['f1'] - new['matching_8000']['f1']):.2f}" in flat
+        assert f"| With phones cut and every address, {n:,} labels {row(new[f'matching_{n}'])}" in flat
+    assert f"That added {f1(dates) - f1(old):.1f} points of F1" in flat
+    assert f"That added {f1(phones) - f1(dates):.2f}" in flat
+    assert f"F1 rose a further {f1(new) - f1(phones):.2f} points to {f1(new):.2f}" in flat
+    p3, n3 = phones["matching_300"], new["matching_300"]
+    assert n3["precision"] > p3["precision"] and n3["recall"] < p3["recall"]
+    assert f"recall fell {100 * (p3['recall'] - n3['recall']):.1f} points" in flat
+    for n in (1000, 8000):
+        assert all(new[f"matching_{n}"][k] > phones[f"matching_{n}"][k] for k in ("precision", "recall"))
+    assert f"custmatch now scores {f1(new):.2f}: {f1(new) - 100 * paper['random_forest']:.1f} points" in flat
+    assert f"{f1(new) - 100 * paper['ditto']:.2f} above Ditto and {100 * paper['sudowoodo'] - f1(new):.2f} below" in flat
+    assert f1(new) > 100 * max(paper[k] for k in ("claude3_sonnet", "llama3_70b", "mistral_large", "gpt4_turbo"))
+    assert f"added {100 * (b['dob_edit']['matching_8000']['f1'] - dates['matching_8000']['f1']):.2f}" in flat
     fm, mm = new["errors"]["false_matches"], new["errors"]["missed_matches"]
-    assert (f"Of one draw's {fm['count']:,} false matches, {pct1(fm['shared_email_or_phone'])}% share an email or "
-            f"phone - {pct1(fm['shared_contact_names_differ'])}% while") in flat
+    assert (f"Of one draw's {fm['count']:,} false matches, {pct1(fm['shared_email_or_phone'])}% share an email "
+            f"or phone - {pct1(fm['shared_contact_names_differ'])}% while") in flat
     assert f"{pct1(fm['a_name_blank'])}% have no name on one side" in flat
-    assert (f"Of the {mm['count']} missed matches, {pct1(mm['phone_agrees_only_in_last_10_digits'])}% share a phone "
-            f"only") in flat
-    assert f"{pct1(mm['shared_address_not_both_first'])}% share an address" in flat
-    assert f"and {pct1(mm['a_name_blank'])}% have no name on one side" in flat
-    bl, bl_old = new["blocking"], old["blocking"]
+    assert (f"Of the {mm['count']} missed matches, {pct1(mm['shared_email_or_phone'])}% share an email or phone, "
+            f"and {pct1(mm['a_name_blank'])}% have no name on one side") in flat
+    bl, bl_first, bl_old = new["blocking"], dates["blocking"], old["blocking"]
     assert (f"proposed {pct(bl['recall'])}% of the matches at {bl['candidate_pairs'] / 1e6:.1f} million candidates "
             f"in about {round(bl['seconds'])} seconds") in flat
-    assert f"with 0.1.2's date reading the keys found {pct(bl_old['recall'])}%" in flat
+    assert f"with the first address only the keys found {pct(bl_first['recall'])}%" in flat
+    assert f"with 0.1.2's date reading {pct(bl_old['recall'])}%" in flat
     assert bl["recall"] > paper["blocking_best_recall"]
-    assert (f"from {pct(old['matching_8000']['f1'])} to {pct(new['matching_8000']['f1'])} with 8,000 labels, and its "
-            f"blocking recall from {pct(bl_old['recall'])}% to {pct(bl['recall'])}%") in changelog
+    changelog = " ".join((ROOT / "CHANGELOG.md").read_text().split())
+    assert (f"from {pct(old['matching_8000']['f1'])} to {pct(dates['matching_8000']['f1'])} with 8,000 labels, and "
+            f"its blocking recall from {pct(bl_old['recall'])}% to {pct(bl_first['recall'])}%") in changelog
+    assert (f"BPID's pairwise F1 from {f1(dates):.2f} to {f1(phones):.2f}" in changelog and
+            f"to {f1(new):.2f}, and its blocking recall from {pct(bl_first['recall'])}% to {pct(bl['recall'])}%" in changelog)
 
 
 def test_audit_claims():

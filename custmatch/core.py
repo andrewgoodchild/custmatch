@@ -707,11 +707,24 @@ def clear_caches():
 # views share a key, and a pair is compared through its two views that agree best on the alias
 # fields, so the best-matching value counts (zer, ZAL-Analytics/zer: AliasPhoneticKey and
 # AliasTokenOverlapSimilarity). Customers, golden records and every output stay one row per record.
-ALIAS_FIELDS = ("last_name", "email", "phone")
+ALIAS_FIELDS = ("last_name", "email", "phone", "address")
+# an address alias is three columns, "addr_number@address_2", "addr_street@address_2" and
+# "addr_unit@address_2", and a view takes all three: a second address replaces the whole address
+ADDRESS_PARTS = ("addr_number", "addr_street", "addr_unit")
+
+
+def alias_field(col):
+    """The alias field a column belongs to: "email@email_2" -> "email", "addr_street@home" -> "address"."""
+    part = col.split("@", 1)[0]
+    return "address" if part in ADDRESS_PARTS else part
+
+
+def _parts(field):
+    return ADDRESS_PARTS if field == "address" else (field,)
 
 
 def alias_columns(df):
-    return [c for c in df.columns if "@" in c and c.split("@", 1)[0] in ALIAS_FIELDS]
+    return [c for c in df.columns if "@" in c and alias_field(c) in ALIAS_FIELDS]
 
 
 def service_records(df):
@@ -751,23 +764,34 @@ def alias_views(df):
         return hit[1]
     if len(_VIEWS) > 2:
         _VIEWS.clear()
-    fields = sorted({c.split("@", 1)[0] for c in cols})
-    cur = pd.DataFrame({"owner": np.arange(len(df))} | {f: df[f].fillna("").to_numpy(dtype=object) for f in fields})
+    fields = sorted({alias_field(c) for c in cols})
+    parts = [p for f in fields for p in _parts(f)]
+    col = {p: df[p].fillna("").to_numpy(dtype=object) for p in parts}
+    cur = pd.DataFrame({"owner": np.arange(len(df))} | col)
     for f in fields:
-        own = df[f].fillna("").to_numpy(dtype=object)
-        alts = pd.concat([pd.DataFrame({"owner": np.arange(len(df)), "alt": df[c].fillna("").to_numpy(dtype=object)})
-                          for c in cols if c.split("@", 1)[0] == f], ignore_index=True)
-        alts = alts[(alts.alt != "") & (alts.alt.to_numpy() != own[alts.owner.to_numpy()])].drop_duplicates()
+        names = sorted({c.split("@", 1)[1] for c in cols if alias_field(c) == f})
+        alts = pd.concat([pd.DataFrame({"owner": np.arange(len(df))} |
+                                       {"alt_" + p: (df[f"{p}@{name}"].fillna("").to_numpy(dtype=object)
+                                                     if f"{p}@{name}" in df.columns else "") for p in _parts(f)})
+                          for name in names], ignore_index=True)
+        o = alts.owner.to_numpy()
+        filled = np.zeros(len(alts), bool)
+        same = np.ones(len(alts), bool)               # every part as the record's own: no new view
+        for p in _parts(f):
+            filled |= alts["alt_" + p].to_numpy() != ""
+            same &= alts["alt_" + p].to_numpy() == col[p][o]
+        alts = alts[filled & ~same].drop_duplicates()
         if len(alts):
-            more = cur.merge(alts, on="owner").assign(**{f: lambda t: t.alt}).drop(columns="alt")
+            more = cur.merge(alts, on="owner")
+            more = more.assign(**{p: more["alt_" + p] for p in _parts(f)}).drop(columns=["alt_" + p for p in _parts(f)])
             cur = pd.concat([cur, more], ignore_index=True)
     if len(cur) == len(df):
         views = (df, None)
     else:
         extra = cur.iloc[len(df):]
         v = df.iloc[extra.owner.to_numpy()].copy()
-        for f in fields:
-            v[f] = extra[f].to_numpy()
+        for p in parts:
+            v[p] = extra[p].to_numpy()
         if "email" in fields and "email_user" in v.columns:
             v["email_user"] = [e.split("@")[0] if "@" in e else "" for e in v.email]
         views = (pd.concat([df, v], ignore_index=True), cur.owner.to_numpy())
@@ -786,8 +810,8 @@ def _view_records(df):
 
 def best_views(df, pairs):
     """Pairs of records as pairs of views: for each pair, the two views (a record or one of its
-    alias rows) that agree best on the alias fields - surname by Jaro-Winkler, email and phone
-    exactly - the records themselves on a tie. Pairs whose records have no aliases are unchanged."""
+    alias rows) that agree best on the alias fields - surname and address (house number and
+    street) by Jaro-Winkler, email and phone exactly - the records themselves on a tie. Pairs whose records have no aliases are unchanged."""
     from rapidfuzz.process import cpdist
     views, owner = alias_views(df)
     pairs = np.asarray(pairs)
@@ -812,11 +836,14 @@ def best_views(df, pairs):
         return np.where(m == 0, rec, v_idx[np.clip(start[rec] + m - 1, 0, max(len(v_idx) - 1, 0))])
     vi, vj = view(i[pid], a), view(j[pid], b)
     score = np.zeros(len(pid))
-    for field in sorted({c.split("@", 1)[0] for c in alias_columns(df)}):
-        col = views[field].fillna("").to_numpy(dtype=object)
+    for field in sorted({alias_field(c) for c in alias_columns(df)}):
+        if field == "address":
+            col = (views.addr_number.fillna("") + " " + views.addr_street.fillna("")).str.strip().to_numpy(dtype=object)
+        else:
+            col = views[field].fillna("").to_numpy(dtype=object)
         x, y = col[vi], col[vj]
         both = (x != "") & (y != "")
-        if field == "last_name":
+        if field in ("last_name", "address"):
             score += np.where(both, cpdist(list(x), list(y), scorer=JaroWinkler.similarity, workers=-1), 0.0)
         else:
             score += both & (x == y)
