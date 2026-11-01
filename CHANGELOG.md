@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.1.3 (2026-11-01)
+
+Runs on large files are several times faster and hold far less memory: all 5,000,000 NCVR
+records in 7.6 minutes at 12.8 GB, against 22.9 minutes and 49 GB, with identical outputs.
+Also adaptive blocking, stratified labels, active learning that no longer stalls, more date
+forms, name tidying and long-format sources; Python 3.11 or newer.
 
 **Changed:** Python 3.11 or newer is required. Python 3.10 reached end of life in October 2026, and
 pandas, numpy, scipy and scikit-learn had already dropped it, so 3.10 resolved an older set of
