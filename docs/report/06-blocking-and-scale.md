@@ -261,6 +261,18 @@ evidence column by column. Ten million records then took 31 minutes, the last st
 1612 s originally), with the same clustered F1 and peak memory back to 34.0 GB: releasing the
 scoring caches before the last stage removed the rise.
 
+The same ten million on the 18-core, 64 GB laptop of the NCVR runs below, shared with other work
+(`research/results/scale_large.json`, `scale_10m_local`): 7.3 minutes, the same 96.89 clustered
+F1, the last stage 268 s - still over half the run. Its peak resident memory, 41.3 GB, does not
+compare with the cloud machine's 34.0: other work pressed on the laptop, macOS compressed pages,
+and resident memory counts them unevenly. The physical footprint does not, and is what the NCVR
+runs below report. Sampled step by step (`research/scripts/scale_memory.py`,
+`scale_10m_local_footprint`; `MallocLargeCache=0`, one run each), the script peaked at 28.3 GB
+with the memory work below, while scoring, and 30.4 GB before it, in the last stage. Its timing
+pass over blocking and features, which a plain run does not make, leaves that work's feature
+caches alive into the run; without it ten million records peaked at 21.2 GB, about 2.1 GB per
+million, in the last stage.
+
 **One real file of millions: the full NCVR benchmark** (`research/scripts/modal_ncvr_full.py`): all five
 sources, 5,000,000 records of 3,500,840 people with real name and postcode frequencies,
 labelled as a user would (300 random, then 700 by active learning). It ran on the same machine
