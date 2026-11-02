@@ -310,6 +310,8 @@ def run(name, spec, tmp, tools, out, dedupe_key="dedupe"):
 
 def main():
     specs = S.datasets() | dedupe_datasets()
+    for name in ("fake_1000", "febrl3", "febrl4", "historical_50k"):   # as before the date-of-birth key
+        specs[name]["custmatch_variants"] = {"no_dob_key": {"dob_key": False}}
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     only = [a[len("--only="):] for a in sys.argv[1:] if a.startswith("--only=")]
     tools = set(only[0].split(",")) if only else {"custmatch", "splink", "dedupe"}

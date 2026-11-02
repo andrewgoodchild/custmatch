@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+**Changed:** date of birth alone is now a blocking key on files of up to 500,000 records with
+dates of birth (`"dob_key"`; `false` or `true` overrides it). Records whose names are both
+misspelt or blank share no name key, and on Splink's noisy fake_1000 the default keys compared
+only 66.1% of the true pairs: clustered F1 rises from 87.11 to 93.72, ahead of Splink's 92.52
+with its tutorial's looser blocking. On the generated Australian file at four sizes, up to
+424,530 records, it added 0.29 to 1.99 points; historical_50k gives 86.90 against 87.01 with one
+label draw and 87.26 against 87.00 over four; febrl3 and febrl4 do not change. The run saves the
+choice, so `add` blocks the same way, and a state saved by 0.1.3 keeps it off
+(docs/report/06-blocking-and-scale.md "Date of birth alone").
+
 **Added:** `"parquet_outputs": true` writes `clusters.parquet`, `links.parquet` and
 `golden_records.parquet` beside their CSVs, in `custmatch run` and `custmatch add`.
 `links.parquet` is written a slice at a time, as `links.csv` is.

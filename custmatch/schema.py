@@ -37,8 +37,29 @@ def max_block(cfg):
     return cfg.get("max_block")
 
 
+DOB_KEY_MAX_RECORDS = 500_000
+
+
+def with_dob_key(df, cfg):
+    """cfg with "dob_key" decided, so the run saves it and `add` blocks the same way: unset, it is
+    on for a file of up to DOB_KEY_MAX_RECORDS records with dates of birth. Date of birth alone as
+    a blocking key finds the records whose two names are both misspelt: on fake_1000 the default
+    keys compared 66% of the true pairs and 81% with it, and clustered F1 rose from 87.11 to 93.72
+    (research/scripts/home_data_benchmark.py). On a million records its blocks hold about 30
+    people each: 4.6 times the candidate pairs (research/scripts/custmatch_scale.py's file).
+    A state saved without the key keeps it off."""
+    if "dob_key" in cfg:
+        return cfg
+    on = len(df) <= DOB_KEY_MAX_RECORDS and bool((df.date_of_birth != "").any())
+    return cfg | {"dob_key": on}
+
+
 def extra_keys(cfg):
-    return tuple(tuple(k) for k in cfg.get("extra_blocking", []))
+    """The config's extra_blocking keys, and date of birth alone when "dob_key" is on."""
+    keys = tuple(tuple(k) for k in cfg.get("extra_blocking", []))
+    if cfg.get("dob_key") and ("date_of_birth",) not in keys:
+        keys += (("date_of_birth",),)
+    return keys
 
 
 def feature_options(cfg):

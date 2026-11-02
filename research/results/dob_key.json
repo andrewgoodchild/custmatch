@@ -1,0 +1,19 @@
+{
+ "fake_1000": {
+  "without": {
+   "candidate_pairs": 4348,
+   "true_pairs_compared_pct": 66.1,
+   "reachable_after_closure_pct": 79.7
+  },
+  "missed_by_default_keys": {
+   "true_pairs": 688,
+   "both_names_differ": 626,
+   "a_name_blank": 461
+  },
+  "with": {
+   "candidate_pairs": 4673,
+   "true_pairs_compared_pct": 81.3,
+   "reachable_after_closure_pct": 94.1
+  }
+ }
+}

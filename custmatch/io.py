@@ -131,12 +131,14 @@ def load(config_path):
         cfg = json.loads(config_path.read_text())
     except json.JSONDecodeError as e:
         raise ConfigError(f"{config_path.name} is not valid JSON: {e.msg} (line {e.lineno}, column {e.colno})") from None
-    return load_config(cfg, config_path.parent)
+    from .schema import with_dob_key
+    df, cfg = load_config(cfg, config_path.parent)
+    return df, with_dob_key(df, cfg)
 
 
 # every top-level config key custmatch reads; anything else is most likely a typo
 KNOWN_KEYS = {
-    "sources", "country", "date_order", "normalise", "extra_fields", "extra_blocking", "max_block", "blocking", "cache_candidates", "fold_trees",
+    "sources", "country", "date_order", "normalise", "extra_fields", "extra_blocking", "max_block", "blocking", "dob_key", "cache_candidates", "fold_trees",
     "blocking_recall", "lsh_blocking", "check_large_blocks", "rich_features", "name_words", "record_dates", "matcher_model",
     "match_weight_feature", "max_cluster", "min_precision", "review_band", "overrides", "trusted_ids", "trusted_max", "twin_guard",
     "unique_sources", "stability_margin", "identity_events",

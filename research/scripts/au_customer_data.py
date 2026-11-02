@@ -30,6 +30,8 @@ names are mostly two syllables (Xiaoming, Jianhua), as they are in practice.
 `--seed N` builds another population (data/au_customer_sN/) for repeating experiments over several
 generated files, not one. `--no-shared` writes data/au_customer_noshared/: no family emails and no parent's contact on a
 child's records - the world most favourable to exact-identifier matching (research/scripts/cdp_reassess.py).
+`--households N` builds N households instead of 5,200, in data/au_customer_hN/ (a larger file for
+the date-of-birth key's size limit, schema.DOB_KEY_MAX_RECORDS).
 `--scripts` writes the same file to data/au_customer_script/ with 40% of Chinese and Lebanese
 customers' store records in Chinese characters or Arabic script (flagged in a `script` column).
 
@@ -549,8 +551,11 @@ SHARED = True
 
 def main():
     import sys
-    global SHARED
+    global SHARED, N_HOUSEHOLDS
     SHARED = "--no-shared" not in sys.argv
+    households_arg = "--households" in sys.argv
+    if households_arg:              # a larger (or smaller) population: data/au_customer_hN/
+        N_HOUSEHOLDS = int(sys.argv[sys.argv.index("--households") + 1])
     seed = int(sys.argv[sys.argv.index("--seed") + 1]) if "--seed" in sys.argv else SEED
     g = Gen(seed)
     people, households = build_people(g)
@@ -561,6 +566,8 @@ def main():
         out_dir = ROOT / "data/au_customer_noshared"
     if seed != SEED:
         out_dir = ROOT / f"data/au_customer_s{seed}"
+    if households_arg:
+        out_dir = ROOT / f"data/au_customer_h{N_HOUSEHOLDS}"
     if "--scripts" in sys.argv:        # the same file with some names in Chinese and Arabic script
         srcs = native_script(srcs, people)
         out_dir = ROOT / "data/au_customer_script"

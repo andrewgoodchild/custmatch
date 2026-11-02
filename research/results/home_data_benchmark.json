@@ -102,13 +102,13 @@
    "wall_seconds": 18.9
   },
   "custmatch_1000": {
-   "precision": 97.79,
-   "recall": 78.53,
-   "f1": 87.11,
-   "clusters": 357,
+   "precision": 97.35,
+   "recall": 90.35,
+   "f1": 93.72,
+   "clusters": 302,
    "largest_cluster": 10,
-   "adjusted_rand": 0.8706,
-   "seconds": 2.4
+   "adjusted_rand": 0.9369,
+   "seconds": 2.3
   },
   "dedupe_run2": {
    "precision": 99.91,
@@ -141,6 +141,17 @@
    "threshold": 0.5,
    "peak_memory_gb": 3.99,
    "wall_seconds": 19.1
+  },
+  "custmatch_1000_no_dob_key": {
+   "precision": 97.79,
+   "recall": 78.53,
+   "f1": 87.11,
+   "clusters": 357,
+   "largest_cluster": 10,
+   "adjusted_rand": 0.8706,
+   "config": {
+    "dob_key": false
+   }
   }
  },
  "febrl3": {
@@ -170,7 +181,7 @@
    "clusters": 2022,
    "largest_cluster": 6,
    "adjusted_rand": 0.9942,
-   "seconds": 2.9
+   "seconds": 2.5
   },
   "dedupe_run2": {
    "precision": 100.0,
@@ -203,6 +214,17 @@
    "threshold": 0.5,
    "peak_memory_gb": 8.27,
    "wall_seconds": 188.0
+  },
+  "custmatch_1000_no_dob_key": {
+   "precision": 100.0,
+   "recall": 98.85,
+   "f1": 99.42,
+   "clusters": 2022,
+   "largest_cluster": 6,
+   "adjusted_rand": 0.9942,
+   "config": {
+    "dob_key": false
+   }
   }
  },
  "febrl4": {
@@ -232,7 +254,7 @@
    "clusters": 5001,
    "largest_cluster": 4,
    "adjusted_rand": 0.9984,
-   "seconds": 3.2
+   "seconds": 2.8
   },
   "dedupe_run2": {
    "precision": 100.0,
@@ -265,6 +287,17 @@
    "threshold": 0.5,
    "peak_memory_gb": 7.23,
    "wall_seconds": 652.7
+  },
+  "custmatch_1000_no_dob_key": {
+   "precision": 99.76,
+   "recall": 99.92,
+   "f1": 99.84,
+   "clusters": 5001,
+   "largest_cluster": 4,
+   "adjusted_rand": 0.9984,
+   "config": {
+    "dob_key": false
+   }
   }
  },
  "historical_50k": {
@@ -288,13 +321,13 @@
    "wall_seconds": 755.8
   },
   "custmatch_1000": {
-   "precision": 93.19,
-   "recall": 81.6,
-   "f1": 87.01,
-   "clusters": 9799,
-   "largest_cluster": 54,
-   "adjusted_rand": 0.8701,
-   "seconds": 8.0
+   "precision": 93.64,
+   "recall": 81.07,
+   "f1": 86.9,
+   "clusters": 9959,
+   "largest_cluster": 44,
+   "adjusted_rand": 0.869,
+   "seconds": 6.6
   },
   "dedupe_run2": {
    "precision": 99.01,
@@ -327,6 +360,17 @@
    "threshold": 0.5,
    "peak_memory_gb": 9.23,
    "wall_seconds": 1921.1
+  },
+  "custmatch_1000_no_dob_key": {
+   "precision": 93.19,
+   "recall": 81.6,
+   "f1": 87.01,
+   "clusters": 9799,
+   "largest_cluster": 54,
+   "adjusted_rand": 0.8701,
+   "config": {
+    "dob_key": false
+   }
   }
  },
  "dedupe_patent_example": {

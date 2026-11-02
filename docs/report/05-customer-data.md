@@ -253,6 +253,7 @@ check on a few hundred labelled pairs from your own file.
 | As before, 300 random + 700 active | 70.07 +- 3.73 | 64.50 | 45.75 |
 | `"country": "AU"`, 1,000 random labels | 70.22 +- 1.08 | 70.06 | 46.80 |
 | **`"country": "AU"`, 300 random + 700 active** | **81.69 +- 0.74** | **78.74** | **53.74** |
+| The same, with date of birth as a blocking key (the default from 0.1.4 on files of up to 500,000 records) | 82.33 +- 0.19 | 79.98 | 54.16 |
 | Ceiling: every true candidate pair accepted | 93.27 | | 66.47 with true identities |
 
 - **Use active learning** (`custmatch sample --active`). Only about 5% of candidate pairs are

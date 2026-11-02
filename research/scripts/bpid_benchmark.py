@@ -57,6 +57,8 @@ VARIANTS = {
     "dob_edit": {"country": "US", "extra_fields": [{"name": "date_of_birth", "compare": "edit"}]},
     # names in either order, or missing a part: the worst-matched part compared in any order
     "name_words": {"country": "US", "name_words": True},
+    # date of birth alone as a blocking key (found on fake_1000); changes the blocking only
+    "dob_key": {"country": "US", "dob_key": True},
 }
 
 

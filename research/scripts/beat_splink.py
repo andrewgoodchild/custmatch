@@ -51,9 +51,12 @@ VARIANTS = {                         # config overrides; "_mix" / "_jev" change 
     # re-cut customers over 30 records at stricter thresholds (dedupe); 30 is a fixed guess
     "rich_recut30": {"max_cluster": 30},
     # the opt-in worst-matched name part, in any order (core.name_words_feature, found on BPID),
-    # and the same code without it
-    "rich_name_words": {"rich_features": True, "name_words": True},
-    "rich_no_name_words": {"rich_features": True},
+    # and the same code without it; both measured before the date-of-birth key
+    "rich_name_words": {"rich_features": True, "name_words": True, "dob_key": False},
+    "rich_no_name_words": {"rich_features": True, "dob_key": False},
+    # date of birth alone as a blocking key ("dob_key"): the default keys compared 66% of
+    # fake_1000's true pairs, missing the many with a typo in both names
+    "rich_dob_key": {"rich_features": True, "dob_key": True},
 }
 
 
