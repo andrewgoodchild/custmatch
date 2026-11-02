@@ -73,7 +73,8 @@ def _contacts(df, profiles, field, i, j):
     vi = v[np.asarray(i)]
     # classes only for the records in these pairs (not the whole file), through one mapping
     classes = pd.Series({k: t[0] for k, t in profiles[field].items()}, dtype=object)
-    ci = pd.Series(vi, dtype=object).map(classes).fillna("personal").to_numpy(dtype=object)
+    # astype: with no profiled values map gives float NaNs, and pandas 4 will not fill them with a string
+    ci = pd.Series(vi, dtype=object).map(classes).astype(object).fillna("personal").to_numpy(dtype=object)
     ci = np.where(vi == "", "", ci)                 # (pandas may hand back a read-only array)
     same = (vi != "") & (vi == v[np.asarray(j)])
     label = np.where(ci == "personal", f"same {field}",

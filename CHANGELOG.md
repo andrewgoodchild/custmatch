@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.1.4 (2026-11-06)
+
+Better matching where names and dates of birth are messy: date of birth alone as a blocking key
+on files of up to 500,000 records (Splink's fake_1000 from 87.11 to 93.72 clustered F1), and
+dates compared by their parts, partial dates included. On AWS's BPID benchmark, phone
+extensions, every address and partial dates took pairwise F1 from 74.45 to 79.38, above the
+paper's best model. Also Parquet outputs, address aliases and the opt-in `"name_words"`.
 
 **Added:** dates of birth compared by their parts (`"date_parts"`): one more feature, 1 when two
 dates disagree on a year, month or day both give, partial dates included ("1985 02", "march
@@ -44,6 +50,9 @@ part of the other, in any order. On BPID, whose names come in either order, pair
 from 77.16 to 77.99 with 8,000 labels, all of it precision; on six other datasets it moved
 clustered F1 by a third of a point or less either way, and cost 0.43 on the sparse Australian
 file, so it is off by default.
+
+**Fixed:** explaining a pair whose emails or phones had no profiled value filled a float column
+with a string, which pandas 4 will refuse; the column is now read as text first.
 
 **Fixed:** a model scored on features it was not trained on now raises an error. custmatch's own
 forest scorer looks up each tree's leaves directly, which does not check the number of columns,
