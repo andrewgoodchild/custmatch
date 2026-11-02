@@ -331,6 +331,12 @@ stratified folds, the threshold chosen on the training folds, three draws.
 | And `"name_words"`, 300 labels | 72.56 | 63.12 | 85.50 |
 | And `"name_words"`, 1,000 labels | 75.32 | 68.83 | 83.18 |
 | And `"name_words"`, 8,000 labels | 77.99 | 72.96 | 83.79 |
+| Dates of birth by their parts (the default here), 300 labels | 73.21 | 63.32 | 86.77 |
+| Dates of birth by their parts (the default here), 1,000 labels | 76.55 | 68.53 | 86.70 |
+| Dates of birth by their parts (the default here), 8,000 labels | 79.38 | 73.45 | 86.36 |
+| And `"name_words"`, with dates by their parts, 300 labels | 74.42 | 65.89 | 85.61 |
+| And `"name_words"`, with dates by their parts, 1,000 labels | 77.69 | 72.10 | 84.28 |
+| And `"name_words"`, with dates by their parts, 8,000 labels | 80.17 | 77.48 | 83.07 |
 | Paper: random forest | 62.9 | 65.3 | 60.9 |
 | Paper: Ditto | 75.2 | 74.6 | 80.4 |
 | Paper: Sudowoodo | 78.8 | 77.4 | 80.2 |
@@ -342,7 +348,8 @@ stratified folds, the threshold chosen on the training folds, three draws.
     "1953 11 09", "09 nov 1953" and "19531109" stayed as written and disagreed with
     "1953-11-09". Dates with a space, the month in words (a weekday stuck to the day is
     dropped) or no separators now read as ISO dates (0.1.3). That added 7.0 points of F1.
-    Partial dates ("may 2008", "22 november") are still kept as written.
+    Partial dates ("may 2008", "22 november") are still kept as written (and compared by
+    their parts since: below).
   - *Phones.* 77% of the labelled profiles' phone numbers are not valid ones (area codes such as 149 do not
     exist), so they were kept as written, and a stray prefix ("80 579 443 4394") or an
     extension ("8980408493 x 11399") kept a number from meeting the same number written
@@ -366,7 +373,24 @@ stratified folds, the threshold chosen on the training folds, three draws.
   custmatch to 77.99, 0.81 below Sudowoodo. On the other datasets, on and off on the same code
   (the table below), it moved clustered F1 by a third of a point or less, and cost the sparse
   Australian file 0.43, where no draw gained. So it is off by default.
-- **Between Ditto and Sudowoodo.** custmatch now scores 77.16: 14.3 points above the paper's
+- **Partial dates: a fourth gap, now read.** A sample of the remaining false matches showed
+  dates of birth the model could not compare: 16.5% of the labelled profiles' dates are
+  partial ("1985 02", "march 2000", "14 march", "24 1987"), kept as written, so "1970 05"
+  against "1963 07 12" looked no different from "1959 03" against "21 03 1959". A new feature
+  (core.date_parts_feature) is 1 when two dates disagree on a part both give - year, month or
+  day - 0 when the parts they share agree, -1 when they share none. And "17 07 1982" in a
+  month-first country now reads as the 17th of July, the only reading, where it was kept as
+  written. Together they raised F1 from 77.16 to 79.38 with 8,000 labels, 1,000 and 300 by
+  2.18 and 2.38. Precision rose with every number of labels, recall with 300 and 8,000 (with
+  1,000 it fell 0.28); false matches on one draw fell from 1,526 to 1,292. The date fix alone raised blocking recall from 79.41% to 80.18% at the same 13.5
+  million candidates. With `"name_words"` as well custmatch scores 80.17, 1.37 above Sudowoodo.
+  The feature is on by default only where at least 1% of the dates of birth are partial: no
+  other dataset in this repository has one, and forced on where every date is whole it only
+  repeats "date of birth agrees" - it cost fake_1000 0.63 (2 draws, random and active labels),
+  the sparse Australian file 0.40 (3 draws) and historical_50k 0.17, and moved febrl3, febrl4
+  and the synthetic customers by 0.08 or less (`rich_date_parts` against `rich_no_date_parts`
+  in beat_splink.json, `country_au_active_date_parts` in au_validation.json).
+- **Between Ditto and Sudowoodo** (before dates by their parts). custmatch now scores 77.16: 14.3 points above the paper's
   random forest and above every LLM it tried, 1.96 above Ditto and 1.64 below Sudowoodo, on a
   laptop CPU with no pretraining. Comparing the date also by edit distance (`"extra_fields"`)
   added 0.15 before these changes.
@@ -381,7 +405,8 @@ stratified folds, the threshold chosen on the training folds, three draws.
   address only the keys found 71.89%, and with 0.1.2's date reading 70.18%.
 
 `"name_words"` on the other datasets, clustered F1 with it off and on (before the date-of-birth
-key; `research/scripts/beat_splink.py`, `au_validate.py` and `ncvr_leipzig.py` run them with it off):
+key; the table after this one is with it; `research/scripts/beat_splink.py`, `au_validate.py`
+and `ncvr_leipzig.py` run them with it off):
 
 | Dataset | Off | On | Change |
 | --- | --- | --- | --- |
@@ -392,6 +417,20 @@ key; `research/scripts/beat_splink.py`, `au_validate.py` and `ncvr_leipzig.py` r
 | fake_1000 (2 draws, random and active labels) | 96.64 | 96.44 | -0.19 |
 | NCVR Leipzig, 20,000 people (3 draws) | 99.18 | 99.24 | +0.05 |
 | Sparse Australian file (3 draws) | 81.69 | 81.26 | -0.43 |
+
+With the date-of-birth key on (the default since), `"name_words"` costs historical_50k more: on
+the same code, off and on (`rich_no_date_parts` and `rich_dob_key_name_words` in
+beat_splink.json; `country_au_active_no_date_parts` and `country_au_active_dob_key_name_words`
+in au_validation.json). So it stays off by default.
+
+| Dataset | Off | On | Change |
+| --- | --- | --- | --- |
+| historical_50k (2 draws, random and active labels) | 87.26 | 86.03 | -1.22 |
+| febrl3 (2 draws, random and active labels) | 99.81 | 99.91 | +0.10 |
+| Synthetic customers (2 draws, random and active labels) | 98.14 | 97.92 | -0.21 |
+| febrl4 (2 draws, random and active labels) | 99.94 | 99.95 | +0.01 |
+| fake_1000 (2 draws, random and active labels) | 96.64 | 96.44 | -0.19 |
+| Sparse Australian file (3 draws) | 82.33 | 82.25 | -0.08 |
 
 ---
 

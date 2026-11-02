@@ -45,9 +45,19 @@ VARIANTS = {"baseline": {},
             # names in Chinese / Arabic script (--data au_customer_script): transliteration off vs on
             "country_au_active_no_script": {"country": "AU", "normalise": {"script": False}, "_active": True},
             # the opt-in name-words feature (core.name_words_feature, found on BPID)
-            "country_au_active_name_words": {"country": "AU", "_active": True, "name_words": True, "dob_key": False},
+            "country_au_active_name_words": {"country": "AU", "_active": True, "name_words": True, "dob_key": False,
+                                             "date_parts": False},
             # date of birth alone as a blocking key (found on fake_1000)
-            "country_au_active_dob_key": {"country": "AU", "_active": True, "dob_key": True},
+            "country_au_active_dob_key": {"country": "AU", "_active": True, "dob_key": True, "date_parts": False},
+            # dates of birth disagreeing on a part (core.date_parts_feature, found on BPID): off and
+            # forced on (the file has no partial dates, so it is off by default), and with
+            # name_words as well; and name_words on the defaults (the date-of-birth key, no date parts)
+            "country_au_active_no_date_parts": {"country": "AU", "_active": True, "dob_key": True, "date_parts": False},
+            "country_au_active_date_parts": {"country": "AU", "_active": True, "dob_key": True, "date_parts": True},
+            "country_au_active_date_parts_name_words": {"country": "AU", "_active": True, "dob_key": True,
+                                                        "date_parts": True, "name_words": True},
+            "country_au_active_dob_key_name_words": {"country": "AU", "_active": True, "dob_key": True,
+                                                     "date_parts": False, "name_words": True},
             "country_au_active_no_dob_key": {"country": "AU", "_active": True, "dob_key": False},
             # leave-one-out with active learning, where runs are stable: what each step is worth
             **{f"active_without_{step}": {"country": "AU", "normalise": {step: False}, "_active": True}

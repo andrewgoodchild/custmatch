@@ -45,7 +45,7 @@ def _importance(state):
     cfg = json.loads((state / "config.json").read_text())
     opts = schema.feature_options(cfg)
     names = feature_names(pq.read_schema(state / "records.parquet").names, opts["extra_fields"], opts["rich"],
-                          name_words=opts["name_words"])
+                          name_words=opts["name_words"], date_parts=opts["date_parts"])
     names += [f"feature {k}" for k in range(len(names), len(model.feature_importances_))]
     return {n: round(float(v), 4) for n, v in zip(names, model.feature_importances_)}
 

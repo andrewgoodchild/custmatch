@@ -54,6 +54,25 @@ def with_dob_key(df, cfg):
     return cfg | {"dob_key": on}
 
 
+DATE_PARTS_MIN_SHARE = 0.01
+
+
+def with_date_parts(df, cfg):
+    """cfg with "date_parts" decided, so the run saves it and `add` builds the same features:
+    unset, it is on when at least DATE_PARTS_MIN_SHARE of the dates of birth are partial ("1985 02",
+    "14 march"; core.date_parts_feature). Where every date is whole it only repeats "date of birth
+    agrees": forced on, it cost the sparse Australian file 0.40 clustered F1, and no other dataset
+    here has a partial date. A state saved without the key keeps it off, as its model was trained
+    without the feature."""
+    if "date_parts" in cfg:
+        return cfg
+    from .core import date_parts
+    dated = df.date_of_birth.to_numpy()[df.date_of_birth.to_numpy() != ""]
+    known = date_parts(dated) >= 0
+    partial = known.any(1) & ~known.all(1)
+    return cfg | {"date_parts": bool(len(dated)) and float(partial.mean()) >= DATE_PARTS_MIN_SHARE}
+
+
 def extra_keys(cfg):
     """The config's extra_blocking keys, and date of birth alone when "dob_key" is on."""
     keys = tuple(tuple(k) for k in cfg.get("extra_blocking", []))
@@ -68,7 +87,7 @@ def feature_options(cfg):
     They lifted historical_50k from 82.1 to 87.0 and fake_1000 from 88.2 to 92.5 clustered F1,
     and cost at most 0.3 on the febrl sets (research/scripts/beat_splink.py)."""
     return {"extra_fields": extra_fields(cfg), "rich": bool(cfg.get("rich_features", True)),
-            "name_words": bool(cfg.get("name_words", False))}
+            "name_words": bool(cfg.get("name_words", False)), "date_parts": bool(cfg.get("date_parts", False))}
 
 
 def feature_options_for(df, cfg):

@@ -537,9 +537,50 @@ def parse_dates(values):
     return out[codes] if len(values) else np.full((0, 3), -1, dtype=np.int64)
 
 
+def date_parts(values):
+    """(year, month, day) int arrays, -1 for each part not known: a full date, or the parts a
+    partial one gives - "1985 02", "march 2000", "14 march", "24 1987", "dec 25wed". Two numbers
+    of 12 or less and no year ("07 11") could be either order and give nothing; so does a value
+    that is not a date. Each distinct value is read once."""
+    codes, uniq = pd.factorize(np.asarray(values, dtype=object), use_na_sentinel=False)
+    full = parse_dates(uniq)
+    out = np.array([f if f[0] >= 0 else _partial_date(v) for f, v in zip(full.tolist(), uniq)],
+                   dtype=np.int64).reshape(-1, 3)
+    return out[codes] if len(values) else np.full((0, 3), -1, dtype=np.int64)
+
+
+def _partial_date(v):
+    from .country import _MONTHS, _WEEKDAY
+    none = (-1, -1, -1)
+    y = mo = d = -1
+    small = []
+    for t in _WEEKDAY.sub("", v.lower()).replace(",", " ").replace("/", " ").replace(".", " ").split():
+        if t.isdecimal() and len(t) == 4 and y < 0:
+            y = int(t)
+        elif t.isdecimal() and len(t) <= 2:
+            small.append(int(t))
+        elif len(t) >= 3 and mo < 0 and len(m := [k + 1 for k, n in enumerate(_MONTHS) if n.startswith(t)]) == 1:
+            mo = m[0]
+        else:
+            return none
+    if mo > 0:                                   # a month in words: a number is the day
+        d = small[0] if len(small) == 1 else -1
+    elif len(small) == 2:                        # only one reading when one number is over 12
+        a, b = small
+        mo, d = (b, a) if a > 12 >= b else (a, b) if b > 12 >= a else (-1, -1)
+    elif len(small) == 1:
+        n = small[0]
+        mo, d = (n, -1) if y > 0 and n <= 12 else (-1, n) if 12 < n else (-1, -1)
+    elif small:
+        return none
+    if not (mo == -1 or 1 <= mo <= 12) or not (d == -1 or 1 <= d <= 31):
+        return none
+    return y, mo, d
+
+
 def record_arrays(df):
     """Per-record values the rich features need, computed once per run: parsed dates and their
-    normalised strings, name counts, first initials. Recomputing them on every features() call
+    normalised strings, the parts of partial dates, name counts, first initials. Recomputing them on every features() call
     cost 44 s of a 155 s run at 500k records (the in-cluster check calls it once per threshold)."""
     dates = parse_dates(df.date_of_birth.to_numpy())
     codes, uniq = pd.factorize(dates[:, 0] * 10_000 + dates[:, 1] * 100 + dates[:, 2])
@@ -549,7 +590,8 @@ def record_arrays(df):
     strings = np.array([f"{y:04d}{m:02d}{d:02d}" for y, m, d in dates[first]])
     out = {"dates": dates,
            "date_str": strings[codes] if len(codes) else np.array([]),
-           "initial": df.first_name.str[:1].to_numpy()}
+           "initial": df.first_name.str[:1].to_numpy(),
+           "date_parts": date_parts(df.date_of_birth.to_numpy())}
     for field in ("first_name", "last_name"):
         v = pd.Series(df[field].to_numpy())
         out[f"{field}_count"] = v.map(v.value_counts()).to_numpy().astype(float)
@@ -625,6 +667,17 @@ def name_words_feature(df, pairs):
     return np.where(some_a & some_b, np.maximum(a, b), -1.0).astype(np.float32)
 
 
+def date_parts_feature(rec, pairs):
+    """1 when two dates of birth disagree on a part both give - year, month or day - 0 when every
+    part they share agrees, -1 when they share none. Partial dates count: "1970 05" and
+    "1963 07 12" disagree, "1959 03" and "21 03 1959" agree. On BPID, where a fifth of the dates
+    are partial or in no form custmatch reads, it added 2.2 points of pairwise F1, most of it
+    precision (research/scripts/bpid_benchmark.py)."""
+    a, b = rec["date_parts"][pairs[:, 0]], rec["date_parts"][pairs[:, 1]]
+    both = (a >= 0) & (b >= 0)
+    return np.where(both.any(1), (both & (a != b)).any(1), -1.0).astype(np.float32)
+
+
 FEATURE_CHUNK = 2_000_000
 # pairs scored at once (about 0.8 GB of features): a forest predicts in threads of a fixed number
 # of rows, and on one FEATURE_CHUNK at a time the last wave of threads left most cores idle
@@ -632,7 +685,8 @@ FEATURE_CHUNK = 2_000_000
 SCORE_CHUNK = 8_000_000
 
 
-def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None, name_words=False):
+def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None, name_words=False,
+             date_parts=False):
     """13 standard features, then one per extra field: `exact` -> 1 / 0 / -1 (missing),
     `similarity` -> Jaro-Winkler, `edit` -> normalised Levenshtein (dates, codes); -1 when missing.
     An extra field may name a standard column (e.g. date_of_birth) to compare it fuzzily too.
@@ -642,7 +696,7 @@ def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, recor
     stay bounded however many pairs there are.
 
     With alias fields ("aliases") each pair is compared through its best-agreeing views (best_views)."""
-    chunks = feature_chunks(df, pairs, profiles, aware, extra_fields, rich, records, name_words)
+    chunks = feature_chunks(df, pairs, profiles, aware, extra_fields, rich, records, name_words, date_parts)
     if len(pairs) <= FEATURE_CHUNK:
         return next(chunks)[1]
     X = None
@@ -653,7 +707,8 @@ def features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, recor
     return X
 
 
-def feature_chunks(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None, name_words=False):
+def feature_chunks(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None, name_words=False,
+                   date_parts=False):
     """features() FEATURE_CHUNK pairs at a time, as (first row, rows): for a caller that uses each
     chunk and drops it, so the features of every pair are never held at once."""
     if alias_views(df)[1] is not None:
@@ -663,16 +718,21 @@ def feature_chunks(df, pairs, profiles, aware=True, extra_fields=(), rich=False,
     if rich and records is None and len(pairs) > FEATURE_CHUNK:
         records = record_arrays(df)
     for s in range(0, max(len(pairs), 1), FEATURE_CHUNK):
-        yield s, _features(df, pairs[s:s + FEATURE_CHUNK], profiles, aware, extra_fields, rich, records, name_words)
+        yield s, _features(df, pairs[s:s + FEATURE_CHUNK], profiles, aware, extra_fields, rich, records, name_words,
+                           date_parts)
 
 
-def _features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None, name_words=False):
+def _features(df, pairs, profiles, aware=True, extra_fields=(), rich=False, records=None, name_words=False,
+              date_parts=False):
     from . import country
     X = _standard_features(df, pairs, profiles, aware)
     if rich:
+        records = records if records is not None else record_arrays(df)
         X = np.hstack([X, rich_features(df, pairs, records)])
         if name_words:
             X = np.hstack([X, name_words_feature(df, pairs)[:, None]])
+        if date_parts:
+            X = np.hstack([X, date_parts_feature(records, pairs)[:, None]])
     X = np.hstack([X, country.features(df, pairs, profiles)])
     if not extra_fields or not len(pairs):
         return X if not extra_fields else np.zeros((0, X.shape[1] + len(extra_fields)), np.float32)
@@ -707,13 +767,14 @@ RICH_FEATURES = ["first name rarity (agreeing)", "surname rarity (agreeing)", "f
                  "first initial agrees", "date gap (log days)", "birth year agrees", "day and month swapped",
                  "day and month agree", "dates one edit apart"]
 NAME_WORDS_FEATURE = "worst-matched name part (any order)"
+DATE_PARTS_FEATURE = "date of birth parts disagree"
 
 
-def feature_names(columns, extra_fields=(), rich=False, match_weight=False, name_words=False):
+def feature_names(columns, extra_fields=(), rich=False, match_weight=False, name_words=False, date_parts=False):
     """The features' names, in the order core.features builds them, for a record frame with these
     columns - for explaining a score (which feature moved it, and by how much)."""
     names = list(STANDARD_FEATURES) + (list(RICH_FEATURES) if rich else []) + \
-        ([NAME_WORDS_FEATURE] if rich and name_words else [])
+        ([NAME_WORDS_FEATURE] if rich and name_words else []) + ([DATE_PARTS_FEATURE] if rich and date_parts else [])
     columns = set(columns)
     names += [n for col, n in (("first_roots", "first names share a root"), ("email_user", "email user names agree"),
                                ("name_skeleton", "name skeletons agree (across scripts)")) if col in columns]

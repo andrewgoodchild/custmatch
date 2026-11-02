@@ -967,5 +967,197 @@
    "seconds": 3.3,
    "active_300_700": 98.92
   }
+ },
+ "rich_no_date_parts": {
+  "febrl3": {
+   "random_1000": 99.42,
+   "candidate_pairs": 65001,
+   "seconds": 2.8,
+   "active_300_700": 99.99
+  },
+  "febrl4": {
+   "random_1000": 99.84,
+   "candidate_pairs": 61269,
+   "seconds": 2.9,
+   "active_300_700": 99.99
+  },
+  "historical_50k": {
+   "random_1000": 86.07,
+   "candidate_pairs": 700198,
+   "seconds": 7.7,
+   "active_300_700": 87.06
+  },
+  "fake_1000": {
+   "random_1000": 92.46,
+   "candidate_pairs": 50129,
+   "seconds": 2.5,
+   "active_300_700": 99.08
+  },
+  "synthetic": {
+   "random_1000": 97.48,
+   "candidate_pairs": 51376,
+   "seconds": 3.4,
+   "active_300_700": 98.86
+  }
+ },
+ "rich_no_date_parts/seed2": {
+  "febrl3": {
+   "random_1000": 99.83,
+   "candidate_pairs": 65001,
+   "seconds": 2.9,
+   "active_300_700": 99.99
+  },
+  "febrl4": {
+   "random_1000": 99.92,
+   "candidate_pairs": 61269,
+   "seconds": 3.1,
+   "active_300_700": 99.99
+  },
+  "historical_50k": {
+   "random_1000": 86.05,
+   "candidate_pairs": 700198,
+   "seconds": 7.7,
+   "active_300_700": 89.85
+  },
+  "fake_1000": {
+   "random_1000": 95.98,
+   "candidate_pairs": 50129,
+   "seconds": 2.9,
+   "active_300_700": 99.03
+  },
+  "synthetic": {
+   "random_1000": 97.29,
+   "candidate_pairs": 51376,
+   "seconds": 3.7,
+   "active_300_700": 98.92
+  }
+ },
+ "rich_date_parts": {
+  "febrl3": {
+   "random_1000": 99.69,
+   "candidate_pairs": 65001,
+   "seconds": 2.8,
+   "active_300_700": 99.99
+  },
+  "febrl4": {
+   "random_1000": 99.81,
+   "candidate_pairs": 61269,
+   "seconds": 2.9,
+   "active_300_700": 99.99
+  },
+  "historical_50k": {
+   "random_1000": 85.91,
+   "candidate_pairs": 700198,
+   "seconds": 7.6,
+   "active_300_700": 88.4
+  },
+  "fake_1000": {
+   "random_1000": 92.3,
+   "candidate_pairs": 50129,
+   "seconds": 1.9,
+   "active_300_700": 99.13
+  },
+  "synthetic": {
+   "random_1000": 97.34,
+   "candidate_pairs": 51376,
+   "seconds": 2.9,
+   "active_300_700": 98.88
+  }
+ },
+ "rich_dob_key_name_words": {
+  "febrl3": {
+   "random_1000": 99.74,
+   "candidate_pairs": 65001,
+   "seconds": 2.6,
+   "active_300_700": 99.99
+  },
+  "febrl4": {
+   "random_1000": 99.86,
+   "candidate_pairs": 61269,
+   "seconds": 2.6,
+   "active_300_700": 99.99
+  },
+  "historical_50k": {
+   "random_1000": 84.32,
+   "candidate_pairs": 700198,
+   "seconds": 7.1,
+   "active_300_700": 86.86
+  },
+  "fake_1000": {
+   "random_1000": 91.88,
+   "candidate_pairs": 50129,
+   "seconds": 2.2,
+   "active_300_700": 99.03
+  },
+  "synthetic": {
+   "random_1000": 96.93,
+   "candidate_pairs": 51376,
+   "seconds": 3.1,
+   "active_300_700": 98.88
+  }
+ },
+ "rich_dob_key_name_words/seed2": {
+  "febrl3": {
+   "random_1000": 99.92,
+   "candidate_pairs": 65001,
+   "seconds": 2.8,
+   "active_300_700": 99.99
+  },
+  "febrl4": {
+   "random_1000": 99.96,
+   "candidate_pairs": 61269,
+   "seconds": 2.8,
+   "active_300_700": 99.99
+  },
+  "historical_50k": {
+   "random_1000": 85.0,
+   "candidate_pairs": 700198,
+   "seconds": 7.2,
+   "active_300_700": 87.95
+  },
+  "fake_1000": {
+   "random_1000": 95.84,
+   "candidate_pairs": 50129,
+   "seconds": 2.5,
+   "active_300_700": 99.03
+  },
+  "synthetic": {
+   "random_1000": 96.95,
+   "candidate_pairs": 51376,
+   "seconds": 3.2,
+   "active_300_700": 98.94
+  }
+ },
+ "rich_date_parts/seed2": {
+  "febrl3": {
+   "random_1000": 99.88,
+   "candidate_pairs": 65001,
+   "seconds": 2.7,
+   "active_300_700": 99.99
+  },
+  "febrl4": {
+   "random_1000": 99.92,
+   "candidate_pairs": 61269,
+   "seconds": 2.7,
+   "active_300_700": 99.99
+  },
+  "historical_50k": {
+   "random_1000": 85.37,
+   "candidate_pairs": 700198,
+   "seconds": 7.2,
+   "active_300_700": 88.68
+  },
+  "fake_1000": {
+   "random_1000": 93.52,
+   "candidate_pairs": 50129,
+   "seconds": 2.5,
+   "active_300_700": 99.08
+  },
+  "synthetic": {
+   "random_1000": 97.48,
+   "candidate_pairs": 51376,
+   "seconds": 3.2,
+   "active_300_700": 98.96
+  }
  }
 }

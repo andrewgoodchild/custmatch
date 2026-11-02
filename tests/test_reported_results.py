@@ -589,6 +589,66 @@ def test_dob_key_claims():
             f"{bo['candidate_pairs'] / 1e6:.1f} to {bk['candidate_pairs'] / 1e6:.1f} million") in flat
 
 
+def test_date_parts_claims():
+    """Dates of birth by their parts: BPID's rows and gains, and what forcing it on costs files
+    whose dates are all whole (chapter 9 "BPID", the guide, the changelog)."""
+    from custmatch.schema import DATE_PARTS_MIN_SHARE
+    flat, guide = _flat(REPORT), _flat(GUIDE)
+    changelog = _flat((ROOT / "CHANGELOG.md").read_text())
+    b = load("bpid.json")
+    base, on, both = b["all_addresses"], b["all_addresses_date_parts"], b["all_addresses_name_words_date_parts"]
+    pct = lambda v: f"{100 * v:.2f}"
+    for n in (300, 1000, 8000):
+        for label, r in (("Dates of birth by their parts (the default here)", on),
+                         ('And `"name_words"`, with dates by their parts', both)):
+            m = r[f"matching_{n}"]
+            assert f"| {label}, {n:,} labels | {pct(m['f1'])} | {pct(m['precision'])} | {pct(m['recall'])} |" in flat
+        assert on[f"matching_{n}"]["precision"] > base[f"matching_{n}"]["precision"]
+    r = lambda r, n: 100 * r[f"matching_{n}"]["recall"]
+    assert all(r(on, n) > r(base, n) for n in (300, 8000)) and f"with 1,000 it fell {r(base, 1000) - r(on, 1000):.2f}" in flat
+    gain = lambda n: 100 * (on[f"matching_{n}"]["f1"] - base[f"matching_{n}"]["f1"])
+    f1_base, f1_on, f1_both = (100 * x["matching_8000"]["f1"] for x in (base, on, both))
+    sudo = 100 * b["paper"]["sudowoodo"]
+    assert f"raised F1 from {f1_base:.2f} to {f1_on:.2f} with 8,000 labels, 1,000 and 300 by {gain(1000):.2f} and {gain(300):.2f}" in flat
+    assert f"custmatch scores {f1_both:.2f}, {f1_both - sudo:.2f} above Sudowoodo" in flat
+    assert f"rose from {f1_base:.2f} to {f1_on:.2f} with 8,000 labels" in changelog and f"to {f1_both:.2f} with" in changelog
+    assert f"added {gain(8000):.2f} points of pairwise F1 with 8,000" in guide
+    fm = (base["errors"]["false_matches"]["count"], on["errors"]["false_matches"]["count"])
+    assert f"fell from {fm[0]:,} to {fm[1]:,}" in flat
+    bo, bn = base["blocking"], on["blocking"]
+    for text in (flat, changelog):
+        assert f"from {pct(bo['recall'])}% to {pct(bn['recall'])}%" in text
+    assert round(bo["candidate_pairs"] / 1e6, 1) == round(bn["candidate_pairs"] / 1e6, 1) == 13.5
+    assert f"at least {100 * DATE_PARTS_MIN_SHARE:.0f}% of the" in guide + flat
+    bs = load("beat_splink.json")
+
+    def mean(variant, ds):
+        return fsum(bs[f"{variant}{s}"][ds][x] for s in ("", "/seed2") for x in ("random_1000", "active_300_700")) / 4
+    cost = {ds: mean("rich_no_date_parts", ds) - mean("rich_date_parts", ds)
+            for ds in ("historical_50k", "synthetic", "febrl3", "febrl4", "fake_1000")}
+    au = load("au_validation.json")
+    au_cost = au["country_au_active_no_date_parts"]["mean"]["all_records"]["f1"] - \
+        au["country_au_active_date_parts"]["mean"]["all_records"]["f1"]
+    assert (f"it cost fake_1000 {cost['fake_1000']:.2f} (2 draws, random and active labels), the sparse "
+            f"Australian file {au_cost:.2f} (3 draws) and historical_50k {cost['historical_50k']:.2f}") in flat
+    assert max(abs(cost[d]) for d in ("synthetic", "febrl3", "febrl4")) <= 0.08
+    worst = max(max(cost.values()), au_cost)
+    assert f"cost up to {worst:.2f}" in guide and f"cost up to {worst:.2f}" in changelog
+    # name_words on the current defaults (the date-of-birth key): still off by default
+    row = lambda name, off, on: f"| {name} | {off:.2f} | {on:.2f} | {on - off:+.2f} |".replace("+-", "-")
+    names = {"historical_50k": "historical_50k", "febrl3": "febrl3", "synthetic": "Synthetic customers",
+             "febrl4": "febrl4", "fake_1000": "fake_1000"}
+    for ds, name in names.items():
+        assert row(f"{name} (2 draws, random and active labels)", mean("rich_no_date_parts", ds),
+                   mean("rich_dob_key_name_words", ds)) in flat, ds
+    loss = mean("rich_no_date_parts", "historical_50k") - mean("rich_dob_key_name_words", "historical_50k")
+    for text in (guide, changelog):
+        assert f"costs historical_50k {loss:.2f}" in text or f"costs historical_50k\n{loss:.2f}" in text
+    a_off, a_on = (au[v]["mean"]["all_records"]["f1"] for v in ("country_au_active_no_date_parts",
+                                                                 "country_au_active_dob_key_name_words"))
+    assert row("Sparse Australian file (3 draws)", a_off, a_on) in flat
+
+
 def test_audit_claims():
     a = load("audit_check.json")
     flat = " ".join(GUIDE.split())

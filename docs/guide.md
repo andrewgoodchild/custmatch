@@ -559,7 +559,7 @@ merge joined two different people with the same first name and surname, whom not
 apart (`tests/test_custmatch.py`, test_previous_surnames_find_people_who_changed_their_name;
 library versions move these by a point or two).
 
-**Four matcher options.**
+**Five matcher options.**
 
 - `"rich_features"` (on by default): nine more comparisons for names and dates that drift -
   how rare an agreeing name is, first and last name swapped, matching initials, and graded dates
@@ -574,7 +574,17 @@ library versions move these by a point or two).
   precision. Elsewhere it moved clustered F1 by a third of a point or less either way, and cost
   0.43 on the sparse Australian file, so it is off by default
   ([report/09-against-other-tools.md](report/09-against-other-tools.md) "A public benchmark of personal identities: BPID"). It is saved with
-  the model: `custmatch add` uses the run's setting.
+  the model: `custmatch add` uses the run's setting. With the date-of-birth key on it costs
+  historical_50k 1.22, so it stays off by default.
+- `"date_parts"` (on for files whose dates of birth are partial): one more date comparison, 1
+  when two dates of birth disagree on a part both give - year, month or day - 0 when the parts
+  they share agree. Partial dates ("1985 02", "march 2000", "14 march") stay as written and
+  agree with nothing, so without it "1970 05" against "1963 07 12" looks no different from
+  "1959 03" against "21 03 1959". It is on when at least 1% of the file's dates of birth are
+  partial; where every date is whole it only repeats "date of birth agrees" and, forced on, cost
+  up to 0.63. On BPID, where 16.5% are partial, it added 2.22 points of pairwise F1 with 8,000
+  labels, most of it precision. `false` or `true` overrides it; it is saved with the model,
+  and a state saved by 0.1.3 keeps it off.
 - `"match_weight_feature": true` (opt-in): a Fellegi-Sunter match weight, fitted without labels
   on all the candidate pairs, as one more input for the forest (see [report/06-blocking-and-scale.md](report/06-blocking-and-scale.md) "A match weight of
   custmatch's own"). It helps most where labels are thin, but costs the web-sign-up
