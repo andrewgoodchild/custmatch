@@ -395,5 +395,123 @@
    "seconds": 21.5,
    "blocks_skipped": 1681
   }
+ },
+ "all_addresses_date_parts": {
+  "load_seconds": 57.1,
+  "records": 1000000,
+  "features": 25,
+  "matching_300": {
+   "precision": 0.6332,
+   "recall": 0.8677,
+   "f1": 0.7321,
+   "f1_per_seed": [
+    0.7265,
+    0.7389,
+    0.731
+   ],
+   "train_pairs": 300
+  },
+  "matching_1000": {
+   "precision": 0.6853,
+   "recall": 0.867,
+   "f1": 0.7655,
+   "f1_per_seed": [
+    0.7677,
+    0.7644,
+    0.7643
+   ],
+   "train_pairs": 1000
+  },
+  "matching_8000": {
+   "precision": 0.7345,
+   "recall": 0.8636,
+   "f1": 0.7938,
+   "f1_per_seed": [
+    0.7919,
+    0.7927,
+    0.7968
+   ],
+   "train_pairs": 8000
+  },
+  "errors": {
+   "false_matches": {
+    "count": 1292,
+    "shared_email_or_phone": 0.5519,
+    "shared_contact_names_differ": 0.3793,
+    "a_name_blank": 0.2608,
+    "phone_agrees_only_in_last_10_digits": 0.1246,
+    "shared_address_not_both_first": 0.0573
+   },
+   "missed_matches": {
+    "count": 618,
+    "shared_email_or_phone": 0.3738,
+    "shared_contact_names_differ": 0.1926,
+    "a_name_blank": 0.301,
+    "phone_agrees_only_in_last_10_digits": 0.0825,
+    "shared_address_not_both_first": 0.0744
+   }
+  },
+  "blocking": {
+   "recall": 0.8018,
+   "candidate_pairs": 13507556,
+   "seconds": 14.5,
+   "blocks_skipped": 532
+  }
+ },
+ "all_addresses_name_words_date_parts": {
+  "load_seconds": 60.1,
+  "records": 1000000,
+  "features": 26,
+  "matching_300": {
+   "precision": 0.6589,
+   "recall": 0.8561,
+   "f1": 0.7442,
+   "f1_per_seed": [
+    0.7382,
+    0.75,
+    0.7444
+   ],
+   "train_pairs": 300
+  },
+  "matching_1000": {
+   "precision": 0.721,
+   "recall": 0.8428,
+   "f1": 0.7769,
+   "f1_per_seed": [
+    0.7759,
+    0.7761,
+    0.7788
+   ],
+   "train_pairs": 1000
+  },
+  "matching_8000": {
+   "precision": 0.7748,
+   "recall": 0.8307,
+   "f1": 0.8017,
+   "f1_per_seed": [
+    0.7998,
+    0.8005,
+    0.8048
+   ],
+   "train_pairs": 8000
+  },
+  "errors": {
+   "false_matches": {
+    "count": 1087,
+    "shared_email_or_phone": 0.5078,
+    "shared_contact_names_differ": 0.3082,
+    "a_name_blank": 0.3017,
+    "phone_agrees_only_in_last_10_digits": 0.0975,
+    "shared_address_not_both_first": 0.0598
+   },
+   "missed_matches": {
+    "count": 698,
+    "shared_email_or_phone": 0.4456,
+    "shared_contact_names_differ": 0.2722,
+    "a_name_blank": 0.2751,
+    "phone_agrees_only_in_last_10_digits": 0.0917,
+    "shared_address_not_both_first": 0.0817
+   }
+  }
  }
 }

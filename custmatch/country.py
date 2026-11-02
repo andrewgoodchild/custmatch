@@ -258,7 +258,8 @@ def _text_date(v):
 
 def iso_date(v, order):
     """A date of birth as YYYY-MM-DD: ISO (or 19910424), day-month-year or month-day-year
-    (`order`) with /, ., - or a space between, or with the month in words. Anything else - a
+    (`order`, unless the month would be over 12 and the day would not) with /, ., - or a space
+    between, or with the month in words. Anything else - a
     partial date, a typo - is kept as written."""
     m = _ISO.match(v) or _COMPACT.match(v)
     if m:
@@ -266,6 +267,8 @@ def iso_date(v, order):
     elif (m := _DMY.match(v)):
         a, b, y = (int(x) for x in m.groups())
         d, mo = (a, b) if order == "dmy" else (b, a)
+        if mo > 12 >= d:                           # "17 07 1982" in a month-first country: one reading
+            d, mo = mo, d
     elif (t := _text_date(v)):
         y, mo, d = t
     else:

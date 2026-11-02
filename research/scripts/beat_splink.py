@@ -52,11 +52,17 @@ VARIANTS = {                         # config overrides; "_mix" / "_jev" change 
     "rich_recut30": {"max_cluster": 30},
     # the opt-in worst-matched name part, in any order (core.name_words_feature, found on BPID),
     # and the same code without it; both measured before the date-of-birth key
-    "rich_name_words": {"rich_features": True, "name_words": True, "dob_key": False},
-    "rich_no_name_words": {"rich_features": True, "dob_key": False},
+    "rich_name_words": {"rich_features": True, "name_words": True, "dob_key": False, "date_parts": False},
+    "rich_no_name_words": {"rich_features": True, "dob_key": False, "date_parts": False},
     # date of birth alone as a blocking key ("dob_key"): the default keys compared 66% of
     # fake_1000's true pairs, missing the many with a typo in both names
-    "rich_dob_key": {"rich_features": True, "dob_key": True},
+    "rich_dob_key": {"rich_features": True, "dob_key": True, "date_parts": False},
+    # dates of birth disagreeing on a part, partial dates included (core.date_parts_feature,
+    # found on BPID), off and forced on: none of these files has a partial date, so it is off by
+    # default here; and name_words on these defaults (the date-of-birth key, no date parts)
+    "rich_no_date_parts": {"rich_features": True, "dob_key": True, "date_parts": False},
+    "rich_date_parts": {"rich_features": True, "dob_key": True, "date_parts": True},
+    "rich_dob_key_name_words": {"rich_features": True, "dob_key": True, "date_parts": False, "name_words": True},
 }
 
 

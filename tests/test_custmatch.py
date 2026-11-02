@@ -1764,6 +1764,20 @@ def test_dates_with_spaces_month_words_and_no_separators_agree():
         assert iso_date(v, "mdy") == "1953-11-09", v
     for v in ("1953 11", "22 november", "marsh 9 1953", "09111953", "1"):   # partial or unclear: as written
         assert iso_date(v, "mdy") == v, v
+    assert iso_date("17 07 1982", "mdy") == iso_date("07 17 1982", "dmy") == "1982-07-17"   # one reading
+    assert iso_date("13 13 1982", "mdy") == "13 13 1982"
+
+
+def test_partial_dates_of_birth_give_their_parts_and_a_disagreeing_part_is_a_feature():
+    from custmatch.core import date_parts, date_parts_feature
+    vals = ["1985-02-09", "1985 02", "march 2000", "14 march", "24 1987", "dec 25wed", "1993", "13",
+            "07 11", "58", "", "n/a"]
+    assert date_parts(vals).tolist() == [
+        [1985, 2, 9], [1985, 2, -1], [2000, 3, -1], [-1, 3, 14], [1987, -1, 24], [-1, 12, 25], [1993, -1, -1],
+        [-1, -1, 13]] + [[-1, -1, -1]] * 4
+    rec = {"date_parts": date_parts(["1970 05", "1963-07-12", "1959 03", "1959-03-21", "07 11", "1963-07-12"])}
+    got = date_parts_feature(rec, np.array([[0, 1], [2, 3], [4, 5], [1, 5]]))
+    assert got.tolist() == [1, 0, -1, 0]
 
 
 def test_a_country_column_is_read_from_the_source(tmp_path):
@@ -2406,6 +2420,36 @@ def test_dob_key_is_on_for_small_files_and_saved_with_the_model(world, tmp_path)
     (tmp / "on.json").write_text(json.dumps(json.loads((tmp / "config.json").read_text()) | {"dob_key": True}))
     with pytest.raises(io.ConfigError, match="dob_key"):   # the add config cannot change it
         incremental.add(tmp / "run", tmp / "on.json", tmp / "added2")
+
+
+def test_date_parts_is_on_for_files_with_partial_dates_and_saved_with_the_model(world, tmp_path):
+    """The date-parts feature is on for files with partial dates of birth unless the config says
+    otherwise; the run saves the choice, and a state saved before it (no "date_parts") keeps it
+    off, as its model has no such column."""
+    from custmatch import incremental, models, schema
+    tmp, _ = _world_copy(world, tmp_path)
+    df, cfg = io.load(tmp / "config.json")
+    assert cfg["date_parts"] is False                      # every date whole: nothing to add
+    partial = df.assign(date_of_birth=np.where(np.arange(len(df)) % 10 == 0, "1985 02", df.date_of_birth))
+    assert schema.with_date_parts(partial, {})["date_parts"] is True
+    assert schema.with_date_parts(partial, {"date_parts": False})["date_parts"] is False
+    assert schema.with_date_parts(df.assign(date_of_birth=""), {})["date_parts"] is False
+    assert schema.feature_options({})["date_parts"] is False
+    (tmp_path / "ran").mkdir()
+    tmp, _, _, _ = _ran(world, tmp_path / "ran", {"date_parts": True})
+    state = tmp / "run" / "state"
+    assert json.loads((state / "config.json").read_text())["date_parts"] is True
+    with_feature = models.load_model(state)["forest"].n_features_in_
+    tmp, _, _, _ = _ran(world, tmp_path / "ran", {"date_parts": False}, out="off")
+    assert models.load_model(tmp / "off" / "state")["forest"].n_features_in_ == with_feature - 1
+    saved = json.loads((tmp / "off" / "state" / "config.json").read_text())
+    saved.pop("date_parts")                                # as a state saved by 0.1.3
+    (tmp / "off" / "state" / "config.json").write_text(json.dumps(saved))
+    plain = json.loads((tmp / "config.json").read_text())
+    plain.pop("date_parts")
+    (tmp / "plain.json").write_text(json.dumps(plain))
+    incremental.add(tmp / "off", tmp / "plain.json", tmp / "added")
+    assert "date_parts" not in json.loads((tmp / "added" / "state" / "config.json").read_text())
 
 
 def test_blocking_report_and_skeleton_hold_no_plain_text_when_asked(world, tmp_path, monkeypatch):

@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+**Added:** dates of birth compared by their parts (`"date_parts"`): one more feature, 1 when two
+dates disagree on a year, month or day both give, partial dates included ("1985 02", "march
+2000", "14 march", which stay as written and agreed with nothing). On BPID, where 16.5% of the
+dates are partial, pairwise F1 rose from 77.16 to 79.38 with 8,000 labels, above Sudowoodo's
+78.8, and to 80.17 with `"name_words"`. It is on when at least 1% of a file's dates of birth are
+partial, which no other dataset in this repository has: forced on where every date is whole, it
+cost up to 0.63. The run saves the choice; a state saved by 0.1.3 keeps it off
+(docs/report/09-against-other-tools.md "BPID").
+
+**Fixed:** a day-month-year date in a month-first country ("17 07 1982" in the US), whose only
+reading is the 17th of July, was kept as written; it now reads as 1982-07-17. BPID's blocking
+recall rose from 79.41% to 80.18% at the same 13.5 million candidates.
+
+**Unchanged:** `"name_words"` stays opt-in. With the date-of-birth key on, it costs historical_50k
+1.22 points of clustered F1 (2 draws, random and active labels).
+
 **Changed:** date of birth alone is now a blocking key on files of up to 500,000 records with
 dates of birth (`"dob_key"`; `false` or `true` overrides it). Records whose names are both
 misspelt or blank share no name key, and on Splink's noisy fake_1000 the default keys compared
