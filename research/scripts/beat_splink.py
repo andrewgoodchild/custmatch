@@ -50,8 +50,8 @@ VARIANTS = {                         # config overrides; "_mix" / "_jev" change 
     "rich_learned_disagree": {"blocking": "learned", "max_block": 60, "_strategy": "disagreement"},
     # re-cut customers over 30 records at stricter thresholds (dedupe); 30 is a fixed guess
     "rich_recut30": {"max_cluster": 30},
-    # the opt-in worst-matched name part, in any order (core.name_words_feature, found on BPID),
-    # and the same code without it; both measured before the date-of-birth key
+    # the worst-matched name part, in any order (core.name_words_feature, found on BPID; since gated
+    # on names in either order), and the same code without it; both measured before the date-of-birth key
     "rich_name_words": {"rich_features": True, "name_words": True, "dob_key": False, "date_parts": False},
     "rich_no_name_words": {"rich_features": True, "dob_key": False, "date_parts": False},
     # date of birth alone as a blocking key ("dob_key"): the default keys compared 66% of
@@ -94,7 +94,10 @@ def setup(name, tmp):
     if name == "fake_1000":   # the tailored config, matching Splink's tutorial-07 setup
         cfg.update(extra_blocking=[["first_name"], ["city"], ["email"], ["date_of_birth"]], max_block=200,
                    extra_fields=spec["extra_fields"] + [{"name": "date_of_birth", "compare": "edit"},
-                                                        {"name": "email", "compare": "similarity"}])
+                                                        {"name": "email", "compare": "similarity"}],
+                   # its 1,000 noisy names put 15.6% of them "in either order" (schema.either_order_share),
+                   # over the 12% that turns name_words on; every result here was measured with it off
+                   name_words=False)
     if name == "historical_50k":
         cfg["lsh_blocking"] = HISTORICAL_LSH
     truth = {}

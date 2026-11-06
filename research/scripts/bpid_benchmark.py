@@ -51,7 +51,9 @@ PAPER = {"random_forest": 0.629, "ditto": 0.752, "sudowoodo": 0.788, "claude3_so
          "llama3_70b": 0.729, "mistral_large": 0.604, "gpt4_turbo": 0.687,
          "blocking_best_recall": 0.711, "blocking_best_candidates": 10_000_000}
 VARIANTS = {
-    # what a user would write: the columns, the aliases, the country
+    # what a user would write: the columns, the aliases, the country. Since the gates on partial
+    # dates and names in either order (schema.with_date_parts, with_name_words), this gets
+    # date_parts and name_words on by default: all_addresses_name_words_date_parts' numbers
     "shipped": {"country": "US"},
     # the date of birth also compared by edit distance, as the guide suggests for messy dates
     "dob_edit": {"country": "US", "extra_fields": [{"name": "date_of_birth", "compare": "edit"}]},

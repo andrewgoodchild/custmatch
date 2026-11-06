@@ -331,12 +331,12 @@ stratified folds, the threshold chosen on the training folds, three draws.
 | And `"name_words"`, 300 labels | 72.56 | 63.12 | 85.50 |
 | And `"name_words"`, 1,000 labels | 75.32 | 68.83 | 83.18 |
 | And `"name_words"`, 8,000 labels | 77.99 | 72.96 | 83.79 |
-| Dates of birth by their parts (the default here), 300 labels | 73.21 | 63.32 | 86.77 |
-| Dates of birth by their parts (the default here), 1,000 labels | 76.55 | 68.53 | 86.70 |
-| Dates of birth by their parts (the default here), 8,000 labels | 79.38 | 73.45 | 86.36 |
-| And `"name_words"`, with dates by their parts, 300 labels | 74.42 | 65.89 | 85.61 |
-| And `"name_words"`, with dates by their parts, 1,000 labels | 77.69 | 72.10 | 84.28 |
-| And `"name_words"`, with dates by their parts, 8,000 labels | 80.17 | 77.48 | 83.07 |
+| Dates of birth by their parts, 300 labels | 73.21 | 63.32 | 86.77 |
+| Dates of birth by their parts, 1,000 labels | 76.55 | 68.53 | 86.70 |
+| Dates of birth by their parts, 8,000 labels | 79.38 | 73.45 | 86.36 |
+| And `"name_words"`, with dates by their parts (the default here), 300 labels | 74.42 | 65.89 | 85.61 |
+| And `"name_words"`, with dates by their parts (the default here), 1,000 labels | 77.69 | 72.10 | 84.28 |
+| And `"name_words"`, with dates by their parts (the default here), 8,000 labels | 80.17 | 77.48 | 83.07 |
 | Paper: random forest | 62.9 | 65.3 | 60.9 |
 | Paper: Ditto | 75.2 | 74.6 | 80.4 |
 | Paper: Sudowoodo | 78.8 | 77.4 | 80.2 |
@@ -363,7 +363,7 @@ stratified folds, the threshold chosen on the training folds, three draws.
     each split as the address is and compared as a whole. With every address, F1 rose a further
     1.88 points to 77.16; precision and recall both rose with 1,000 and 8,000 labels, and with
     300 precision rose and recall fell 1.6 points.
-- **Names in either order: an opt-in feature.** In a sample of the false matches, many pairs
+- **Names in either order: a feature, on where a file has them.** In a sample of the false matches, many pairs
   shared a surname and a contact but not a first name ("colten figueroa" and "vincent
   figueroa": a family), or had their names in different orders. The swapped-name feature takes
   the better of the two cross comparisons, so "kamden horner" against "horner sariah" scored 1
@@ -372,7 +372,8 @@ stratified folds, the threshold chosen on the training folds, three draws.
   and 1.73 with 300, all of it precision (false matches 1,526 to 1,399 on one draw), bringing
   custmatch to 77.99, 0.81 below Sudowoodo. On the other datasets, on and off on the same code
   (the table below), it moved clustered F1 by a third of a point or less, and cost the sparse
-  Australian file 0.43, where no draw gained. So it is off by default.
+  Australian file 0.43, where no draw gained. So it is on only where a file's names come in
+  either order ("Where it pays", below).
 - **Partial dates: a fourth gap, now read.** A sample of the remaining false matches showed
   dates of birth the model could not compare: 16.5% of the labelled profiles' dates are
   partial ("1985 02", "march 2000", "14 march", "24 1987"), kept as written, so "1970 05"
@@ -383,7 +384,8 @@ stratified folds, the threshold chosen on the training folds, three draws.
   written. Together they raised F1 from 77.16 to 79.38 with 8,000 labels, 1,000 and 300 by
   2.18 and 2.38. Precision rose with every number of labels, recall with 300 and 8,000 (with
   1,000 it fell 0.28); false matches on one draw fell from 1,526 to 1,292. The date fix alone raised blocking recall from 79.41% to 80.18% at the same 13.5
-  million candidates. With `"name_words"` as well custmatch scores 80.17, 1.37 above Sudowoodo.
+  million candidates. With `"name_words"` as well - the default here, since it is on where a
+  file's names come in either order - custmatch scores 80.17, 1.37 above Sudowoodo.
   The feature is on by default only where at least 1% of the dates of birth are partial: no
   other dataset in this repository has one, and forced on where every date is whole it only
   repeats "date of birth agrees" - it cost fake_1000 0.63 (2 draws, random and active labels),
@@ -421,7 +423,7 @@ and `ncvr_leipzig.py` run them with it off):
 With the date-of-birth key on (the default since), `"name_words"` costs historical_50k more: on
 the same code, off and on (`rich_no_date_parts` and `rich_dob_key_name_words` in
 beat_splink.json; `country_au_active_no_date_parts` and `country_au_active_dob_key_name_words`
-in au_validation.json). So it stays off by default.
+in au_validation.json). So it is off where names are in one order.
 
 | Dataset | Off | On | Change |
 | --- | --- | --- | --- |
@@ -431,6 +433,35 @@ in au_validation.json). So it stays off by default.
 | febrl4 (2 draws, random and active labels) | 99.94 | 99.95 | +0.01 |
 | fake_1000 (2 draws, random and active labels) | 96.64 | 96.44 | -0.19 |
 | Sparse Australian file (3 draws) | 82.33 | 82.25 | -0.08 |
+
+**Where it pays: names in either order.** The share of a file's records with both names whose
+surname is commoner in the file as a first name, or whose first name is commoner as a surname
+(`schema.either_order_share`) - how far the names come in either order; a file written
+surname-first throughout is consistent and scores low - is 72.0% on BPID, and at most 8.8% on
+every other file here with names in one order: the Australian file 8.8%, NCVR Leipzig's real
+names 8.0%, historical_50k 6.3%, febrl3 5.9%, the synthetic customers 5.7% and febrl4 4.9%;
+fake_1000's 1,000 noisy names are the exception at 15.6%. Swapping the names of a tenth of the
+records puts the share at 15-16%, and there the feature pays: 1.02 on the synthetic customers
+and 2.18 on historical_50k (`research/scripts/name_order.py swap`, name_order.json; clustered
+F1, 2 draws, random and active labels, on the current defaults):
+
+| File | Either-order share | Off | On | Change |
+| --- | --- | --- | --- | --- |
+| Synthetic customers, 0% swapped | 5.65% | 98.14 | 97.92 | -0.21 |
+| Synthetic customers, 10% swapped | 14.93% | 96.21 | 97.23 | +1.02 |
+| Synthetic customers, 25% swapped | 28.64% | 94.28 | 96.23 | +1.95 |
+| Synthetic customers, 50% swapped | 52.02% | 92.85 | 95.23 | +2.38 |
+| historical_50k, 0% swapped | 6.32% | 87.26 | 86.03 | -1.22 |
+| historical_50k, 10% swapped | 15.75% | 83.47 | 85.65 | +2.18 |
+| historical_50k, 25% swapped | 30.22% | 81.87 | 83.36 | +1.48 |
+| historical_50k, 50% swapped | 59.52% | 75.33 | 79.88 | +4.55 |
+
+So `"name_words"` is on by default where the share is at least 12% (`schema.NAME_WORDS_MIN_SHARE`),
+between the files with names in one order and those with a tenth swapped. fake_1000 crosses it,
+and the benchmark scripts' tailored config for it pins the feature off, as every published
+fake_1000 figure was measured (`beat_splink.py`, `home_data_benchmark.py`; on, it scored 0.19
+lower, the tables above). The run saves the choice; `true` or `false` overrides it, and a state
+saved without the key keeps it off.
 
 ---
 

@@ -599,8 +599,8 @@ def test_date_parts_claims():
     base, on, both = b["all_addresses"], b["all_addresses_date_parts"], b["all_addresses_name_words_date_parts"]
     pct = lambda v: f"{100 * v:.2f}"
     for n in (300, 1000, 8000):
-        for label, r in (("Dates of birth by their parts (the default here)", on),
-                         ('And `"name_words"`, with dates by their parts', both)):
+        for label, r in (("Dates of birth by their parts", on),
+                         ('And `"name_words"`, with dates by their parts (the default here)', both)):
             m = r[f"matching_{n}"]
             assert f"| {label}, {n:,} labels | {pct(m['f1'])} | {pct(m['precision'])} | {pct(m['recall'])} |" in flat
         assert on[f"matching_{n}"]["precision"] > base[f"matching_{n}"]["precision"]
@@ -647,6 +647,40 @@ def test_date_parts_claims():
     a_off, a_on = (au[v]["mean"]["all_records"]["f1"] for v in ("country_au_active_no_date_parts",
                                                                  "country_au_active_dob_key_name_words"))
     assert row("Sparse Australian file (3 draws)", a_off, a_on) in flat
+
+
+def test_name_words_gate_claims():
+    """name_words on by default where names come in either order: each dataset's either-order
+    share, the swap experiment's table and gains, and the threshold between them (chapter 9
+    "BPID", the guide, the changelog)."""
+    from custmatch.schema import NAME_WORDS_MIN_SHARE
+    flat, guide = _flat(REPORT), _flat(GUIDE)
+    changelog = _flat((ROOT / "CHANGELOG.md").read_text())
+    r = load("name_order.json")
+    share = {k: v["either_order_share"] for k, v in r["stats"].items()}
+    assert f"is {share['bpid']:.1f}% on BPID" in flat and share["bpid"] >= 100 * NAME_WORDS_MIN_SHARE
+    others = {k: v for k, v in share.items() if k not in ("bpid", "fake_1000")}
+    assert f"at most {max(others.values()):.1f}% on every other file" in flat
+    assert max(others.values()) < 100 * NAME_WORDS_MIN_SHARE
+    for k, v in others.items():
+        assert f"{v:.1f}%" in flat, k
+    assert f"the exception at {share['fake_1000']:.1f}%" in flat and share["fake_1000"] >= 100 * NAME_WORDS_MIN_SHARE
+    names = {"synthetic": "Synthetic customers", "historical_50k": "historical_50k"}
+    mean = lambda e, k: fsum(v for seed in e[k].values() for v in seed.values()) / 4  # noqa: E731
+    gains = {}
+    for ds, label in names.items():
+        for pct, e in r["swap"][ds].items():
+            off, on, s = mean(e, "off"), mean(e, "on"), e["either_order_share"]
+            line = f"| {label}, {int(pct[:-3])}% swapped | {s:.2f}% | {off:.2f} | {on:.2f} | {on - off:+.2f} |"
+            assert line.replace("+-", "-") in flat, (ds, pct)
+            if pct == "0pct":
+                assert on < off and s < 100 * NAME_WORDS_MIN_SHARE
+            if pct == "10pct":
+                gains[ds] = on - off
+                assert 100 * NAME_WORDS_MIN_SHARE <= s <= 16 and on > off
+    for text in (flat, guide, changelog):
+        assert f"least {100 * NAME_WORDS_MIN_SHARE:.0f}%" in text
+        assert f"{gains['synthetic']:.2f} on the synthetic customers and {gains['historical_50k']:.2f} on historical_50k" in text
 
 
 def test_audit_claims():

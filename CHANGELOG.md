@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+**Added (server):** `custmatch-server erase CONFIG --labels LABELS KEY... | --file erase.csv`
+answers an erasure request in one operation: the records and every stored version, the decisions,
+pinned values and review claims about them and the real-time matcher's rows are deleted; the
+audit actions that named them keep action, steward, time and keys but lose their detail and note,
+and an `erased` action is logged per record by key; then a batch run is published with every
+earlier run retired and their files deleted, so no run and no matcher memory holds them.
+`--dry-run` reports where the data is (server/README.md "Erasure requests";
+docs/report/12-the-service.md "Erasure in the service").
+
+**Changed (server):** a retired run's files are deleted at retirement - its result folder, with
+every output and the saved state, and the inputs' Parquet copies of the records - keeping its
+catalog row and its config, labels and decisions copies. They were kept indefinitely.
+
+**Changed:** `"name_words"` is on by default where a file's names come in either order: where at
+least 12% of the records with both names have a surname commoner in the file as a first name, or
+a first name commoner as a surname. That share is 72% on BPID, which now scores 80.17 pairwise F1
+with 8,000 labels by default, and at most 8.8% on every file here with names in one order, where
+the feature costs up to 1.22 clustered F1; with a tenth of a file's names swapped it is 15-16%,
+and the feature gained 1.02 on the synthetic customers and 2.18 on historical_50k
+(`research/scripts/name_order.py`). `true` or `false` overrides it; the run saves the choice, and
+a state saved without the key keeps it off (docs/report/09-against-other-tools.md "BPID").
+
 ## 0.1.4 (2026-11-06)
 
 Better matching where names and dates of birth are messy: date of birth alone as a blocking key

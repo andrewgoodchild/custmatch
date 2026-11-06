@@ -11,7 +11,7 @@ measured at is in the report's chapter on the service
 | --- | --- | --- |
 | API and dashboard | `custmatch-server serve` | Lookups, real-time matching, overrides, the dashboard at `/dashboard` |
 | Scheduler | `custmatch-server schedule ...` | Loads files dropped in an inbox, runs the batch at set times, checks health, alerts |
-| One-off jobs | `load`, `batch`, `key`, `check` | The same work by hand |
+| One-off jobs | `load`, `batch`, `key`, `check`, `erase` | The same work by hand; and erasure requests |
 
 All processes share the database (`CUSTMATCH_DB_URL`) and a data directory for run files
 (`CUSTMATCH_DATA_DIR`). Run one API process and one scheduler; the API scales to more copies for
@@ -45,7 +45,9 @@ lookups, but only one holds the write lease for real-time matching at a time.
 - **The batch run is the truth.** It is `custmatch run` over every live record - loaded from
   files or arrived through the API - with labels and stewards' decisions read from the database,
   and customer IDs carried over from the current run. It publishes in **one transaction**:
-  readers see the old run or the new one, never a mix. The current run and one before it are kept.
+  readers see the old run or the new one, never a mix. The current run and one before it are
+  kept; a run retired beyond that loses its files (its results and the copies of its input
+  records), keeping only its catalog row and its config, labels and decisions copies.
 - **Real-time matching is provisional.** `POST /match` scores a record against the current run's
   model in memory - a compact index of hashed blocking keys, built from the batch blocker's own
   key definition - and joins it to the customer it fits: it must match at least half of that
@@ -157,13 +159,34 @@ updated, deleted and left unchanged, and every version of every record.
 **Through the API:** records matched with `POST /match` and `"write": true` are stored as that
 day's API load and included in the next batch run.
 
+## Erasure requests
+
+```sh
+custmatch-server erase CONFIG --labels LABELS web:w000123 app:a004 --note "ticket 42"
+custmatch-server erase CONFIG --labels LABELS --file erase.csv --dry-run      # source,record_id columns
+```
+
+One operation reaches every copy the service holds of a person: their records and every stored
+version of them; the stewards' decisions on their pairs, pinned golden values and review claims;
+the real-time matcher's rows; and the runs. The audit log keeps the actions that named the
+records (action, steward, time, keys) but drops their detail and note, which may hold a pinned
+value or free text, and logs an `erased` action per record, by key only. Then a batch run over the
+remaining records is published with **every earlier run retired** and their files deleted - a
+rollback to a run holding the person would undo the erasure - so the real-time matcher reloads
+from a run without them. `--dry-run` reports where the records' data is and changes nothing.
+Without a published run yet, only the database is touched.
+
+Erase the person from the source systems first: a later load would bring the records back. Not
+reached: your labels file (a pair naming the record is dropped at the next run), files in the
+inbox's `done/` folder, and backups (below), which age out.
+
 ## Batch runs and the schedule
 
 `custmatch-server schedule CONFIG --labels LABELS --inbox DIR --batch-at 02:00` loads the inbox as
 files arrive and runs the batch at 02:00 UTC daily (repeat `--batch-at` for more). A batch run
 matches every live record, keeps customer IDs stable from the previous run, publishes in one
 transaction (readers see the old run or the new one, never a mix), keeps the previous run for
-rollback, and runs the health checks. Only one scheduler works at a time, even if two are started.
+rollback (older runs are retired and their files deleted), and runs the health checks. Only one scheduler works at a time, even if two are started.
 
 With your own scheduler (cron, a Kubernetes CronJob, Airflow), run
 `custmatch-server schedule ... --once` instead: one pass - load the inbox, run a batch, check -
@@ -228,7 +251,10 @@ tar czf custmatch-runs-$(date +%F).tgz -C "$CUSTMATCH_DATA_DIR" runs
 
 With SQLite, stop the processes and copy the `.db` file (or use `sqlite3 custmatch.db ".backup copy.db"`).
 Restore both from the same time: the database names the run directories it uses. Only the
-current run and the one before it are kept, so older run directories can be deleted or archived.
+current run and the one before it hold files; a retired run's results and input copies are
+deleted when it is retired. A backup holds whatever was erased after it was taken: keep backups
+no longer than your erasure commitments allow, and after restoring one, repeat the erasures
+logged since (`steward_log`, action `erased`).
 
 ## Upgrading
 

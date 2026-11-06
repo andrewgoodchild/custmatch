@@ -236,7 +236,7 @@ to the review queue.*
 | Why two records were, or were not, matched | ✅ | `links.csv`, `custmatch explain` |
 | Matching on hashed emails, phones and IDs | ✅ | `"hash_fields"` |
 | Result files without names or contacts: record keys and evidence only | ◐ | `"minimal_outputs"`; the saved state that `custmatch add` needs still holds the records |
-| Erasure requests | ✅ | `custmatch forget` |
+| Erasure requests | ✅ | `custmatch forget`; in the service, `custmatch-server erase` reaches every copy in one operation |
 
 ## Documentation
 

@@ -566,16 +566,22 @@ library versions move these by a point or two).
   (days apart, same year, day and month swapped, a one-character typo). They lifted
   historical_50k from 82.1 to 87.0 clustered F1 and fake_1000 from 88.2 to 92.5, and cost at
   most 0.3 on the febrl sets. `"rich_features": false` turns them off.
-- `"name_words": true` (opt-in, with `"rich_features"`): one more name comparison, for files
-  whose names come in either order or with a part missing: how well the worse-met part of a
-  name (first name, surname) is met by either part of the other, in any order. "kamden horner"
-  and "horner sariah" share only a surname and score 0.44; "monk" and "hester monk" score 1.
-  On BPID it added 0.83 points of pairwise F1 with 8,000 labels and 1.73 with 300, all of it
-  precision. Elsewhere it moved clustered F1 by a third of a point or less either way, and cost
-  0.43 on the sparse Australian file, so it is off by default
-  ([report/09-against-other-tools.md](report/09-against-other-tools.md) "A public benchmark of personal identities: BPID"). It is saved with
-  the model: `custmatch add` uses the run's setting. With the date-of-birth key on it costs
-  historical_50k 1.22, so it stays off by default.
+- `"name_words"` (on where a file's names come in either order, with `"rich_features"`): one
+  more name comparison, for files whose names come in either order or with a part missing: how
+  well the worse-met part of a name (first name, surname) is met by either part of the other, in
+  any order. "kamden horner" and "horner sariah" share only a surname and score 0.44; "monk" and
+  "hester monk" score 1. On BPID, where 72% of the records' names look swapped against the
+  file's own counts, it added 0.83 points of pairwise F1 with 8,000 labels and 1.73 with 300, all
+  of it precision. Where names are in one order it is a cost: it moved clustered F1 by a third of
+  a point or less either way on five datasets, cost 0.43 on the sparse Australian file, and with
+  the date-of-birth key on it costs historical_50k 1.22. So it is on by default only where at
+  least 12% of a file's records with both names have a surname commoner in the file as a first
+  name, or a first name commoner as a surname: with a tenth of a file's names swapped that share
+  is 15-16%, and the feature gained 1.02 on the synthetic customers and 2.18 on historical_50k;
+  every file here with names in one order is under 9%, except fake_1000's 1,000 noisy names
+  (15.6%) ([report/09-against-other-tools.md](report/09-against-other-tools.md) "A public benchmark of personal identities: BPID").
+  `"name_words": true` or `false` overrides it. It is saved with the model: `custmatch add` uses
+  the run's setting.
 - `"date_parts"` (on for files whose dates of birth are partial): one more date comparison, 1
   when two dates of birth disagree on a part both give - year, month or day - 0 when the parts
   they share agree. Partial dates ("1985 02", "march 2000", "14 march") stay as written and
@@ -1011,7 +1017,8 @@ config; use the same key for runs you compare. Recognisably fake values (test@te
   in `cookies.csv`.
 - `custmatch forget erase.csv --state results/ --out results2/` handles an erasure request: the
   records are removed from the customers, the links and the saved state, and the deletion is
-  logged by record key only. Delete older output folders yourself.
+  logged by record key only. Delete older output folders yourself. In the service,
+  `custmatch-server erase` does the whole of it in one operation ("Security" below).
 - custmatch sends no customer data anywhere.
 - `state/` holds the records; only point `custmatch add` at folders you created ("Security" below).
 
@@ -1159,8 +1166,14 @@ warning above applies to it). Protect both as you would the source systems.
 - The image runs as a non-root user and needs no network at run time (name lists are fetched,
   checksum-verified, at build).
 - `server/sql/roles.sql` sketches least-privilege database roles for Postgres.
-- Erasure (`custmatch forget`) works on the library's files; the service does not yet erase a
-  person from its database, retained runs and audit log in one operation (on the roadmap).
+- **Erasure requests:** `custmatch-server erase CONFIG --labels LABELS KEY...` (or `--file
+  erase.csv`) removes a person's records and every stored version, the decisions, pins and review
+  claims about them and the real-time matcher's rows, blanks the detail and note of the audit
+  actions that named them (keeping action, steward, time and keys) and logs an `erased` action by
+  key; then a batch run is published with every earlier run retired and their files deleted, so
+  no run and no matcher memory holds them. `--dry-run` says where the data is. Erase the person
+  from the source systems first, or a later load brings the records back; backups age out
+  (server/README.md "Erasure requests").
 
 ### Reporting
 

@@ -87,6 +87,33 @@ What it has to handle, and what was measured:
    but cut recall to 69.45 (F1 79.44). Also rejected in a trial: a mean-score rule and a veto on any clear non-match.
    About 18 ms a record either way.
 
+## Erasure in the service
+
+`custmatch-server erase` (server/custmatch_server/erase.py) answers an erasure request in one
+operation. The library's `custmatch forget` rebuilds a saved run without the records; the service
+holds more copies: the source records and every version, the per-run tables of the current run
+and the one kept for rollback, each run's files (the inputs' Parquet copies of the records, every
+output, and the state with every record), the real-time matcher's rows and its memory, and what
+stewards wrote - decisions, pinned values and the audit log, whose notes are free text.
+
+Two designs were weighed. Scrubbing every copy in place - deleting rows from a dozen tables and
+rewriting a dozen output files, each with its own format - leaves each format a place to miss, and
+the golden record of the person's customer, built partly from their values, would need
+survivorship rerun by hand. The other is to delete the person's rows and **run a batch**: the batch
+run already regenerates every table and file from the live records, and is the service's source
+of truth. It costs a full run (2.5 minutes a million records) for each request, which an erasure
+request can afford, and it settles run retention: the run an erasure publishes **retires every
+earlier run**, since a rollback to one would undo the erasure, and a retired run's files are now
+deleted (its catalog row and its config, labels and decisions copies - settings and record keys -
+stay). The real-time matcher notices the new run within a second and reloads; its replay of
+real-time records joins the source records, so a deleted record is not replayed. The audit log is
+kept as a log: the actions that named the records keep their action, steward, time and keys and
+lose their detail and note, and an `erased` action is written per record, by key, as the library's
+forget logs by key. What the service cannot reach is listed in the operator guide: the source
+systems, the operator's labels file, loaded files in the inbox's `done/` folder, and backups.
+`tests/test_server_erase.py` checks each copy, and that the API answers 404 for the records and
+finds them in no search afterwards.
+
 ## Erasure from exports
 
 A warehouse export (Parquet or Iceberg) is not built; this is what one would have to handle.

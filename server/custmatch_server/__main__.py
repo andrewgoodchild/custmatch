@@ -6,6 +6,9 @@ custmatch-server key revoke NAME | key list
 custmatch-server schedule CONFIG --labels LABELS --inbox DIR [--batch-at HH:MM ...] [--poll 60] [--once]
                                                       load the inbox, run batches on a schedule, alert (scheduler.py)
 custmatch-server check                                the health checks; exit 0 ok, 1 warn, 2 fail (health.py)
+custmatch-server erase CONFIG --labels LABELS KEY... | --file RECORDS.csv [--note TEXT] [--dry-run]
+                                                      an erasure request: the records (source:record_id) out of
+                                                      the database, the runs and the audit log's details (erase.py)
 
 A load is incremental (adds and changes records) unless --full, which also marks records missing
 from the file as deleted. The database comes from CUSTMATCH_DB_URL (default sqlite:///custmatch.db;
@@ -44,6 +47,13 @@ def main(argv=None):
     sc.add_argument("--poll", type=int, default=60)
     sc.add_argument("--once", action="store_true", help="load the inbox, run a batch, check, exit")
     sub.add_parser("check")
+    er = sub.add_parser("erase")
+    er.add_argument("config")
+    er.add_argument("--labels", required=True)
+    er.add_argument("keys", nargs="*", help="source:record_id")
+    er.add_argument("--file", help="a CSV with source and record_id columns, as custmatch forget takes")
+    er.add_argument("--note", help="logged with the erasure, e.g. the request's ticket")
+    er.add_argument("--dry-run", action="store_true", help="report where the records' data is; change nothing")
     s = sub.add_parser("serve")
     s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8000)
@@ -79,6 +89,17 @@ def main(argv=None):
     elif a.cmd == "batch":
         from .worker import run_batch
         run_batch(eng, a.config, a.labels, os.environ.get("CUSTMATCH_DATA_DIR", "data"))
+    elif a.cmd == "erase":
+        from .erase import erase
+        keys = list(a.keys)
+        if a.file:
+            import pandas as pd
+            f = pd.read_csv(a.file, dtype=str, keep_default_na=False)
+            keys += (f.source + ":" + f.record_id).tolist()
+        if not keys:
+            ap.error("erase needs record keys (source:record_id) or --file")
+        print(json.dumps(erase(eng, keys, a.config, a.labels, os.environ.get("CUSTMATCH_DATA_DIR", "data"),
+                               note=a.note, actor="custmatch-server erase", dry_run=a.dry_run)))
     else:
         import uvicorn
         from .api import create_app

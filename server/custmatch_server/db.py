@@ -139,10 +139,13 @@ def _int(s):
     return pd.to_numeric(s.replace("", None), errors="coerce").astype("Int64")
 
 
-def publish(eng, run_id, result_dir, summary, input_load_id, reconcile=None):
+def publish(eng, run_id, result_dir, summary, input_load_id, reconcile=None, keep=KEEP_RUNS):
     """Load a finished custmatch run's outputs and make it current, in one transaction.
     reconcile: {table: the highest seq the run saw} - the real-time rows the run included are
-    marked reconciled in the same transaction (rows written while it ran stay pending)."""
+    marked reconciled in the same transaction (rows written while it ran stay pending).
+    keep: how many published runs to keep, this one included; the rest are retired (an erasure
+    keeps only the new run, erase.py). Returns (records, the retired runs' ids): the caller
+    deletes their files (remove_run_files) once the transaction has committed."""
     out = Path(result_dir)
     csv = lambda path: pd.read_csv(path, dtype=str, keep_default_na=False)  # noqa: E731
     cl, gold, lk = csv(out / "clusters.csv"), csv(out / "golden_records.csv"), csv(out / "links.csv")
@@ -217,17 +220,17 @@ def publish(eng, run_id, result_dir, summary, input_load_id, reconcile=None):
             if upto is not None:
                 c.execute(update(table).where(table.c.reconciled_run.is_(None)).where(table.c.seq <= upto)
                           .values(reconciled_run=run_id))
-        retired = _retire_old(c)
+        retired = _retire_old(c, keep)
     return len(cl), retired
 
 
-def _retire_old(c):
-    """Runs beyond the newest KEEP_RUNS published ones: their partitions dropped (Postgres) or rows
+def _retire_old(c, keep=KEEP_RUNS):
+    """Runs beyond the newest `keep` published ones: their partitions dropped (Postgres) or rows
     deleted (SQLite), status 'retired'. The run row stays, as the catalog's record."""
-    keep = [r for (r,) in c.execute(select(runs.c.id).where(runs.c.status == "published")
-                                     .order_by(runs.c.id.desc()).limit(KEEP_RUNS))]
+    kept = [r for (r,) in c.execute(select(runs.c.id).where(runs.c.status == "published")
+                                     .order_by(runs.c.id.desc()).limit(keep))]
     old = [r for (r,) in c.execute(select(runs.c.id).where(runs.c.status == "published")
-                                    .where(runs.c.id.not_in(keep)))]
+                                    .where(runs.c.id.not_in(kept)))]
     for r in old:
         if c.dialect.name == "postgresql":
             # detach, then drop, children before parents: a foreign key between partitioned tables
@@ -240,6 +243,28 @@ def _retire_old(c):
                 c.execute(delete(t).where(t.c.run_id == r))
         c.execute(update(runs).where(runs.c.id == r).values(status="retired"))
     return old
+
+
+def remove_run_files(eng, run_ids):
+    """Delete the personal data in retired runs' folders: the result folder (every output, and the
+    saved state with every record) and the inputs' record files. The folder's config, labels and
+    decisions copies (settings and record keys only) stay, as the record of what the run read.
+    Returns the result folders removed."""
+    import shutil
+    if not run_ids:
+        return []
+    with eng.connect() as c:
+        uris = c.execute(select(runs.c.artifact_uri).where(runs.c.id.in_(list(run_ids)))).scalars().all()
+    removed = []
+    for uri in uris:
+        result = Path(uri) if uri else None
+        if result is None or not result.exists():
+            continue
+        shutil.rmtree(result)
+        for p in (result.parent / "inputs").glob("*.parquet"):
+            p.unlink()
+        removed.append(str(result))
+    return removed
 
 
 def fail_run(eng, run_id, message):
