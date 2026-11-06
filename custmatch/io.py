@@ -131,9 +131,9 @@ def load(config_path):
         cfg = json.loads(config_path.read_text())
     except json.JSONDecodeError as e:
         raise ConfigError(f"{config_path.name} is not valid JSON: {e.msg} (line {e.lineno}, column {e.colno})") from None
-    from .schema import with_date_parts, with_dob_key
+    from .schema import with_date_parts, with_dob_key, with_name_words
     df, cfg = load_config(cfg, config_path.parent)
-    return df, with_date_parts(df, with_dob_key(df, cfg))
+    return df, with_name_words(df, with_date_parts(df, with_dob_key(df, cfg)))
 
 
 # every top-level config key custmatch reads; anything else is most likely a typo

@@ -1,0 +1,250 @@
+{
+ "stats": {
+  "febrl3": {
+   "records": 5000,
+   "either_order_share": 5.91,
+   "one_name_blank": 4.46
+  },
+  "febrl4": {
+   "records": 10000,
+   "either_order_share": 4.86,
+   "one_name_blank": 4.9
+  },
+  "historical_50k": {
+   "records": 50578,
+   "either_order_share": 6.32,
+   "one_name_blank": 8.79
+  },
+  "fake_1000": {
+   "records": 1000,
+   "either_order_share": 15.6,
+   "one_name_blank": 27.8
+  },
+  "synthetic": {
+   "records": 20134,
+   "either_order_share": 5.65,
+   "one_name_blank": 2.11
+  },
+  "au": {
+   "records": 18478,
+   "either_order_share": 8.84,
+   "one_name_blank": 36.59
+  },
+  "ncvr": {
+   "records": 2000000,
+   "either_order_share": 8.04,
+   "one_name_blank": 0.0
+  },
+  "bpid": {
+   "records": 1000000,
+   "either_order_share": 72.0,
+   "one_name_blank": 22.51
+  }
+ },
+ "swap": {
+  "synthetic": {
+   "0pct": {
+    "either_order_share": 5.65,
+    "off": {
+     "seed1": {
+      "random_1000": 97.48,
+      "active_300_700": 98.86
+     },
+     "seed2": {
+      "random_1000": 97.29,
+      "active_300_700": 98.92
+     }
+    },
+    "on": {
+     "seed1": {
+      "random_1000": 96.93,
+      "active_300_700": 98.88
+     },
+     "seed2": {
+      "random_1000": 96.95,
+      "active_300_700": 98.94
+     }
+    },
+    "mean_off": 98.14,
+    "mean_on": 97.92
+   },
+   "10pct": {
+    "either_order_share": 14.93,
+    "off": {
+     "seed1": {
+      "random_1000": 95.58,
+      "active_300_700": 96.78
+     },
+     "seed2": {
+      "random_1000": 95.31,
+      "active_300_700": 97.18
+     }
+    },
+    "on": {
+     "seed1": {
+      "random_1000": 96.47,
+      "active_300_700": 98.08
+     },
+     "seed2": {
+      "random_1000": 96.53,
+      "active_300_700": 97.84
+     }
+    },
+    "mean_off": 96.21,
+    "mean_on": 97.23
+   },
+   "25pct": {
+    "either_order_share": 28.64,
+    "off": {
+     "seed1": {
+      "random_1000": 91.82,
+      "active_300_700": 95.73
+     },
+     "seed2": {
+      "random_1000": 93.77,
+      "active_300_700": 95.79
+     }
+    },
+    "on": {
+     "seed1": {
+      "random_1000": 95.19,
+      "active_300_700": 97.25
+     },
+     "seed2": {
+      "random_1000": 95.69,
+      "active_300_700": 96.79
+     }
+    },
+    "mean_off": 94.28,
+    "mean_on": 96.23
+   },
+   "50pct": {
+    "either_order_share": 52.02,
+    "off": {
+     "seed1": {
+      "random_1000": 91.68,
+      "active_300_700": 94.03
+     },
+     "seed2": {
+      "random_1000": 91.4,
+      "active_300_700": 94.3
+     }
+    },
+    "on": {
+     "seed1": {
+      "random_1000": 94.06,
+      "active_300_700": 96.4
+     },
+     "seed2": {
+      "random_1000": 93.98,
+      "active_300_700": 96.47
+     }
+    },
+    "mean_off": 92.85,
+    "mean_on": 95.23
+   }
+  },
+  "historical_50k": {
+   "0pct": {
+    "either_order_share": 6.32,
+    "off": {
+     "seed1": {
+      "random_1000": 86.07,
+      "active_300_700": 87.06
+     },
+     "seed2": {
+      "random_1000": 86.05,
+      "active_300_700": 89.85
+     }
+    },
+    "on": {
+     "seed1": {
+      "random_1000": 84.32,
+      "active_300_700": 86.86
+     },
+     "seed2": {
+      "random_1000": 85.0,
+      "active_300_700": 87.95
+     }
+    },
+    "mean_off": 87.26,
+    "mean_on": 86.03
+   },
+   "10pct": {
+    "either_order_share": 15.75,
+    "off": {
+     "seed1": {
+      "random_1000": 86.53,
+      "active_300_700": 83.75
+     },
+     "seed2": {
+      "random_1000": 82.24,
+      "active_300_700": 81.37
+     }
+    },
+    "on": {
+     "seed1": {
+      "random_1000": 85.41,
+      "active_300_700": 86.9
+     },
+     "seed2": {
+      "random_1000": 83.44,
+      "active_300_700": 86.84
+     }
+    },
+    "mean_off": 83.47,
+    "mean_on": 85.65
+   },
+   "25pct": {
+    "either_order_share": 30.22,
+    "off": {
+     "seed1": {
+      "random_1000": 82.52,
+      "active_300_700": 82.33
+     },
+     "seed2": {
+      "random_1000": 82.58,
+      "active_300_700": 80.05
+     }
+    },
+    "on": {
+     "seed1": {
+      "random_1000": 83.02,
+      "active_300_700": 83.37
+     },
+     "seed2": {
+      "random_1000": 83.36,
+      "active_300_700": 83.67
+     }
+    },
+    "mean_off": 81.87,
+    "mean_on": 83.36
+   },
+   "50pct": {
+    "either_order_share": 59.52,
+    "off": {
+     "seed1": {
+      "random_1000": 77.39,
+      "active_300_700": 71.67
+     },
+     "seed2": {
+      "random_1000": 79.06,
+      "active_300_700": 73.2
+     }
+    },
+    "on": {
+     "seed1": {
+      "random_1000": 78.3,
+      "active_300_700": 81.15
+     },
+     "seed2": {
+      "random_1000": 76.2,
+      "active_300_700": 83.88
+     }
+    },
+    "mean_off": 75.33,
+    "mean_on": 79.88
+   }
+  }
+ }
+}

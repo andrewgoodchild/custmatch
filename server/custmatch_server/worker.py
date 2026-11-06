@@ -99,9 +99,11 @@ def _realtime_snapshot(eng):
     return snap, votes, issued
 
 
-def run_batch(eng, config_path, labels_path, data_dir, log=print, decisions_as_labels=True):
+def run_batch(eng, config_path, labels_path, data_dir, log=print, decisions_as_labels=True, keep_runs=db.KEEP_RUNS):
     """decisions_as_labels: stewards' decisions also train the model (as well as overriding their
-    own pairs) - server/learning_test.py measures what that gives."""
+    own pairs) - server/learning_test.py measures what that gives. keep_runs: published runs kept,
+    this one included (db.publish); the retired runs' files are deleted. Returns (run id, summary),
+    the summary with "retired_runs" added."""
     config_path, data_dir = Path(config_path).resolve(), Path(data_dir)
     cfg = json.loads(config_path.read_text())
     if cfg.get("overrides"):                                # paths in the config stay relative to it
@@ -151,10 +153,11 @@ def run_batch(eng, config_path, labels_path, data_dir, log=print, decisions_as_l
                    "feature_importance": _importance(out / "result" / "state"),
                    "warnings": s["warnings"]}
         # the real-time rows the run saw are confirmed or moved by it, in the publish transaction
-        n, retired = db.publish(eng, run_id, out / "result", summary, input_load, reconcile=snap)
+        n, retired = db.publish(eng, run_id, out / "result", summary, input_load, reconcile=snap, keep=keep_runs)
+        db.remove_run_files(eng, retired)                      # after the commit: the catalog no longer serves them
         log(f"run {run_id} published: {n:,} records, {summary['customers']:,} customers, "
-            f"input up to load {input_load}; retired runs {retired}")
-        return run_id, summary
+            f"input up to load {input_load}; retired runs {retired}" + (" (their files deleted)" if retired else ""))
+        return run_id, summary | {"retired_runs": retired}
     except Exception as e:
         db.fail_run(eng, run_id, f"{type(e).__name__}: {e}")
         raise

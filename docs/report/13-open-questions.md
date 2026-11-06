@@ -48,8 +48,9 @@ For the service:
   erasure in [chapter 12](12-the-service.md)).
 - **How far the online path should go:** scoring and joining only, with guards and re-cuts left to
   batch, is simplest.
-- **Run retention:** how many previous runs to keep for rollback, against the copies erasure must
-  reach.
+- **Run retention** is settled with erasure ([chapter 12](12-the-service.md), "Erasure in the
+  service"): the current run and one before it keep their files, a retired run's are deleted, and
+  an erasure's run retires every earlier one.
 
 ---
 

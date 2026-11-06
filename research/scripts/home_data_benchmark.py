@@ -235,6 +235,10 @@ def run(name, spec, tmp, tools, out, dedupe_key="dedupe"):
     own, splink_datasets_benchmark.py runs its documented settings). out: the stored results, kept
     for the tools not run."""
     cfg = {"sources": [], "extra_fields": spec["extra_fields"], "extra_blocking": spec["extra_blocking"]}
+    if name == "fake_1000":
+        # its 1,000 noisy names put 15.6% of them "in either order" (schema.either_order_share), over
+        # the 12% that turns name_words on; every result here was measured with it off
+        cfg["name_words"] = False
     for src, frame in spec["frames"].items():
         path = tmp / f"{name}_{src}.csv"
         frame.fillna("").astype(str).to_csv(path, index=False)

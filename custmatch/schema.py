@@ -15,6 +15,8 @@ An extra field may name a standard column to add a fuzzy comparison of it.
 Each extra field must also be mapped in a source's `columns`. Extra blocking keys may use
 standard or extra field names. With neither present the pipeline is exactly the measured one.
 """
+import pandas as pd
+
 COMPARES = ("exact", "similarity", "edit", "years_apart")
 
 
@@ -71,6 +73,46 @@ def with_date_parts(df, cfg):
     known = date_parts(dated) >= 0
     partial = known.any(1) & ~known.all(1)
     return cfg | {"date_parts": bool(len(dated)) and float(partial.mean()) >= DATE_PARTS_MIN_SHARE}
+
+
+def either_order_share(df):
+    """The share of the records with both names whose surname is commoner in the file as a first
+    name than as a surname, or whose first name is commoner as a surname: how far the names come in
+    either order. A file written surname-first throughout scores low, as a file written first-name
+    first does: only the order varying within the file counts, which is what the name-words
+    feature (core.name_words_feature) is for. BPID 72.0%; every other dataset here with names in
+    one order at most 8.8% (NCVR's real names 8.0%), but fake_1000's 1,000 noisy names 15.6%;
+    with a tenth of a file's names swapped, 15-16% (research/scripts/name_order.py)."""
+    f, l = df.first_name.to_numpy(), df.last_name.to_numpy()
+    both = (f != "") & (l != "")
+    if not both.any():
+        return 0.0
+    as_first = pd.Series(f[f != ""]).value_counts()
+    as_last = pd.Series(l[l != ""]).value_counts()
+    count = lambda values, by: pd.Series(values).map(by).fillna(0).to_numpy()  # noqa: E731
+    f, l = f[both], l[both]
+    odd = (count(l, as_first) > count(l, as_last)) | (count(f, as_last) > count(f, as_first))
+    return float(odd.mean())
+
+
+NAME_WORDS_MIN_SHARE = 0.12
+
+
+def with_name_words(df, cfg):
+    """cfg with "name_words" decided, so the run saves it and `add` builds the same features:
+    unset, it is on when either_order_share(df) is at least NAME_WORDS_MIN_SHARE. The name-words
+    feature compares the worse-met part of a name with either part of the other, in any order: on
+    BPID (72% either order) it added 0.8 points of pairwise F1, all precision, and with a tenth of
+    a file's names swapped (15-16%) 1.02 on the synthetic customers and 2.18 on historical_50k of
+    clustered F1; where names are in one order (under 9%) it costs up to 1.22, as the swapped-name
+    feature already covers an occasional swap. 12% sits between (research/scripts/name_order.py).
+    Off without the rich features, and where names are hashed (a hash is compared for equality
+    only). A state saved without the key keeps it off, as its model was trained without the feature."""
+    if "name_words" in cfg:
+        return cfg
+    hashed = "first_name" in cfg.get("hash_fields", []) or "last_name" in cfg.get("hash_fields", [])
+    on = bool(cfg.get("rich_features", True)) and not hashed and either_order_share(df) >= NAME_WORDS_MIN_SHARE
+    return cfg | {"name_words": on}
 
 
 def extra_keys(cfg):

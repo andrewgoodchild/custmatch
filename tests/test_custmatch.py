@@ -2452,6 +2452,31 @@ def test_date_parts_is_on_for_files_with_partial_dates_and_saved_with_the_model(
     assert "date_parts" not in json.loads((tmp / "added" / "state" / "config.json").read_text())
 
 
+def test_name_words_is_on_for_files_whose_names_come_in_either_order(world, tmp_path):
+    """The name-words feature is on for a file whose names come in either order - at least
+    NAME_WORDS_MIN_SHARE of the records with both names have a surname commoner in the file as a
+    first name, or a first name commoner as a surname - unless the config says otherwise; the run
+    saves the choice. A file written surname-first throughout is consistent, so it stays off."""
+    from custmatch import schema
+    tmp, _ = _world_copy(world, tmp_path)
+    df, cfg = io.load(tmp / "config.json")
+    assert cfg["name_words"] is False and schema.either_order_share(df) < schema.NAME_WORDS_MIN_SHARE
+    half = np.arange(len(df)) % 2 == 0
+    mixed = df.assign(first_name=np.where(half, df.last_name, df.first_name), last_name=np.where(half, df.first_name, df.last_name))
+    assert schema.either_order_share(mixed) >= schema.NAME_WORDS_MIN_SHARE
+    assert schema.with_name_words(mixed, {})["name_words"] is True
+    assert schema.with_name_words(mixed, {"name_words": False})["name_words"] is False
+    assert schema.with_name_words(mixed, {"rich_features": False})["name_words"] is False
+    assert schema.with_name_words(mixed, {"hash_fields": ["first_name"]})["name_words"] is False
+    surname_first = df.assign(first_name=df.last_name, last_name=df.first_name)
+    assert schema.with_name_words(surname_first, {})["name_words"] is False
+    assert schema.with_name_words(df.assign(first_name="", last_name=""), {})["name_words"] is False
+    assert schema.feature_options({})["name_words"] is False
+    (tmp_path / "ran").mkdir()
+    tmp, _, _, _ = _ran(world, tmp_path / "ran", {})
+    assert json.loads((tmp / "run" / "state" / "config.json").read_text())["name_words"] is False
+
+
 def test_blocking_report_and_skeleton_hold_no_plain_text_when_asked(world, tmp_path, monkeypatch):
     monkeypatch.setenv("CUSTMATCH_SALT", "k")
     tmp, truth, _, _ = _ran(world, tmp_path, {"blocking": "fixed", "minimal_outputs": True})
