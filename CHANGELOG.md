@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.1.5 (2026-11-07)
+
+Erasure requests answered in one operation in the service, and better matching where names come
+in either order. `custmatch-server erase` deletes a record's every copy - its versions, the
+decisions about it, the matcher's memory and the audit log's details - and publishes a run
+without it, retiring every earlier run; retired runs now lose their files. `"name_words"` is on by
+default where a file's names come in either order, as a share of the file's own names decides:
+AWS's BPID benchmark scores 80.17 pairwise F1 by default, from 79.38.
 
 **Added (server):** `custmatch-server erase CONFIG --labels LABELS KEY... | --file erase.csv`
 answers an erasure request in one operation: the records and every stored version, the decisions,
